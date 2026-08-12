@@ -362,7 +362,8 @@ artifact 的版控規則：`splits/`、`results/` 與 `probs/` 都進 git（`pro
 ### 6.2 主實驗前的必要程式工作
 
 - [x] 新增固定 PDF-group 與 row-stratified rotating split 產生器；row protocol 必須驗證每個 Calibration／Test PDF 在 Train 皆有其他 row，並將檢查結果寫入 manifest。
-- [ ] 新增完整 17-state validator 與 projection unit tests。
+- [x] 新增完整 17-state validator 與 projection unit tests。（`paper/projection.py`、`tests/test_projection.py`，120 種 argmax 結果全數窮舉）
+- [x] 新增契約檔的入境檢查（`paper/validate.py`）：機率值域、bundle↔split 對應、跨 rotation 一致性、artifact checksum、逐列檔的列錯位偵測。
 - [ ] 將 calibration API 改為明確接收 calibration labels，拒絕 Test labels。
 - [ ] 將 joint decoder 拆成固定 probabilities／固定 scales 的乾淨模式。
 - [ ] 把需手動改 Python 常數的實驗改成 CLI／config，避免 run 間污染。（split generator 已有 CLI；訓練與評估尚未）
@@ -541,9 +542,10 @@ W2 的 B 與 C 相對空閒：B 可先把 W4 的封存腳本寫好，C 可先做
 | 論文需要的元件 | 現況 | 待處理 |
 |---|---|---|
 | Rotating split generator（PDF-group 與 row-stratified） | ✅ `paper/splits.py`，六個 manifest 已產出 | — |
-| 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`，ablation 開關已移除 | 尚無驅動腳本把訓練串起來；backbone 待定案 |
-| 完整 17-state projection 與 validator | ⬜ 未實作 | 須為雙向投影，並加 17-state unit tests |
-| Calibration-only class-bias API | ⬜ 未實作 | 只接收 calibration labels、拒絕 test labels，並保存 fallback／biases |
+| 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone 已定案；`MODEL_REVISION` 與 `EPOCHS` 兩個常數留給 B 在 GPU 機上定值 |
+| 完整 17-state projection 與 validator | ✅ `paper/projection.py` | 雙向投影，120 種 argmax 結果全數窮舉測試 |
+| 契約檔入境檢查 | ✅ `paper/validate.py` | 值域、bundle↔split 對應、跨 rotation 一致性、checksum、列錯位 |
+| Calibration-only class-bias API | ⬜ 未實作 | 只接收 calibration labels、拒絕 test labels，並保存 fallback／biases；conditional 的三個結構性 pinned 類別見 §3.2 |
 | 17-state joint decoder | ⬜ 未實作 | 須提供「固定 probabilities、固定 α、只切換 decoding rule」的乾淨比較模式，不夾帶額外可調參數 |
 | M0–M6 與評估輸出 | ⬜ 未實作 | 依賴上面三項 |
 

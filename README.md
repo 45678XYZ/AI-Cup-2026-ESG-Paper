@@ -34,10 +34,12 @@ paper/          study code (the only importable package)
   model.py        shared encoder, four heads
   dataset.py      tokenisation and collation
   splits.py       rotating three-way split generation (stdlib only)
+  projection.py   hierarchy-constrained projection onto the 17 states
   train_fold.py   trains one rotation, emits raw probabilities only
   run_training.py driver: split manifest in, contract bundle out
   artifacts.py    the only writer of contract files
-  evaluate.py     per-row predictions -> aggregate summary
+  evaluate.py     per-row predictions -> the contract-3 results file
+  validate.py     inbound conformance checks on received artifacts
 contracts/      interface schemas and example files
 docs/           paper plan and interface contract
 splits/         generated split manifests (version controlled)
@@ -91,8 +93,8 @@ Two boundary rules matter most:
 ```bash
 python -m paper.splits                  # -> splits/{protocol}_seed{seed}.json  (6 files)
 python -m contracts.export_states       # -> contracts/states.json
-python -m contracts.make_fixtures       # -> synthetic probability fixtures
-python -m contracts.make_examples       # -> synthetic results + placeholder tables
+python -m contracts.make_fixtures       # -> synthetic probability fixtures   (5 bundles)
+python -m contracts.make_examples       # -> synthetic results + placeholder tables (42 + 42)
 pytest -q                               # asserts the invariants on what was generated
 ```
 
@@ -138,13 +140,22 @@ throwaway smoke test.
 ## Status
 
 Done: frozen label space and 17-state definitions, data layer with checksums,
-split generation for both protocols, the training driver, and synthetic
-example files for every handoff.
+split generation for both protocols, the hierarchy-constrained projection, the
+training driver, artifact validation, and synthetic example files for every
+handoff.
 
-Not yet implemented — the decision stage, which is what the paper is about:
-the 17-state projection, the calibration-only bias API, the joint decoder, and
-M0-M6 themselves. Until those exist, `paper/evaluate.py` has nothing real to
+Not yet implemented — the rest of the decision stage, which is what the paper
+is about: the calibration-only bias API, the joint 17-state decoder, and the
+M0-M6 runner. Until those exist, `paper/evaluate.py` has nothing real to
 summarise and every file under `contracts/examples/` is fabricated.
+
+One design point is settled ahead of the calibration code and is worth reading
+before it: under conditional (hierarchy-constrained) estimation, the three
+child-field `N/A` biases are *unidentifiable*, not merely unsupported — those
+classes never occur inside their conditioning subset. They are pinned at 0.0 by
+definition (`paper/labels.py::CONDITIONAL_PINNED_CLASSES`), which leaves M3
+unaffected but gives M6 three pinned terms where M5 fits four. See
+[docs/paper_plan.md](docs/paper_plan.md) §3.2.
 
 Two values in `paper/train_config.py` are marked `TODO(B)` and must be settled
 on the GPU machine before the first official run: `MODEL_REVISION` (pin to the

@@ -403,12 +403,14 @@ A 提供 placeholder `.tex`（欄數、欄序、對齊與正式版相同，數�
 | `splits/{protocol}_seed{seed}.json` | ✅ 6 檔 | **真實檔案，同時就是契約 1 的範例檔**；不另做複本，避免兩份真相漂移 |
 | `paper/run_training.py` | ✅ | 訓練驅動腳本：讀 split → 只用 train_ids 訓練 → 對 calib／test 推論 → 寫成契約格式。B 只要跑，不必自己拼裝 |
 | `paper/artifacts.py` | ✅ | 契約檔的唯一寫入點；驅動腳本與 fixture 產生器共用，兩者結構不可能分岔 |
-| `paper/evaluate.py` | ✅ | 由逐列 predictions 算出契約 3 的聚合摘要 |
+| `paper/projection.py` | ✅ | 完整雙向 hierarchy projection（M1–M3 的 output rule） |
+| `paper/evaluate.py` | ✅ | 由逐列 predictions 產生契約 3 的**完整**結果物件（含信封），真實 runner 與範例產生器共用 |
+| `paper/validate.py` | ✅ | 契約檔的入境檢查；A 每收到一組 bundle 就跑 |
 | `contracts/states.json` | ✅ | 由 `paper/labels.py` 產生，測試斷言不漂移 |
 | `contracts/make_fixtures.py` | ✅ | 合成機率 fixtures，`concentration` 控制 gold 集中度 |
 | `contracts/make_examples.py` | ✅ | 契約 3 的 M0–M6 predictions／results 與契約 4 的 placeholder `.tex` |
-| `contracts/examples/probs/pdf_group_seed42_r0/` | ✅ | 契約 2 範例 bundle |
-| `contracts/examples/predictions/`、`results/` | ✅ 各 7 檔 | 契約 3 範例，M0–M6 齊全 |
+| `contracts/examples/probs/pdf_group_seed42_r{0..4}/` | ✅ 5 檔 | 契約 2 範例 bundle；五個 rotation 齊全，才能走完「拼接五折→2,000 列→計一次分」的路徑 |
+| `contracts/examples/predictions/`、`results/` | ✅ 各 42 檔 | 契約 3 範例，2 protocols × 3 seeds × M0–M6 全備，C 因此能測 3-seed std 與 Table 3 的雙設定對照 |
 | `contracts/examples/tables/` | ✅ | 契約 4 的 tabular placeholder、caption 與 manifest |
 
 **範例檔才是真正解鎖他人的東西。**規格文件本身不解除任何人的封鎖。
