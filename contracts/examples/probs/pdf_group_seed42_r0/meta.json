@@ -788,60 +788,60 @@
   "11999",
   "12000"
  ],
- "git_sha": null,
- "created_at": "2026-08-12T15:52:08.885394+00:00",
+ "git_sha": "52823a1788caffd77cab82f329259b94c9a90c51-dirty",
+ "created_at": "2026-08-12T17:50:04.410056+00:00",
  "artifacts": {
   "calibration_promise_status.npy": {
-   "sha256": "sha256:75764417eceafe12d8beab5828c7db30fd4a0f01df4e7196c35e24bd06e71f9f",
+   "sha256": "sha256:5b751f66e21d0645f7d53917a6b924c42ce01239e5c5a989a247d00f4da650fc",
    "shape": [
     371,
     2
    ]
   },
   "calibration_verification_timeline.npy": {
-   "sha256": "sha256:74fb83b62d1409d2d776e82f287fdc6f9a8f8698faaac257de930a9817cf0f24",
+   "sha256": "sha256:c75e66417c9b3c1ad28d98d4a812a3132c83a18e6a62c014d95fe3dcfd1c79a2",
    "shape": [
     371,
     5
    ]
   },
   "calibration_evidence_status.npy": {
-   "sha256": "sha256:b6baaa87df6eb9c00c5cfe8b04cc747ba79b84977a6446cd355336a906aa98a0",
+   "sha256": "sha256:96cf35413d817f62fe710f28ab92f44359a95bd657ebe5ebb14da3293e9f5114",
    "shape": [
     371,
     3
    ]
   },
   "calibration_evidence_quality.npy": {
-   "sha256": "sha256:42c73a3bcb2e0c5718521e92ed8d83015275b7735ba84849dd5484bbdea4446b",
+   "sha256": "sha256:006133b28ef392a600b49382428182702fe68a7c558c18a744c5281cebcd7cb3",
    "shape": [
     371,
     4
    ]
   },
   "test_promise_status.npy": {
-   "sha256": "sha256:6bbd64f2133446b24bfd5fdc8a04980b9ee242fdeefa84064b68ea1ed490920f",
+   "sha256": "sha256:84f70fde8c3ed5b5e5e0dd2763174c8dbf74b86cf8c48c38d2815c5c62b2e02a",
    "shape": [
     407,
     2
    ]
   },
   "test_verification_timeline.npy": {
-   "sha256": "sha256:ef5ae22872e6a25d3184ecefa53a8beda12169e8e6e33fb2194b50a34167db34",
+   "sha256": "sha256:fdfb5219d158b68e3f05265560481ac1587bb9fec7d8e3863326767caa677608",
    "shape": [
     407,
     5
    ]
   },
   "test_evidence_status.npy": {
-   "sha256": "sha256:015c0cfde259c63705b4537a4c0d390b16eeb397bb2e26593bdcb990c3327803",
+   "sha256": "sha256:b8d8df198e75af08c424516839f912e5278c6659ac191dd72f3b504e566e3dd3",
    "shape": [
     407,
     3
    ]
   },
   "test_evidence_quality.npy": {
-   "sha256": "sha256:5d23653632e9dabdc289b7f991076b1d298f5b77330e19c350d931e771863a54",
+   "sha256": "sha256:3fdec13e0914fa28dabb5ce42e15f134784d7288f832b0b5d1cd422a80c197ea",
    "shape": [
     407,
     4
@@ -852,5 +852,5 @@
  "model_revision": "synthetic",
  "checkpoint_rule": "n/a",
  "synthetic": true,
- "concentration": 0.6
+ "concentration": 0.4
 }

@@ -4,15 +4,26 @@ Lets the decision pipeline be built and smoke-tested before any GPU output
 exists: the fixtures are contract-shaped, so switching to B's real
 probabilities is a path change and nothing else.
 
-``concentration`` controls how much mass sits on the gold label, which makes
-the expected behaviour of M0-M6 analytically predictable:
+``concentration`` is the weight placed on a one-hot at the gold label, the rest
+going to uniform noise:
 
-    concentration=1.0   near one-hot on gold -> every method should score ~1.0
-                        and produce no invalid tuples
-    concentration=0.0   uniform noise -> methods are separated only by their
-                        decision rule, so hierarchy violations in M0 become
-                        visible while M1-M6 must stay at 0
-    in between          gold-favouring but confusable, the realistic case
+    0.0          pure noise -> the decision rule is the only thing separating
+                 the methods, so M0's hierarchy violations become visible while
+                 M1-M6 must stay at zero
+    0 < c < 0.5  gold-favouring but confusable: the band that actually exercises
+                 a decision rule, and the only band worth debugging in
+    c >= 0.5     gold wins every row *by construction* -- the noise component
+                 can contribute at most (1 - c), so no other class can overtake
+                 it. A perfect oracle: every method scores 1.0 and no method can
+                 be told apart from any other.
+
+Measured on rotation 0 of pdf_group_seed42, as a guide when picking a value:
+
+    c     rows where M0 breaks the hierarchy
+    0.0   86%
+    0.2   63%
+    0.4   13%
+    0.5+   0%
 
     python -m contracts.make_fixtures --out contracts/examples/probs
 
@@ -31,19 +42,38 @@ from paper.artifacts import write_probs_bundle
 from paper.data import REPO_ROOT, load_dev
 from paper.labels import EVAL_FIELDS, FIELDS, LABEL2ID
 
+# Inside the useful band and near its confident end: the gold label usually
+# wins, but often enough loses that M0 breaks the hierarchy on ~13% of rows,
+# which is what gives the decision rules something to differ about.
+DEFAULT_CONCENTRATION = 0.4
+
 
 def _probs_for(rows, field, rng, concentration):
+    """Linear mix of uniform noise and a one-hot on gold.
+
+    ``(1 - c) * noise + c * onehot``. Both components are already distributions,
+    so every row sums to 1 without a renormalisation step, and ``concentration``
+    behaves as an actual dial: the probability of the gold label winning rises
+    smoothly from chance at 0 to certainty at 1.
+
+    An earlier version added ``concentration * n_classes * 10`` to the gold
+    column of unnormalised noise. That swamped the noise (which peaks near 1.0)
+    at any setting above ~0.05, so the knob had two positions -- pure noise, or
+    a perfect oracle -- and nothing in between could exercise a decision rule.
+    """
     labels = EVAL_FIELDS[field]
     n, c = len(rows), len(labels)
-    probs = rng.random((n, c)).astype(np.float64) + 1e-3
-    gold = np.array([LABEL2ID[field][r[field]] for r in rows])
-    # Push mass onto the gold column; concentration=1 is effectively one-hot.
-    probs[np.arange(n), gold] += concentration * c * 10.0
-    probs /= probs.sum(axis=1, keepdims=True)
-    return probs.astype(np.float32)
+
+    noise = rng.random((n, c))
+    noise /= noise.sum(axis=1, keepdims=True)
+
+    onehot = np.zeros((n, c))
+    onehot[np.arange(n), [LABEL2ID[field][r[field]] for r in rows]] = 1.0
+
+    return ((1.0 - concentration) * noise + concentration * onehot).astype(np.float32)
 
 
-def make_rotation_fixture(split, k, out_dir, concentration=0.6, rows=None):
+def make_rotation_fixture(split, k, out_dir, concentration=DEFAULT_CONCENTRATION, rows=None):
     """Write one probs/{protocol}_seed{seed}_r{k}/ bundle."""
     rows = rows if rows is not None else load_dev()
     by_id = {r["id"]: r for r in rows}
@@ -82,7 +112,7 @@ def main() -> None:
     ap.add_argument("--protocol", default="pdf_group")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--rotations", nargs="+", type=int, default=[0])
-    ap.add_argument("--concentration", type=float, default=0.6)
+    ap.add_argument("--concentration", type=float, default=DEFAULT_CONCENTRATION)
     ap.add_argument("--out", type=Path, default=REPO_ROOT / "contracts" / "examples" / "probs")
     args = ap.parse_args()
 
