@@ -67,6 +67,22 @@ EPOCHS = 12
 
 BACKBONE_LR = 2e-5
 HEAD_LR = 1e-4
+
+# Stated here rather than left to torch's AdamW default, which is also 0.01
+# today. A hyperparameter that lives in a library default is not frozen: it can
+# move with a version bump, and train_config_sha256 -- the hash every bundle
+# records as its proof of recipe -- would not change when it did.
+WEIGHT_DECAY = 0.01
+
+# Biases and LayerNorm gains are exempt, the standard BERT fine-tuning
+# convention: decaying a normalisation gain toward zero fights the layer's
+# purpose. Matched by substring against parameter names.
+NO_DECAY = ("bias", "LayerNorm.weight")
+
+# AdamW's betas (0.9, 0.999) and eps (1e-8) stay at the torch defaults. They
+# have not moved across releases and no recipe here depends on them; if that
+# ever stops being true they belong here too.
+
 WARMUP_RATIO = 0.1
 LR_SCHEDULE = "cosine"        # "linear" | "cosine"
 DROPOUT = 0.1

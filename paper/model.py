@@ -12,7 +12,14 @@ import torch
 import torch.nn as nn
 from transformers import AutoModel
 
-from paper.train_config import DROPOUT, LLRD_DECAY, USE_LLRD, USE_MEAN_POOLING
+from paper.train_config import (
+    DROPOUT,
+    LLRD_DECAY,
+    NO_DECAY,
+    USE_LLRD,
+    USE_MEAN_POOLING,
+    WEIGHT_DECAY,
+)
 
 
 class MultiTaskEncoder(nn.Module):
@@ -37,27 +44,45 @@ class MultiTaskEncoder(nn.Module):
         pooled = self.dropout(self._pool(out, attention_mask))
         return {field: clf(pooled) for field, clf in self.classifiers.items()}
 
+    @staticmethod
+    def _decay_groups(named_params, lr):
+        """One learning rate, split into decayed and undecayed parameters.
+
+        Every group carries an explicit ``weight_decay`` so the optimiser can
+        never fall back on a library default that ``train_config`` does not
+        record (see ``WEIGHT_DECAY`` there).
+        """
+        decay, no_decay = [], []
+        for name, param in named_params:
+            (no_decay if any(k in name for k in NO_DECAY) else decay).append(param)
+        groups = []
+        if decay:
+            groups.append({"params": decay, "lr": lr, "weight_decay": WEIGHT_DECAY})
+        if no_decay:
+            groups.append({"params": no_decay, "lr": lr, "weight_decay": 0.0})
+        return groups
+
     def get_optimizer_groups(self, backbone_lr, head_lr):
         """Parameter groups, with layer-wise LR decay when enabled."""
         if not USE_LLRD:
-            return [
-                {"params": list(self.encoder.parameters()), "lr": backbone_lr},
-                {"params": list(self.classifiers.parameters()), "lr": head_lr},
-            ]
+            return (
+                self._decay_groups(self.encoder.named_parameters(), backbone_lr)
+                + self._decay_groups(self.classifiers.named_parameters(), head_lr)
+            )
 
-        groups = [{"params": list(self.classifiers.parameters()), "lr": head_lr}]
+        groups = self._decay_groups(self.classifiers.named_parameters(), head_lr)
 
         n_layers = len(self.encoder.encoder.layer)
-        groups.append({
-            "params": list(self.encoder.embeddings.parameters()),
-            "lr": backbone_lr * (LLRD_DECAY ** n_layers),
-        })
+        groups += self._decay_groups(
+            self.encoder.embeddings.named_parameters(),
+            backbone_lr * (LLRD_DECAY ** n_layers),
+        )
         for i, layer in enumerate(self.encoder.encoder.layer):
-            groups.append({
-                "params": list(layer.parameters()),
-                "lr": backbone_lr * (LLRD_DECAY ** (n_layers - 1 - i)),
-            })
+            groups += self._decay_groups(
+                layer.named_parameters(),
+                backbone_lr * (LLRD_DECAY ** (n_layers - 1 - i)),
+            )
         if getattr(self.encoder, "pooler", None) is not None:
-            groups.append({"params": list(self.encoder.pooler.parameters()), "lr": backbone_lr})
+            groups += self._decay_groups(self.encoder.pooler.named_parameters(), backbone_lr)
 
         return groups
