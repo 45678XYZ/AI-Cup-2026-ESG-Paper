@@ -270,7 +270,7 @@ predictions/{protocol}_seed{seed}_{method}.csv.gz
 
 | 欄位 | 型別 | 說明 |
 |---|---|---|
-| `id` | str | 引號包覆，防型別漂移 |
+| `id` | str | 見下方「CSV 陷阱」——**引號不足以防型別漂移** |
 | `pdf_url` | str | C 的 bootstrap cluster key，避免 C 再去 join 原始資料 |
 | `rotation` | int | 該列來自哪個 rotation 的 test partition |
 | `gold_ps` / `gold_vt` / `gold_es` / `gold_eq` | str | 類別名稱原文 |
@@ -278,7 +278,21 @@ predictions/{protocol}_seed{seed}_{method}.csv.gz
 | `gold_state_id` | int | 0–16，見 §1.3 |
 | `pred_state_id` | int | 0–16；不合法 tuple 填 `-1`（僅 M0 可能出現） |
 
-**設計取捨**：`pdf_url` 與 `gold_*` 是冗餘資料（可從原始資料集 join 得到），但刻意放進來。理由是 C 的統計腳本因此**完全不需要碰原始資料集，也不需要重現 split 邏輯**——單一檔案自足，join 錯誤的可能性歸零。42 個檔案 × 2,000 列的儲存成本可以忽略。
+**CSV 陷阱（與 §1.1 的 JSON 陷阱同一類，但更隱蔽）**：檔案寫出時 `id` 有引號包覆，但**引號擋不住 pandas 的型別推斷**——`pd.read_csv(...)` 讀回來的 `id` 是 `int64`，值是 `10001` 而不是 `"10001"`。列數、欄數、所有檢查都正常，只有 join 會靜默地一筆都對不上。這與 §1.1 禁止位置索引所要防的是同一種失敗。
+
+因此讀取方式**寫進契約**，不是建議：
+
+```python
+from paper.artifacts import read_predictions      # -> list[dict]，id 為 str
+from paper.artifacts import read_predictions_df   # -> DataFrame，id 為 str
+
+# 若堅持自行讀取，dtype 不可省略：
+pd.read_csv(path, dtype={"id": str})
+```
+
+**檔案位元組是決定性的**：writer 以 `mtime=0`、`filename=""` 寫 gzip container，所以相同的 predictions 永遠得到相同的 sha256。沒有這一條，每次重跑產生器都會讓 42 個 `predictions_sha256` 全部改變，§5 的 `input_sha256` 稽核鏈就無法區分「數字變了」與「檔案又被寫了一次」。
+
+**設計取捨**：`pdf_url` 與 `gold_*` 是冗餘資料（可從原始資料集 join 得到），但刻意放進來。理由是 C 的統計腳本因此**完全不需要碰原始資料集，也不需要重現 split 邏輯**——單一檔案自足，join 錯誤的可能性歸零。42 個檔案 × 2,000 列的儲存成本可以忽略。這份冗餘還有第二個用途：`gold_*` 與資料集不符即代表列已錯位，`paper/validate.py` 據此偵測 §1.1 所警告的無聲錯位。
 
 ### 4.2 聚合摘要
 

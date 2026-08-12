@@ -180,3 +180,20 @@ def read_predictions(path):
         r["gold_state_id"] = int(float(r["gold_state_id"]))
         r["pred_state_id"] = int(float(r["pred_state_id"]))
     return rows
+
+
+def read_predictions_df(path):
+    """pandas view of a predictions CSV, with ``id`` kept as a string.
+
+    The CSV analogue of the ``pd.read_json`` trap in contract §1.1, and the
+    reason this helper exists rather than a line of documentation: quoting does
+    **not** protect the column. ``pd.read_csv`` type-infers straight through
+    the quotes, so a plain read turns ``"10001"`` into ``int64`` and every
+    id-keyed join against a split manifest or the dataset silently matches
+    nothing while every shape and count still looks right.
+
+    This is the supported way to load the file into pandas.
+    """
+    import pandas as pd
+
+    return pd.read_csv(path, dtype={"id": str})

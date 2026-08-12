@@ -5,7 +5,12 @@ import json
 import pytest
 
 from contracts.make_examples import make_contract3, make_contract4
-from paper.artifacts import prediction_row, read_predictions, write_predictions
+from paper.artifacts import (
+    prediction_row,
+    read_predictions,
+    read_predictions_df,
+    write_predictions,
+)
 from paper.data import file_sha256, load_dev
 from paper.evaluate import build_results, summarise_predictions, write_results
 from paper.labels import FIELDS
@@ -91,6 +96,23 @@ def test_writing_the_same_predictions_twice_gives_the_same_bytes(tmp_path):
     a = write_predictions(tmp_path / "a.csv.gz", records)
     b = write_predictions(tmp_path / "b.csv.gz", records)
     assert file_sha256(a) == file_sha256(b)
+
+
+def test_pandas_needs_the_helper_to_keep_ids_as_strings(tmp_path):
+    """Quoting does not survive pandas type inference, so C reading these files
+    the obvious way gets int64 ids and every id join silently matches nothing.
+    Contract §4.1 points at read_predictions_df for exactly this reason."""
+    pd = pytest.importorskip("pandas")
+    path = write_predictions(tmp_path / "p.csv.gz", _perfect_records()[:50])
+
+    # Asserted on the values, not the dtype: pandas 2 stores strings as object
+    # and pandas 3 as str, and the property that matters is that an id still
+    # compares equal to the id in the split manifest.
+    assert pd.read_csv(path)["id"].dtype.kind == "i"   # the trap, pinned
+    df = read_predictions_df(path)
+    assert isinstance(df["id"].iloc[0], str)
+    assert df["id"].iloc[0] == ROWS[0]["id"]
+    assert df["rotation"].dtype.kind == "i"            # only id is coerced back
 
 
 # --- the generated example files -----------------------------------------
