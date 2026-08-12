@@ -29,9 +29,14 @@ def bundle(tmp_path):
 
 
 def _probs_for_rotation(rot):
+    """Uniform distributions: valid input, so a test that breaks one thing
+    fails for that reason and not because the rows never summed to 1."""
     return {
         partition: {
-            f: np.zeros((len(rot[f"{partition}_ids"]), len(EVAL_FIELDS[f])), np.float32)
+            f: np.full(
+                (len(rot[f"{partition}_ids"]), len(EVAL_FIELDS[f])),
+                1 / len(EVAL_FIELDS[f]), np.float32,
+            )
             for f in EVAL_FIELDS
         }
         for partition in ("calibration", "test")
@@ -51,6 +56,20 @@ def test_bundle_writer_rejects_a_wrong_class_count(tmp_path):
     probs = _probs_for_rotation(SPLIT["rotations"][0])
     probs["calibration"]["evidence_quality"] = probs["calibration"]["evidence_quality"][:, :2]
     with pytest.raises(ValueError, match="expected"):
+        write_probs_bundle(tmp_path / "b", SPLIT, 0, probs)
+
+
+@pytest.mark.parametrize("break_it, match", [
+    (lambda a: a * 3.0, "sum to 1"),          # logits, or a missing softmax
+    (lambda a: a * -1.0, "negative"),         # log-probabilities
+    (lambda a: a * np.nan, "NaN"),
+])
+def test_bundle_writer_rejects_arrays_that_are_not_distributions(tmp_path, break_it, match):
+    """Contract §3 fixes the value range; the shape being right is what makes
+    this failure invisible downstream if it is not caught at the write."""
+    probs = _probs_for_rotation(SPLIT["rotations"][0])
+    probs["test"]["promise_status"] = break_it(probs["test"]["promise_status"])
+    with pytest.raises(ValueError, match=match):
         write_probs_bundle(tmp_path / "b", SPLIT, 0, probs)
 
 

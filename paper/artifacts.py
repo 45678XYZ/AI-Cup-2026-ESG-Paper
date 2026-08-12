@@ -60,13 +60,31 @@ def now_iso():
 # Contract 2: probability bundles
 # --------------------------------------------------------------------------
 
+def _check_distribution(arr, label):
+    """Reject anything that is not a row-stochastic array (contract §3).
+
+    Cheap here, and the failure it catches is otherwise invisible: logits, a
+    half-applied softmax or an argmaxed one-hot all have the right shape and
+    produce a perfectly plausible-looking results table.
+    """
+    if not np.isfinite(arr).all():
+        raise ValueError(f"{label}: contains NaN or Inf")
+    if (arr < 0).any():
+        raise ValueError(f"{label}: contains negative values, so it is not a probability")
+    if arr.size:
+        dev = float(np.abs(arr.sum(axis=1) - 1.0).max())
+        if dev > 1e-4:
+            raise ValueError(f"{label}: rows do not sum to 1 (max deviation {dev:.2e})")
+
+
 def write_probs_bundle(out_dir, split, rotation, probs, extra_meta=None):
     """Write one ``probs/{protocol}_seed{seed}_r{k}/`` directory.
 
     ``probs`` is ``{"calibration": {field: (N, C) array}, "test": {...}}``.
     Row order must already match the split's id lists — this function checks
-    the lengths but cannot check the ordering, which is why the driver slices
-    its input straight from the manifest rather than re-deriving it.
+    the lengths and the probability range but cannot check the ordering, which
+    is why the driver slices its input straight from the manifest rather than
+    re-deriving it. ``paper/validate.py`` covers what one call cannot see.
     """
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -82,6 +100,7 @@ def write_probs_bundle(out_dir, split, rotation, probs, extra_meta=None):
                 raise ValueError(
                     f"{partition}/{field}: got {arr.shape}, expected {expected}"
                 )
+            _check_distribution(arr, f"{partition}/{field}")
             path = out_dir / f"{partition}_{field}.npy"
             np.save(path, arr)
             artifacts[path.name] = {"sha256": file_sha256(path), "shape": list(arr.shape)}

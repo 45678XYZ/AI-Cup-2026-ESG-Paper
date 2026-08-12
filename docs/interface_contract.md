@@ -399,7 +399,15 @@ A 提供 placeholder `.tex`（欄數、欄序、對齊與正式版相同，數�
 
 **範例檔才是真正解鎖他人的東西。**規格文件本身不解除任何人的封鎖。
 
-**格式正確性在產出當下就強制，而不是事後檢查**：generator 產不出違反 same-document 覆蓋的 split，`write_probs_bundle` 拒收與 manifest 長度不符的陣列，驅動腳本從 manifest 取列所以對齊無從漂移，`run_training.py` 未釘 revision 就不啟動。測試套件對真實產出的檔案斷言這些性質。
+**格式正確性在產出當下就強制，而不是事後檢查**：generator 產不出違反 same-document 覆蓋的 split，`write_probs_bundle` 拒收與 manifest 長度不符的陣列、也拒收不是機率分布的陣列（logits、漏掉的 softmax、被 argmax 過的 one-hot），驅動腳本從 manifest 取列所以對齊無從漂移，`run_training.py` 未釘 revision 就不啟動。測試套件對真實產出的檔案斷言這些性質。
+
+**但寫入時看不到的事，由 `paper/validate.py` 在收件時檢查**——一次寫入無從得知 bundle 是否對著它所宣稱的 split 產出、五個 rotation 是否屬於同一個 partition、磁碟上的陣列是否還是當初記下 checksum 的那一份、revision 究竟有沒有釘。這些正是契約 §0 判準所指的失敗：它們不會報錯，只會產生看起來合理的數字。
+
+```bash
+python -m paper.validate probs/pdf_group_seed42_r*        # 單 bundle + 跨 rotation 一致性
+python -m paper.validate predictions/*.csv.gz             # 逐列檔，含列錯位偵測
+python -m paper.validate --all
+```
 
 ### 6.1 已定案：folds 隨 seed 改變
 

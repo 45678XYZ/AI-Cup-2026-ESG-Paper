@@ -99,8 +99,23 @@ pytest -q                               # asserts the invariants on what was gen
 Conformance is enforced where artifacts are created rather than checked
 afterwards: the generator refuses to emit a split that breaks same-document
 coverage, the bundle writer refuses arrays whose shape disagrees with the
-manifest, and the training driver takes its rows from the manifest so alignment
-cannot drift. The test suite asserts these properties on real generated files.
+manifest or that are not probability distributions, and the training driver
+takes its rows from the manifest so alignment cannot drift. The test suite
+asserts these properties on real generated files.
+
+What a single write cannot see — whether a bundle was produced against the
+split it names, whether five rotations belong to one partition, whether the
+array on disk is still the one that was checksummed — is checked on receipt:
+
+```bash
+python -m paper.validate probs/pdf_group_seed42_r*
+python -m paper.validate predictions/*.csv.gz
+python -m paper.validate --all
+```
+
+Run it on every bundle as it arrives. These failures do not raise; they produce
+a plausible results table, which is why they get a validator rather than a
+convention.
 
 ## Training runs
 
