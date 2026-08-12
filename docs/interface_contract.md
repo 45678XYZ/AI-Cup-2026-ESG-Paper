@@ -1,0 +1,396 @@
+# 介面契約 v1.0
+
+> 對應文件：[`docs/paper_plan.md`](paper_plan.md)
+
+---
+
+## 0. 契約是什麼、不是什麼
+
+**契約 = 規格 + 範例檔。** 兩者缺一不可：
+
+| 元件 | 用途 | 沒有它會怎樣 |
+|---|---|---|
+| 規格（本文件） | 定義欄位、型別、順序、不變量 | 各自解讀，爭議時無仲裁依據 |
+| 範例檔（`contracts/examples/`） | 下游今天就能寫程式 | 下游必須等上游交件才能動工 |
+
+**契約只管跨越邊界的東西。** B 的訓練 log 格式、C 的中間 dataframe、D 的章節檔名都不入契約——過度規範會拖慢彼此。判準：**這個東西壞掉時，會不會靜默地產生錯誤數字？** 會，就入契約。
+
+---
+
+## 1. 全域共用定義（所有契約共用，凍結後不得改）
+
+### 1.1 Row identity：一律用 `id` 字串，禁止位置索引
+
+資料集的 `id` 是**字串**（`"10001"`、`"11836"`），dev 共 2,000 筆、已排序、無重複。
+
+> **強制規則：所有跨人交接的檔案，row 一律以 `id` 字串識別。任何契約檔不得以「第 n 列」隱含對應關係。**
+
+理由：只要有任何一份檔案以位置索引對齊，B 載入資料時 train/val 串接順序不同、或中途做了任何過濾，整條管線就會**靜默錯位**——shape 正確、機率加總為 1、所有檢查通過，而分數只是悄悄變低。這是本專案最可能發生、也最難察覺的錯誤。
+
+**JSON 陷阱**：`pandas.read_json` 會把 `"10001"` 自動轉成整數 `10001`。所有讀取契約檔的程式一律用標準庫 `json.load`，或 `pd.read_json(..., dtype={'id': str})`。
+
+### 1.2 Canonical row order
+
+`splits/*.json` 內的 `canonical_row_order`（2,000 個 id 的清單）是**唯一權威**的列順序定義，等於 `train_1000 + val_1000` 的原始串接順序。所有 `.npy` 陣列的列順序都必須參照它或參照 rotation 的 partition id 清單，不得自行假設。
+
+### 1.3 凍結的枚舉
+
+欄位名稱與類別順序由 `paper/labels.py` 的 `EVAL_FIELDS` 定義，全 repo 不另立一套：
+
+| field | 類別順序（= `.npy` 的欄索引 0..C-1） |
+|---|---|
+| `promise_status` | `Yes`, `No` |
+| `verification_timeline` | `already`, `within_2_years`, `between_2_and_5_years`, `more_than_5_years`, `N/A` |
+| `evidence_status` | `Yes`, `No`, `N/A` |
+| `evidence_quality` | `Clear`, `Not Clear`, `Misleading`, `N/A` |
+
+17 個合法狀態的 canonical 順序 = `paper/labels.py::build_states()` 的輸出順序（index 0..16），凍結後不得重排。狀態以 `state_id` 整數在契約檔中流通，並在 `contracts/states.json` 存一份 id→tuple 對照表。
+
+其他凍結常數：
+- `protocol` ∈ {`pdf_group`, `row_strat`}
+- `seed` ∈ {42, 123, 456}
+- `rotation` k ∈ {0, 1, 2, 3, 4}
+- `method` ∈ {M0, M1, M2, M3, M4, M5, M6}
+- 官方權重：PS 0.20、VT 0.15、ES 0.30、EQ 0.35
+
+### 1.4 每個檔案都必須自我描述
+
+所有契約檔（含 `.npy` 的 sidecar）一律帶這組欄位，讓不匹配**被偵測**而不是被假設：
+
+```json
+{
+  "contract_version": "1.0",
+  "protocol": "pdf_group",
+  "seed": 42,
+  "rotation": 3,
+  "data_checksum": "sha256:...",
+  "git_sha": "...",
+  "created_at": "..."
+}
+```
+
+`data_checksum` = 對 `canonical_row_order` 順序下的 `(id, data, 四個 label)` 串接後取 sha256。任兩個檔案的 `data_checksum` 不同即視為不可混用。`paper/run_training.py` 啟動時會比對，不符就拒絕執行。
+
+### 1.5 版本與變更規則
+
+- 每個檔案帶 `contract_version`（semver）。
+- **加欄位 = minor**，下游可忽略未知欄位。
+- **改名、刪除、改順序、改型別、改語意 = major**，須 A 同意、更新本文件、重產範例檔，並通知所有消費者。
+- 凍結後若必須破壞性變更，一律走 major，不得原地改語意（例如把某欄位從「test 機率」偷偷改成「全部機率」）。
+
+---
+
+## 2. 契約 1：Splits（A → B，同時被 A 自己消費）
+
+### 路徑
+
+```
+splits/{protocol}_seed{seed}.json      # protocol ∈ {pdf_group, row_strat}
+```
+
+共 6 個檔案（2 protocols × 3 seeds），每檔 5 個 rotation。
+
+### Schema
+
+```jsonc
+{
+  "contract_version": "1.0",
+  "protocol": "pdf_group",
+  "seed": 42,
+  "data_checksum": "sha256:...",
+  "git_sha": "...",
+  "created_at": "...",
+  "generator": "paper/splits.py",
+  "resample_attempts": 1,          // 為滿足 same-document 覆蓋而重抽的次數
+  "split_fingerprint": "sha256:...",  // 見 §3 不變量 1b
+
+  "canonical_row_order": ["10001", "10002", ...],   // 2000 個 id 字串
+
+  "rotations": [
+    {
+      "k": 0,
+      "train_ids":       ["10003", ...],   // 依 canonical order 升冪
+      "calibration_ids": ["10001", ...],
+      "test_ids":        ["10007", ...],
+      "train_pdfs":       ["https://...pdf", ...],
+      "calibration_pdfs": [...],
+      "test_pdfs":        [...],
+
+      "support": {
+        "train":       { "promise_status": {"Yes": 812, "No": 388}, "...": {} },
+        "calibration": { "...": {} },
+        "test":        { "...": {} }
+      },
+      "tuple_support": {
+        "train":       {"0": 388, "1": 73, ...},   // key = state_id 字串
+        "calibration": {...},
+        "test":        {...}
+      },
+
+      "checks": {
+        "rows_disjoint": true,
+        "rows_cover_all_2000": true,
+        "pdfs_disjoint": true,              // pdf_group 為 true；row_strat 為 false
+        "same_document_coverage": {         // row_strat 才有意義，pdf_group 填 null
+          "satisfied": true,
+          "n_pdfs_checked": 49,
+          "violating_pdfs": []
+        }
+      },
+
+      "calibration_absent_classes": {
+        "evidence_quality": ["Misleading"]  // 觸發 bias fallback，A 的 calibration 程式讀這欄
+      }
+    }
+  ],
+
+  "fallback_rule": "absent class bias fixed at 0.0; recorded per-rotation in results manifest"
+}
+```
+
+### 不變量
+
+1. 每個 rotation 的 train/calibration/test id 三方互斥，聯集恰為 2,000 筆。
+2. 五個 rotation 的 `test_ids` 互斥，聯集恰為 2,000 筆（每筆恰好當一次 test）。
+3. `pdf_group`：`train_pdfs`、`calibration_pdfs`、`test_pdfs` 三方互斥。
+4. `row_strat`：每個出現在 calibration 或 test 的 `pdf_url`，在 train 至少有一筆不同 row（same-document protocol 的硬性要求），不滿足則 `checks.same_document_coverage.satisfied = false`，**產生器必須重抽而不是輸出**。
+5. 所有 id 為字串且存在於 `canonical_row_order`。
+6. support 數字必須與 id 清單重算一致；`tests/test_splits.py` 對每個產出的 manifest 重算比對。
+
+### 已知的 rare-class 事實（直接影響 fallback 設計）
+
+`Misleading` 僅 2 筆，且落在**兩份不同的 PDF**（id `10017` @ `202508071622071323.pdf`、id `11836` @ `aseh-2024-csr-ch-final.pdf`）。在 5-way PDF-group 切分下，這 2 筆最多落在 2 個 fold，因此**多數 rotation 的 calibration partition 會完全看不到 `Misleading`**。契約用 `calibration_absent_classes` 明確傳遞此事實，A 的 calibration 程式據此套用固定 fallback（bias = 0.0），並寫入 results manifest。這不是例外處理，是預期路徑。
+
+### B 的替代輸入
+
+`splits/*.json` 本身就是範例檔——真實結構、真實 id，B 直接對著它寫執行腳本，不必等其他東西。
+
+---
+
+## 3. 契約 2：Probabilities（B → A）
+
+### 路徑
+
+```
+probs/{protocol}_seed{seed}_r{k}/
+    calibration_{field}.npy
+    test_{field}.npy
+    meta.json
+```
+
+共 30 個目錄（2 protocols × 3 seeds × 5 rotations）× 8 個 `.npy` + 1 個 `meta.json`。
+
+> **⚠ 與 `paper_plan.md` 原契約表的差異**：原表只寫 `probs/{protocol}_{seed}_r{k}_{field}.npy`，未區分 partition。但 protocol 規定 bias 只能在 Calibration partition 學，因此 **B 必須同時輸出 calibration 與 test 兩個 partition 的機率**，否則 M2/M3/M5/M6 無法執行。此為對原表的修正，**B 必須被告知**——若照原格式跑完 P0 才發現，15 次訓練要重來。
+
+### `.npy` 規格
+
+| 項目 | 規定 |
+|---|---|
+| dtype | `float32` |
+| shape | `(len(partition_ids), C_field)`，C 依 §1.3 |
+| 列順序 | 嚴格等於 split 檔中該 rotation 的 `calibration_ids` / `test_ids` 順序 |
+| 欄順序 | 嚴格等於 §1.3 的類別順序 |
+| 值域 | 每列為機率分布，`abs(row.sum() - 1) < 1e-4`，無 NaN/Inf，無負值 |
+| 內容 | **原始模型機率**。不得套用任何 postprocess、hard rule、bias、argmax |
+
+**B 的明確非職責**：B 不輸出 predictions、不套 `apply_hard_rules`、不做任何 threshold tuning。所有決策階段由 A 執行。這條寫進契約是為了保住 M0（完全無結構 baseline）的乾淨性——只要 B 順手套了 hard rule，M0 就不再是 M0，而且從數字上看不出來。
+
+### `meta.json`
+
+```jsonc
+{
+  "contract_version": "1.0",
+  "protocol": "pdf_group", "seed": 42, "rotation": 0,
+  "split_file": "splits/pdf_group_seed42.json",
+  "split_fingerprint": "sha256:...",   // 見下方定義
+  "data_checksum": "sha256:...",          // 必須等於 split 檔的值
+
+  "calibration_ids": ["10001", ...],       // 冗餘但刻意：與 split 檔交叉驗證
+  "test_ids": ["10007", ...],
+
+  "model_name": "hfl/chinese-roberta-wwm-ext-large",
+  "model_revision": "a1b2c3d",             // HF 精確 revision，非 "main"
+  "train_config_sha256": "...",            // 凍結 config 的 hash
+  "checkpoint_rule": "avg_last_k",         // = paper/train_config.py 的常數
+  "checkpoint_last_k": 3,
+  "epochs": 12,                            // 實際跑的 epoch 數（固定預算，無 early stopping）
+  "git_sha": "...",
+  "hardware": "RTX 3090 (nvidia-smi idx 1)",
+  "started_at": "...", "finished_at": "...", "created_at": "...",
+
+  "artifacts": {
+    "calibration_promise_status.npy": {"sha256": "...", "shape": [400, 2]},
+    "test_promise_status.npy": {"sha256": "...", "shape": [400, 2]}
+  }
+}
+```
+
+### 不變量
+
+1. `meta.json` 的 `calibration_ids` / `test_ids` 必須與 split 檔逐項相同（順序也相同）。
+1b. `split_fingerprint` 必須與 split 檔一致。這是對 **partition 內容**（protocol、seed、canonical order、每個 rotation 的三份 id 清單）取的 sha256，**刻意排除 `created_at`、`git_sha` 與 support 表**——重跑 generator 產生語意相同的 manifest 時不該讓既有 bundle 失效。它擋的是逐 bundle 的 id 比對看不到的情況：各 rotation 分別對著不同版本的 split 產出，每一份單看都正確，整組卻不一致。
+2. `data_checksum` 與 split 檔一致。
+3. 每個 `.npy` 的 shape[0] 等於對應 id 清單長度。
+4. `model_revision` 不得為 `main`／`latest`／空字串。
+5. 所有 `.npy` 的實際 sha256 與 `artifacts` 記載相符。
+
+### A 的替代輸入
+
+`contracts/examples/probs/` 提供 synthetic fixtures：以已知 bias 生成、M0–M6 的**預期輸出可解析求得**，用來 smoke-test 整條決策管線。真實機率到位後只換路徑。
+
+---
+
+## 4. 契約 3：Results（A → C）
+
+分成**兩層**：逐列預測（統計的原料）與聚合摘要（人看的、可交叉核對的）。
+
+> **⚠ 與 `paper_plan.md` 原契約表的差異**：原表只列聚合量（per-field F1、per-class F1、support、tuple acc、invalid rate）。但統計設計要求 paired PDF-cluster bootstrap（10,000 次），必須以 PDF 為單位重抽並在相同抽樣上計算兩方法差值——**這需要逐列 gold/pred，聚合數字辦不到**。因此新增 4.1 的 predictions 層。此為對原表的修正，**C 必須被告知**。
+
+### 4.1 逐列預測（主要交付物）
+
+```
+predictions/{protocol}_seed{seed}_{method}.csv.gz
+```
+
+42 個檔案（2 × 3 × 7）。gzip 壓縮的 CSV，`pandas.read_csv` 與 `csv` 模組都能直接讀。每檔恰好 2,000 列，每個 id 出現一次（五個 rotation 的 test partition 拼接）。
+
+| 欄位 | 型別 | 說明 |
+|---|---|---|
+| `id` | str | 引號包覆，防型別漂移 |
+| `pdf_url` | str | C 的 bootstrap cluster key，避免 C 再去 join 原始資料 |
+| `rotation` | int | 該列來自哪個 rotation 的 test partition |
+| `gold_ps` / `gold_vt` / `gold_es` / `gold_eq` | str | 類別名稱原文 |
+| `pred_ps` / `pred_vt` / `pred_es` / `pred_eq` | str | 類別名稱原文 |
+| `gold_state_id` | int | 0–16，見 §1.3 |
+| `pred_state_id` | int | 0–16；不合法 tuple 填 `-1`（僅 M0 可能出現） |
+
+**設計取捨**：`pdf_url` 與 `gold_*` 是冗餘資料（可從原始資料集 join 得到），但刻意放進來。理由是 C 的統計腳本因此**完全不需要碰原始資料集，也不需要重現 split 邏輯**——單一檔案自足，join 錯誤的可能性歸零。42 個檔案 × 2,000 列的儲存成本可以忽略。
+
+### 4.2 聚合摘要
+
+```
+results/{protocol}_seed{seed}_{method}.json
+```
+
+```jsonc
+{
+  "contract_version": "1.0",
+  "protocol": "pdf_group", "seed": 42, "method": "M3",
+  "predictions_file": "predictions/pdf_group_seed42_M3.csv.gz",
+  "predictions_sha256": "...",
+  "data_checksum": "...",
+  "git_sha": "...",
+  "created_at": "...",
+  "n_rows": 2000,
+
+  "weighted_macro_f1": 0.6471,
+  "per_field_macro_f1": {"promise_status": 0.88, "...": 0.0},
+  "per_class_f1":      {"evidence_quality": {"Clear": 0.91, "Misleading": 0.0}},
+  "per_class_support": {"evidence_quality": {"Clear": 1093, "Misleading": 2}},
+  "conditional_f1": {                       // secondary metric
+    "verification_timeline_given_ps_yes": 0.0,
+    "evidence_status_given_ps_yes": 0.0,
+    "evidence_quality_given_es_yes": 0.0
+  },
+  "tuple_exact_match": 0.0,
+  "invalid_tuple_rate": 0.0,                // M1–M6 必須為 0
+
+  "decision_params": {                      // 附錄用，逐 rotation；不在凍結範圍內（見下）
+    "0": {
+      "calibration_biases": {"evidence_quality": {"Clear": 0.3, "Misleading": 0.0}},
+      "fallback_applied": {"evidence_quality": ["Misleading"]},
+      "decoder": {"alpha": [1.0, 1.0, 1.0, 1.0], "mode": "fixed"}
+    }
+  }
+}
+```
+
+### 不變量
+
+1. `weighted_macro_f1` 等於用 `paper/score.py` 對 predictions CSV 重算的結果。摘要一律由 `paper/evaluate.py` 從逐列產生，不手動填寫——**兩者不一致時以逐列為準**。
+2. M1–M6 的 `invalid_tuple_rate` 必須為 0，否則視為 implementation bug。
+3. `per_class_support` 由 gold 計算，同一 protocol/seed 下所有 method 必須相同。
+4. 只計分 gold 中實際出現的類別（沿用官方 scorer 行為，見 `paper/score.py`）。
+
+**`decision_params` 刻意排除在凍結範圍外。** 它記錄 A 的決策階段內部參數（bias 值、fallback、decoder 設定），供論文附錄與稽核用，C 的統計不消費它。決策階段實作完成前，其內部結構還會變；把它綁進凍結只會逼出一次沒有意義的 major bump。上層欄位（`weighted_macro_f1` 以下到 `invalid_tuple_rate`）與 §4.1 的逐列格式才是凍結的部分。
+
+### C 的替代輸入
+
+A 提供 `contracts/examples/predictions/` 與 `results/` 的合成檔（分數為亂數但結構完整、內部一致），C 在 W1–W2 就能把 bootstrap、Holm、per-class、sensitivity 全部跑通。
+
+---
+
+## 5. 契約 4：Tables & Figures（C → D）
+
+### 路徑與固定檔名
+
+```
+tables/table1_dataset.tex      figures/figure1_hierarchy.pdf
+tables/table2_main.tex
+tables/table3_regimes.tex
+tables/manifest.json
+```
+
+檔名在契約凍結時固定，D 的 `\input{}` 因此不會因 C 改名而斷。
+
+### 規格
+
+| 項目 | 規定 | 理由 |
+|---|---|---|
+| `.tex` 內容 | **只含 `tabular` 環境**，不含 `\begin{table}`、`\caption`、`\label` | D 在 8 頁預算下需要自行決定浮動位置、寬度與 `\small`；C 包死會讓 D 無法壓版 |
+| Caption 文字 | 另存 `tables/table2_main_caption.txt`（純文字） | 內容歸 C（數字正確性），排版歸 D |
+| 巨集依賴 | 僅允許 `booktabs`、`multirow`；不得引入其他 package | NTCIR ACM 模板衝突風險 |
+| 數字格式 | C 端定案（小數位、± 寫法），D 不得手改 | 「所有數字由 script 生成，不手抄」 |
+| 圖 | 向量 PDF，字型嵌入，寬度可縮至單欄不失真 | |
+
+### `tables/manifest.json`
+
+```jsonc
+{
+  "contract_version": "1.0",
+  "generated_at": "...", "git_sha": "...",
+  "tables": {
+    "table2_main.tex": {
+      "source_script": "make_table2.py",
+      "input_files": ["results/pdf_group_seed42_M0.json", "..."],
+      "input_sha256": {"results/pdf_group_seed42_M0.json": "..."}
+    }
+  }
+}
+```
+
+這份 manifest 是 claim–evidence audit 的骨幹：文中任一數字都能回溯到產生它的 script 與輸入 checksum。
+
+### D 的替代輸入
+
+A 提供 placeholder `.tex`（欄數、欄序、對齊與正式版相同，數值填 `--`），D 從 W1 就能排版並測 8 頁預算。
+
+---
+
+## 6. A 的交付清單與現況
+
+| 交付物 | 狀態 | 說明 |
+|---|---|---|
+| `paper/splits.py` | ✅ | 兩種 protocol 的 generator，純標準庫 |
+| `splits/{protocol}_seed{seed}.json` | ✅ 6 檔 | **真實檔案，同時就是契約 1 的範例檔**；不另做複本，避免兩份真相漂移 |
+| `paper/run_training.py` | ✅ | 訓練驅動腳本：讀 split → 只用 train_ids 訓練 → 對 calib／test 推論 → 寫成契約格式。B 只要跑，不必自己拼裝 |
+| `paper/artifacts.py` | ✅ | 契約檔的唯一寫入點；驅動腳本與 fixture 產生器共用，兩者結構不可能分岔 |
+| `paper/evaluate.py` | ✅ | 由逐列 predictions 算出契約 3 的聚合摘要 |
+| `contracts/states.json` | ✅ | 由 `paper/labels.py` 產生，測試斷言不漂移 |
+| `contracts/make_fixtures.py` | ✅ | 合成機率 fixtures，`concentration` 控制 gold 集中度 |
+| `contracts/make_examples.py` | ✅ | 契約 3 的 M0–M6 predictions／results 與契約 4 的 placeholder `.tex` |
+| `contracts/examples/probs/pdf_group_seed42_r0/` | ✅ | 契約 2 範例 bundle |
+| `contracts/examples/predictions/`、`results/` | ✅ 各 7 檔 | 契約 3 範例，M0–M6 齊全 |
+| `contracts/examples/tables/` | ✅ | 契約 4 的 tabular placeholder、caption 與 manifest |
+
+**範例檔才是真正解鎖他人的東西。**規格文件本身不解除任何人的封鎖。
+
+**格式正確性在產出當下就強制，而不是事後檢查**：generator 產不出違反 same-document 覆蓋的 split，`write_probs_bundle` 拒收與 manifest 長度不符的陣列，驅動腳本從 manifest 取列所以對齊無從漂移，`run_training.py` 未釘 revision 就不啟動。測試套件對真實產出的檔案斷言這些性質。
+
+### 6.1 已定案：folds 隨 seed 改變
+
+**每個 seed 各自抽自己的一組 folds**，seed 同時決定切分與訓練隨機性，兩者不拆開。
+
+理由是全部只有 49 份 PDF，切分運氣的影響很大；folds 若跨 seed 固定，三個 seed 會一起繼承同一個運氣，seed std 反而看不出來。實測三個 seed 的 fold 0 重疊率為 17%（`pdf_group`）與 22.5%（`row_strat`），`tests/test_splits.py::test_seeds_produce_different_partitions` 鎖住此性質。
+
+已知代價：變異來源無法拆解，因此 seed std 只能描述成整條流程的變異，不能說成模型穩定度。同一 seed 內 M0–M6 仍共用完全相同的 Test rows，方法間的配對比較與投稿前檢查清單皆不受影響。
