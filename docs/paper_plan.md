@@ -346,7 +346,7 @@ Development／test、各類 support、合法 tuple 數、PDF／company 數，以
 - stdout/stderr log、checkpoint 選擇規則與 artifact checksums。
 - 由單一 evaluation script 產生的 JSON／CSV tables，避免人工抄分數。
 
-artifact 的版控規則：`splits/` 與 `results/` 進 git（純文字、體積小，且本身就是 protocol 與結果的證據）；`predictions/` 只收 `.csv.gz`；`probs/` 的 `.npy` 與模型權重不進 git，改以 release archive／可追蹤儲存保存，並在 manifest 放 checksum。
+artifact 的版控規則：`splits/`、`results/` 與 `probs/` 都進 git（`probs/` 每個 rotation 僅 72 KB、30 個共約 2.1 MB，進 git 可省去 B 到 A 的傳輸環節，並讓整份研究從 clone 就能重現）；`predictions/` 只收 `.csv.gz`；模型權重（每個 rotation 約 1.3 GB）不進 git，改以 release archive／可追蹤儲存保存，checksum 記在 bundle 的 `meta.json`。
 
 在 GPU 產出正式機率前，A 使用具已知預期輸出的 synthetic probability fixtures smoke-test M0–M6。主表數字一律只能來自新 protocol 的 cross-fitted probabilities。
 

@@ -3,13 +3,15 @@
 # splits/      COMMITTED  — small JSON, and it is the paper's evidence of protocol
 # results/     COMMITTED  — aggregate summaries, small
 # predictions/ COMMITTED as .csv.gz only — 42 files x 2000 rows; gzip keeps it ~2MB
-# probs/       IGNORED    — float32 arrays from B, large; tracked by checksum in
-#                           meta.json and archived out-of-band
+# probs/       COMMITTED  — 72 KB per rotation, ~2.1 MB for all 30. Small enough
+#                           that committing them removes the B-to-A transfer step
+#                           entirely and makes the study reproducible from a clone.
+# model.pt     IGNORED    — ~1.3 GB per rotation; archived out-of-band, and the
+#                           bundle's meta.json carries its checksum
 #
-# The leading slashes matter: an unanchored "probs/" would also swallow
-# contracts/examples/probs/, and git does not descend into an excluded
-# directory, so no later negation could bring the example bundle back.
-/probs/
+# The leading slash matters: an unanchored "predictions/" would also swallow
+# contracts/examples/predictions/, and git does not descend into an excluded
+# directory, so no later negation could bring the example files back.
 /predictions/*.csv
 
 # Model weights and caches
@@ -17,6 +19,7 @@
 *.npz
 *.pt
 !contracts/examples/**/*.npy
+!/probs/**/*.npy
 /checkpoints/
 /checkpoints_*/
 
