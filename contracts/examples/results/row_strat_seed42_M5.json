@@ -1,0 +1,154 @@
+{
+ "contract_version": "1.0",
+ "protocol": "row_strat",
+ "seed": 42,
+ "method": "M5",
+ "predictions_file": "predictions/row_strat_seed42_M5.csv.gz",
+ "predictions_sha256": "sha256:0a93fd4963cd944e1a74914ede192ab1c753ddaa108c08f641d1109d3c105158",
+ "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+ "git_sha": "0fe2f4afba77b27067e02d735af5bcef681ce9b2-dirty",
+ "created_at": "2026-08-12T19:23:28.141155+00:00",
+ "n_rows": 2000,
+ "weighted_macro_f1": 0.7428045979291301,
+ "per_field_macro_f1": {
+  "promise_status": 0.8990077958894401,
+  "verification_timeline": 0.6913207542208059,
+  "evidence_status": 0.8280264667389746,
+  "evidence_quality": 0.6025628159897964
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.9656626506024096,
+   "No": 0.8323529411764706
+  },
+  "verification_timeline": {
+   "already": 0.8247422680412371,
+   "within_2_years": 0.23711340206185566,
+   "between_2_and_5_years": 0.804040404040404,
+   "more_than_5_years": 0.7583547557840618,
+   "N/A": 0.8323529411764706
+  },
+  "evidence_status": {
+   "Yes": 0.9165739710789766,
+   "No": 0.7351524879614767,
+   "N/A": 0.8323529411764706
+  },
+  "evidence_quality": {
+   "Clear": 0.859086491739553,
+   "Not Clear": 0.6896551724137931,
+   "Misleading": 0.03418803418803419,
+   "N/A": 0.827321565617805
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 1627,
+   "No": 373
+  },
+  "verification_timeline": {
+   "already": 718,
+   "within_2_years": 34,
+   "between_2_and_5_years": 498,
+   "more_than_5_years": 377,
+   "N/A": 373
+  },
+  "evidence_status": {
+   "Yes": 1345,
+   "No": 282,
+   "N/A": 373
+  },
+  "evidence_quality": {
+   "Clear": 1118,
+   "Not Clear": 225,
+   "Misleading": 2,
+   "N/A": 655
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.6778025705783703,
+  "evidence_status_given_ps_yes": 0.8511723518998702,
+  "evidence_quality_given_es_yes": 0.557197537498021
+ },
+ "tuple_exact_match": 0.7435,
+ "invalid_tuple_rate": 0.0,
+ "synthetic": true,
+ "decision_params": {
+  "0": {
+   "calibration_biases": "<per-class biases>",
+   "fallback_applied": {
+    "evidence_quality": [
+     "Misleading"
+    ]
+   },
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "1": {
+   "calibration_biases": "<per-class biases>",
+   "fallback_applied": {},
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "2": {
+   "calibration_biases": "<per-class biases>",
+   "fallback_applied": {
+    "evidence_quality": [
+     "Misleading"
+    ]
+   },
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "3": {
+   "calibration_biases": "<per-class biases>",
+   "fallback_applied": {},
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "4": {
+   "calibration_biases": "<per-class biases>",
+   "fallback_applied": {
+    "evidence_quality": [
+     "Misleading"
+    ]
+   },
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  }
+ }
+}

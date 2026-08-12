@@ -34,6 +34,7 @@ from paper.artifacts import (
 from paper.data import REPO_ROOT, index_by_id, load_dev
 from paper.evaluate import build_results, write_results
 from paper.labels import EVAL_FIELDS, FIELDS, STATES
+from paper.train_config import PROTOCOLS, SEEDS
 
 METHODS = ["M0", "M1", "M2", "M3", "M4", "M5", "M6"]
 
@@ -215,20 +216,26 @@ def make_contract4(out_root):
 
 def main():
     ap = argparse.ArgumentParser(description="Generate contract 3 and 4 example files.")
-    ap.add_argument("--protocol", default="pdf_group")
-    ap.add_argument("--seed", type=int, default=42)
+    # Defaults cover the full 2 x 3 x 7 = 42 files contract §4.1 specifies.
+    # A single (protocol, seed) would leave C unable to exercise the two paths
+    # that only exist across them: the 3-seed mean+/-std of Table 2, and the
+    # same-document vs document-disjoint comparison of Table 3.
+    ap.add_argument("--protocols", nargs="+", default=list(PROTOCOLS))
+    ap.add_argument("--seeds", nargs="+", type=int, default=list(SEEDS))
     ap.add_argument("--out", type=Path, default=REPO_ROOT / "contracts" / "examples")
     args = ap.parse_args()
 
-    with open(REPO_ROOT / "splits" / f"{args.protocol}_seed{args.seed}.json", encoding="utf-8") as f:
-        split = json.load(f)
     rows = load_dev()
-
-    print("contract 3 (predictions + results):")
-    make_contract3(split, rows, args.out)
+    n = 0
+    for protocol in args.protocols:
+        for seed in args.seeds:
+            with open(REPO_ROOT / "splits" / f"{protocol}_seed{seed}.json", encoding="utf-8") as f:
+                split = json.load(f)
+            print(f"contract 3 — {protocol} seed{seed}:")
+            n += len(make_contract3(split, rows, args.out))
     print("contract 4 (tables):")
     make_contract4(args.out)
-    print(f"\nall under {args.out}")
+    print(f"\n{n} predictions + {n} results under {args.out}")
     print("\nEVERY NUMBER ABOVE IS FABRICATED. The files are shaped correctly and")
     print("internally consistent so downstream code can run; the scores and their")
     print("ordering mean nothing and must never reach a table.")

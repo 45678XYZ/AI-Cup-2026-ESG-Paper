@@ -3,12 +3,11 @@
  "protocol": "pdf_group",
  "seed": 42,
  "method": "M3",
- "synthetic": true,
  "predictions_file": "predictions/pdf_group_seed42_M3.csv.gz",
- "predictions_sha256": "sha256:c9c6b238194080677ef806aeb0d345fbc350c712bdbd34f269d62a6cf62b598b",
+ "predictions_sha256": "sha256:788b4a882f5d154b51f844aa897eb5c6117e18dbb7b34057c31ce00fbc8d7745",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": null,
- "created_at": "2026-08-12T15:52:09.716769+00:00",
+ "git_sha": "0fe2f4afba77b27067e02d735af5bcef681ce9b2-dirty",
+ "created_at": "2026-08-12T19:23:26.763967+00:00",
  "n_rows": 2000,
  "weighted_macro_f1": 0.7519289616893157,
  "per_field_macro_f1": {
@@ -72,6 +71,7 @@
  },
  "tuple_exact_match": 0.756,
  "invalid_tuple_rate": 0.0,
+ "synthetic": true,
  "decision_params": {
   "0": {
    "calibration_biases": "<per-class biases>",

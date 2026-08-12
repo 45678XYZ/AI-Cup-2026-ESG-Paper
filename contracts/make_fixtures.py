@@ -111,7 +111,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Generate synthetic probability fixtures.")
     ap.add_argument("--protocol", default="pdf_group")
     ap.add_argument("--seed", type=int, default=42)
-    ap.add_argument("--rotations", nargs="+", type=int, default=[0])
+    # All five by default: the concatenation path (five test partitions -> one
+    # 2,000-row score) is where duplicate-id and row-count bugs live, and a
+    # single rotation cannot exercise it.
+    ap.add_argument("--rotations", nargs="+", type=int, default=[0, 1, 2, 3, 4])
     ap.add_argument("--concentration", type=float, default=DEFAULT_CONCENTRATION)
     ap.add_argument("--out", type=Path, default=REPO_ROOT / "contracts" / "examples" / "probs")
     args = ap.parse_args()
