@@ -84,6 +84,15 @@ def test_predictions_roundtrip_keeps_ids_as_strings(tmp_path):
     assert isinstance(back[0]["gold_state_id"], int)
 
 
+def test_writing_the_same_predictions_twice_gives_the_same_bytes(tmp_path):
+    """results/*.json binds a summary to its predictions by sha256, so the
+    checksum has to mean "these predictions" and not "this write"."""
+    records = _perfect_records()[:50]
+    a = write_predictions(tmp_path / "a.csv.gz", records)
+    b = write_predictions(tmp_path / "b.csv.gz", records)
+    assert file_sha256(a) == file_sha256(b)
+
+
 # --- the generated example files -----------------------------------------
 
 def test_examples_are_internally_consistent(examples):

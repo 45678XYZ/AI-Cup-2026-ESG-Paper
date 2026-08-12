@@ -12,6 +12,7 @@ on any machine.
 
 import csv
 import gzip
+import io
 import json
 import subprocess
 from datetime import datetime, timezone
@@ -149,10 +150,20 @@ def prediction_row(row, rotation, pred):
 
 
 def write_predictions(path, records):
-    """Write the gzipped per-row predictions CSV (contract §4.1)."""
+    """Write the gzipped per-row predictions CSV (contract §4.1).
+
+    ``mtime=0`` and ``filename=""`` keep the gzip container out of the bytes:
+    by default it stamps the current time and the output file's own name into
+    the header, so identical predictions hash differently on every rebuild.
+    That would put a fresh ``predictions_sha256`` in all 42 results files after
+    any regeneration, and leave contract §5's input_sha256 audit trail unable
+    to distinguish "the numbers changed" from "the file was written again".
+    """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with gzip.open(path, "wt", newline="", encoding="utf-8") as f:
+    with open(path, "wb") as raw, \
+            gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as gz, \
+            io.TextIOWrapper(gz, encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=PREDICTION_COLUMNS, quoting=csv.QUOTE_NONNUMERIC)
         writer.writeheader()
         writer.writerows(records)
