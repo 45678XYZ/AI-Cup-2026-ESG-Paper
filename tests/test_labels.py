@@ -2,8 +2,11 @@ import json
 from dataclasses import asdict, astuple
 
 from contracts.export_states import build as build_states_export
-from paper.data import REPO_ROOT
+from paper.data import REPO_ROOT, load_dev
 from paper.labels import (
+    CONDITIONAL_FREE_CLASSES,
+    CONDITIONAL_PINNED_CLASSES,
+    CONDITIONING_SUBSET,
     EVAL_FIELDS,
     INVALID_STATE_ID,
     STATE_TO_ID,
@@ -49,6 +52,38 @@ def test_label_order_matches_probability_columns():
     assert EVAL_FIELDS["promise_status"] == ["Yes", "No"]
     assert EVAL_FIELDS["evidence_quality"] == ["Clear", "Not Clear", "Misleading", "N/A"]
     assert EVAL_FIELDS["verification_timeline"][-1] == "N/A"
+
+
+def test_conditional_calibration_pins_exactly_the_structural_na_classes():
+    """M3/M6 estimate each child field's bias inside its parent's subset, where
+    the child's N/A can never appear. Those three biases are unidentifiable and
+    fixed at 0.0 by definition — the paper has to say so, so the code has to
+    know it rather than discover it at implementation time."""
+    assert CONDITIONAL_PINNED_CLASSES == {
+        "promise_status": [],
+        "verification_timeline": ["N/A"],
+        "evidence_status": ["N/A"],
+        "evidence_quality": ["N/A"],
+    }
+    assert CONDITIONAL_FREE_CLASSES["promise_status"] == ["Yes", "No"]
+    assert "N/A" not in CONDITIONAL_FREE_CLASSES["evidence_quality"]
+    for field in EVAL_FIELDS:
+        assert (sorted(CONDITIONAL_FREE_CLASSES[field] + CONDITIONAL_PINNED_CLASSES[field])
+                == sorted(EVAL_FIELDS[field]))
+
+
+def test_pinned_classes_really_have_no_support_in_their_conditioning_subset():
+    """Derived from the state space above; confirmed against the data here, so
+    the claim rests on the dataset and not only on the definition."""
+    rows = load_dev()
+    for field, (parent, parent_value) in CONDITIONING_SUBSET.items():
+        subset = [r for r in rows if r[parent] == parent_value]
+        assert subset
+        observed = {r[field] for r in subset}
+        for pinned in CONDITIONAL_PINNED_CLASSES[field]:
+            assert pinned not in observed, (field, pinned)
+        for free in CONDITIONAL_FREE_CLASSES[field]:
+            assert free in observed, (field, free)
 
 
 def test_states_json_matches_its_source():

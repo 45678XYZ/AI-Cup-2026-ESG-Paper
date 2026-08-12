@@ -18,15 +18,18 @@ from sklearn.metrics import f1_score
 
 from paper.artifacts import CONTRACT_VERSION, git_sha, now_iso
 from paper.data import file_sha256
-from paper.labels import EVAL_FIELDS, FIELD_ALIAS, FIELDS, INVALID_STATE_ID
+from paper.labels import (
+    CONDITIONING_SUBSET,
+    EVAL_FIELDS,
+    FIELD_ALIAS,
+    FIELDS,
+    INVALID_STATE_ID,
+)
 from paper.score import compute_per_field_f1, macro_f1, present_labels
 
-# Conditional metrics: the subset on which each field is actually meaningful.
-CONDITIONAL_SUBSETS = {
-    "verification_timeline": ("promise_status", "Yes"),
-    "evidence_status": ("promise_status", "Yes"),
-    "evidence_quality": ("evidence_status", "Yes"),
-}
+# The subset on which each field is actually meaningful. Shared with the
+# conditional calibration of M3/M6, which conditions on the same parents.
+CONDITIONAL_SUBSETS = CONDITIONING_SUBSET
 
 
 def _columns(records, field):

@@ -161,6 +161,20 @@ splits/{protocol}_seed{seed}.json      # protocol ∈ {pdf_group, row_strat}
 
 `Misleading` 僅 2 筆，且落在**兩份不同的 PDF**（id `10017` @ `202508071622071323.pdf`、id `11836` @ `aseh-2024-csr-ch-final.pdf`）。在 5-way PDF-group 切分下，這 2 筆最多落在 2 個 fold，因此**多數 rotation 的 calibration partition 會完全看不到 `Misleading`**。契約用 `calibration_absent_classes` 明確傳遞此事實，A 的 calibration 程式據此套用固定 fallback（bias = 0.0），並寫入 results manifest。這不是例外處理，是預期路徑。
 
+### conditional bias 的結構性 pinned 類別（與上面那件事**不同**）
+
+`calibration_absent_classes` 回答的是「這個 rotation 的 calibration partition 少了什麼」——隨資料而變。conditional calibration（M3／M6）還有第二組估不出來的 bias，它**不隨資料變、不隨 rotation 變、也不該進 manifest**：
+
+| 欄位 | 條件子集 | 該子集中永不出現 |
+|---|---|---|
+| `verification_timeline` | gold `PS=Yes` | `N/A` |
+| `evidence_status` | gold `PS=Yes` | `N/A` |
+| `evidence_quality` | gold `ES=Yes` | `N/A` |
+
+子欄的 `N/A` 不是該欄的一個類別，而是「父欄已排除此欄」的標記，所以它在條件子集中出現次數恆為 0，calibration 目標函數在該座標上**完全平坦**——是不可識別（unidentifiable），不只是無支撐。這三個 bias 因此**依 conditional calibration 的定義**固定為 0.0，不走稀有類 fallback 那條路。
+
+由 `paper/labels.py::CONDITIONAL_PINNED_CLASSES` 從 17 個狀態推導（不是另外抄一份），`tests/test_labels.py` 同時對狀態空間與真實資料斷言。論文必須據實說明其後果：M3 不受影響（projection 在父欄允許時本就不會選 N/A），但 **M6 受影響**——state 0 `(No, N/A, N/A, N/A)` 的四項 bias 有三項是 pinned，而 M5 的 global bias 四項都有估。M5 vs M6 的對比要連同「哪些參數存在」一起讀，因為那正是 conditioning 的意思。
+
 ### B 的替代輸入
 
 `splits/*.json` 本身就是範例檔——真實結構、真實 id，B 直接對著它寫執行腳本，不必等其他東西。

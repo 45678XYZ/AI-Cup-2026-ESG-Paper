@@ -140,6 +140,15 @@ z_t,c(x) = log p_t,c(x) + b_t,c
 
 所有 bias 只能由 calibration partition 學習，不能在同一批 OOF labels 上調好再回報同一批分數。`Misleading` 若在 calibration partition 沒有樣本，不單獨調其 bias，並在 manifest 記錄 fallback 規則。
 
+**conditional bias 的定義域（已定案，須寫入 Methods）**：conditional 估計下，子欄的 `N/A` 在其條件子集中出現次數**恆為 0**——gold `PS=Yes` 的樣本裡 VT、ES 永遠不是 `N/A`，gold `ES=Yes` 的樣本裡 EQ 永遠不是 `N/A`。這不是稀有類，是階層的定義使然，因此 calibration 目標函數在 `b_vt,N/A`、`b_es,N/A`、`b_eq,N/A` 三個座標上完全平坦，參數不可識別。
+
+故 **conditional bias 只定義在各欄的實質（admissible）類別上，三個結構性 `N/A` 依定義固定為 0.0**，不視為 fallback。由 `paper/labels.py::CONDITIONAL_PINNED_CLASSES` 從 17 個狀態推導，並有 unit tests 同時對狀態空間與真實資料斷言。
+
+兩項後果必須在論文說明，不可略過：
+
+1. **M3 不受影響**：projection 只在父欄要求時才輸出子欄 `N/A`，該情況下任何 bias 都改不了結果。
+2. **M6 受影響**：state 0 `(No, N/A, N/A, N/A)` 的分數含三個子欄 `N/A` 項，其 bias 全為 pinned，而 M5 的 global bias 四項皆有估計。因此 §4.4 的 M6 vs. M5 contrast 要讀成「conditional vs. global，**包含兩者可估參數集合的差異**」——這個差異正是 conditioning 的內容，不是實作瑕疵；但若不揭露，讀者會誤以為兩者只差在估計子集。
+
 ### 3.3 兩種合法化方式
 
 **Deterministic hierarchy projection**  

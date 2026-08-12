@@ -87,3 +87,59 @@ def row_to_state_id(row: dict) -> int:
 
 def is_valid_tuple(ps: str, vt: str, es: str, eq: str) -> bool:
     return (ps, vt, es, eq) in STATE_TO_ID
+
+
+# --------------------------------------------------------------------------
+# Conditional (hierarchy-constrained) calibration
+# --------------------------------------------------------------------------
+# Which subset each field's conditional bias is estimated on (plan section 3.2).
+# ``promise_status`` is absent because it is estimated on every row.
+CONDITIONING_SUBSET = {
+    "verification_timeline": ("promise_status", "Yes"),
+    "evidence_status":       ("promise_status", "Yes"),
+    "evidence_quality":      ("evidence_status", "Yes"),
+}
+
+
+def _conditional_class_split() -> tuple[dict, dict]:
+    """Split each field's classes into those a conditional bias can move and
+    those it structurally cannot.
+
+    A child field's ``N/A`` is not one of its classes in any meaningful sense:
+    it is the marker that the parent ruled the field out. It therefore never
+    occurs inside the conditioning subset -- not rarely, but *never*, for every
+    rotation and every dataset obeying the hierarchy -- so the calibration
+    objective is completely flat in its bias and the parameter is
+    unidentifiable rather than merely unsupported.
+
+    Those biases are consequently fixed at 0.0 **by definition of conditional
+    calibration**, not by the absent-class fallback that covers rare classes
+    such as ``Misleading``. Two consequences the paper has to state:
+
+      * M3 is unaffected -- the projection never selects a child ``N/A`` unless
+        the parent forced it, where no bias can change the outcome;
+      * M6 is affected -- state 0 ``(No, N/A, N/A, N/A)`` scores three ``N/A``
+        columns, so three of its four bias terms are pinned while M5's global
+        bias fits all four. The M5-vs-M6 contrast must be read as
+        "conditional vs global" *including* this difference in which
+        parameters exist, because it is what conditioning means.
+
+    Derived from ``STATES`` so it follows the hierarchy instead of restating it.
+    """
+    free, pinned = {}, {}
+    for field in FIELDS:
+        if field not in CONDITIONING_SUBSET:
+            free[field], pinned[field] = list(EVAL_FIELDS[field]), []
+            continue
+        parent, parent_value = CONDITIONING_SUBSET[field]
+        live = {
+            getattr(s, FIELD_ALIAS[field]) for s in STATES
+            if getattr(s, FIELD_ALIAS[parent]) == parent_value
+        }
+        free[field] = [c for c in EVAL_FIELDS[field] if c in live]
+        pinned[field] = [c for c in EVAL_FIELDS[field] if c not in live]
+    return free, pinned
+
+
+# Classes a conditional bias is estimated for / pinned at 0.0 by definition.
+CONDITIONAL_FREE_CLASSES, CONDITIONAL_PINNED_CLASSES = _conditional_class_split()
