@@ -1,0 +1,32 @@
+# --- Contract artifacts: what is and is not version controlled ---
+#
+# splits/      COMMITTED  — small JSON, and it is the paper's evidence of protocol
+# results/     COMMITTED  — aggregate summaries, small
+# predictions/ COMMITTED as .csv.gz only — 42 files x 2000 rows; gzip keeps it ~2MB
+# probs/       IGNORED    — float32 arrays from B, large; tracked by checksum in
+#                           meta.json and archived out-of-band
+#
+# The leading slashes matter: an unanchored "probs/" would also swallow
+# contracts/examples/probs/, and git does not descend into an excluded
+# directory, so no later negation could bring the example bundle back.
+/probs/
+/predictions/*.csv
+
+# Model weights and caches
+*.npy
+*.npz
+*.pt
+!contracts/examples/**/*.npy
+/checkpoints/
+/checkpoints_*/
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+.DS_Store
