@@ -39,7 +39,7 @@ paper/          study code (the only importable package)
   artifacts.py    the only writer of contract files
   evaluate.py     per-row predictions -> aggregate summary
 contracts/      interface schemas and example files
-docs/           paper plan, proposal, interface contract
+docs/           paper plan and interface contract
 splits/         generated split manifests (version controlled)
 tests/          pytest suite
 dataset/        AI CUP development and test data
