@@ -1,14 +1,23 @@
-"""Turn per-row predictions into the contract-3 aggregate summary.
+"""Turn per-row predictions into the contract-3 results file.
 
 Every number in ``results/*.json`` comes from here, computed from the
 predictions CSV and nothing else, so the summary is always reproducible from
 the per-row file it accompanies.
+
+``build_results`` owns the whole contract-3 object, envelope included, because
+the alternative is two writers: one in the real M0-M6 runner and one in the
+synthetic example generator. Those would drift, and C would have validated the
+statistics against the shape that lost.
 """
 
+import json
 from collections import Counter
+from pathlib import Path
 
 from sklearn.metrics import f1_score
 
+from paper.artifacts import CONTRACT_VERSION, git_sha, now_iso
+from paper.data import file_sha256
 from paper.labels import EVAL_FIELDS, FIELD_ALIAS, FIELDS, INVALID_STATE_ID
 from paper.score import compute_per_field_f1, macro_f1, present_labels
 
@@ -72,3 +81,37 @@ def summarise_predictions(records) -> dict:
             r["pred_state_id"] == INVALID_STATE_ID for r in records
         ) / n if n else 0.0,
     }
+
+
+def build_results(records, *, protocol, seed, method, predictions_path,
+                  data_checksum, **extra) -> dict:
+    """The complete contract-3 results object for one (protocol, seed, method).
+
+    ``predictions_path`` is the file ``records`` was written to; it is hashed
+    here so the summary cannot be paired with a different per-row file than the
+    one it describes. ``extra`` carries the fields outside the frozen part of
+    the contract -- ``decision_params``, and ``synthetic`` for fixtures.
+    """
+    predictions_path = Path(predictions_path)
+    return {
+        "contract_version": CONTRACT_VERSION,
+        "protocol": protocol,
+        "seed": seed,
+        "method": method,
+        "predictions_file": f"predictions/{predictions_path.name}",
+        "predictions_sha256": file_sha256(predictions_path),
+        "data_checksum": data_checksum,
+        "git_sha": git_sha(),
+        "created_at": now_iso(),
+        **summarise_predictions(records),
+        **extra,
+    }
+
+
+def write_results(path, results) -> Path:
+    """Write one ``results/{protocol}_seed{seed}_{method}.json``."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=1)
+    return path

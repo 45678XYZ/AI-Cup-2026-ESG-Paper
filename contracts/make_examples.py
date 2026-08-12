@@ -31,8 +31,8 @@ from paper.artifacts import (
     prediction_row,
     write_predictions,
 )
-from paper.data import REPO_ROOT, file_sha256, index_by_id, load_dev
-from paper.evaluate import summarise_predictions
+from paper.data import REPO_ROOT, index_by_id, load_dev
+from paper.evaluate import build_results, write_results
 from paper.labels import EVAL_FIELDS, FIELDS, STATES
 
 METHODS = ["M0", "M1", "M2", "M3", "M4", "M5", "M6"]
@@ -84,19 +84,17 @@ def make_contract3(split, rows, out_root, methods=METHODS):
         pred_path = Path(out_root) / "predictions" / f"{protocol}_seed{seed}_{method}.csv.gz"
         write_predictions(pred_path, records)
 
-        summary = {
-            "contract_version": CONTRACT_VERSION,
-            "protocol": protocol,
-            "seed": seed,
-            "method": method,
-            "synthetic": True,
-            "predictions_file": f"predictions/{pred_path.name}",
-            "predictions_sha256": file_sha256(pred_path),
-            "data_checksum": split["data_checksum"],
-            "git_sha": git_sha(),
-            "created_at": now_iso(),
-            **summarise_predictions(records),
-            "decision_params": {
+        # Same builder the real M0-M6 runner will use, so the envelope C
+        # validates against here is the envelope C receives in W3.
+        summary = build_results(
+            records,
+            protocol=protocol,
+            seed=seed,
+            method=method,
+            predictions_path=pred_path,
+            data_checksum=split["data_checksum"],
+            synthetic=True,
+            decision_params={
                 str(rot["k"]): {
                     "calibration_biases": None if method in ("M0", "M1", "M4") else "<per-class biases>",
                     "fallback_applied": rot["calibration_absent_classes"],
@@ -104,11 +102,10 @@ def make_contract3(split, rows, out_root, methods=METHODS):
                 }
                 for rot in split["rotations"]
             },
-        }
-        res_path = Path(out_root) / "results" / f"{protocol}_seed{seed}_{method}.json"
-        res_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(res_path, "w", encoding="utf-8") as f:
-            json.dump(summary, f, ensure_ascii=False, indent=1)
+        )
+        res_path = write_results(
+            Path(out_root) / "results" / f"{protocol}_seed{seed}_{method}.json", summary,
+        )
 
         written.append((pred_path, res_path))
         print(f"  {method}: weighted_macro_f1={summary['weighted_macro_f1']:.4f} "

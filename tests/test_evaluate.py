@@ -6,8 +6,8 @@ import pytest
 
 from contracts.make_examples import make_contract3, make_contract4
 from paper.artifacts import prediction_row, read_predictions, write_predictions
-from paper.data import load_dev
-from paper.evaluate import summarise_predictions
+from paper.data import file_sha256, load_dev
+from paper.evaluate import build_results, summarise_predictions, write_results
 from paper.labels import FIELDS
 from paper.score import compute_weighted_macro_f1
 from paper.splits import build_split
@@ -116,3 +116,22 @@ def test_contract4_placeholders_are_bare_tabulars(examples):
         assert r"\begin{table}" not in tex
         assert r"\caption" not in tex
         assert (examples / "tables" / f"{name}_caption.txt").exists()
+
+
+# --- the results envelope -------------------------------------------------
+
+def test_results_envelope_binds_a_summary_to_its_own_predictions_file(tmp_path):
+    """build_results is the single writer of the contract-3 object, so the
+    envelope C validated against is the envelope the real runner emits."""
+    records = _perfect_records()
+    path = write_predictions(tmp_path / "pdf_group_seed42_M6.csv.gz", records)
+    results = build_results(
+        records, protocol="pdf_group", seed=42, method="M6",
+        predictions_path=path, data_checksum="sha256:abc", synthetic=True,
+    )
+    assert results["predictions_file"] == "predictions/pdf_group_seed42_M6.csv.gz"
+    assert results["predictions_sha256"] == file_sha256(path)
+    assert results["weighted_macro_f1"] == summarise_predictions(records)["weighted_macro_f1"]
+
+    written = json.load(open(write_results(tmp_path / "r.json", results), encoding="utf-8"))
+    assert written == results
