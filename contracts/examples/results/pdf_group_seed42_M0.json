@@ -1,0 +1,114 @@
+{
+ "contract_version": "1.0",
+ "protocol": "pdf_group",
+ "seed": 42,
+ "method": "M0",
+ "synthetic": true,
+ "predictions_file": "predictions/pdf_group_seed42_M0.csv.gz",
+ "predictions_sha256": "sha256:c529b617372dbd19fc8fb02e88d883061e162275d84364f8a4f6b83cce9b57e1",
+ "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+ "git_sha": null,
+ "created_at": "2026-08-12T15:52:09.541974+00:00",
+ "n_rows": 2000,
+ "weighted_macro_f1": 0.6825864407030954,
+ "per_field_macro_f1": {
+  "promise_status": 0.7739493132390001,
+  "verification_timeline": 0.6736106136906692,
+  "evidence_status": 0.7438832610855092,
+  "evidence_quality": 0.5816857362172636
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.8956776080597985,
+   "No": 0.6522210184182016
+  },
+  "verification_timeline": {
+   "already": 0.8264462809917356,
+   "within_2_years": 0.30434782608695654,
+   "between_2_and_5_years": 0.7665647298674821,
+   "more_than_5_years": 0.7163781624500666,
+   "N/A": 0.7543160690571049
+  },
+  "evidence_status": {
+   "Yes": 0.8632513110125051,
+   "No": 0.6463768115942029,
+   "N/A": 0.7220216606498195
+  },
+  "evidence_quality": {
+   "Clear": 0.8578336557059961,
+   "Not Clear": 0.6317757009345795,
+   "Misleading": 0.029197080291970802,
+   "N/A": 0.807936507936508
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 1627,
+   "No": 373
+  },
+  "verification_timeline": {
+   "already": 718,
+   "within_2_years": 34,
+   "between_2_and_5_years": 498,
+   "more_than_5_years": 377,
+   "N/A": 373
+  },
+  "evidence_status": {
+   "Yes": 1345,
+   "No": 282,
+   "N/A": 373
+  },
+  "evidence_quality": {
+   "Clear": 1118,
+   "Not Clear": 225,
+   "Misleading": 2,
+   "N/A": 655
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.6799545196910046,
+  "evidence_status_given_ps_yes": 0.7794868483820072,
+  "evidence_quality_given_es_yes": 0.5407507285318379
+ },
+ "tuple_exact_match": 0.3895,
+ "invalid_tuple_rate": 0.458,
+ "decision_params": {
+  "0": {
+   "calibration_biases": null,
+   "fallback_applied": {},
+   "decoder": null
+  },
+  "1": {
+   "calibration_biases": null,
+   "fallback_applied": {
+    "evidence_quality": [
+     "Misleading"
+    ]
+   },
+   "decoder": null
+  },
+  "2": {
+   "calibration_biases": null,
+   "fallback_applied": {
+    "evidence_quality": [
+     "Misleading"
+    ]
+   },
+   "decoder": null
+  },
+  "3": {
+   "calibration_biases": null,
+   "fallback_applied": {},
+   "decoder": null
+  },
+  "4": {
+   "calibration_biases": null,
+   "fallback_applied": {
+    "evidence_quality": [
+     "Misleading"
+    ]
+   },
+   "decoder": null
+  }
+ }
+}

@@ -1,0 +1,173 @@
+{
+ "contract_version": "1.0",
+ "source": "paper/labels.py",
+ "eval_fields": {
+  "promise_status": [
+   "Yes",
+   "No"
+  ],
+  "verification_timeline": [
+   "already",
+   "within_2_years",
+   "between_2_and_5_years",
+   "more_than_5_years",
+   "N/A"
+  ],
+  "evidence_status": [
+   "Yes",
+   "No",
+   "N/A"
+  ],
+  "evidence_quality": [
+   "Clear",
+   "Not Clear",
+   "Misleading",
+   "N/A"
+  ]
+ },
+ "field_weights": {
+  "promise_status": 0.2,
+  "verification_timeline": 0.15,
+  "evidence_status": 0.3,
+  "evidence_quality": 0.35
+ },
+ "n_states": 17,
+ "states": [
+  {
+   "state_id": 0,
+   "ps": "No",
+   "vt": "N/A",
+   "es": "N/A",
+   "eq": "N/A",
+   "kind": "ps_no"
+  },
+  {
+   "state_id": 1,
+   "ps": "Yes",
+   "vt": "already",
+   "es": "No",
+   "eq": "N/A",
+   "kind": "es_no"
+  },
+  {
+   "state_id": 2,
+   "ps": "Yes",
+   "vt": "already",
+   "es": "Yes",
+   "eq": "Clear",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 3,
+   "ps": "Yes",
+   "vt": "already",
+   "es": "Yes",
+   "eq": "Not Clear",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 4,
+   "ps": "Yes",
+   "vt": "already",
+   "es": "Yes",
+   "eq": "Misleading",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 5,
+   "ps": "Yes",
+   "vt": "within_2_years",
+   "es": "No",
+   "eq": "N/A",
+   "kind": "es_no"
+  },
+  {
+   "state_id": 6,
+   "ps": "Yes",
+   "vt": "within_2_years",
+   "es": "Yes",
+   "eq": "Clear",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 7,
+   "ps": "Yes",
+   "vt": "within_2_years",
+   "es": "Yes",
+   "eq": "Not Clear",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 8,
+   "ps": "Yes",
+   "vt": "within_2_years",
+   "es": "Yes",
+   "eq": "Misleading",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 9,
+   "ps": "Yes",
+   "vt": "between_2_and_5_years",
+   "es": "No",
+   "eq": "N/A",
+   "kind": "es_no"
+  },
+  {
+   "state_id": 10,
+   "ps": "Yes",
+   "vt": "between_2_and_5_years",
+   "es": "Yes",
+   "eq": "Clear",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 11,
+   "ps": "Yes",
+   "vt": "between_2_and_5_years",
+   "es": "Yes",
+   "eq": "Not Clear",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 12,
+   "ps": "Yes",
+   "vt": "between_2_and_5_years",
+   "es": "Yes",
+   "eq": "Misleading",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 13,
+   "ps": "Yes",
+   "vt": "more_than_5_years",
+   "es": "No",
+   "eq": "N/A",
+   "kind": "es_no"
+  },
+  {
+   "state_id": 14,
+   "ps": "Yes",
+   "vt": "more_than_5_years",
+   "es": "Yes",
+   "eq": "Clear",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 15,
+   "ps": "Yes",
+   "vt": "more_than_5_years",
+   "es": "Yes",
+   "eq": "Not Clear",
+   "kind": "es_yes"
+  },
+  {
+   "state_id": 16,
+   "ps": "Yes",
+   "vt": "more_than_5_years",
+   "es": "Yes",
+   "eq": "Misleading",
+   "kind": "es_yes"
+  }
+ ]
+}

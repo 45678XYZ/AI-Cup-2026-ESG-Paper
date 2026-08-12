@@ -1,0 +1,1 @@
+Controlled comparison of decision rules on identical base probabilities and identical test rows. Cells are seed mean$\pm$std.

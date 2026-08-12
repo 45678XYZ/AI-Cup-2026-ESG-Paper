@@ -1,0 +1,23 @@
+{
+ "contract_version": "1.0",
+ "synthetic": true,
+ "generated_at": "2026-08-12T15:52:09.924408+00:00",
+ "git_sha": null,
+ "tables": {
+  "table1_dataset.tex": {
+   "source_script": "contracts/make_examples.py",
+   "input_files": [],
+   "input_sha256": {}
+  },
+  "table2_main.tex": {
+   "source_script": "contracts/make_examples.py",
+   "input_files": [],
+   "input_sha256": {}
+  },
+  "table3_regimes.tex": {
+   "source_script": "contracts/make_examples.py",
+   "input_files": [],
+   "input_sha256": {}
+  }
+ }
+}

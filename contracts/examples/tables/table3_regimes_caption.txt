@@ -1,0 +1,1 @@
+Same-document versus document-disjoint evaluation. $\Delta$ is the gap between two estimation targets, not a bias estimate.
