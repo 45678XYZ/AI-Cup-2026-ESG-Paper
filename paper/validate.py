@@ -385,6 +385,11 @@ def main() -> None:
     if args.all:
         paths += sorted(p for p in (REPO_ROOT / "probs").glob("*") if p.is_dir())
         paths += sorted((REPO_ROOT / "predictions").glob("*.csv.gz"))
+        if not paths:
+            # The normal state of a fresh clone: B has not delivered yet.
+            # Nothing to check is not a usage error.
+            print("nothing to validate: probs/ and predictions/ are empty")
+            return
     if not paths:
         ap.error("give at least one path, or --all")
 
