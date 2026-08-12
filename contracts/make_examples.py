@@ -119,14 +119,19 @@ def make_contract3(split, rows, out_root, methods=METHODS):
 
 PLACEHOLDER = "--"
 
-TABLE2 = r"""\begin{tabular}{llrrrrrrr}
+# Column set is plan §5 Table 2, including Tuple Acc.: D measures the 8-page
+# budget against this file, so a column missing here is a column D discovers in
+# W4 when the table no longer fits.
+TABLE2 = r"""\begin{tabular}{llrrrrrrrr}
 \toprule
-ID & Calibration & Decoding & Weighted F1 & PS & VT & ES & EQ & Invalid \%% \\
+ID & Calibration & Decoding & Weighted F1 & PS & VT & ES & EQ & Tuple Acc. & Invalid \%% \\
 \midrule
 %s
 \bottomrule
 \end{tabular}
 """
+
+TABLE2_NUMERIC_COLUMNS = 7
 
 TABLE2_ROWS = [
     ("M0", "None", "Independent"), ("M1", "None", "Projection"),
@@ -177,7 +182,7 @@ def make_contract4(out_root):
     tables_dir.mkdir(parents=True, exist_ok=True)
 
     body = "\n".join(
-        f"{mid} & {cal} & {dec} & " + " & ".join([PLACEHOLDER] * 6) + r" \\"
+        f"{mid} & {cal} & {dec} & " + " & ".join([PLACEHOLDER] * TABLE2_NUMERIC_COLUMNS) + r" \\"
         for mid, cal, dec in TABLE2_ROWS
     )
     files = {

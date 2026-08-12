@@ -149,6 +149,19 @@ def test_contract4_placeholders_are_bare_tabulars(examples):
         assert (examples / "tables" / f"{name}_caption.txt").exists()
 
 
+def test_table2_placeholder_carries_every_column_the_plan_specifies(examples):
+    """D measures the 8-page budget against this file. A column that appears
+    only when the real numbers arrive is a layout problem discovered in W4."""
+    tex = (examples / "tables" / "table2_main.tex").read_text(encoding="utf-8")
+    header = [c.strip() for c in tex.splitlines()[2].removesuffix(r"\\").split("&")]
+    assert header == ["ID", "Calibration", "Decoding", "Weighted F1",
+                      "PS", "VT", "ES", "EQ", "Tuple Acc.", r"Invalid \%"]
+    assert tex.splitlines()[0] == r"\begin{tabular}{ll" + "r" * 8 + "}"
+    for line in tex.splitlines():
+        if line.startswith("M"):
+            assert len(line.removesuffix(r"\\").split("&")) == len(header)
+
+
 # --- the results envelope -------------------------------------------------
 
 def test_results_envelope_binds_a_summary_to_its_own_predictions_file(tmp_path):
