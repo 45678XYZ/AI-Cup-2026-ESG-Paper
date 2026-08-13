@@ -52,7 +52,7 @@ dataset/        AI CUP development and test data
 Everything except training runs on CPU with three packages:
 
 ```bash
-pip install numpy scikit-learn pytest
+pip install numpy scikit-learn pandas pytest
 pytest -q                      # no GPU, no model download
 ```
 
