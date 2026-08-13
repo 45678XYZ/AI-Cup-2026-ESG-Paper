@@ -14,14 +14,16 @@ import csv
 import gzip
 import io
 import json
-import subprocess
-from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
 
-from paper.data import REPO_ROOT, file_sha256
+from paper.data import file_sha256
 from paper.labels import EVAL_FIELDS, FIELD_ALIAS, FIELDS, tuple_to_state_id
+
+# Re-exported: these are provenance stamps rather than writers, but every
+# caller that writes a contract file needs them from here.
+from paper.provenance import git_sha, now_iso  # noqa: F401
 
 CONTRACT_VERSION = "1.0"
 
@@ -31,30 +33,6 @@ PREDICTION_COLUMNS = (
     + [f"pred_{a}" for a in FIELD_ALIAS.values()]
     + ["gold_state_id", "pred_state_id"]
 )
-
-
-def git_sha(repo_root=REPO_ROOT):
-    """Current commit, suffixed ``-dirty`` when the tree has changes.
-
-    Returns None outside a repository or before the first commit; callers
-    record that as-is rather than inventing a value.
-    """
-    try:
-        sha = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=repo_root,
-            capture_output=True, text=True, check=True,
-        ).stdout.strip()
-        dirty = subprocess.run(
-            ["git", "status", "--porcelain"], cwd=repo_root,
-            capture_output=True, text=True, check=True,
-        ).stdout.strip()
-        return sha + ("-dirty" if dirty else "")
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None
-
-
-def now_iso():
-    return datetime.now(timezone.utc).isoformat()
 
 
 # --------------------------------------------------------------------------

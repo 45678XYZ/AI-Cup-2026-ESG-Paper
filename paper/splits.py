@@ -26,13 +26,12 @@ import argparse
 import hashlib
 import json
 import random
-import subprocess
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
 from pathlib import Path
 
 from paper.data import REPO_ROOT, canonical_row_order, data_checksum, load_dev
 from paper.labels import EVAL_FIELDS, row_to_state_id
+from paper.provenance import git_sha, now_iso
 from paper.train_config import N_FOLDS, SEEDS
 
 CONTRACT_VERSION = "1.0"
@@ -204,8 +203,8 @@ def build_split(protocol, seed, rows=None):
         "protocol": protocol,
         "seed": seed,
         "data_checksum": data_checksum(rows),
-        "git_sha": _git_sha(),
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "git_sha": git_sha(),
+        "created_at": now_iso(),
         "generator": "paper/splits.py",
         "resample_attempts": attempt,
         "canonical_row_order": order,
@@ -295,21 +294,6 @@ def split_fingerprint(split) -> str:
             for row_id in rot[name]:
                 h.update(b"\x1f" + row_id.encode())
     return "sha256:" + h.hexdigest()
-
-
-def _git_sha():
-    try:
-        sha = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT,
-            capture_output=True, text=True, check=True,
-        ).stdout.strip()
-        dirty = subprocess.run(
-            ["git", "status", "--porcelain"], cwd=REPO_ROOT,
-            capture_output=True, text=True, check=True,
-        ).stdout.strip()
-        return sha + ("-dirty" if dirty else "")
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None
 
 
 def main():
