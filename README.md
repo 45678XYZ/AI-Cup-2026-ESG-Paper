@@ -72,6 +72,13 @@ reports the figure as skipped — its counts come from `paper/labels.py` rather
 than from the run, so the committed PDF cannot fall out of step with the
 tables. The two tests that compile it skip on the same condition.
 
+Any TeX Live or MacTeX installation will do. TeX Live also installs under
+`$HOME` without root, which is how the committed figure was built:
+
+```bash
+./install-tl -scheme-full -texdir ~/texlive/2026    # then put its bin/ on PATH
+```
+
 Training additionally needs the pinned CUDA environment, which resolves only on
 a CUDA machine (`environment.yml` pins `pytorch-cuda`):
 

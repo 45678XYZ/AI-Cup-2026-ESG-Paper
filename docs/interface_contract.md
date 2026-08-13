@@ -353,13 +353,15 @@ A 提供 `contracts/examples/predictions/` 與 `results/` 的合成檔（分數�
 ### 路徑與固定檔名
 
 ```
-tables/table1_dataset.tex      figures/figure1_hierarchy.pdf
-tables/table2_main.tex
-tables/table3_regimes.tex
+tables/table1_dataset.tex      figures/figure1_hierarchy.pdf   ← 交付物，D 引入這個
+tables/table2_main.tex         figures/figure1_hierarchy.tex   ← 圖的原始碼（standalone TikZ）
+tables/table3_regimes.tex      figures/figure1_defs.tex        ← 圖印出的數字，由 script 生成
 tables/manifest.json
 ```
 
-檔名在契約凍結時固定，D 的 `\input{}` 因此不會因 C 改名而斷。
+檔名在契約凍結時固定，D 的 `\input{}` 與 `\includegraphics{}` 因此不會因 C 改名而斷。
+
+`figures/` 下的三個檔案只有 `.pdf` 是交付物。另外兩個是它的來源，一併進版控，理由是 D 若想在編輯器裡預覽或微調圖，不必先執行 C 的重算流程；但 **D 不需要、也不應該把 `.tex` 引入正文**，見下面「圖」的規定。
 
 ### 規格
 
@@ -369,7 +371,19 @@ tables/manifest.json
 | Caption 文字 | 另存 `tables/table2_main_caption.txt`（純文字） | 內容歸 C（數字正確性），排版歸 D |
 | 巨集依賴 | 僅允許 `booktabs`、`multirow`；不得引入其他 package | NTCIR ACM 模板衝突風險 |
 | 數字格式 | C 端定案（小數位、± 寫法），D 不得手改 | 「所有數字由 script 生成，不手抄」 |
-| 圖 | 向量 PDF，字型嵌入，寬度可縮至單欄不失真 | |
+| 圖 | 向量 PDF，字型嵌入；交付物是 `.pdf`，D 以 `\includegraphics` 引入，preamble **不需加任何 package** | 圖以 TikZ 繪製，但先編譯成 PDF 才交付，所以上一列的 package 限制對圖同樣成立 |
+
+### Figure 1 的產生方式
+
+圖畫在 `figures/figure1_hierarchy.tex`，用 `standalone` document class 與 TikZ，由 `analysis/figure1.py`（或 `python -m analysis`）呼叫 `latexmk` 編成 `figure1_hierarchy.pdf`。
+
+用 TikZ 而非繪圖程式庫的理由只有一個，就是字型：圖上的字與內文都是 ACM 模板的 Linux Libertine，數學式由 TeX 本身排版，不會出現圖與內文兩套字的違和。**這不改變交付介面** —— D 拿到的仍是 PDF，preamble 不必加 `tikz`，因此不觸犯上面的 package 限制。
+
+圖印出的數字（合法 tuple 數、組合數、hierarchy-invalid 數）不寫在繪圖原始碼裡，而是由 `analysis/figure1.py` 從 `paper/labels.py` 推導後寫進 `figures/figure1_defs.tex`，繪圖端只能引用巨集。這是「所有數字由 script 生成，不手抄」在圖上的落實方式；`tests/test_analysis_figure1.py` 會在原始碼裡出現裸數字時讓測試失敗，也會偵測 `figure1_defs.tex` 是否過期。
+
+重建圖需要一套含 `latexmk` 的 TeX 環境。**沒有 TeX 的機器不受影響**：`python -m analysis` 會偵測並跳過圖，照常重算全部表格。這是安全的，因為圖的數字來自 `paper/labels.py` 而非該次執行的結果，跳過不可能讓已進版控的 PDF 與同批表格對不上。
+
+版面上，圖的自然尺寸是 15.4 × 7.0 cm（6.1 × 2.8 in），設計成用 `figure*` 跨雙欄、以原尺寸放置：此時圖上的字是 8pt，對比內文 9pt。放大到 `width=\textwidth` 會讓圖上的字大於內文；而這張圖承載四件事，縮到單欄不可能維持可讀，原本規格欄寫的「可縮至單欄不失真」應理解為向量圖的性質，不是建議的排版方式。
 
 ### `tables/manifest.json`
 
@@ -432,3 +446,48 @@ python -m paper.validate --all
 理由是全部只有 49 份 PDF，切分運氣的影響很大；folds 若跨 seed 固定，三個 seed 會一起繼承同一個運氣，seed std 反而看不出來。實測三個 seed 的 fold 0 重疊率為 17%（`pdf_group`）與 22.5%（`row_strat`），`tests/test_splits.py::test_seeds_produce_different_partitions` 鎖住此性質。
 
 已知代價：變異來源無法拆解，因此 seed std 只能描述成整條流程的變異，不能說成模型穩定度。同一 seed 內 M0–M6 仍共用完全相同的 Test rows，方法間的配對比較與投稿前檢查清單皆不受影響。
+
+---
+
+## 7. C 的交付清單與現況
+
+C 消費契約 3（`predictions/`、`results/`），產出契約 4（`tables/`、`figures/`）。整條線都不碰原始資料集，也不重現 split 邏輯——這是 §4 刻意讓逐列檔自足的用意。
+
+### 交付物
+
+| 交付物 | 狀態 | 說明 |
+|---|---|---|
+| `analysis/audit.py` | ✅ | 資料／support／duplicate 稽核，Table 1 的全部數字；`Misleading=2` 落在哪兩份 PDF 由它認定 |
+| `analysis/load.py` | ✅ | 把 42 個 predictions 檔對齊到同一組 canonical row order，錯位在此攔截而非在統計階段 |
+| `analysis/metrics.py` | ✅ | subset-aware weighted macro-F1，向量化以支撐 bootstrap，並釘住 `paper/score.py`（測試斷言兩者同分） |
+| `analysis/bootstrap.py` | ✅ | 10,000 次 paired PDF-cluster bootstrap 與 Holm 校正；以 PDF 為重抽單位，同一抽樣上計兩法差值 |
+| `analysis/aggregate.py` | ✅ | 跨 seed 聚合、§3.4 預先指定的對比、sensitivity |
+| `analysis/tables.py` | ✅ | 契約 4 的三張 `tabular`、caption 純文字檔與 provenance manifest |
+| `analysis/figure1.py` | ✅ | Figure 1 的數字（由 `paper/labels.py` 推導）與 latexmk 建置 |
+| `analysis/__main__.py` | ✅ | 一鍵重算：`python -m analysis`，凍結後只能重算不能改動的那道指令 |
+| `tables/table{1,2,3}*.tex`、`*_caption.txt`、`manifest.json` | ✅ | 契約 4 交付物 |
+| `figures/figure1_hierarchy.pdf` | ✅ | 契約 4 交付物；`.tex` 與 `_defs.tex` 為其來源，見 §5 |
+| `tests/test_analysis_*.py` | ✅ 6 檔 | audit、metrics、bootstrap、aggregate、tables、figure1 各一 |
+
+### 實作歷程
+
+依序完成，每一步都在下一步依賴它之前先有測試：
+
+| commit | 內容 |
+|---|---|
+| `2a49b59` | 資料稽核與 rare class 落點——Table 1 的數字來源 |
+| `5e178ab` | 對齊後的 predictions 載入，與釘住 `paper.score` 的計分器 |
+| `2fe56b3` | paired PDF-cluster bootstrap 與 Holm 校正 |
+| `1f87222` | 跨 seed 聚合、預先指定對比、sensitivity |
+| `bd1980c` | 契約 4 的表、caption 與 provenance manifest |
+| `bb5685a` | Figure 1 初版（繪圖程式庫產生） |
+| `4e003bc` | 一鍵重算全部表與圖 |
+| `7d44b86` | Figure 1 改以 standalone TikZ 繪製，數字仍由 script 生成（見 §5） |
+
+SHA 對應 `c-analysis` 這條線；若日後以 squash 方式合併，改用 `git log --grep='feat(analysis)'` 追溯。
+
+### 這條線一貫遵守的兩件事
+
+**沒有任何分數被轉抄。** `analysis/metrics.py` 是 `paper/score.py` 的向量化重述（為了跑得動 10,000 次重抽），測試斷言兩者對同一輸入給出相同分數；表與圖的每個數字都來自 script，`tables/manifest.json` 記下每個輸入的 sha256，因此文中任一數字都能回溯到產生它的程式與輸入。Figure 1 的三個計數同樣如此——它們從 `paper/labels.py` 推導後寫進 `figures/figure1_defs.tex`，繪圖原始碼只能引用巨集，測試會在有人把數字打進圖裡時失敗。
+
+**合成輸入永遠說得出自己是合成的。** `python -m analysis --predictions-root contracts/examples` 跑完會在最後印出警告，說明每個分數都是捏造的、只有形狀有意義。這道防線存在的理由是：合成資料的表格與真實表格在結構上完全一樣，肉眼分辨不出來。
