@@ -15,7 +15,14 @@ EVAL_FIELDS = {
     "evidence_quality":      ["Clear", "Not Clear", "Misleading", "N/A"],
 }
 
-# Official AI CUP weighting of the four field-level macro-F1 scores.
+# Weighting of the four field-level macro-F1 scores, transcribed from the AI CUP
+# task definition at https://www.aidea-web.tw/aicup_veripromiseesg (2026-08-13):
+#
+#   總分 = 承諾辨識 Macro-F1×0.20 + 證據支持 Macro-F1×0.30
+#        + 清晰度 Macro-F1×0.35   + 時機預測 Macro-F1×0.15
+#
+# 承諾辨識 -> promise_status, 時機預測 -> verification_timeline,
+# 證據支持 -> evidence_status, 清晰度 -> evidence_quality.
 FIELD_WEIGHTS = {
     "promise_status":        0.20,
     "verification_timeline": 0.15,
