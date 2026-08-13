@@ -48,9 +48,10 @@ analysis/       audit, statistics, tables and figure (consumes the contracts)
   bootstrap.py    paired PDF-cluster bootstrap and Holm correction
   aggregate.py    cross-seed aggregation and the pre-specified contrasts
   tables.py       contract-4 tables, captions and provenance manifest
-  figure1.py      the hierarchy and the alternative decision routes
+  figure1.py      Figure 1's counts, and the latexmk build of its source
 contracts/      interface schemas and example files
 docs/           paper plan and interface contract
+figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
 splits/         generated split manifests (version controlled)
 tests/          pytest suite
 dataset/        AI CUP development and test data
@@ -61,9 +62,15 @@ dataset/        AI CUP development and test data
 Everything except training runs on CPU with five packages:
 
 ```bash
-pip install numpy scikit-learn pandas matplotlib pytest
+pip install numpy scikit-learn pandas pypdf pytest
 pytest -q                      # no GPU, no model download
 ```
+
+Figure 1 is standalone TikZ, so redrawing it needs a TeX installation carrying
+`latexmk`. Without one `python -m analysis` still writes every table and simply
+reports the figure as skipped — its counts come from `paper/labels.py` rather
+than from the run, so the committed PDF cannot fall out of step with the
+tables. The two tests that compile it skip on the same condition.
 
 Training additionally needs the pinned CUDA environment, which resolves only on
 a CUDA machine (`environment.yml` pins `pytorch-cuda`):

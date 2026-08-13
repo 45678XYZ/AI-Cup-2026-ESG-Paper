@@ -16,7 +16,7 @@ from pathlib import Path
 from analysis.aggregate import protocol_summary, regime_comparison
 from analysis.audit import full_audit
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT
-from analysis.figure1 import build as build_figure1
+from analysis.figure1 import build as build_figure1, tex_available
 from analysis.load import EXAMPLES_ROOT, REAL_ROOT, pdf_clusters
 from analysis.tables import write_tables
 from paper.data import REPO_ROOT, canonical_row_order, load_dev
@@ -72,8 +72,15 @@ def main() -> None:
     write_tables(args.out_dir, audit, summaries, regimes, inputs)
     print(f"tables  -> {args.out_dir}")
 
-    figure = build_figure1(args.figures_dir / "figure1_hierarchy.pdf")
-    print(f"figure  -> {figure}")
+    # The figure is TikZ, so rebuilding it needs TeX. Its counts come from
+    # paper.labels rather than from this run, so skipping it cannot put the
+    # committed PDF out of step with the tables printed above.
+    if tex_available():
+        figure = build_figure1(args.figures_dir / "figure1_hierarchy.pdf")
+        print(f"figure  -> {figure}")
+    else:
+        print("figure  -> skipped, no latexmk on PATH; the committed "
+              "figures/figure1_hierarchy.pdf is unchanged and still current")
 
     if Path(args.predictions_root).resolve() == EXAMPLES_ROOT.resolve():
         print("\nINPUTS WERE SYNTHETIC. Every score above is fabricated and "

@@ -1,0 +1,120 @@
+% Figure 1: the label hierarchy and the alternative decision routes.
+%
+% Build with analysis/figure1.py (or `python -m analysis`), never by hand:
+% the counts come from figure1_defs.tex, which is generated from paper.labels.
+% Nothing in this file may type a count out; tests/test_analysis_figure1.py
+% fails the build if it does.
+%
+% Fonts are the ACM template's own, so the figure's type matches the paper's.
+% Panel coordinates run 0-10 and are scaled once, which keeps the geometry
+% readable while leaving the type at its true size.
+%
+% For D: the natural size is 15.4 x 7.0 cm (6.1 x 2.8 in), meant for figure*
+% across both columns. Include it without a width key -- at 1:1 the labels sit
+% at 8pt against the template's 9pt body. Forcing width=\textwidth enlarges
+% them past the running text, and no single-column reduction leaves them
+% legible; this figure carries too much to fit one column.
+\documentclass[border=1pt]{standalone}
+
+\usepackage[T1]{fontenc}
+\usepackage[tt=false,type1=true]{libertine}
+\usepackage[libertine]{newtxmath}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+
+\input{figure1_defs}
+
+\definecolor{ink}{HTML}{333333}
+\definecolor{routegrey}{HTML}{8C8C8C}
+\definecolor{routenone}{HTML}{4D4D4D}
+\definecolor{routeglobal}{HTML}{1F77B4}
+\definecolor{routecond}{HTML}{D62728}
+
+\tikzset{
+  box/.style     = {draw=ink, rounded corners=1.6pt, line width=0.35pt,
+                    fill=white, align=center, inner sep=3.2pt, text=ink},
+  % Parallel alternatives are drawn to one width. Letting TikZ size each box
+  % to its own label makes "projection" narrower than its neighbours, which
+  % reads as a lesser option rather than an equal one.
+  choice/.style  = {box, minimum width=2.05cm},
+  leaf/.style    = {box, minimum width=1.35cm},
+  edgelabel/.style = {text=routegrey, inner sep=1.2pt, font=\scriptsize},
+  note/.style    = {text=ink, align=center},
+  aside/.style   = {text=routegrey, align=center, font=\itshape\scriptsize},
+  methods/.style = {text=ink, font=\bfseries\scriptsize},
+  title/.style   = {text=ink, anchor=west, font=\small},
+  route/.style   = {draw, line width=0.32pt, -{Stealth[length=2.6pt,width=2pt]}},
+  alt/.style     = {route, draw=routegrey, densely dashed},
+}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.70, font=\footnotesize, every node/.style={inner sep=2pt}]
+
+% ---------------------------------------------------------------- panel (a)
+\node[title] at (-0.4, 10.1) {(a) Task hierarchy};
+
+\node[box] (ps)   at (5.0, 8.9) {promise\_status\\Yes / No};
+\node[box] (psno) at (1.8, 6.6) {VT = ES = EQ\\= N/A};
+\node[box] (psyes) at (6.9, 6.6)
+  {verification\_timeline (\NumTimelines)\\evidence\_status (Yes / No)};
+
+\draw[route] (ps) -- (psno);
+\draw[route] (ps) -- (psyes);
+\node[edgelabel] at (2.9, 7.95) {No};
+\node[edgelabel] at (6.4, 7.95) {Yes};
+
+\node[leaf] (esno)  at (5.7, 4.2) {EQ = N/A};
+\node[leaf] (esyes) at (8.6, 4.2) {EQ (\NumQualities)};
+
+\draw[route] (psyes) -- (esno);
+\draw[route] (psyes) -- (esyes);
+\node[edgelabel] at (5.15, 5.4)  {ES = No};
+\node[edgelabel] at (8.95, 5.4) {ES = Yes};
+
+\node[note] at (5.0, 2.4)
+  {$1 + \NumTimelines\times(1+\NumQualities) = \NumStates$ legal tuples};
+\node[note] at (5.0, 1.6)
+  {of $\NumPromiseLabels\times\NumTimelineLabels\times\NumEvidenceLabels
+      \times\NumQualityLabels = \NumCombinations$ combinations};
+\node[aside] at (5.0, 0.8) {the other \NumInvalid{} are hierarchy-invalid};
+
+% ---------------------------------------------------------------- panel (b)
+\begin{scope}[shift={(11.5, 0)}]
+\node[title] at (-0.4, 10.1) {(b) Decision routes (alternatives, not stages)};
+
+\node[box] (base) at (5.0, 8.9)
+  {base probabilities\\(identical for every method)};
+
+\node[choice, draw=routenone]   (cnone) at (1.4, 6.3) {no\\calibration};
+\node[choice, draw=routeglobal] (cglob) at (5.0, 6.3) {global\\bias};
+\node[choice, draw=routecond]   (ccond) at (8.6, 6.3) {conditional\\bias};
+
+\draw[route, draw=routenone]   (base) -- (cnone);
+\draw[route, draw=routeglobal] (base) -- (cglob);
+\draw[route, draw=routecond]   (base) -- (ccond);
+
+\node[choice] (oind)  at (1.4, 3.3) {independent\\argmax};
+\node[choice] (oproj) at (5.0, 3.3) {projection};
+\node[choice] (ostate) at (8.6, 3.3) {\NumStates-state\\decoding};
+
+% Calibration and output rule are chosen independently, so each calibration
+% reaches both structured rules. Dashed, because any one method takes exactly
+% one of these routes -- the arrows are alternatives, not a flow.
+% Loop variables are spelled out because the obvious short names are taken:
+% \c and \o are accent commands and \rule draws a black box.
+\foreach \calib in {cnone, cglob, ccond}
+  \foreach \decoder in {oproj, ostate}
+    \draw[alt] (\calib) -- (\decoder);
+\draw[route, draw=routenone] (cnone) -- (oind);
+
+\node[methods] at (1.4, 2.2) {M0};
+\node[methods] at (5.0, 2.2) {M1 / M2 / M3};
+\node[methods] at (8.6, 2.2) {M4 / M5 / M6};
+
+\node[aside] at (1.4, 1.5) {may be invalid};
+\node[aside] at (5.0, 1.5) {always valid};
+\node[aside] at (8.6, 1.5) {always valid};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}
