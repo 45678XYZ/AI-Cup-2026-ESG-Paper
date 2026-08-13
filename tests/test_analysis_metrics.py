@@ -1,0 +1,112 @@
+"""The fast scorer must be the official scorer, bit for bit.
+
+analysis/metrics.py exists only for speed. Its licence to exist is this file:
+if it ever disagrees with paper/score.py -- the contract's single source of
+truth for the metric -- the bootstrap is measuring something the paper does not
+report.
+"""
+
+import numpy as np
+import pytest
+
+from analysis.load import EXAMPLES_ROOT, METHODS, load_aligned, pdf_clusters
+from analysis.metrics import encode, field_macro_f1, weighted_macro_f1
+from paper.artifacts import read_predictions
+from paper.data import canonical_row_order, load_dev
+from paper.labels import FIELD_ALIAS, FIELDS
+from paper.score import compute_per_field_f1, compute_weighted_macro_f1
+
+DEV = load_dev()
+ORDER = canonical_row_order(DEV)
+RECORDS = read_predictions(
+    EXAMPLES_ROOT / "predictions" / "pdf_group_seed42_M3.csv.gz"
+)
+
+
+def _reference(records, idx=None):
+    """paper/score.py's answer, from the raw label strings."""
+    if idx is not None:
+        records = [records[i] for i in idx]
+    gold = [{f: r[f"gold_{FIELD_ALIAS[f]}"] for f in FIELDS} for r in records]
+    pred = [{f: r[f"pred_{FIELD_ALIAS[f]}"] for f in FIELDS} for r in records]
+    return gold, pred
+
+
+def test_matches_paper_score_on_the_full_set():
+    gold, pred = encode(RECORDS)
+    g, p = _reference(RECORDS)
+    assert weighted_macro_f1(gold, pred) == pytest.approx(
+        compute_weighted_macro_f1(g, p), abs=1e-12
+    )
+
+
+def test_matches_paper_score_on_random_subsets():
+    # Subsets are where the present-labels-only convention bites: Misleading
+    # (n=2) drops in and out, changing which classes are averaged over.
+    gold, pred = encode(RECORDS)
+    rng = np.random.default_rng(0)
+    for _ in range(50):
+        idx = rng.choice(len(RECORDS), size=int(rng.integers(50, len(RECORDS))),
+                         replace=True)
+        g, p = _reference(RECORDS, idx)
+        assert weighted_macro_f1(gold, pred, idx) == pytest.approx(
+            compute_weighted_macro_f1(g, p), abs=1e-12
+        )
+
+
+def test_per_field_matches_paper_score():
+    gold, pred = encode(RECORDS)
+    g, p = _reference(RECORDS)
+    reference = compute_per_field_f1(g, p)
+    mine = field_macro_f1(gold, pred)
+    for field in FIELDS:
+        assert mine[field] == pytest.approx(reference[field], abs=1e-12)
+
+
+def test_empty_subset_scores_zero_like_the_official_scorer():
+    gold, pred = encode(RECORDS)
+    assert weighted_macro_f1(gold, pred, np.array([], dtype=np.int64)) == 0.0
+
+
+def test_aligned_load_puts_every_method_on_one_row_order():
+    # The property the paired bootstrap rests on: one resample index array is
+    # valid for every method and every seed.
+    a_gold, a_pred = load_aligned("pdf_group", 42, "M0", ORDER, EXAMPLES_ROOT)
+    b_gold, b_pred = load_aligned("pdf_group", 42, "M6", ORDER, EXAMPLES_ROOT)
+    assert a_gold.shape == (len(ORDER), len(FIELDS))
+    assert np.array_equal(a_gold, b_gold)      # same rows, same order
+    assert not np.array_equal(a_pred, b_pred)  # different decision rules
+
+
+def test_aligned_load_is_consistent_across_protocols_and_seeds():
+    reference, _ = load_aligned("pdf_group", 42, "M0", ORDER, EXAMPLES_ROOT)
+    for protocol in ("pdf_group", "row_strat"):
+        for seed in (42, 123, 456):
+            gold, _ = load_aligned(protocol, seed, "M0", ORDER, EXAMPLES_ROOT)
+            assert np.array_equal(gold, reference)
+
+
+def test_all_forty_two_example_sets_load():
+    for protocol in ("pdf_group", "row_strat"):
+        for seed in (42, 123, 456):
+            for method in METHODS:
+                gold, pred = load_aligned(protocol, seed, method, ORDER,
+                                          EXAMPLES_ROOT)
+                assert gold.shape == pred.shape == (2000, 4)
+
+
+def test_pdf_clusters_partition_every_row_exactly_once():
+    clusters = pdf_clusters(ORDER, DEV)
+    assert len(clusters) == 49
+    covered = np.concatenate(clusters)
+    assert sorted(covered.tolist()) == list(range(len(ORDER)))
+
+
+def test_encode_reindexes_by_id_not_by_position():
+    # The contract's central failure mode (section 1.1): a file whose rows are
+    # in a different order must still align, and must do so by id.
+    shuffled = list(reversed(RECORDS))
+    gold_a, pred_a = encode(RECORDS, order=ORDER)
+    gold_b, pred_b = encode(shuffled, order=ORDER)
+    assert np.array_equal(gold_a, gold_b)
+    assert np.array_equal(pred_a, pred_b)
