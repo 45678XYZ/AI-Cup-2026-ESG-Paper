@@ -19,7 +19,18 @@ from paper.data import REPO_ROOT
 # is version controlled, so B's first bundle would dirty the tree and rotations
 # 1-4 would all be stamped -dirty despite no code change, and the same happens
 # to every artifact written under contracts/examples/ after the first.
-CODE_PATHSPEC = ("paper", "contracts", ":(exclude)contracts/examples")
+#
+# The environment files are in because they pin torch and transformers, and a
+# version change there moves the numbers without touching a line of Python.
+# Deliberately out: dataset/ (covered by data_checksum), splits/ (covered by
+# split_fingerprint), docs/ and tests/ (cannot change an artifact).
+CODE_PATHSPEC = (
+    "paper",
+    "contracts",
+    "environment.yml",
+    "pyproject.toml",
+    ":(exclude)contracts/examples",
+)
 
 
 def git_sha(repo_root=REPO_ROOT):
