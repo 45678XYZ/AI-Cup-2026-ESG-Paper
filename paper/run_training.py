@@ -22,8 +22,9 @@ from pathlib import Path
 import torch
 from transformers import AutoTokenizer
 
-from paper.artifacts import now_iso, write_probs_bundle
+from paper.artifacts import write_probs_bundle
 from paper.data import REPO_ROOT, data_checksum, file_sha256, index_by_id, load_dev
+from paper.provenance import now_iso
 from paper.train_config import (
     CHECKPOINT_LAST_K,
     CHECKPOINT_RULE,

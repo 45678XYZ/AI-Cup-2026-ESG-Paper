@@ -16,7 +16,7 @@ from pathlib import Path
 
 from sklearn.metrics import f1_score
 
-from paper.artifacts import CONTRACT_VERSION, git_sha, now_iso
+from paper.artifacts import CONTRACT_VERSION
 from paper.data import file_sha256
 from paper.labels import (
     CONDITIONING_SUBSET,
@@ -25,6 +25,7 @@ from paper.labels import (
     FIELDS,
     INVALID_STATE_ID,
 )
+from paper.provenance import git_sha, now_iso
 from paper.score import compute_per_field_f1, macro_f1, present_labels
 
 # The subset on which each field is actually meaningful. Shared with the

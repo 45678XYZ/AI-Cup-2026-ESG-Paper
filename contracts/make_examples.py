@@ -24,16 +24,11 @@ import json
 import random
 from pathlib import Path
 
-from paper.artifacts import (
-    CONTRACT_VERSION,
-    git_sha,
-    now_iso,
-    prediction_row,
-    write_predictions,
-)
+from paper.artifacts import CONTRACT_VERSION, prediction_row, write_predictions
 from paper.data import REPO_ROOT, index_by_id, load_dev
 from paper.evaluate import build_results, write_results
 from paper.labels import EVAL_FIELDS, FIELDS, STATES
+from paper.provenance import git_sha, now_iso
 from paper.train_config import PROTOCOLS, SEEDS
 
 METHODS = ["M0", "M1", "M2", "M3", "M4", "M5", "M6"]

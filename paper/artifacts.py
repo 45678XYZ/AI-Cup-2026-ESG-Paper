@@ -20,10 +20,7 @@ import numpy as np
 
 from paper.data import file_sha256
 from paper.labels import EVAL_FIELDS, FIELD_ALIAS, FIELDS, tuple_to_state_id
-
-# Re-exported: these are provenance stamps rather than writers, but every
-# caller that writes a contract file needs them from here.
-from paper.provenance import git_sha, now_iso  # noqa: F401
+from paper.provenance import git_sha, now_iso
 
 CONTRACT_VERSION = "1.0"
 
