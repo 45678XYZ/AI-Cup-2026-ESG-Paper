@@ -1,8 +1,8 @@
 {
  "contract_version": "1.0",
  "synthetic": true,
- "generated_at": "2026-08-12T19:23:29.040967+00:00",
- "git_sha": "0fe2f4afba77b27067e02d735af5bcef681ce9b2-dirty",
+ "generated_at": "2026-08-13T04:12:35.116779+00:00",
+ "git_sha": "47d8fe525c7f5bea8f56bc3664410e78bf595647",
  "tables": {
   "table1_dataset.tex": {
    "source_script": "contracts/make_examples.py",
