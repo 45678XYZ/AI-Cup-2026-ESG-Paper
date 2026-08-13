@@ -40,6 +40,7 @@ paper/          study code (the only importable package)
   artifacts.py    the only writer of contract files
   evaluate.py     per-row predictions -> the contract-3 results file
   validate.py     inbound conformance checks on received artifacts
+  provenance.py   the git stamp every generated artifact carries
 contracts/      interface schemas and example files
 docs/           paper plan and interface contract
 splits/         generated split manifests (version controlled)
@@ -49,7 +50,7 @@ dataset/        AI CUP development and test data
 
 ## Setup
 
-Everything except training runs on CPU with three packages:
+Everything except training runs on CPU with four packages:
 
 ```bash
 pip install numpy scikit-learn pandas pytest
