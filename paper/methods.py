@@ -21,6 +21,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from paper.decoder import decode_valid_states
 from paper.labels import FIELDS
 from paper.projection import independent_argmax, project
 
@@ -110,7 +111,5 @@ def decide(method, probs, biases=None) -> list[dict]:
     if method.output_rule == "projection":
         return project(scores)
     if method.output_rule == "decoder":
-        from paper.decoder import decode_valid_states
-
         return decode_valid_states(scores)
     raise ValueError(f"unknown output rule: {method.output_rule!r}")
