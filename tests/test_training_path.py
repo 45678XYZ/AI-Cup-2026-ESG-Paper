@@ -107,6 +107,14 @@ def test_layerwise_decay_produces_a_ladder(model):
 
 # --- the loop and its output ----------------------------------------------
 
+def test_a_short_final_accumulation_window_is_not_dropped():
+    import paper.train_fold as tf
+
+    assert [tf._accumulation_window(i, 3) for i in range(3)] == [
+        (2, False), (2, True), (1, True),
+    ]
+
+
 @pytest.fixture(scope="module")
 def probs(tiny_model_dir):
     """One epoch of real training, then inference, exactly as the driver does."""

@@ -10,6 +10,7 @@ code applied even the hierarchy hard rules, M0 would silently stop being an
 unstructured baseline and no number in the results table would reveal it.
 """
 
+import math
 import random
 
 import numpy as np
@@ -92,6 +93,17 @@ def _loss(criteria, logits, labels):
     return total
 
 
+def _accumulation_window(step, n_batches):
+    """Return this window's size and whether ``step`` closes it.
+
+    The final window may contain fewer than ``GRAD_ACCUM_STEPS`` batches. It
+    still needs an optimiser step, with its loss scaled by its actual size.
+    """
+    start = (step // GRAD_ACCUM_STEPS) * GRAD_ACCUM_STEPS
+    size = min(GRAD_ACCUM_STEPS, n_batches - start)
+    return size, step + 1 == start + size
+
+
 def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None):
     """Train the anchor on ``train_data`` only.
 
@@ -110,7 +122,7 @@ def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None):
     ).to(DEVICE)
     optimizer = AdamW(model.get_optimizer_groups(BACKBONE_LR, HEAD_LR))
 
-    total_steps = (len(loader) // GRAD_ACCUM_STEPS) * EPOCHS
+    total_steps = math.ceil(len(loader) / GRAD_ACCUM_STEPS) * EPOCHS
     warmup_steps = int(WARMUP_RATIO * total_steps)
     make_schedule = (
         get_cosine_schedule_with_warmup if LR_SCHEDULE == "cosine"
@@ -140,11 +152,12 @@ def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None):
 
             with torch.cuda.amp.autocast():
                 logits = model(input_ids, attention_mask)
-                loss = _loss(criteria, logits, labels) / GRAD_ACCUM_STEPS
+                window_size, update_due = _accumulation_window(step, len(loader))
+                loss = _loss(criteria, logits, labels) / window_size
 
             scaler.scale(loss).backward()
 
-            if (step + 1) % GRAD_ACCUM_STEPS == 0:
+            if update_due:
                 scaler.unscale_(optimizer)
                 nn.utils.clip_grad_norm_(model.parameters(), MAX_GRAD_NORM)
                 old_scale = scaler.get_scale()

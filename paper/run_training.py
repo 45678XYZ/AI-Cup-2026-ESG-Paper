@@ -16,10 +16,16 @@ rotations = 30 bundles from 30 fits.
 
 import argparse
 import json
+import os
+import platform
+import shlex
+import sys
 import time
 from pathlib import Path
 
 import torch
+import transformers
+from huggingface_hub import snapshot_download
 from transformers import AutoTokenizer
 
 from paper.artifacts import write_probs_bundle
@@ -44,7 +50,20 @@ def _hardware():
     return "cpu"
 
 
-def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=False):
+def _runtime_meta():
+    return {
+        "command": shlex.join([sys.executable, *sys.argv]),
+        "python_version": platform.python_version(),
+        "torch_version": torch.__version__,
+        "torch_cuda_version": torch.version.cuda,
+        "transformers_version": transformers.__version__,
+        "cuda_device_order": os.environ.get("CUDA_DEVICE_ORDER"),
+        "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+    }
+
+
+def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=False,
+                 model_source=None):
     by_id = index_by_id(rows)
     rot = next(r for r in split["rotations"] if r["k"] == rotation)
 
@@ -65,7 +84,9 @@ def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=Fal
 
     started = now_iso()
     t0 = time.time()
-    model, avg_state = train_rotation(train_data, tokenizer, split["seed"])
+    model, avg_state = train_rotation(
+        train_data, tokenizer, split["seed"], model_name=model_source,
+    )
     probs = {name: predict_probs(model, data, tokenizer) for name, data in partitions.items()}
     elapsed = time.time() - t0
 
@@ -84,6 +105,7 @@ def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=Fal
             "finished_at": now_iso(),
             "train_seconds": round(elapsed, 1),
             "n_train_rows": len(train_data),
+            **_runtime_meta(),
         },
     )
     if save_checkpoint:
@@ -129,14 +151,28 @@ def main():
     if split["data_checksum"] != data_checksum(rows):
         raise SystemExit(f"{split_path} was built against different data; refusing to run.")
 
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, revision=MODEL_REVISION)
+    # Resolve the pinned Hub revision once, then load every rotation from the
+    # local snapshot. Transformers 4.40 otherwise probes for an optional
+    # safetensors conversion on each load even when pytorch_model.bin is cached.
+    try:
+        model_source = snapshot_download(
+            MODEL_NAME, revision=MODEL_REVISION, local_files_only=True,
+        )
+    except Exception as exc:
+        raise SystemExit(
+            f"Pinned model snapshot is not present in the Hugging Face cache: {exc}"
+        ) from exc
+    tokenizer = AutoTokenizer.from_pretrained(model_source, local_files_only=True)
 
     for k in args.rotations:
         out_dir = args.out_dir / f"{args.protocol}_seed{args.seed}_r{k}"
         if args.skip_existing and (out_dir / "meta.json").exists():
             print(f"[r{k}] exists, skipping", flush=True)
             continue
-        run_rotation(split, k, rows, tokenizer, args.out_dir, args.save_checkpoint)
+        run_rotation(
+            split, k, rows, tokenizer, args.out_dir, args.save_checkpoint,
+            model_source=model_source,
+        )
 
     print(f"\nbundles written to {args.out_dir}/{args.protocol}_seed{args.seed}_r*")
 
