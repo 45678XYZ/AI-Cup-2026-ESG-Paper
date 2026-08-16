@@ -140,6 +140,12 @@ z_t,c(x) = log p_t,c(x) + b_t,c
 
 所有 bias 只能由 calibration partition 學習，不能在同一批 OOF labels 上調好再回報同一批分數。`Misleading` 若在 calibration partition 沒有樣本，不單獨調其 bias，並在 manifest 記錄 fallback 規則。
 
+**最佳化程序（實作凍結）**：每個欄位分開以 deterministic coordinate
+ascent 最大化 calibration macro-F1；bias grid 為 `[-5, 5]`、step `0.25`，
+最多 10 passes，無嚴格改善即停止。global 與 conditional 各 rotation 只擬合
+一次；M2／M5 共用同一組 global biases，M3／M6 共用同一組 conditional
+biases，避免把 decoder-specific tuning 混入比較。
+
 **conditional bias 的定義域（已定案，須寫入 Methods）**：conditional 估計下，子欄的 `N/A` 在其條件子集中出現次數**恆為 0**——gold `PS=Yes` 的樣本裡 VT、ES 永遠不是 `N/A`，gold `ES=Yes` 的樣本裡 EQ 永遠不是 `N/A`。這不是稀有類，是階層的定義使然，因此 calibration 目標函數在 `b_vt,N/A`、`b_es,N/A`、`b_eq,N/A` 三個座標上完全平坦，參數不可識別。
 
 故 **conditional bias 只定義在各欄的實質（admissible）類別上，三個結構性 `N/A` 依定義固定為 0.0**，不視為 fallback。由 `paper/labels.py::CONDITIONAL_PINNED_CLASSES` 從 17 個狀態推導，並有 unit tests 同時對狀態空間與真實資料斷言。
@@ -364,9 +370,9 @@ artifact 的版控規則：`splits/`、`results/` 與 `probs/` 都進 git（`pro
 - [x] 新增固定 PDF-group 與 row-stratified rotating split 產生器；row protocol 必須驗證每個 Calibration／Test PDF 在 Train 皆有其他 row，並將檢查結果寫入 manifest。
 - [x] 新增完整 17-state validator 與 projection unit tests。（`paper/projection.py`、`tests/test_projection.py`，120 種 argmax 結果全數窮舉）
 - [x] 新增契約檔的入境檢查（`paper/validate.py`）：機率值域、bundle↔split 對應、跨 rotation 一致性、artifact checksum、逐列檔的列錯位偵測。
-- [ ] 將 calibration API 改為明確接收 calibration labels，拒絕 Test labels。
-- [ ] 將 joint decoder 拆成固定 probabilities／固定 scales 的乾淨模式。
-- [ ] 把需手動改 Python 常數的實驗改成 CLI／config，避免 run 間污染。（split generator 已有 CLI；訓練與評估尚未）
+- [x] 將 calibration API 改為明確接收 calibration labels，拒絕 Test labels。
+- [x] 將 joint decoder 拆成固定 probabilities／固定 scales 的乾淨模式。
+- [x] 把需手動改 Python 常數的實驗改成 CLI／config，避免 run 間污染。（split、訓練與 M0–M6 評估皆有 CLI）
 - [ ] 建立 `run_manifest.json` 與一鍵重算 tables 的指令。
 - [ ] 建立只涵蓋 controlled study 的英文 README，從乾淨環境驗證至少一條 inference／evaluation command。（README 已建立；乾淨環境驗證尚未做）
 
@@ -545,8 +551,8 @@ W2 的 B 與 C 相對空閒：B 可先把 W4 的封存腳本寫好，C 可先做
 | 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone、精確 model revision、12 epochs 與 last-3 checkpoint averaging 均已凍結；30/30 fits 已完成並驗證 |
 | 完整 17-state projection 與 validator | ✅ `paper/projection.py` | 雙向投影，120 種 argmax 結果全數窮舉測試 |
 | 契約檔入境檢查 | ✅ `paper/validate.py` | 值域、bundle↔split 對應、跨 rotation 一致性、checksum、列錯位 |
-| Calibration-only class-bias API | ⬜ 未實作 | 只接收 calibration labels、拒絕 test labels，並保存 fallback／biases；conditional 的三個結構性 pinned 類別見 §3.2 |
-| 17-state joint decoder | ⬜ 未實作 | 須提供「固定 probabilities、固定 α、只切換 decoding rule」的乾淨比較模式，不夾帶額外可調參數 |
-| M0–M6 與評估輸出 | ⬜ 未實作 | 依賴上面三項 |
+| Calibration-only class-bias API | ✅ `paper/calibration.py` | 強制 `partition="calibration"`；保存 grid、fallback、biases 與 conditional pinned 類別 |
+| 17-state joint decoder | ✅ `paper/decoder.py` | 固定 probabilities、固定 `α=(1,1,1,1)`，不夾帶額外可調參數 |
+| M0–M6 與評估輸出 | ✅ `paper/run_decision.py` | 五折 Test 拼接後一次計分；真實結果待由 30 bundles 產生 |
 
 任何論文敘述以**正式凍結後的程式與 manifest**為準，不以 README、舊 log 或開發時記憶為準。

@@ -145,10 +145,11 @@ split generation for both protocols, the hierarchy-constrained projection, the
 training driver, artifact validation, and synthetic example files for every
 handoff.
 
-Not yet implemented — the rest of the decision stage, which is what the paper
-is about: the calibration-only bias API, the joint 17-state decoder, and the
-M0-M6 runner. Until those exist, `paper/evaluate.py` has nothing real to
-summarise and every file under `contracts/examples/` is fabricated.
+Implemented: the calibration-only bias API, fixed-scale joint 17-state decoder,
+and the real M0-M6 runner. `paper/run_decision.py` consumes the 30 validated
+probability bundles and writes the 42 per-row prediction files plus their 42
+aggregate result manifests. Files under `contracts/examples/` remain fabricated
+fixtures and must never be used as paper results.
 
 One design point is settled ahead of the calibration code and is worth reading
 before it: under conditional (hierarchy-constrained) estimation, the three
@@ -162,3 +163,10 @@ The official GPU setup is frozen in `paper/train_config.py`: the exact Hugging
 Face revision is pinned, the fixed budget is 12 epochs, and the last three epoch
 states are averaged. All 30 cross-fitted probability bundles have been produced
 and validated; see `docs/gpu_training_progress.md` for the completion record.
+
+Run the controlled decision study on CPU after all probability bundles validate:
+
+```bash
+python -m paper.run_decision
+python -m paper.validate predictions/*.csv.gz
+```

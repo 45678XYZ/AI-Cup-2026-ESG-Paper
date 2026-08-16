@@ -404,6 +404,9 @@ A 提供 placeholder `.tex`（欄數、欄序、對齊與正式版相同，數�
 | `paper/run_training.py` | ✅ | 訓練驅動腳本：讀 split → 只用 train_ids 訓練 → 對 calib／test 推論 → 寫成契約格式。B 只要跑，不必自己拼裝 |
 | `paper/artifacts.py` | ✅ | 契約檔的唯一寫入點；驅動腳本與 fixture 產生器共用，兩者結構不可能分岔 |
 | `paper/projection.py` | ✅ | 完整雙向 hierarchy projection（M1–M3 的 output rule） |
+| `paper/calibration.py` | ✅ | Calibration-only global／conditional class-bias coordinate ascent；Test labels 直接拒絕 |
+| `paper/decoder.py` | ✅ | 固定 `alpha=[1,1,1,1]` 的 17-state joint decoder |
+| `paper/run_decision.py` | ✅ | 真實 M0–M6 runner：五 rotations 拼接、寫 predictions／results 並即時驗證 |
 | `paper/evaluate.py` | ✅ | 由逐列 predictions 產生契約 3 的**完整**結果物件（含信封），真實 runner 與範例產生器共用 |
 | `paper/validate.py` | ✅ | 契約檔的入境檢查；A 每收到一組 bundle 就跑 |
 | `contracts/states.json` | ✅ | 由 `paper/labels.py` 產生，測試斷言不漂移 |
