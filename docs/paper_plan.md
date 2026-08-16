@@ -542,7 +542,7 @@ W2 的 B 與 C 相對空閒：B 可先把 W4 的封存腳本寫好，C 可先做
 | 論文需要的元件 | 現況 | 待處理 |
 |---|---|---|
 | Rotating split generator（PDF-group 與 row-stratified） | ✅ `paper/splits.py`，六個 manifest 已產出 | — |
-| 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone 已定案；`MODEL_REVISION` 與 `EPOCHS` 兩個常數留給 B 在 GPU 機上定值 |
+| 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone、精確 model revision、12 epochs 與 last-3 checkpoint averaging 均已凍結；30/30 fits 已完成並驗證 |
 | 完整 17-state projection 與 validator | ✅ `paper/projection.py` | 雙向投影，120 種 argmax 結果全數窮舉測試 |
 | 契約檔入境檢查 | ✅ `paper/validate.py` | 值域、bundle↔split 對應、跨 rotation 一致性、checksum、列錯位 |
 | Calibration-only class-bias API | ⬜ 未實作 | 只接收 calibration labels、拒絕 test labels，並保存 fallback／biases；conditional 的三個結構性 pinned 類別見 §3.2 |

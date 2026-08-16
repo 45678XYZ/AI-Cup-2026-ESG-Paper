@@ -158,8 +158,7 @@ definition (`paper/labels.py::CONDITIONAL_PINNED_CLASSES`), which leaves M3
 unaffected but gives M6 three pinned terms where M5 fits four. See
 [docs/paper_plan.md](docs/paper_plan.md) §3.2.
 
-Two values in `paper/train_config.py` are marked `TODO(B)` and must be settled
-on the GPU machine before the first official run: `MODEL_REVISION` (pin to the
-exact Hugging Face revision that gets downloaded) and `EPOCHS` (set from the
-competition training logs — there is no early stopping, so the budget is
-whatever this constant says).
+The official GPU setup is frozen in `paper/train_config.py`: the exact Hugging
+Face revision is pinned, the fixed budget is 12 epochs, and the last three epoch
+states are averaged. All 30 cross-fitted probability bundles have been produced
+and validated; see `docs/gpu_training_progress.md` for the completion record.
