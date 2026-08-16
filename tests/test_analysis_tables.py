@@ -1,16 +1,21 @@
 """Emitted tables must match the placeholder structure D laid out against."""
 
+import copy
 import json
 import re
+
+import pytest
 
 from analysis.aggregate import protocol_summary, regime_comparison
 from analysis.audit import full_audit
 from analysis.load import EXAMPLES_ROOT, pdf_clusters
 from analysis.tables import (
     TABLE_FILES,
+    build_captions,
     render_table1,
     render_table2,
     render_table3,
+    table_inputs,
     write_tables,
 )
 from paper.data import REPO_ROOT, canonical_row_order, load_dev
@@ -26,6 +31,7 @@ SUMMARIES = {
     for p in ("pdf_group", "row_strat")
 }
 REGIMES = regime_comparison(SUMMARIES, ORDER, EXAMPLES_ROOT, CLUSTERS, n_boot=200)
+INPUTS = table_inputs(EXAMPLES_ROOT)
 
 
 def _column_count(tex):
@@ -80,21 +86,20 @@ def test_table2_reports_zero_invalid_for_every_structured_method():
 
 
 def test_written_manifest_records_every_input_checksum(tmp_path):
-    inputs = sorted((EXAMPLES_ROOT / "results").glob("*.json"))
-    write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, inputs)
+    write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, INPUTS)
 
     for name in TABLE_FILES:
         assert (tmp_path / name).exists()
     manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
     for name in TABLE_FILES:
         entry = manifest["tables"][name]
-        assert entry["source_script"] == "analysis/tables.py"
+        assert entry["input_files"], name
         assert len(entry["input_sha256"]) == len(entry["input_files"])
         assert all(v.startswith("sha256:") for v in entry["input_sha256"].values())
 
 
 def test_captions_are_written_beside_the_tables(tmp_path):
-    write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, [])
+    write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, INPUTS)
     for stem in ("table1_dataset", "table2_main", "table3_regimes"):
         caption = (tmp_path / f"{stem}_caption.txt").read_text(encoding="utf-8")
         assert caption.strip()
@@ -103,3 +108,80 @@ def test_captions_are_written_beside_the_tables(tmp_path):
         encoding="utf-8")
     assert "not a bias" in (tmp_path / "table3_regimes_caption.txt").read_text(
         encoding="utf-8")
+
+
+# ---------------------------------------------------------------- provenance
+# Two failures the manifest and the captions used to allow silently: the
+# manifest checksummed results/*.json while every score came from
+# predictions/*.csv.gz, and the captions transcribed audited counts as literal
+# text. Neither made a number wrong on the day it was written, which is exactly
+# why both need a test rather than a reader's attention.
+
+
+def test_manifest_records_the_files_each_table_actually_reads(tmp_path):
+    write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, INPUTS)
+    manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
+
+    scored = manifest["tables"]["table2_main.tex"]["input_files"]
+    assert scored, "table 2 must record the files its numbers came from"
+    assert all("predictions" in p for p in scored)
+    assert not any(p.endswith(".json") and "results" in p for p in scored)
+
+    audited = manifest["tables"]["table1_dataset.tex"]["input_files"]
+    assert any("dataset" in p for p in audited)
+    assert any("splits" in p for p in audited)
+    assert not any("predictions" in p for p in audited), (
+        "table 1 counts come from the dataset audit, not from predictions"
+    )
+
+
+def test_each_table_names_the_script_that_computed_it(tmp_path):
+    write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, INPUTS)
+    manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
+    scripts = {n: manifest["tables"][n]["source_script"] for n in TABLE_FILES}
+    assert scripts["table1_dataset.tex"] == "analysis/audit.py"
+    assert scripts["table2_main.tex"] == "analysis/aggregate.py"
+
+
+def test_write_tables_refuses_to_emit_an_empty_audit_trail(tmp_path):
+    """A root holding predictions/ but no results/ used to produce all three
+    tables with an empty input_files and no warning at all."""
+    empty = {name: [] for name in TABLE_FILES}
+    with pytest.raises(ValueError, match="no input files recorded"):
+        write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, empty)
+
+    # A partially-populated map is the likelier accident, and must fail too.
+    partial = dict(INPUTS, **{"table2_main.tex": []})
+    with pytest.raises(ValueError, match="table2_main.tex"):
+        write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, partial)
+
+
+def test_table1_caption_reports_the_audited_counts():
+    caption = build_captions(AUDIT)["table1_dataset"]
+    absent = AUDIT["splits"]["calibration_without_misleading"]
+    assert f"{absent['n_without']} of the {absent['n_rotations']} rotations" in caption
+
+
+def test_captions_move_with_a_resampled_split():
+    """The whole point: a caption that stays put while the audit moves is a
+    transcribed number wearing a generated number's clothes."""
+    altered = copy.deepcopy(AUDIT)
+    altered["splits"]["calibration_without_misleading"]["n_without"] = 7
+    caption = build_captions(altered)["table1_dataset"]
+    assert "7 of the" in caption
+    assert "18 of the" not in caption
+
+
+def test_table2_and_3_captions_follow_the_audit_too():
+    """reviewer flagged table 1; these two carry transcribed counts as well."""
+    altered = copy.deepcopy(AUDIT)
+    altered["development"]["paragraphs"] = 1234
+    altered["development"]["pdfs"] = 7
+    captions = build_captions(altered, seeds=(1, 2))
+
+    assert "1,234" in captions["table2_main"]
+    assert "2,000" not in captions["table2_main"]
+    assert "two seeds" in captions["table2_main"]
+    assert "three seeds" not in captions["table2_main"]
+    assert "same 7 reports" in captions["table3_regimes"]
+    assert "49" not in captions["table3_regimes"]

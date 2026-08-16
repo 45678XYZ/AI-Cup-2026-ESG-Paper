@@ -18,7 +18,7 @@ from analysis.audit import full_audit
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT
 from analysis.figure1 import build as build_figure1, tex_available
 from analysis.load import EXAMPLES_ROOT, REAL_ROOT, pdf_clusters
-from analysis.tables import write_tables
+from analysis.tables import table_inputs, write_tables
 from paper.data import REPO_ROOT, canonical_row_order, load_dev
 from paper.train_config import PROTOCOLS, SEEDS
 
@@ -26,8 +26,9 @@ from paper.train_config import PROTOCOLS, SEEDS
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--predictions-root", type=Path, default=REAL_ROOT,
-                    help="directory holding predictions/ and results/; pass "
-                         "contracts/examples to run against the synthetic set")
+                    help="directory holding predictions/; every score comes "
+                         "from there. Pass contracts/examples to run against "
+                         "the synthetic set")
     ap.add_argument("--out-dir", type=Path, default=REPO_ROOT / "tables")
     ap.add_argument("--figures-dir", type=Path, default=REPO_ROOT / "figures")
     ap.add_argument("--n-boot", type=int, default=N_BOOT)
@@ -68,8 +69,10 @@ def main() -> None:
                       ensure_ascii=False, indent=1)
         print(f"stats   -> {args.summaries_out}")
 
-    inputs = sorted((Path(args.predictions_root) / "results").glob("*.json"))
-    write_tables(args.out_dir, audit, summaries, regimes, inputs)
+    # Each table records the files its own numbers came from: the dataset and
+    # split manifests for table 1, the per-row predictions for tables 2 and 3.
+    inputs = table_inputs(args.predictions_root, seeds=SEEDS)
+    write_tables(args.out_dir, audit, summaries, regimes, inputs, seeds=SEEDS)
     print(f"tables  -> {args.out_dir}")
 
     # The figure is TikZ, so rebuilding it needs TeX. Its counts come from
