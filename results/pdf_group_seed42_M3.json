@@ -1,0 +1,368 @@
+{
+ "contract_version": "1.0",
+ "protocol": "pdf_group",
+ "seed": 42,
+ "method": "M3",
+ "predictions_file": "predictions/pdf_group_seed42_M3.csv.gz",
+ "predictions_sha256": "sha256:06f9ffbef8d677a45f25f1d34c8ead1985f3e271d9a402822c7647c392c9a786",
+ "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+ "git_sha": "68a2504e566d0e5a113a02532b3970a6c34ea3e6",
+ "created_at": "2026-08-16T15:49:57.201271+00:00",
+ "n_rows": 2000,
+ "weighted_macro_f1": 0.5761354964576868,
+ "per_field_macro_f1": {
+  "promise_status": 0.7925647096917816,
+  "verification_timeline": 0.5200746344548791,
+  "evidence_status": 0.6512592318353554,
+  "evidence_quality": 0.4120959708585483
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.924908424908425,
+   "No": 0.6602209944751382
+  },
+  "verification_timeline": {
+   "already": 0.5481088254810883,
+   "within_2_years": 0.2807017543859649,
+   "between_2_and_5_years": 0.49673202614379086,
+   "more_than_5_years": 0.6146095717884131,
+   "N/A": 0.6602209944751382
+  },
+  "evidence_status": {
+   "Yes": 0.8328424153166422,
+   "No": 0.4607142857142857,
+   "N/A": 0.6602209944751382
+  },
+  "evidence_quality": {
+   "Clear": 0.7854958497160333,
+   "Not Clear": 0.2164705882352941,
+   "Misleading": 0.0,
+   "N/A": 0.6464174454828661
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 1627,
+   "No": 373
+  },
+  "verification_timeline": {
+   "already": 718,
+   "within_2_years": 34,
+   "between_2_and_5_years": 498,
+   "more_than_5_years": 377,
+   "N/A": 373
+  },
+  "evidence_status": {
+   "Yes": 1345,
+   "No": 282,
+   "N/A": 373
+  },
+  "evidence_quality": {
+   "Clear": 1118,
+   "Not Clear": 225,
+   "Misleading": 2,
+   "N/A": 655
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.5069442014024698,
+  "evidence_status_given_ps_yes": 0.6749534861211189,
+  "evidence_quality_given_es_yes": 0.369445524074868
+ },
+ "tuple_exact_match": 0.446,
+ "invalid_tuple_rate": 0.0,
+ "decision_params": {
+  "0": {
+   "calibration_mode": "conditional",
+   "calibration_biases": {
+    "promise_status": {
+     "Yes": 0.75,
+     "No": 0.0
+    },
+    "verification_timeline": {
+     "already": 0.5,
+     "within_2_years": -1.75,
+     "between_2_and_5_years": 0.25,
+     "more_than_5_years": 0.0,
+     "N/A": 0.0
+    },
+    "evidence_status": {
+     "Yes": 1.0,
+     "No": 0.25,
+     "N/A": 0.0
+    },
+    "evidence_quality": {
+     "Clear": 2.0,
+     "Not Clear": 1.0,
+     "Misleading": 2.25,
+     "N/A": 0.0
+    }
+   },
+   "fallback_applied": {},
+   "structural_pinned": {
+    "promise_status": [],
+    "verification_timeline": [
+     "N/A"
+    ],
+    "evidence_status": [
+     "N/A"
+    ],
+    "evidence_quality": [
+     "N/A"
+    ]
+   },
+   "optimizer": {
+    "objective": "per-field macro_f1",
+    "grid": {
+     "min": -5.0,
+     "max": 5.0,
+     "step": 0.25
+    },
+    "max_passes": 10,
+    "calibration_objective": {
+     "promise_status": 0.8507792860734037,
+     "verification_timeline": 0.5389880952380952,
+     "evidence_status": 0.7056164789567279,
+     "evidence_quality": 0.4775929165141222
+    }
+   },
+   "decoder": null
+  },
+  "1": {
+   "calibration_mode": "conditional",
+   "calibration_biases": {
+    "promise_status": {
+     "Yes": -0.25,
+     "No": 0.0
+    },
+    "verification_timeline": {
+     "already": 1.25,
+     "within_2_years": -0.75,
+     "between_2_and_5_years": 0.0,
+     "more_than_5_years": 0.25,
+     "N/A": 0.0
+    },
+    "evidence_status": {
+     "Yes": 1.25,
+     "No": 0.0,
+     "N/A": 0.0
+    },
+    "evidence_quality": {
+     "Clear": 1.75,
+     "Not Clear": 0.5,
+     "Misleading": 0.0,
+     "N/A": 0.0
+    }
+   },
+   "fallback_applied": {
+    "evidence_quality": [
+     "Misleading"
+    ]
+   },
+   "structural_pinned": {
+    "promise_status": [],
+    "verification_timeline": [
+     "N/A"
+    ],
+    "evidence_status": [
+     "N/A"
+    ],
+    "evidence_quality": [
+     "N/A"
+    ]
+   },
+   "optimizer": {
+    "objective": "per-field macro_f1",
+    "grid": {
+     "min": -5.0,
+     "max": 5.0,
+     "step": 0.25
+    },
+    "max_passes": 10,
+    "calibration_objective": {
+     "promise_status": 0.8174258109040717,
+     "verification_timeline": 0.5280635868318081,
+     "evidence_status": 0.7413943355119825,
+     "evidence_quality": 0.6656900383915942
+    }
+   },
+   "decoder": null
+  },
+  "2": {
+   "calibration_mode": "conditional",
+   "calibration_biases": {
+    "promise_status": {
+     "Yes": 0.25,
+     "No": 0.0
+    },
+    "verification_timeline": {
+     "already": 1.5,
+     "within_2_years": -0.25,
+     "between_2_and_5_years": 0.0,
+     "more_than_5_years": 0.5,
+     "N/A": 0.0
+    },
+    "evidence_status": {
+     "Yes": 0.5,
+     "No": 0.0,
+     "N/A": 0.0
+    },
+    "evidence_quality": {
+     "Clear": 1.0,
+     "Not Clear": 0.0,
+     "Misleading": 0.0,
+     "N/A": 0.0
+    }
+   },
+   "fallback_applied": {
+    "evidence_quality": [
+     "Misleading"
+    ]
+   },
+   "structural_pinned": {
+    "promise_status": [],
+    "verification_timeline": [
+     "N/A"
+    ],
+    "evidence_status": [
+     "N/A"
+    ],
+    "evidence_quality": [
+     "N/A"
+    ]
+   },
+   "optimizer": {
+    "objective": "per-field macro_f1",
+    "grid": {
+     "min": -5.0,
+     "max": 5.0,
+     "step": 0.25
+    },
+    "max_passes": 10,
+    "calibration_objective": {
+     "promise_status": 0.7798782670963122,
+     "verification_timeline": 0.4888366132804467,
+     "evidence_status": 0.7080976119793125,
+     "evidence_quality": 0.6691659158192818
+    }
+   },
+   "decoder": null
+  },
+  "3": {
+   "calibration_mode": "conditional",
+   "calibration_biases": {
+    "promise_status": {
+     "Yes": 0.75,
+     "No": 0.0
+    },
+    "verification_timeline": {
+     "already": 1.25,
+     "within_2_years": -0.75,
+     "between_2_and_5_years": 0.0,
+     "more_than_5_years": 0.5,
+     "N/A": 0.0
+    },
+    "evidence_status": {
+     "Yes": 0.0,
+     "No": -0.5,
+     "N/A": 0.0
+    },
+    "evidence_quality": {
+     "Clear": 1.75,
+     "Not Clear": 1.0,
+     "Misleading": 1.75,
+     "N/A": 0.0
+    }
+   },
+   "fallback_applied": {},
+   "structural_pinned": {
+    "promise_status": [],
+    "verification_timeline": [
+     "N/A"
+    ],
+    "evidence_status": [
+     "N/A"
+    ],
+    "evidence_quality": [
+     "N/A"
+    ]
+   },
+   "optimizer": {
+    "objective": "per-field macro_f1",
+    "grid": {
+     "min": -5.0,
+     "max": 5.0,
+     "step": 0.25
+    },
+    "max_passes": 10,
+    "calibration_objective": {
+     "promise_status": 0.7942680002339592,
+     "verification_timeline": 0.49099413673482056,
+     "evidence_status": 0.71839584704248,
+     "evidence_quality": 0.46385685614178324
+    }
+   },
+   "decoder": null
+  },
+  "4": {
+   "calibration_mode": "conditional",
+   "calibration_biases": {
+    "promise_status": {
+     "Yes": 1.5,
+     "No": 0.0
+    },
+    "verification_timeline": {
+     "already": 0.25,
+     "within_2_years": -0.25,
+     "between_2_and_5_years": 1.25,
+     "more_than_5_years": 1.75,
+     "N/A": 0.0
+    },
+    "evidence_status": {
+     "Yes": 1.0,
+     "No": -0.5,
+     "N/A": 0.0
+    },
+    "evidence_quality": {
+     "Clear": 1.25,
+     "Not Clear": 0.75,
+     "Misleading": 0.0,
+     "N/A": 0.0
+    }
+   },
+   "fallback_applied": {
+    "evidence_quality": [
+     "Misleading"
+    ]
+   },
+   "structural_pinned": {
+    "promise_status": [],
+    "verification_timeline": [
+     "N/A"
+    ],
+    "evidence_status": [
+     "N/A"
+    ],
+    "evidence_quality": [
+     "N/A"
+    ]
+   },
+   "optimizer": {
+    "objective": "per-field macro_f1",
+    "grid": {
+     "min": -5.0,
+     "max": 5.0,
+     "step": 0.25
+    },
+    "max_passes": 10,
+    "calibration_objective": {
+     "promise_status": 0.8111582640185594,
+     "verification_timeline": 0.4949521743537847,
+     "evidence_status": 0.6423054070112894,
+     "evidence_quality": 0.6171632630286799
+    }
+   },
+   "decoder": null
+  }
+ }
+}

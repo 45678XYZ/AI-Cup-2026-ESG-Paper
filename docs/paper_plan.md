@@ -553,6 +553,6 @@ W2 的 B 與 C 相對空閒：B 可先把 W4 的封存腳本寫好，C 可先做
 | 契約檔入境檢查 | ✅ `paper/validate.py` | 值域、bundle↔split 對應、跨 rotation 一致性、checksum、列錯位 |
 | Calibration-only class-bias API | ✅ `paper/calibration.py` | 強制 `partition="calibration"`；保存 grid、fallback、biases 與 conditional pinned 類別 |
 | 17-state joint decoder | ✅ `paper/decoder.py` | 固定 probabilities、固定 `α=(1,1,1,1)`，不夾帶額外可調參數 |
-| M0–M6 與評估輸出 | ✅ `paper/run_decision.py` | 五折 Test 拼接後一次計分；真實結果待由 30 bundles 產生 |
+| M0–M6 與評估輸出 | ✅ `paper/run_decision.py` | 五折 Test 拼接後一次計分；42 predictions + 42 results 已由 30 bundles 產生並驗證 |
 
 任何論文敘述以**正式凍結後的程式與 manifest**為準，不以 README、舊 log 或開發時記憶為準。

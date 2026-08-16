@@ -170,3 +170,8 @@ Run the controlled decision study on CPU after all probability bundles validate:
 python -m paper.run_decision
 python -m paper.validate predictions/*.csv.gz
 ```
+
+The full official run has been materialised: `predictions/` and `results/`
+contain all 42 protocol/seed/method outputs, and all 42 prediction files pass
+the contract validator. Their result manifests identify decision-code commit
+`68a2504e566d0e5a113a02532b3970a6c34ea3e6`.
