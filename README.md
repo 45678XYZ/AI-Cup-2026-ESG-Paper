@@ -26,7 +26,7 @@ or the training data.
 ## Layout
 
 ```
-paper/          study code (the only importable package)
+paper/          study code: label space, data, training, contract artifacts
   labels.py       frozen enumerations + canonical 17-state space
   data.py         loading, canonical row order, data checksum
   score.py        official weighted macro-F1 (single source of truth)
@@ -41,8 +41,17 @@ paper/          study code (the only importable package)
   evaluate.py     per-row predictions -> the contract-3 results file
   validate.py     inbound conformance checks on received artifacts
   provenance.py   the git stamp every generated artifact carries
+analysis/       audit, statistics, tables and figure (consumes the contracts)
+  audit.py        dataset and split audit; the numbers behind Table 1
+  metrics.py      subset-aware weighted macro-F1, pinned to paper/score.py
+  load.py         prediction sets aligned onto one canonical row order
+  bootstrap.py    paired PDF-cluster bootstrap and Holm correction
+  aggregate.py    cross-seed aggregation and the pre-specified contrasts
+  tables.py       contract-4 tables, captions and provenance manifest
+  figure1.py      Figure 1's counts, and the latexmk build of its source
 contracts/      interface schemas and example files
 docs/           paper plan and interface contract
+figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
 splits/         generated split manifests (version controlled)
 tests/          pytest suite
 dataset/        AI CUP development and test data
@@ -50,11 +59,24 @@ dataset/        AI CUP development and test data
 
 ## Setup
 
-Everything except training runs on CPU with four packages:
+Everything except training runs on CPU with five packages:
 
 ```bash
-pip install numpy scikit-learn pandas pytest
+pip install numpy scikit-learn pandas pypdf pytest
 pytest -q                      # no GPU, no model download
+```
+
+Figure 1 is standalone TikZ, so redrawing it needs a TeX installation carrying
+`latexmk`. Without one `python -m analysis` still writes every table and simply
+reports the figure as skipped — its counts come from `paper/labels.py` rather
+than from the run, so the committed PDF cannot fall out of step with the
+tables. The two tests that compile it skip on the same condition.
+
+Any TeX Live or MacTeX installation will do. TeX Live also installs under
+`$HOME` without root, which is how the committed figure was built:
+
+```bash
+./install-tl -scheme-full -texdir ~/texlive/2026    # then put its bin/ on PATH
 ```
 
 Training additionally needs the pinned CUDA environment, which resolves only on
@@ -98,6 +120,31 @@ python -m contracts.make_fixtures       # -> synthetic probability fixtures   (5
 python -m contracts.make_examples       # -> synthetic results + placeholder tables (42 + 42)
 pytest -q                               # asserts the invariants on what was generated
 ```
+
+## Tables and the figure
+
+One command rebuilds every number the paper reports, from the per-row
+predictions and nothing else:
+
+```bash
+python -m analysis --predictions-root contracts/examples   # against the synthetic set
+python -m analysis                                         # against real results/
+```
+
+It writes `tables/table{1,2,3}*.tex`, their captions, `tables/manifest.json`
+(recording the sha256 of every input, so any printed number traces back to the
+artifacts behind it) and `figures/figure1_hierarchy.pdf`. The 10,000-resample
+paired PDF-cluster bootstrap takes about 90 seconds.
+
+Nothing here transcribes a score: `analysis/metrics.py` is a vectorised
+restatement of `paper/score.py`, fast enough for the bootstrap, and
+`tests/test_analysis_metrics.py` asserts the two agree exactly — on the full
+2,000 rows and on resampled subsets — so the intervals are computed with the
+same metric the paper reports.
+
+Run against `contracts/examples` the command prints a warning, because those
+scores are fabricated: only the shapes are meaningful until B's probabilities
+and A's decision stage exist.
 
 Conformance is enforced where artifacts are created rather than checked
 afterwards: the generator refuses to emit a split that breaks same-document
