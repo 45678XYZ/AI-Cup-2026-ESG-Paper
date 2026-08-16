@@ -19,7 +19,7 @@ from pathlib import Path
 
 from analysis.audit import SPLITS_DIR
 from analysis.load import METHODS, predictions_path
-from paper.data import TEST_PATH, TRAIN_PATH, VAL_PATH, file_sha256
+from paper.data import REPO_ROOT, TEST_PATH, TRAIN_PATH, VAL_PATH, file_sha256
 from paper.labels import FIELDS
 from paper.provenance import git_sha, now_iso
 from paper.train_config import PROTOCOLS, SEEDS
@@ -57,6 +57,22 @@ def _word(n) -> str:
 
 def _times(n) -> str:
     return {1: "once", 2: "twice"}.get(n, f"{_word(n)} times")
+
+
+def _repo_relative(path) -> str:
+    """Path as the manifest should record it: relative to the repository.
+
+    ``relative_to`` rather than ``os.path.relpath`` so that a path outside the
+    repository fails the containment test instead of being written as a chain
+    of ``..`` segments, which would be neither portable nor meaningful. Such a
+    path is kept absolute, where it is at least obviously wrong rather than
+    quietly relative to nothing.
+    """
+    resolved = Path(path).resolve()
+    try:
+        return str(resolved.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(resolved)
 
 
 def table_inputs(predictions_root, protocols=PROTOCOLS, seeds=SEEDS,
@@ -229,11 +245,15 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
         (out_dir / f"{stem}_caption.txt").write_text(caption + "\n", encoding="utf-8")
 
     def entry(name):
-        paths = [str(Path(p)) for p in inputs_by_table[name]]
+        paths = [Path(p) for p in inputs_by_table[name]]
+        # Record repo-relative, hash the path as given: the manifest is
+        # committed and read from a fresh clone, where this machine's absolute
+        # paths mean nothing, but the checksum has to open the actual file.
+        recorded = [_repo_relative(p) for p in paths]
         return {
             "source_script": SOURCE_SCRIPTS[name],
-            "input_files": paths,
-            "input_sha256": {p: file_sha256(p) for p in paths},
+            "input_files": recorded,
+            "input_sha256": {r: file_sha256(p) for r, p in zip(recorded, paths)},
         }
 
     manifest = {

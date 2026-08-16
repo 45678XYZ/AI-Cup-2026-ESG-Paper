@@ -3,6 +3,7 @@
 import copy
 import json
 import re
+from pathlib import Path
 
 import pytest
 
@@ -18,7 +19,7 @@ from analysis.tables import (
     table_inputs,
     write_tables,
 )
-from paper.data import REPO_ROOT, canonical_row_order, load_dev
+from paper.data import REPO_ROOT, canonical_row_order, file_sha256, load_dev
 
 DEV = load_dev()
 ORDER = canonical_row_order(DEV)
@@ -133,6 +134,32 @@ def test_manifest_records_the_files_each_table_actually_reads(tmp_path):
     assert not any("predictions" in p for p in audited), (
         "table 1 counts come from the dataset audit, not from predictions"
     )
+
+
+def test_manifest_records_repo_relative_paths(tmp_path):
+    """The manifest is committed and travels with the paper, so an absolute
+    path would bake one machine's directory layout into a published artifact
+    and be uncheckable from a fresh clone. It would also contradict the
+    relative paths the contract's own example specifies.
+    """
+    write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, INPUTS)
+    manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
+    for name in TABLE_FILES:
+        entry = manifest["tables"][name]
+        for path in entry["input_files"]:
+            assert not Path(path).is_absolute(), f"{name}: {path}"
+            assert not path.startswith(".."), f"{name} escapes the repo: {path}"
+        # The checksums stay keyed by the same strings that are listed.
+        assert sorted(entry["input_sha256"]) == sorted(entry["input_files"])
+
+
+def test_manifest_hashes_the_file_rather_than_the_recorded_string(tmp_path):
+    """Recording a relative path must not change which bytes were hashed."""
+    write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, INPUTS)
+    manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
+    recorded = manifest["tables"]["table2_main.tex"]["input_sha256"]
+    for path, digest in recorded.items():
+        assert digest == file_sha256(REPO_ROOT / path), path
 
 
 def test_each_table_names_the_script_that_computed_it(tmp_path):
