@@ -368,7 +368,7 @@ tables/manifest.json
 | 項目 | 規定 | 理由 |
 |---|---|---|
 | `.tex` 內容 | **只含 `tabular` 環境**，不含 `\begin{table}`、`\caption`、`\label` | D 在 8 頁預算下需要自行決定浮動位置、寬度與 `\small`；C 包死會讓 D 無法壓版 |
-| Caption 文字 | 另存 `tables/table2_main_caption.txt`（純文字） | 內容歸 C（數字正確性），排版歸 D |
+| Caption 文字 | 另存 `tables/table2_main_caption.txt`（純文字）；**其中的數字與表格內的數字適用同一條規則，一律由 script 生成** | 內容歸 C（數字正確性），排版歸 D。caption 會逐字進入論文，所以「不手抄」涵蓋它——寫死的 caption 只在重抽 split 前是對的 |
 | 巨集依賴 | 僅允許 `booktabs`、`multirow`；不得引入其他 package | NTCIR ACM 模板衝突風險 |
 | 數字格式 | C 端定案（小數位、± 寫法），D 不得手改 | 「所有數字由 script 生成，不手抄」 |
 | 圖 | 向量 PDF，字型嵌入；交付物是 `.pdf`，D 以 `\includegraphics` 引入，preamble **不需加任何 package** | 圖以 TikZ 繪製，但先編譯成 PDF 才交付，所以上一列的 package 限制對圖同樣成立 |
@@ -392,16 +392,32 @@ tables/manifest.json
   "contract_version": "1.0",
   "generated_at": "...", "git_sha": "...",
   "tables": {
+    // 每張表各自記錄自己的來源，因為它們的來源不同。
+    "table1_dataset.tex": {
+      "source_script": "analysis/audit.py",
+      "input_files": ["dataset/vpesg4k_train_1000.json", "splits/...", "..."],
+      "input_sha256": {"dataset/vpesg4k_train_1000.json": "sha256:..."}
+    },
     "table2_main.tex": {
-      "source_script": "make_table2.py",
-      "input_files": ["results/pdf_group_seed42_M0.json", "..."],
-      "input_sha256": {"results/pdf_group_seed42_M0.json": "..."}
+      "source_script": "analysis/aggregate.py",
+      "input_files": ["predictions/pdf_group_seed42_M0.csv.gz", "..."],
+      "input_sha256": {"predictions/pdf_group_seed42_M0.csv.gz": "sha256:..."}
     }
   }
 }
 ```
 
 這份 manifest 是 claim–evidence audit 的骨幹：文中任一數字都能回溯到產生它的 script 與輸入 checksum。
+
+**`input_files` 必須是數字實際的計算來源，不是同批交付的其他檔案。** 這條看似顯然，但很容易錯：§4 同時交付 `predictions/`（逐列）與 `results/`（聚合），而 C 的統計**只讀逐列檔**——bootstrap 需要逐列 gold/pred，聚合數字辦不到（見 §4 開頭的差異說明）。若 manifest 記成 `results/*.json`，改動一個 predictions 檔會讓表中每個分數改變，而所有 checksum 保持不變，稽核軌跡於是靜默失效。因此：
+
+| 表 | `input_files` |
+|---|---|
+| `table1_dataset.tex` | `dataset/` 三檔 + `splits/*.json`（`analysis/audit.py` 讀的東西） |
+| `table2_main.tex` | `pdf_group` 的 21 個 `predictions/*.csv.gz` |
+| `table3_regimes.tex` | 兩種 protocol 的全部 42 個 `predictions/*.csv.gz` |
+
+**空的 `input_files` 必須報錯，不得寫出。** 一份空 manifest 與一份完整 manifest 長得一樣，卻什麼都沒有擔保；只有 `predictions/` 而無 `results/` 的目錄是 W3 的常態，不能讓它靜默產出無效稽核紀錄。
 
 ### D 的替代輸入
 
