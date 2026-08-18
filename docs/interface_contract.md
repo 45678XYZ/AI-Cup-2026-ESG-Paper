@@ -251,7 +251,11 @@ probs/{protocol}_seed{seed}_r{k}/
 
 ### A 的替代輸入
 
-`contracts/examples/probs/` 提供 synthetic fixtures：以已知 bias 生成、M0–M6 的**預期輸出可解析求得**，用來 smoke-test 整條決策管線。真實機率到位後只換路徑。
+`contracts/examples/probs/` 提供 synthetic fixtures（`contracts/make_fixtures.py`）：每欄各自繞著自己的 gold 標籤獨立抽樣，集中度由 `concentration` 控制。用來 smoke-test 整條決策管線，真實機率到位後只換路徑。
+
+**可預先斷定的是性質，不是分數。** fixtures 沒有套任何 bias，方法之間的高低也無法解析求得；能事先確定的只有兩件事：`concentration ≥ 0.5` 時 gold 由構造保證勝出，M0–M6 全部得 1.0、彼此無從分辨；任何 concentration 下 M1–M6 的 `invalid_tuple_rate` 必為 0，而 M0 不為 0。
+
+而且各欄獨立抽樣使 fixtures **系統性偏袒 M0**——父欄錯了子欄仍可能是對的，真實 encoder 的錯誤則跨欄相關。實測 M1 因此比 M0 低約 0.09 weighted F1。fixture 上的方法排序不得外推到真實機率，能外推的只有管線本身。
 
 ---
 
