@@ -26,6 +26,16 @@
 # Logs
 *.log
 
+# LaTeX build products. Three files under figures/ are COMMITTED and must not
+# be caught here: figure1_hierarchy.tex (the drawing's source), its .pdf
+# (contract §5 freezes it as the deliverable D includes), and the generated
+# figure1_defs.tex — committed so the source compiles in an editor without
+# running the rebuild first. Everything below is latexmk scratch.
+*.aux
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+
 # Python
 __pycache__/
 *.pyc
