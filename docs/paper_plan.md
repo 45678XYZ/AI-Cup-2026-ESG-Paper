@@ -365,9 +365,9 @@ artifact 的版控規則：`splits/`、`results/` 與 `probs/` 都進 git（`pro
 - [x] 新增完整 17-state validator 與 projection unit tests。（`paper/projection.py`、`tests/test_projection.py`，120 種 argmax 結果全數窮舉）
 - [x] 新增契約檔的入境檢查（`paper/validate.py`）：機率值域、bundle↔split 對應、跨 rotation 一致性、artifact checksum、逐列檔的列錯位偵測。
 - [ ] 將 calibration API 改為明確接收 calibration labels，拒絕 Test labels。
-- [ ] 將 joint decoder 拆成固定 probabilities／固定 scales 的乾淨模式。
-- [ ] 把需手動改 Python 常數的實驗改成 CLI／config，避免 run 間污染。（split generator 已有 CLI；訓練與評估尚未）
-- [ ] 建立 `run_manifest.json` 與一鍵重算 tables 的指令。
+- [x] 將 joint decoder 拆成固定 probabilities／固定 scales 的乾淨模式。（`paper/decoder.py`，α 固定為 1；對 17 狀態暴力枚舉的參考實作比對）
+- [x] 把需手動改 Python 常數的實驗改成 CLI／config，避免 run 間污染。（split generator、`run_training.py`、`run_decisions.py` 皆有 CLI）
+- [ ] 建立 `run_manifest.json`。（一鍵重算 tables 已由 `python -m analysis` 提供）
 - [ ] 建立只涵蓋 controlled study 的英文 README，從乾淨環境驗證至少一條 inference／evaluation command。（README 已建立；乾淨環境驗證尚未做）
 
 完成前不要在論文寫「repository is fully reproducible」。
@@ -546,7 +546,7 @@ W2 的 B 與 C 相對空閒：B 可先把 W4 的封存腳本寫好，C 可先做
 | 完整 17-state projection 與 validator | ✅ `paper/projection.py` | 雙向投影，120 種 argmax 結果全數窮舉測試 |
 | 契約檔入境檢查 | ✅ `paper/validate.py` | 值域、bundle↔split 對應、跨 rotation 一致性、checksum、列錯位 |
 | Calibration-only class-bias API | ⬜ 未實作 | 只接收 calibration labels、拒絕 test labels，並保存 fallback／biases；conditional 的三個結構性 pinned 類別見 §3.2 |
-| 17-state joint decoder | ⬜ 未實作 | 須提供「固定 probabilities、固定 α、只切換 decoding rule」的乾淨比較模式，不夾帶額外可調參數 |
-| M0–M6 與評估輸出 | ⬜ 未實作 | 依賴上面三項 |
+| 17-state joint decoder | ✅ `paper/decoder.py` | α 固定為 1，不夾帶額外可調參數；exploratory 用的 α 參數存在但主表一律不傳 |
+| M0–M6 與評估輸出 | 🟡 `paper/run_decisions.py` | M0、M1、M4 已可產出契約 3；M2/M3/M5/M6 待 calibration API |
 
 任何論文敘述以**正式凍結後的程式與 manifest**為準，不以 README、舊 log 或開發時記憶為準。

@@ -35,8 +35,11 @@ paper/          study code: label space, data, training, contract artifacts
   dataset.py      tokenisation and collation
   splits.py       rotating three-way split generation (stdlib only)
   projection.py   hierarchy-constrained projection onto the 17 states
+  decoder.py      joint decoding over the 17 legal states
+  methods.py      the M0-M6 table, and scoring in log space
   train_fold.py   trains one rotation, emits raw probabilities only
   run_training.py driver: split manifest in, contract bundle out
+  run_decisions.py driver: probability bundles in, contract-3 files out
   artifacts.py    the only writer of contract files
   evaluate.py     per-row predictions -> the contract-3 results file
   validate.py     inbound conformance checks on received artifacts
