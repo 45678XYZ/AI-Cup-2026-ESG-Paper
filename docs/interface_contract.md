@@ -247,6 +247,7 @@ probs/{protocol}_seed{seed}_r{k}/
 3. 每個 `.npy` 的 shape[0] 等於對應 id 清單長度。
 4. `model_revision` 不得為 `main`／`latest`／空字串。
 5. 所有 `.npy` 的實際 sha256 與 `artifacts` 記載相符。
+6. 一個 run 的五個 rotation 必須出自**同一套訓練配方**：`model_name`、`model_revision`、`train_config_sha256`、`checkpoint_rule`、`checkpoint_last_k`、`epochs` 六項跨 rotation 一致。A 會把五個 test partition 串成單一 2,000 列再計一次分，中途換過配方的 bundle 每一份單看都合法，混在一起卻等於把兩個模型算成一個數字。`git_sha` 與 `hardware` **不比對**——跨 pull 或換一張卡不改變 fit，真正定義 fit 的東西已經進了 `train_config_sha256`。
 
 ### A 的替代輸入
 

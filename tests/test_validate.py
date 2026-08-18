@@ -125,6 +125,28 @@ def test_rotations_from_different_partitions_are_caught(run, tmp_path):
     assert any("split_fingerprint" in p for p in validate_probs_run(mixed))
 
 
+def test_rotations_from_different_training_recipes_are_caught(run, tmp_path):
+    """Contract §3 invariant 6. Each such bundle is internally valid; the five
+    are concatenated into one score, so a rotation re-run under a different
+    recipe puts two models into one number and nothing per-bundle sees it."""
+    mixed = list(run[:4]) + [
+        _retouch(run[4], tmp_path,
+                 mutate_meta=lambda m: m.update(model_revision="deadbeef"))
+    ]
+    assert any("model_revision" in p for p in validate_probs_run(mixed))
+
+
+def test_a_second_gpu_or_a_pull_mid_run_is_not_an_error(run, tmp_path):
+    """The complement of the check above: git_sha and hardware are excluded on
+    purpose, so rotations spread over a pull or a second card still validate."""
+    spread = list(run[:4]) + [
+        _retouch(run[4], tmp_path,
+                 mutate_meta=lambda m: m.update(git_sha="0" * 40,
+                                                hardware="RTX 3090 (idx 0)"))
+    ]
+    assert validate_probs_run(spread) == []
+
+
 # --- contract 3 -----------------------------------------------------------
 
 @pytest.fixture(scope="module")

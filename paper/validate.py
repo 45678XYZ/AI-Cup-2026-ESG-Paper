@@ -64,6 +64,20 @@ PROVENANCE_META = (
     "epochs", "hardware", "started_at", "finished_at",
 )
 
+# Keys that must agree across the five rotations of one run. The five test
+# partitions are concatenated into a single 2,000-row score, so a rotation
+# re-run after ``EPOCHS`` moved or after the revision was re-pinned would put
+# two different models into one number. Each such bundle is internally valid
+# and passes every per-bundle check; the mixture is only visible across the set.
+#
+# ``git_sha`` and ``hardware`` are deliberately *not* compared: B may run
+# rotations across a pull or on a second GPU without changing the fit, and what
+# does define the fit is hashed into ``train_config_sha256``.
+RECIPE_META = (
+    "model_name", "model_revision", "train_config_sha256",
+    "checkpoint_rule", "checkpoint_last_k", "epochs",
+)
+
 EXPECTED_ARRAYS = tuple(
     f"{partition}_{field}.npy"
     for partition in ("calibration", "test")
@@ -209,7 +223,9 @@ def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR) -> list[str]:
 
     Invariant 1b of contract §3 exists for a failure no per-bundle check can
     see: five rotations each produced against a different version of the split,
-    every one internally consistent, the set as a whole incoherent.
+    every one internally consistent, the set as a whole incoherent. The same
+    argument applies to the training recipe (``RECIPE_META``), because the five
+    rotations are concatenated before anything is scored.
     """
     metas = []
     problems: list[str] = []
@@ -221,7 +237,7 @@ def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR) -> list[str]:
     if not metas:
         return ["no bundles with a meta.json were given"]
 
-    for key in ("protocol", "seed", "split_fingerprint", "data_checksum"):
+    for key in ("protocol", "seed", "split_fingerprint", "data_checksum", *RECIPE_META):
         values = {m.get(key) for _, m in metas}
         if len(values) > 1:
             problems.append(f"bundles disagree on {key}: {sorted(map(str, values))}")
