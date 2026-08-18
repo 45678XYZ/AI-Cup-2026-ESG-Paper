@@ -248,6 +248,7 @@ probs/{protocol}_seed{seed}_r{k}/
 4. `model_revision` 不得為 `main`／`latest`／空字串。
 5. 所有 `.npy` 的實際 sha256 與 `artifacts` 記載相符。
 6. 一個 run 的五個 rotation 必須出自**同一套訓練配方**：`model_name`、`model_revision`、`train_config_sha256`、`checkpoint_rule`、`checkpoint_last_k`、`epochs` 六項跨 rotation 一致。A 會把五個 test partition 串成單一 2,000 列再計一次分，中途換過配方的 bundle 每一份單看都合法，混在一起卻等於把兩個模型算成一個數字。`git_sha` 與 `hardware` **不比對**——跨 pull 或換一張卡不改變 fit，真正定義 fit 的東西已經進了 `train_config_sha256`。
+7. **同一套配方還必須跨 run 成立**，也就是整份研究的 30 個 bundle 六項全部一致。不變量 6 一次只看得到五個 bundle，因此兩個 run 之間改過 config 時，每一組單獨檢查都會過。但 §4.5 的 3-seed mean±std 要能被描述成整條流程的變異、Table 3 的雙 protocol 對照要能歸因於 protocol，前提都是 §3.1 的 base model 全程固定；配方若在 seed 42 與 seed 123 之間動過，那個 std 就變成流程變異與 config 變更的混合，而表面上看不出來。由 `paper/validate.py::validate_probs_study` 檢查，`python -m paper.validate --all` 會自動涵蓋。
 
 ### A 的替代輸入
 

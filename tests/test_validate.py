@@ -18,6 +18,7 @@ from paper.validate import (
     validate_predictions,
     validate_probs_bundle,
     validate_probs_run,
+    validate_probs_study,
 )
 
 ROWS = load_dev()
@@ -134,6 +135,55 @@ def test_rotations_from_different_training_recipes_are_caught(run, tmp_path):
                  mutate_meta=lambda m: m.update(model_revision="deadbeef"))
     ]
     assert any("model_revision" in p for p in validate_probs_run(mixed))
+
+
+def _second_run(run, tmp_path, mutate_meta=None):
+    """The five bundles copied under a second (protocol, seed) name.
+
+    Only the recipe keys are touched, so these copies still carry seed 42's id
+    lists — enough for the study-level check, which reads nothing else, and not
+    a valid bundle set for anything that does.
+    """
+    import shutil
+
+    dirs = []
+    for src in run:
+        dst = tmp_path / src.name.replace("seed42", "seed123")
+        shutil.copytree(src, dst)
+        meta = json.load(open(dst / "meta.json", encoding="utf-8"))
+        meta["seed"] = 123
+        if mutate_meta:
+            mutate_meta(meta)
+        with open(dst / "meta.json", "w", encoding="utf-8") as f:
+            json.dump(meta, f)
+        dirs.append(dst)
+    return dirs
+
+
+def test_a_recipe_that_moved_between_two_runs_is_caught(run, tmp_path):
+    """The gap the per-run check cannot see: each run of five is internally
+    consistent, so both pass, while the 3-seed std silently becomes a mixture
+    of pipeline variance and a config change."""
+    other = _second_run(run, tmp_path, mutate_meta=lambda m: m.update(epochs=10))
+    problems = validate_probs_study(list(run) + other)
+    assert any("epochs" in p for p in problems)
+    assert any("pdf_group_seed123" in p for p in problems)
+
+
+def test_two_runs_of_one_recipe_are_clean(run, tmp_path):
+    assert validate_probs_study(list(run) + _second_run(run, tmp_path)) == []
+
+
+def test_the_study_check_defers_to_the_run_check(run, tmp_path):
+    """A run that is internally inconsistent is reported by the per-run check,
+    which names the rotation; the study check must not restate it less
+    precisely."""
+    broken = list(run[:4]) + [
+        _retouch(run[4], tmp_path / "broken",
+                 mutate_meta=lambda m: m.update(epochs=10))
+    ]
+    assert validate_probs_study(broken) == []
+    assert any("epochs" in p for p in validate_probs_run(broken))
 
 
 def test_a_second_gpu_or_a_pull_mid_run_is_not_an_error(run, tmp_path):
