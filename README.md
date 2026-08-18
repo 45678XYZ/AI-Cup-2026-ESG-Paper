@@ -188,17 +188,41 @@ than something the operator has to remember. It refuses to start unless
 `MODEL_REVISION` is pinned; `--allow-unpinned-revision` overrides that for a
 throwaway smoke test.
 
+## Decision runs
+
+CPU only. This is the step between B's probabilities and the analysis: it
+applies the seven decision rules and writes the contract-3 files.
+
+```bash
+python -m paper.run_decisions --protocol pdf_group --seed 42
+python -m paper.run_decisions --protocol pdf_group --seed 42 \
+    --methods M0 M1 M4 --probs-dir contracts/examples/probs --out-dir /tmp/smoke
+```
+
+One invocation loads the five rotations once and runs every requested method
+over that one loaded set, which is what makes "identical probabilities on
+identical rows" structural rather than an operating convention. All five
+bundles are validated before anything is decided; the five test partitions are
+then concatenated into one 2,000-row predictions file and scored once, because
+per-fold F1 is not on a common scale across folds and must never be averaged.
+
+The second form above is the fixture smoke test, and runs today against the
+synthetic bundles in `contracts/examples/probs/`. M2/M3/M5/M6 stop with
+`NotImplementedError` until the calibration API exists.
+
 ## Status
 
 Done: frozen label space and 17-state definitions, data layer with checksums,
 split generation for both protocols, the hierarchy-constrained projection, the
-training driver, artifact validation, and synthetic example files for every
-handoff.
+joint 17-state decoder, the M0-M6 method table, the training and decision
+drivers, artifact validation, and synthetic example files for every handoff.
+M0, M1 and M4 run end to end on the fixtures today.
 
-Not yet implemented — the rest of the decision stage, which is what the paper
-is about: the calibration-only bias API, the joint 17-state decoder, and the
-M0-M6 runner. Until those exist, `paper/evaluate.py` has nothing real to
-summarise and every file under `contracts/examples/` is fabricated.
+Not yet implemented: the calibration-only bias API, and with it M2, M3, M5 and
+M6 — half of the factorial the paper is about. Until it exists the runner
+refuses those four rather than approximating them. No real probabilities have
+been produced either, so every file under `contracts/examples/` is still
+fabricated and no number anywhere in this repository is a result.
 
 One design point is settled ahead of the calibration code and is worth reading
 before it: under conditional (hierarchy-constrained) estimation, the three
