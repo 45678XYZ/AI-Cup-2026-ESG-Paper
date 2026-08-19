@@ -37,6 +37,7 @@ paper/          study code: label space, data, training, contract artifacts
   projection.py   hierarchy-constrained projection onto the 17 states
   decoder.py      joint decoding over the 17 legal states
   methods.py      the M0-M6 table, and scoring in log space
+  calibration.py  class biases estimated on the Calibration partition only
   train_fold.py   trains one rotation, emits raw probabilities only
   run_training.py driver: split manifest in, contract bundle out
   run_decisions.py driver: probability bundles in, contract-3 files out
@@ -207,27 +208,32 @@ then concatenated into one 2,000-row predictions file and scored once, because
 per-fold F1 is not on a common scale across folds and must never be averaged.
 
 The second form above is the fixture smoke test, and runs today against the
-synthetic bundles in `contracts/examples/probs/`. M2/M3/M5/M6 stop with
-`NotImplementedError` until the calibration API exists.
+synthetic bundles in `contracts/examples/probs/`. All seven methods run; one
+invocation of the full set takes about two seconds on the fixtures.
+
+Biases are estimated per rotation on the Calibration partition and nowhere
+else, against each field's own macro-F1 evaluated *before* the output rule is
+applied. One estimate therefore serves both output rules — M2 and M5 are handed
+the same global biases, M3 and M6 the same conditional ones — which is what
+lets the results table be read as a factorial rather than as seven systems.
 
 ## Status
 
 Done: frozen label space and 17-state definitions, data layer with checksums,
 split generation for both protocols, the hierarchy-constrained projection, the
-joint 17-state decoder, the M0-M6 method table, the training and decision
-drivers, artifact validation, and synthetic example files for every handoff.
-M0, M1 and M4 run end to end on the fixtures today.
+joint 17-state decoder, the M0-M6 method table, calibration-partition class
+biases, the training and decision drivers, artifact validation, and synthetic
+example files for every handoff.
 
-Not yet implemented: the calibration-only bias API, and with it M2, M3, M5 and
-M6 — half of the factorial the paper is about. Until it exists the runner
-refuses those four rather than approximating them. No real probabilities have
-been produced either, so every file under `contracts/examples/` is still
-fabricated and no number anywhere in this repository is a result.
+The decision stage is complete: all seven methods run end to end on the
+fixtures. What is missing is real input — no probabilities have been produced
+yet, so every file under `contracts/examples/` is still fabricated and no
+number anywhere in this repository is a result.
 
-One design point is settled ahead of the calibration code and is worth reading
-before it: under conditional (hierarchy-constrained) estimation, the three
-child-field `N/A` biases are *unidentifiable*, not merely unsupported — those
-classes never occur inside their conditioning subset. They are pinned at 0.0 by
+One design point in that code is easy to misread: under conditional
+(hierarchy-constrained) estimation, the three child-field `N/A` biases are
+*unidentifiable*, not merely unsupported — those classes never occur inside
+their conditioning subset. They are pinned at 0.0 by
 definition (`paper/labels.py::CONDITIONAL_PINNED_CLASSES`), which leaves M3
 unaffected but gives M6 three pinned terms where M5 fits four. See
 [docs/paper_plan.md](docs/paper_plan.md) §3.2.

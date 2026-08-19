@@ -442,6 +442,7 @@ A 提供 placeholder `.tex`（欄數、欄序、對齊與正式版相同，數�
 | `paper/projection.py` | ✅ | 完整雙向 hierarchy projection（M1–M3 的 output rule） |
 | `paper/decoder.py` | ✅ | 17 個合法狀態的 joint decoding，α 固定為 1（M4–M6 的 output rule） |
 | `paper/methods.py` | ✅ | M0–M6 的定義與 dispatch；統一在 `log p + b` 的 score space 運作 |
+| `paper/calibration.py` | ✅ | Calibration partition 上的 class-bias 估計（M2/M3/M5/M6）；只接收 calibration ids，傳入 Test partition 直接 raise |
 | `paper/run_decisions.py` | ✅ | 決策驅動腳本：讀 5 個 probs bundle → 決策 → 拼成 2,000 列 → 寫契約 3。一次 invocation 跑完所有方法，「同一組機率、同一批 rows」因此是結構保證 |
 | `paper/evaluate.py` | ✅ | 由逐列 predictions 產生契約 3 的**完整**結果物件（含信封），真實 runner 與範例產生器共用 |
 | `paper/validate.py` | ✅ | 契約檔的入境檢查；A 每收到一組 bundle 就跑 |
