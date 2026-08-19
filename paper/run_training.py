@@ -17,20 +17,18 @@ rotations = 30 bundles from 30 fits.
 import argparse
 import json
 import os
-import platform
 import shlex
 import sys
 import time
 from pathlib import Path
 
 import torch
-import transformers
 from huggingface_hub import snapshot_download
 from transformers import AutoTokenizer
 
 from paper.artifacts import write_probs_bundle
 from paper.data import REPO_ROOT, data_checksum, file_sha256, index_by_id, load_dev
-from paper.provenance import now_iso
+from paper.provenance import environment, now_iso
 from paper.train_config import (
     CHECKPOINT_LAST_K,
     CHECKPOINT_RULE,
@@ -40,6 +38,7 @@ from paper.train_config import (
     SEEDS,
 )
 from paper.train_fold import predict_probs, train_rotation
+from paper.validate import UNPINNED_REVISIONS
 
 TRAIN_CONFIG_PATH = Path(__file__).resolve().parent / "train_config.py"
 
@@ -50,16 +49,51 @@ def _hardware():
     return "cpu"
 
 
+def _command() -> str:
+    """The invocation, in a form that can actually be re-run.
+
+    ``sys.argv[0]`` under ``python -m`` is the resolved path of the module
+    *file*, so joining it yields a command that puts ``paper/`` on sys.path and
+    dies importing ``paper.artifacts`` -- the one thing this field exists for.
+    ``sys.orig_argv`` keeps the real ``-m paper.run_training`` form.
+    """
+    return shlex.join(getattr(sys, "orig_argv", None) or [sys.executable, *sys.argv])
+
+
 def _runtime_meta():
+    # ``environment`` is the same stamp run_manifest records, so a bundle and
+    # the manifest that indexes it can be compared field by field. What is
+    # local to a fit -- the command, and which GPU CUDA exposed -- is added here.
     return {
-        "command": shlex.join([sys.executable, *sys.argv]),
-        "python_version": platform.python_version(),
-        "torch_version": torch.__version__,
+        "command": _command(),
+        "environment": environment(),
         "torch_cuda_version": torch.version.cuda,
-        "transformers_version": transformers.__version__,
         "cuda_device_order": os.environ.get("CUDA_DEVICE_ORDER"),
         "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
     }
+
+
+def resolve_pinned_snapshot(revision=MODEL_REVISION):
+    """Fetch-or-reuse the pinned snapshot once, and prove it is the pinned one.
+
+    Every rotation then loads from the returned directory rather than by Hub
+    id: transformers 4.40 otherwise probes for an optional safetensors
+    conversion on each load, even when pytorch_model.bin is already cached.
+
+    That path costs the pin, which is why the check below is not decoration.
+    ``from_pretrained`` silently ignores ``revision`` for a local directory, so
+    once the driver hands over a path nothing downstream enforces anything --
+    while meta.json goes on recording MODEL_REVISION as though something did.
+    Hugging Face lays snapshots out as ``snapshots/<commit>``, so the directory
+    name *is* the resolved commit and can be compared against the pin.
+    """
+    path = Path(snapshot_download(MODEL_NAME, revision=revision))
+    if revision not in UNPINNED_REVISIONS and path.name != revision:
+        raise SystemExit(
+            f"{MODEL_NAME} resolved to snapshot {path.name}, not the pinned "
+            f"{revision}. Refusing to train against unidentified weights."
+        )
+    return path
 
 
 def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=False,
@@ -86,6 +120,7 @@ def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=Fal
     t0 = time.time()
     model, avg_state = train_rotation(
         train_data, tokenizer, split["seed"], model_name=model_source,
+        local_files_only=True,
     )
     probs = {name: predict_probs(model, data, tokenizer) for name, data in partitions.items()}
     elapsed = time.time() - t0
@@ -132,11 +167,14 @@ def main():
 
     # An unpinned revision means the run cannot be reproduced against a known
     # set of weights. Failing here rather than after the fits saves the GPU time.
-    if MODEL_REVISION in (None, "", "main", "latest") and not args.allow_unpinned_revision:
+    if MODEL_REVISION in UNPINNED_REVISIONS and not args.allow_unpinned_revision:
         raise SystemExit(
-            "MODEL_REVISION is not pinned in paper/train_config.py (see its TODO(B)).\n"
-            "Pin it to the exact Hugging Face revision, or pass "
-            "--allow-unpinned-revision for a throwaway smoke test."
+            f"MODEL_REVISION is {MODEL_REVISION!r} in paper/train_config.py, "
+            "which does not identify a fixed set of weights.\n"
+            f"Set it to the commit `huggingface-cli scan-cache` reports for "
+            f"{MODEL_NAME}, or what the Hub's Files tab shows for the branch "
+            "you intend, or pass --allow-unpinned-revision for a throwaway "
+            "smoke test."
         )
 
     split_path = (args.splits_dir / f"{args.protocol}_seed{args.seed}.json").resolve()
@@ -151,17 +189,21 @@ def main():
     if split["data_checksum"] != data_checksum(rows):
         raise SystemExit(f"{split_path} was built against different data; refusing to run.")
 
-    # Resolve the pinned Hub revision once, then load every rotation from the
-    # local snapshot. Transformers 4.40 otherwise probes for an optional
-    # safetensors conversion on each load even when pytorch_model.bin is cached.
+    # Downloads on a cold machine and reuses the cache on a warm one. Only
+    # OSError is caught: LocalEntryNotFoundError, HTTP failures and a full or
+    # unreadable cache all derive from it, while a TypeError from a changed
+    # huggingface_hub signature must keep its own traceback rather than be
+    # relabelled as a fetch problem right before a 30-fit campaign.
     try:
-        model_source = snapshot_download(
-            MODEL_NAME, revision=MODEL_REVISION, local_files_only=True,
-        )
-    except Exception as exc:
+        model_source = str(resolve_pinned_snapshot())
+    except OSError as exc:
         raise SystemExit(
-            f"Pinned model snapshot is not present in the Hugging Face cache: {exc}"
+            f"Could not obtain {MODEL_NAME} at revision {MODEL_REVISION}: {exc}\n"
+            "Check network access to huggingface.co, or pre-populate the cache "
+            f"with `huggingface-cli download {MODEL_NAME} "
+            f"--revision {MODEL_REVISION}`."
         ) from exc
+    # The snapshot is complete by now, so the per-load Hub probes are pure cost.
     tokenizer = AutoTokenizer.from_pretrained(model_source, local_files_only=True)
 
     for k in args.rotations:

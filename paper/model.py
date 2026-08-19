@@ -23,9 +23,15 @@ from paper.train_config import (
 
 
 class MultiTaskEncoder(nn.Module):
-    def __init__(self, model_name, num_labels_dict, dropout=DROPOUT, revision=None):
+    def __init__(self, model_name, num_labels_dict, dropout=DROPOUT, revision=None,
+                 local_files_only=False):
         super().__init__()
-        self.encoder = AutoModel.from_pretrained(model_name, revision=revision)
+        # ``revision`` is honoured only when ``model_name`` is a Hub id; for a
+        # local snapshot directory transformers ignores it, so the driver pins
+        # the revision by resolving the snapshot itself (run_training.py).
+        self.encoder = AutoModel.from_pretrained(
+            model_name, revision=revision, local_files_only=local_files_only,
+        )
         hidden_size = self.encoder.config.hidden_size
         self.dropout = nn.Dropout(dropout)
         self.classifiers = nn.ModuleDict({
