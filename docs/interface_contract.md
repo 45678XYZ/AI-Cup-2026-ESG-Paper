@@ -247,10 +247,16 @@ probs/{protocol}_seed{seed}_r{k}/
 3. 每個 `.npy` 的 shape[0] 等於對應 id 清單長度。
 4. `model_revision` 不得為 `main`／`latest`／空字串。
 5. 所有 `.npy` 的實際 sha256 與 `artifacts` 記載相符。
+6. 一個 run 的五個 rotation 必須出自**同一套訓練配方**：`model_name`、`model_revision`、`train_config_sha256`、`checkpoint_rule`、`checkpoint_last_k`、`epochs` 六項跨 rotation 一致。A 會把五個 test partition 串成單一 2,000 列再計一次分，中途換過配方的 bundle 每一份單看都合法，混在一起卻等於把兩個模型算成一個數字。`git_sha` 與 `hardware` **不比對**——跨 pull 或換一張卡不改變 fit，真正定義 fit 的東西已經進了 `train_config_sha256`。
+7. **同一套配方還必須跨 run 成立**，也就是整份研究的 30 個 bundle 六項全部一致。不變量 6 一次只看得到五個 bundle，因此兩個 run 之間改過 config 時，每一組單獨檢查都會過。但 §4.5 的 3-seed mean±std 要能被描述成整條流程的變異、Table 3 的雙 protocol 對照要能歸因於 protocol，前提都是 §3.1 的 base model 全程固定；配方若在 seed 42 與 seed 123 之間動過，那個 std 就變成流程變異與 config 變更的混合，而表面上看不出來。由 `paper/validate.py::validate_probs_study` 檢查，`python -m paper.validate --all` 會自動涵蓋。
 
 ### A 的替代輸入
 
-`contracts/examples/probs/` 提供 synthetic fixtures：以已知 bias 生成、M0–M6 的**預期輸出可解析求得**，用來 smoke-test 整條決策管線。真實機率到位後只換路徑。
+`contracts/examples/probs/` 提供 synthetic fixtures（`contracts/make_fixtures.py`）：每欄各自繞著自己的 gold 標籤獨立抽樣，集中度由 `concentration` 控制。用來 smoke-test 整條決策管線，真實機率到位後只換路徑。
+
+**可預先斷定的是性質，不是分數。** fixtures 沒有套任何 bias，方法之間的高低也無法解析求得；能事先確定的只有兩件事：`concentration ≥ 0.5` 時 gold 由構造保證勝出，M0–M6 全部得 1.0、彼此無從分辨；任何 concentration 下 M1–M6 的 `invalid_tuple_rate` 必為 0，而 M0 不為 0。
+
+而且各欄獨立抽樣使 fixtures **系統性偏袒 M0**——父欄錯了子欄仍可能是對的，真實 encoder 的錯誤則跨欄相關。實測 M1 因此比 M0 低約 0.09 weighted F1。fixture 上的方法排序不得外推到真實機率，能外推的只有管線本身。
 
 ---
 
@@ -353,23 +359,37 @@ A 提供 `contracts/examples/predictions/` 與 `results/` 的合成檔（分數�
 ### 路徑與固定檔名
 
 ```
-tables/table1_dataset.tex      figures/figure1_hierarchy.pdf
-tables/table2_main.tex
-tables/table3_regimes.tex
+tables/table1_dataset.tex      figures/figure1_hierarchy.pdf   ← 交付物，D 引入這個
+tables/table2_main.tex         figures/figure1_hierarchy.tex   ← 圖的原始碼（standalone TikZ）
+tables/table3_regimes.tex      figures/figure1_defs.tex        ← 圖印出的數字，由 script 生成
 tables/manifest.json
 ```
 
-檔名在契約凍結時固定，D 的 `\input{}` 因此不會因 C 改名而斷。
+檔名在契約凍結時固定，D 的 `\input{}` 與 `\includegraphics{}` 因此不會因 C 改名而斷。
+
+`figures/` 下的三個檔案只有 `.pdf` 是交付物。另外兩個是它的來源，一併進版控，理由是 D 若想在編輯器裡預覽或微調圖，不必先執行 C 的重算流程；但 **D 不需要、也不應該把 `.tex` 引入正文**，見下面「圖」的規定。
 
 ### 規格
 
 | 項目 | 規定 | 理由 |
 |---|---|---|
 | `.tex` 內容 | **只含 `tabular` 環境**，不含 `\begin{table}`、`\caption`、`\label` | D 在 8 頁預算下需要自行決定浮動位置、寬度與 `\small`；C 包死會讓 D 無法壓版 |
-| Caption 文字 | 另存 `tables/table2_main_caption.txt`（純文字） | 內容歸 C（數字正確性），排版歸 D |
+| Caption 文字 | 另存 `tables/table2_main_caption.txt`（純文字）；**其中的數字與表格內的數字適用同一條規則，一律由 script 生成** | 內容歸 C（數字正確性），排版歸 D。caption 會逐字進入論文，所以「不手抄」涵蓋它——寫死的 caption 只在重抽 split 前是對的 |
 | 巨集依賴 | 僅允許 `booktabs`、`multirow`；不得引入其他 package | NTCIR ACM 模板衝突風險 |
 | 數字格式 | C 端定案（小數位、± 寫法），D 不得手改 | 「所有數字由 script 生成，不手抄」 |
-| 圖 | 向量 PDF，字型嵌入，寬度可縮至單欄不失真 | |
+| 圖 | 向量 PDF，字型嵌入；交付物是 `.pdf`，D 以 `\includegraphics` 引入，preamble **不需加任何 package** | 圖以 TikZ 繪製，但先編譯成 PDF 才交付，所以上一列的 package 限制對圖同樣成立 |
+
+### Figure 1 的產生方式
+
+圖畫在 `figures/figure1_hierarchy.tex`，用 `standalone` document class 與 TikZ，由 `analysis/figure1.py`（或 `python -m analysis`）呼叫 `latexmk` 編成 `figure1_hierarchy.pdf`。
+
+用 TikZ 而非繪圖程式庫的理由只有一個，就是字型：圖上的字與內文都是 ACM 模板的 Linux Libertine，數學式由 TeX 本身排版，不會出現圖與內文兩套字的違和。**這不改變交付介面** —— D 拿到的仍是 PDF，preamble 不必加 `tikz`，因此不觸犯上面的 package 限制。
+
+圖印出的數字（合法 tuple 數、組合數、hierarchy-invalid 數）不寫在繪圖原始碼裡，而是由 `analysis/figure1.py` 從 `paper/labels.py` 推導後寫進 `figures/figure1_defs.tex`，繪圖端只能引用巨集。這是「所有數字由 script 生成，不手抄」在圖上的落實方式；`tests/test_analysis_figure1.py` 會在原始碼裡出現裸數字時讓測試失敗，也會偵測 `figure1_defs.tex` 是否過期。
+
+重建圖需要一套含 `latexmk` 的 TeX 環境。**沒有 TeX 的機器不受影響**：`python -m analysis` 會偵測並跳過圖，照常重算全部表格。這是安全的，因為圖的數字來自 `paper/labels.py` 而非該次執行的結果，跳過不可能讓已進版控的 PDF 與同批表格對不上。
+
+版面上，圖的自然尺寸是 15.4 × 7.0 cm（6.1 × 2.8 in），設計成用 `figure*` 跨雙欄、以原尺寸放置：此時圖上的字是 8pt，對比內文 9pt。放大到 `width=\textwidth` 會讓圖上的字大於內文；而這張圖承載四件事，縮到單欄不可能維持可讀，原本規格欄寫的「可縮至單欄不失真」應理解為向量圖的性質，不是建議的排版方式。
 
 ### `tables/manifest.json`
 
@@ -378,16 +398,32 @@ tables/manifest.json
   "contract_version": "1.0",
   "generated_at": "...", "git_sha": "...",
   "tables": {
+    // 每張表各自記錄自己的來源，因為它們的來源不同。
+    "table1_dataset.tex": {
+      "source_script": "analysis/audit.py",
+      "input_files": ["dataset/vpesg4k_train_1000.json", "splits/...", "..."],
+      "input_sha256": {"dataset/vpesg4k_train_1000.json": "sha256:..."}
+    },
     "table2_main.tex": {
-      "source_script": "make_table2.py",
-      "input_files": ["results/pdf_group_seed42_M0.json", "..."],
-      "input_sha256": {"results/pdf_group_seed42_M0.json": "..."}
+      "source_script": "analysis/aggregate.py",
+      "input_files": ["predictions/pdf_group_seed42_M0.csv.gz", "..."],
+      "input_sha256": {"predictions/pdf_group_seed42_M0.csv.gz": "sha256:..."}
     }
   }
 }
 ```
 
 這份 manifest 是 claim–evidence audit 的骨幹：文中任一數字都能回溯到產生它的 script 與輸入 checksum。
+
+**`input_files` 必須是數字實際的計算來源，不是同批交付的其他檔案。** 這條看似顯然，但很容易錯：§4 同時交付 `predictions/`（逐列）與 `results/`（聚合），而 C 的統計**只讀逐列檔**——bootstrap 需要逐列 gold/pred，聚合數字辦不到（見 §4 開頭的差異說明）。若 manifest 記成 `results/*.json`，改動一個 predictions 檔會讓表中每個分數改變，而所有 checksum 保持不變，稽核軌跡於是靜默失效。因此：
+
+| 表 | `input_files` |
+|---|---|
+| `table1_dataset.tex` | `dataset/` 三檔 + `splits/*.json`（`analysis/audit.py` 讀的東西） |
+| `table2_main.tex` | `pdf_group` 的 21 個 `predictions/*.csv.gz` |
+| `table3_regimes.tex` | 兩種 protocol 的全部 42 個 `predictions/*.csv.gz` |
+
+**空的 `input_files` 必須報錯，不得寫出。** 一份空 manifest 與一份完整 manifest 長得一樣，卻什麼都沒有擔保；只有 `predictions/` 而無 `results/` 的目錄是 W3 的常態，不能讓它靜默產出無效稽核紀錄。
 
 ### D 的替代輸入
 
@@ -404,11 +440,13 @@ A 提供 placeholder `.tex`（欄數、欄序、對齊與正式版相同，數�
 | `paper/run_training.py` | ✅ | 訓練驅動腳本：讀 split → 只用 train_ids 訓練 → 對 calib／test 推論 → 寫成契約格式。B 只要跑，不必自己拼裝 |
 | `paper/artifacts.py` | ✅ | 契約檔的唯一寫入點；驅動腳本與 fixture 產生器共用，兩者結構不可能分岔 |
 | `paper/projection.py` | ✅ | 完整雙向 hierarchy projection（M1–M3 的 output rule） |
-| `paper/calibration.py` | ✅ | Calibration-only global／conditional class-bias coordinate ascent；Test labels 直接拒絕 |
-| `paper/decoder.py` | ✅ | 固定 `alpha=[1,1,1,1]` 的 17-state joint decoder |
-| `paper/run_decision.py` | ✅ | 真實 M0–M6 runner：五 rotations 拼接、寫 predictions／results 並即時驗證 |
+| `paper/decoder.py` | ✅ | 17 個合法狀態的 joint decoding，α 固定為 1（M4–M6 的 output rule） |
+| `paper/methods.py` | ✅ | M0–M6 的定義與 dispatch；統一在 `log p + b` 的 score space 運作 |
+| `paper/calibration.py` | ✅ | Calibration partition 上的 class-bias 估計（M2/M3/M5/M6）；只接收 calibration ids，傳入 Test partition 直接 raise |
+| `paper/run_decisions.py` | ✅ | 決策驅動腳本：讀 5 個 probs bundle → 決策 → 拼成 2,000 列 → 寫契約 3。一次 invocation 跑完所有方法，「同一組機率、同一批 rows」因此是結構保證 |
 | `paper/evaluate.py` | ✅ | 由逐列 predictions 產生契約 3 的**完整**結果物件（含信封），真實 runner 與範例產生器共用 |
 | `paper/validate.py` | ✅ | 契約檔的入境檢查；A 每收到一組 bundle 就跑 |
+| `paper/run_manifest.py` | ✅ | 整份研究的索引：環境、commit、各 artifact 的 sha256、跨檔一致性判定；唯一檢查 `results.predictions_sha256` 是否仍對得上磁碟的地方 |
 | `contracts/states.json` | ✅ | 由 `paper/labels.py` 產生，測試斷言不漂移 |
 | `contracts/make_fixtures.py` | ✅ | 合成機率 fixtures，`concentration` 控制 gold 集中度 |
 | `contracts/make_examples.py` | ✅ | 契約 3 的 M0–M6 predictions／results 與契約 4 的 placeholder `.tex` |
@@ -436,3 +474,48 @@ python -m paper.validate --all
 理由是全部只有 49 份 PDF，切分運氣的影響很大；folds 若跨 seed 固定，三個 seed 會一起繼承同一個運氣，seed std 反而看不出來。實測三個 seed 的 fold 0 重疊率為 17%（`pdf_group`）與 22.5%（`row_strat`），`tests/test_splits.py::test_seeds_produce_different_partitions` 鎖住此性質。
 
 已知代價：變異來源無法拆解，因此 seed std 只能描述成整條流程的變異，不能說成模型穩定度。同一 seed 內 M0–M6 仍共用完全相同的 Test rows，方法間的配對比較與投稿前檢查清單皆不受影響。
+
+---
+
+## 7. C 的交付清單與現況
+
+C 消費契約 3（`predictions/`、`results/`），產出契約 4（`tables/`、`figures/`）。整條線都不碰原始資料集，也不重現 split 邏輯——這是 §4 刻意讓逐列檔自足的用意。
+
+### 交付物
+
+| 交付物 | 狀態 | 說明 |
+|---|---|---|
+| `analysis/audit.py` | ✅ | 資料／support／duplicate 稽核，Table 1 的全部數字；`Misleading=2` 落在哪兩份 PDF 由它認定 |
+| `analysis/load.py` | ✅ | 把 42 個 predictions 檔對齊到同一組 canonical row order，錯位在此攔截而非在統計階段 |
+| `analysis/metrics.py` | ✅ | subset-aware weighted macro-F1，向量化以支撐 bootstrap，並釘住 `paper/score.py`（測試斷言兩者同分） |
+| `analysis/bootstrap.py` | ✅ | 10,000 次 paired PDF-cluster bootstrap 與 Holm 校正；以 PDF 為重抽單位，同一抽樣上計兩法差值 |
+| `analysis/aggregate.py` | ✅ | 跨 seed 聚合、§3.4 預先指定的對比、sensitivity |
+| `analysis/tables.py` | ✅ | 契約 4 的三張 `tabular`、caption 純文字檔與 provenance manifest |
+| `analysis/figure1.py` | ✅ | Figure 1 的數字（由 `paper/labels.py` 推導）與 latexmk 建置 |
+| `analysis/__main__.py` | ✅ | 一鍵重算：`python -m analysis`，凍結後只能重算不能改動的那道指令 |
+| `tables/table{1,2,3}*.tex`、`*_caption.txt`、`manifest.json` | ✅ | 契約 4 交付物 |
+| `figures/figure1_hierarchy.pdf` | ✅ | 契約 4 交付物；`.tex` 與 `_defs.tex` 為其來源，見 §5 |
+| `tests/test_analysis_*.py` | ✅ 6 檔 | audit、metrics、bootstrap、aggregate、tables、figure1 各一 |
+
+### 實作歷程
+
+依序完成，每一步都在下一步依賴它之前先有測試：
+
+| commit | 內容 |
+|---|---|
+| `2a49b59` | 資料稽核與 rare class 落點——Table 1 的數字來源 |
+| `5e178ab` | 對齊後的 predictions 載入，與釘住 `paper.score` 的計分器 |
+| `2fe56b3` | paired PDF-cluster bootstrap 與 Holm 校正 |
+| `1f87222` | 跨 seed 聚合、預先指定對比、sensitivity |
+| `bd1980c` | 契約 4 的表、caption 與 provenance manifest |
+| `bb5685a` | Figure 1 初版（繪圖程式庫產生） |
+| `4e003bc` | 一鍵重算全部表與圖 |
+| `7d44b86` | Figure 1 改以 standalone TikZ 繪製，數字仍由 script 生成（見 §5） |
+
+SHA 對應 `c-analysis` 這條線；若日後以 squash 方式合併，改用 `git log --grep='feat(analysis)'` 追溯。
+
+### 這條線一貫遵守的兩件事
+
+**沒有任何分數被轉抄。** `analysis/metrics.py` 是 `paper/score.py` 的向量化重述（為了跑得動 10,000 次重抽），測試斷言兩者對同一輸入給出相同分數；表與圖的每個數字都來自 script，`tables/manifest.json` 記下每個輸入的 sha256，因此文中任一數字都能回溯到產生它的程式與輸入。Figure 1 的三個計數同樣如此——它們從 `paper/labels.py` 推導後寫進 `figures/figure1_defs.tex`，繪圖原始碼只能引用巨集，測試會在有人把數字打進圖裡時失敗。
+
+**合成輸入永遠說得出自己是合成的。** `python -m analysis --predictions-root contracts/examples` 跑完會在最後印出警告，說明每個分數都是捏造的、只有形狀有意義。這道防線存在的理由是：合成資料的表格與真實表格在結構上完全一樣，肉眼分辨不出來。

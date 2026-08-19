@@ -6,8 +6,8 @@
  "predictions_file": "predictions/pdf_group_seed42_M0.csv.gz",
  "predictions_sha256": "sha256:ed872a53819399f04fc7add97a46f87e8b1818cda3301fa1545d6a8a784ef25c",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "68a2504e566d0e5a113a02532b3970a6c34ea3e6",
- "created_at": "2026-08-16T15:49:56.578464+00:00",
+ "git_sha": "5108128f7b5fc4815eb5e564850d77bfed5b5cab-dirty",
+ "created_at": "2026-08-19T11:32:22.619602+00:00",
  "n_rows": 2000,
  "weighted_macro_f1": 0.5727152141741317,
  "per_field_macro_f1": {
@@ -73,43 +73,28 @@
  "invalid_tuple_rate": 0.1275,
  "decision_params": {
   "0": {
-   "calibration_mode": null,
    "calibration_biases": null,
-   "fallback_applied": {},
-   "structural_pinned": {},
-   "optimizer": null,
+   "fallback_applied": null,
    "decoder": null
   },
   "1": {
-   "calibration_mode": null,
    "calibration_biases": null,
-   "fallback_applied": {},
-   "structural_pinned": {},
-   "optimizer": null,
+   "fallback_applied": null,
    "decoder": null
   },
   "2": {
-   "calibration_mode": null,
    "calibration_biases": null,
-   "fallback_applied": {},
-   "structural_pinned": {},
-   "optimizer": null,
+   "fallback_applied": null,
    "decoder": null
   },
   "3": {
-   "calibration_mode": null,
    "calibration_biases": null,
-   "fallback_applied": {},
-   "structural_pinned": {},
-   "optimizer": null,
+   "fallback_applied": null,
    "decoder": null
   },
   "4": {
-   "calibration_mode": null,
    "calibration_biases": null,
-   "fallback_applied": {},
-   "structural_pinned": {},
-   "optimizer": null,
+   "fallback_applied": null,
    "decoder": null
   }
  }

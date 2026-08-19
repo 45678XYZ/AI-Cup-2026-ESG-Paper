@@ -4,40 +4,40 @@
  "seed": 456,
  "method": "M3",
  "predictions_file": "predictions/row_strat_seed456_M3.csv.gz",
- "predictions_sha256": "sha256:6ae3635c292e7f9af17a4c381354c9eab13a38f11a57e21967129a8676caaaf9",
+ "predictions_sha256": "sha256:8f76146e6cfd30185908fa25090c1d0ebee357565f0dfeb4034157537f6db49f",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "68a2504e566d0e5a113a02532b3970a6c34ea3e6",
- "created_at": "2026-08-16T15:54:00.900649+00:00",
+ "git_sha": "5108128f7b5fc4815eb5e564850d77bfed5b5cab-dirty",
+ "created_at": "2026-08-19T11:32:43.402121+00:00",
  "n_rows": 2000,
- "weighted_macro_f1": 0.59431966759018,
+ "weighted_macro_f1": 0.5937583577731822,
  "per_field_macro_f1": {
-  "promise_status": 0.8081129830755651,
-  "verification_timeline": 0.5102143458077029,
-  "evidence_status": 0.6778760618653266,
-  "evidence_quality": 0.43657743012661016
+  "promise_status": 0.8028845658202661,
+  "verification_timeline": 0.5075225932851639,
+  "evidence_status": 0.6754656243710083,
+  "evidence_quality": 0.44118105230014804
  },
  "per_class_f1": {
   "promise_status": {
-   "Yes": 0.9295774647887324,
-   "No": 0.6866485013623979
+   "Yes": 0.9265745007680491,
+   "No": 0.6791946308724832
   },
   "verification_timeline": {
-   "already": 0.5520614954577219,
-   "within_2_years": 0.14285714285714285,
-   "between_2_and_5_years": 0.5410821643286573,
-   "more_than_5_years": 0.6284224250325945,
-   "N/A": 0.6866485013623979
+   "already": 0.5553997194950911,
+   "within_2_years": 0.13513513513513514,
+   "between_2_and_5_years": 0.5417515274949084,
+   "more_than_5_years": 0.6261319534282018,
+   "N/A": 0.6791946308724832
   },
   "evidence_status": {
-   "Yes": 0.8377669539153241,
-   "No": 0.509212730318258,
-   "N/A": 0.6866485013623979
+   "Yes": 0.8427299703264095,
+   "No": 0.5044722719141324,
+   "N/A": 0.6791946308724832
   },
   "evidence_quality": {
-   "Clear": 0.7699530516431925,
-   "Not Clear": 0.3016759776536313,
+   "Clear": 0.7661365762394762,
+   "Not Clear": 0.3237410071942446,
    "Misleading": 0.0,
-   "N/A": 0.6746806912096168
+   "N/A": 0.6748466257668712
   }
  },
  "per_class_support": {
@@ -65,34 +65,33 @@
   }
  },
  "conditional_f1": {
-  "verification_timeline_given_ps_yes": 0.48180536390765044,
-  "evidence_status_given_ps_yes": 0.701747112659965,
-  "evidence_quality_given_es_yes": 0.3907073318838025
+  "verification_timeline_given_ps_yes": 0.48033676203241255,
+  "evidence_status_given_ps_yes": 0.7021221888241046,
+  "evidence_quality_given_es_yes": 0.39916647665374577
  },
- "tuple_exact_match": 0.455,
+ "tuple_exact_match": 0.456,
  "invalid_tuple_rate": 0.0,
  "decision_params": {
   "0": {
-   "calibration_mode": "conditional",
    "calibration_biases": {
     "promise_status": {
-     "Yes": 0.75,
+     "Yes": 0.55,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 1.25,
-     "within_2_years": -0.75,
-     "between_2_and_5_years": 2.0,
-     "more_than_5_years": 1.75,
+     "already": 1.1,
+     "within_2_years": -0.95,
+     "between_2_and_5_years": 1.75,
+     "more_than_5_years": 1.6,
      "N/A": 0.0
     },
     "evidence_status": {
-     "Yes": 1.25,
+     "Yes": 1.1,
      "No": 0.25,
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": -0.25,
+     "Clear": -0.35,
      "Not Clear": 0.0,
      "Misleading": 0.0,
      "N/A": 0.0
@@ -102,57 +101,29 @@
     "evidence_quality": [
      "Misleading"
     ]
-   },
-   "structural_pinned": {
-    "promise_status": [],
-    "verification_timeline": [
-     "N/A"
-    ],
-    "evidence_status": [
-     "N/A"
-    ],
-    "evidence_quality": [
-     "N/A"
-    ]
-   },
-   "optimizer": {
-    "objective": "per-field macro_f1",
-    "grid": {
-     "min": -5.0,
-     "max": 5.0,
-     "step": 0.25
-    },
-    "max_passes": 10,
-    "calibration_objective": {
-     "promise_status": 0.7751736207259395,
-     "verification_timeline": 0.576782512103408,
-     "evidence_status": 0.7526443682104059,
-     "evidence_quality": 0.5916750362682737
-    }
    },
    "decoder": null
   },
   "1": {
-   "calibration_mode": "conditional",
    "calibration_biases": {
     "promise_status": {
-     "Yes": -0.25,
+     "Yes": -0.2,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 1.75,
-     "within_2_years": -0.25,
-     "between_2_and_5_years": 0.75,
-     "more_than_5_years": 0.25,
+     "already": 1.65,
+     "within_2_years": -0.05,
+     "between_2_and_5_years": 0.5,
+     "more_than_5_years": 0.2,
      "N/A": 0.0
     },
     "evidence_status": {
-     "Yes": 0.25,
+     "Yes": 0.35,
      "No": 0.0,
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": -0.5,
+     "Clear": -0.45,
      "Not Clear": 0.0,
      "Misleading": 0.0,
      "N/A": 0.0
@@ -163,113 +134,57 @@
      "Misleading"
     ]
    },
-   "structural_pinned": {
-    "promise_status": [],
-    "verification_timeline": [
-     "N/A"
-    ],
-    "evidence_status": [
-     "N/A"
-    ],
-    "evidence_quality": [
-     "N/A"
-    ]
-   },
-   "optimizer": {
-    "objective": "per-field macro_f1",
-    "grid": {
-     "min": -5.0,
-     "max": 5.0,
-     "step": 0.25
-    },
-    "max_passes": 10,
-    "calibration_objective": {
-     "promise_status": 0.8316796598157334,
-     "verification_timeline": 0.6239762882091111,
-     "evidence_status": 0.7178030303030303,
-     "evidence_quality": 0.64867192709491
-    }
-   },
    "decoder": null
   },
   "2": {
-   "calibration_mode": "conditional",
    "calibration_biases": {
     "promise_status": {
-     "Yes": -0.25,
+     "Yes": -0.45,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 1.5,
-     "within_2_years": -0.5,
-     "between_2_and_5_years": 0.0,
-     "more_than_5_years": 0.5,
+     "already": 1.55,
+     "within_2_years": -0.6,
+     "between_2_and_5_years": 0.1,
+     "more_than_5_years": 0.45,
      "N/A": 0.0
     },
     "evidence_status": {
-     "Yes": 1.0,
-     "No": 0.5,
+     "Yes": 2.25,
+     "No": 1.6,
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": 1.25,
-     "Not Clear": 1.0,
+     "Clear": 1.35,
+     "Not Clear": 1.2,
      "Misleading": 0.0,
      "N/A": 0.0
     }
    },
    "fallback_applied": {},
-   "structural_pinned": {
-    "promise_status": [],
-    "verification_timeline": [
-     "N/A"
-    ],
-    "evidence_status": [
-     "N/A"
-    ],
-    "evidence_quality": [
-     "N/A"
-    ]
-   },
-   "optimizer": {
-    "objective": "per-field macro_f1",
-    "grid": {
-     "min": -5.0,
-     "max": 5.0,
-     "step": 0.25
-    },
-    "max_passes": 10,
-    "calibration_objective": {
-     "promise_status": 0.7966989634970707,
-     "verification_timeline": 0.6197256131669184,
-     "evidence_status": 0.7078672078672079,
-     "evidence_quality": 0.4322060218411355
-    }
-   },
    "decoder": null
   },
   "3": {
-   "calibration_mode": "conditional",
    "calibration_biases": {
     "promise_status": {
-     "Yes": 1.0,
+     "Yes": 0.85,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 0.75,
-     "within_2_years": -0.25,
-     "between_2_and_5_years": 0.5,
-     "more_than_5_years": 0.0,
+     "already": 0.9,
+     "within_2_years": -0.15,
+     "between_2_and_5_years": 0.6,
+     "more_than_5_years": -0.05,
      "N/A": 0.0
     },
     "evidence_status": {
-     "Yes": 2.25,
-     "No": 1.25,
+     "Yes": 1.35,
+     "No": -0.9,
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": 2.0,
-     "Not Clear": 1.0,
+     "Clear": 1.85,
+     "Not Clear": 0.9,
      "Misleading": 0.0,
      "N/A": 0.0
     }
@@ -279,89 +194,34 @@
      "Misleading"
     ]
    },
-   "structural_pinned": {
-    "promise_status": [],
-    "verification_timeline": [
-     "N/A"
-    ],
-    "evidence_status": [
-     "N/A"
-    ],
-    "evidence_quality": [
-     "N/A"
-    ]
-   },
-   "optimizer": {
-    "objective": "per-field macro_f1",
-    "grid": {
-     "min": -5.0,
-     "max": 5.0,
-     "step": 0.25
-    },
-    "max_passes": 10,
-    "calibration_objective": {
-     "promise_status": 0.8477055459704634,
-     "verification_timeline": 0.612879055795733,
-     "evidence_status": 0.731107885824867,
-     "evidence_quality": 0.6811721183800623
-    }
-   },
    "decoder": null
   },
   "4": {
-   "calibration_mode": "conditional",
    "calibration_biases": {
     "promise_status": {
      "Yes": 0.0,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": -0.5,
-     "within_2_years": -2.0,
-     "between_2_and_5_years": 0.0,
-     "more_than_5_years": 0.0,
+     "already": -0.55,
+     "within_2_years": -1.95,
+     "between_2_and_5_years": -0.1,
+     "more_than_5_years": 0.2,
      "N/A": 0.0
     },
     "evidence_status": {
-     "Yes": 0.75,
-     "No": 0.0,
+     "Yes": 0.45,
+     "No": -0.25,
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": 0.0,
+     "Clear": 0.05,
      "Not Clear": 0.0,
      "Misleading": 0.0,
      "N/A": 0.0
     }
    },
    "fallback_applied": {},
-   "structural_pinned": {
-    "promise_status": [],
-    "verification_timeline": [
-     "N/A"
-    ],
-    "evidence_status": [
-     "N/A"
-    ],
-    "evidence_quality": [
-     "N/A"
-    ]
-   },
-   "optimizer": {
-    "objective": "per-field macro_f1",
-    "grid": {
-     "min": -5.0,
-     "max": 5.0,
-     "step": 0.25
-    },
-    "max_passes": 10,
-    "calibration_objective": {
-     "promise_status": 0.8081613077684466,
-     "verification_timeline": 0.5137281835811247,
-     "evidence_status": 0.7403784398004052,
-     "evidence_quality": 0.3977600381270106
-    }
-   },
    "decoder": null
   }
  }

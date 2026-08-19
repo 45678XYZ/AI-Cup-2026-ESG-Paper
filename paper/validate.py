@@ -64,6 +64,20 @@ PROVENANCE_META = (
     "epochs", "hardware", "started_at", "finished_at",
 )
 
+# Keys that must agree across the five rotations of one run. The five test
+# partitions are concatenated into a single 2,000-row score, so a rotation
+# re-run after ``EPOCHS`` moved or after the revision was re-pinned would put
+# two different models into one number. Each such bundle is internally valid
+# and passes every per-bundle check; the mixture is only visible across the set.
+#
+# ``git_sha`` and ``hardware`` are deliberately *not* compared: B may run
+# rotations across a pull or on a second GPU without changing the fit, and what
+# does define the fit is hashed into ``train_config_sha256``.
+RECIPE_META = (
+    "model_name", "model_revision", "train_config_sha256",
+    "checkpoint_rule", "checkpoint_last_k", "epochs",
+)
+
 EXPECTED_ARRAYS = tuple(
     f"{partition}_{field}.npy"
     for partition in ("calibration", "test")
@@ -209,7 +223,9 @@ def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR) -> list[str]:
 
     Invariant 1b of contract §3 exists for a failure no per-bundle check can
     see: five rotations each produced against a different version of the split,
-    every one internally consistent, the set as a whole incoherent.
+    every one internally consistent, the set as a whole incoherent. The same
+    argument applies to the training recipe (``RECIPE_META``), because the five
+    rotations are concatenated before anything is scored.
     """
     metas = []
     problems: list[str] = []
@@ -221,7 +237,7 @@ def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR) -> list[str]:
     if not metas:
         return ["no bundles with a meta.json were given"]
 
-    for key in ("protocol", "seed", "split_fingerprint", "data_checksum"):
+    for key in ("protocol", "seed", "split_fingerprint", "data_checksum", *RECIPE_META):
         values = {m.get(key) for _, m in metas}
         if len(values) > 1:
             problems.append(f"bundles disagree on {key}: {sorted(map(str, values))}")
@@ -247,6 +263,48 @@ def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR) -> list[str]:
             f"concatenated test_ids cover {len(set(seen))} distinct rows "
             f"({len(seen)} with duplicates), expected {len(expected)} each once"
         )
+    return problems
+
+
+def _run_of(bundle_name) -> str:
+    """``pdf_group_seed42_r3`` -> ``pdf_group_seed42``."""
+    return str(bundle_name).rsplit("_r", 1)[0]
+
+
+def validate_probs_study(bundle_dirs) -> list[str]:
+    """Check that every run of the study shares one training recipe.
+
+    ``validate_probs_run`` only ever sees one (protocol, seed) at a time, so a
+    config edit *between* two runs is invisible to it: each set of five is
+    internally consistent and passes. But the study aggregates across runs --
+    3-seed mean±std (plan §4.5) and the two-protocol contrast of Table 3 -- and
+    both readings rest on one fixed base model throughout (§3.1). A recipe that
+    moved between seed 42 and seed 123 turns that std into a mixture of
+    pipeline variance and a config change, with nothing on the surface to show
+    which is which.
+
+    Runs that are already internally inconsistent are skipped for that key:
+    ``validate_probs_run`` reports them more precisely.
+    """
+    by_run: dict[str, list[dict]] = {}
+    for d in bundle_dirs:
+        path = Path(d) / "meta.json"
+        if path.exists():
+            with open(path, encoding="utf-8") as f:
+                by_run.setdefault(_run_of(Path(d).name), []).append(json.load(f))
+
+    problems: list[str] = []
+    for key in RECIPE_META:
+        holders: dict[str, list[str]] = {}
+        for run, metas in by_run.items():
+            values = {json.dumps(m.get(key)) for m in metas}
+            if len(values) == 1:
+                holders.setdefault(values.pop(), []).append(run)
+        if len(holders) > 1:
+            detail = "; ".join(
+                f"{value} in {sorted(runs)}" for value, runs in sorted(holders.items())
+            )
+            problems.append(f"the study's runs disagree on {key}: {detail}")
     return problems
 
 
@@ -367,6 +425,8 @@ def _validate_paths(paths, rows) -> list[str]:
     for run, dirs in sorted(by_run.items()):
         if len(dirs) > 1:
             problems += [f"{run}: {m}" for m in validate_probs_run(dirs)]
+    if len(by_run) > 1:
+        problems += validate_probs_study(bundles)
 
     for p in predictions:
         problems += validate_predictions(p, rows=rows, method=_method_of(p))
