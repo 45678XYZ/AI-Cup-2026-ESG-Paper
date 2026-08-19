@@ -48,7 +48,15 @@ def test_it_indexes_the_whole_example_set(manifest):
 
 
 def test_every_verdict_is_clean_on_the_examples(manifest):
-    assert [c["status"] for c in manifest["consistency"]] == ["pass"] * 4
+    assert [c["status"] for c in manifest["consistency"]] == ["pass"] * 6
+
+
+def test_it_indexes_the_contract_4_deliverables(manifest):
+    """The chain has to reach the files D actually includes, or the index stops
+    one link short of the paper."""
+    assert "manifest.json" in manifest["outputs"]["tables"]
+    assert "table2_main.tex" in manifest["outputs"]["tables"]
+    assert "figure1_hierarchy.pdf" in manifest["outputs"]["figures"]
 
 
 def test_it_is_json_serialisable(manifest):
@@ -94,6 +102,45 @@ def test_a_results_file_naming_an_absent_predictions_file_is_caught(copied):
     verdict = _verdict(build_manifest(copied), "results still point at the predictions they summarise")
     assert verdict["status"] == "fail"
     assert any("absent" in p for p in verdict["problems"])
+
+
+def test_results_built_against_other_data_are_caught(copied):
+    path = copied / "results" / "pdf_group_seed123_M1.json"
+    results = json.loads(path.read_text(encoding="utf-8"))
+    results["data_checksum"] = "sha256:0000"
+    path.write_text(json.dumps(results), encoding="utf-8")
+
+    verdict = _verdict(build_manifest(copied), "results were built against this data")
+    assert verdict["status"] == "fail"
+    assert any("pdf_group_seed123_M1" in p for p in verdict["problems"])
+
+
+def test_a_misaligned_predictions_file_is_caught(copied):
+    """The failure the whole contract exists for: every row present, every id
+    present, but the labels sitting one position away from the id they belong
+    to. Nothing about the file's shape shows it; the score is merely a little
+    worse. Row *order* is deliberately not checked -- rows are identified by
+    id, so a reordered file is the same file -- which is exactly why the gold
+    columns are the detector."""
+    import csv as _csv
+    import gzip as _gzip
+
+    target = copied / "predictions" / "pdf_group_seed42_M0.csv.gz"
+    with _gzip.open(target, "rt", newline="", encoding="utf-8") as f:
+        rows = list(_csv.DictReader(f))
+
+    golds = [{k: r[k] for k in r if k.startswith("gold_")} for r in rows]
+    for row, shifted in zip(rows, golds[1:] + golds[:1]):
+        row.update(shifted)
+
+    with _gzip.open(target, "wt", newline="", encoding="utf-8") as f:
+        writer = _csv.DictWriter(f, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+    verdict = _verdict(build_manifest(copied), "per-row files are aligned and legal")
+    assert verdict["status"] == "fail"
+    assert any("gold" in p for p in verdict["problems"])
 
 
 def test_a_split_built_against_other_data_is_caught(copied, tmp_path):

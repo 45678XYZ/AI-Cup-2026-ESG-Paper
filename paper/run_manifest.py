@@ -51,6 +51,7 @@ from paper.provenance import git_sha, now_iso
 from paper.train_config import N_FOLDS, SEEDS
 from paper.validate import (
     load_split,
+    validate_predictions,
     validate_probs_bundle,
     validate_probs_run,
     validate_probs_study,
@@ -185,7 +186,25 @@ def decisions_section(root) -> dict:
     }
 
 
-def _check(name, problems, skipped_when_empty=True) -> dict:
+def outputs_section(root) -> dict:
+    """Contract-4 deliverables: the tables and the figure D includes.
+
+    Indexed here so the chain is unbroken -- ``tables/manifest.json`` ties each
+    printed number to its inputs, and this ties that manifest, and the .tex
+    files beside it, to a commit and an environment. The figure lives at the
+    repository root in every case: its counts come from ``paper/labels.py``
+    rather than from a run, so it has no per-root variant.
+    """
+    tables = {p.name: file_sha256(p)
+              for p in sorted((Path(root) / "tables").glob("*"))
+              if p.is_file()}
+    figures = {p.name: file_sha256(p)
+               for p in sorted((REPO_ROOT / "figures").glob("*"))
+               if p.is_file()}
+    return {"tables": tables, "figures": figures}
+
+
+def _check(name, problems) -> dict:
     if problems is None:
         return {"check": name, "status": "skipped"}
     return {
@@ -195,7 +214,7 @@ def _check(name, problems, skipped_when_empty=True) -> dict:
     }
 
 
-def consistency(root, splits_dir, data) -> list[dict]:
+def consistency(root, splits_dir, data, rows) -> list[dict]:
     """Verdicts, gathered from the validators rather than re-derived here."""
     checks = []
 
@@ -225,7 +244,33 @@ def consistency(root, splits_dir, data) -> list[dict]:
 
     checks.append(_check("results still point at the predictions they summarise",
                          _predictions_links(root)))
+    checks.append(_check("results were built against this data", [
+        f"{name}: results record {recorded}, data give {data['data_checksum']}"
+        for name, recorded in _results_checksums(root)
+        if recorded != data["data_checksum"]
+    ]))
+
+    predictions = sorted((Path(root) / "predictions").glob("*.csv.gz"))
+    if not predictions:
+        checks.append(_check("per-row files are aligned and legal", None))
+    else:
+        problems = []
+        for path in predictions:
+            problems += validate_predictions(path, rows=rows, method=_method_of(path))
+        checks.append(_check("per-row files are aligned and legal", problems))
     return checks
+
+
+def _results_checksums(root):
+    for path in sorted((Path(root) / "results").glob("*.json")):
+        with open(path, encoding="utf-8") as f:
+            yield path.name, json.load(f).get("data_checksum")
+
+
+def _method_of(path) -> str | None:
+    """``pdf_group_seed42_M3.csv.gz`` -> ``M3``; None when named otherwise."""
+    stem = Path(path).name.split(".")[0].rsplit("_", 1)[-1]
+    return stem if stem in METHOD_IDS else None
 
 
 def _predictions_links(root) -> list[str]:
@@ -303,7 +348,8 @@ def build_manifest(root=REPO_ROOT, splits_dir=None) -> dict:
         "splits": splits_section(splits_dir),
         "probs": probs_section(root / "probs"),
         "decisions": decisions_section(root),
-        "consistency": consistency(root, splits_dir, data),
+        "outputs": outputs_section(root),
+        "consistency": consistency(root, splits_dir, data, rows),
     }
     manifest["warnings"] = warnings_for(manifest)
     return manifest
@@ -328,6 +374,8 @@ def main() -> None:
     print(f"  probs       {probs['present']}/{probs['expected']}")
     print(f"  predictions {len(decisions['predictions'])}/{decisions['expected']}")
     print(f"  results     {len(decisions['results'])}/{decisions['expected']}")
+    outputs = manifest["outputs"]
+    print(f"  tables      {len(outputs['tables'])}   figures {len(outputs['figures'])}")
     for check in manifest["consistency"]:
         print(f"  [{check['status']:>7}] {check['check']}")
         for problem in check.get("problems", []):
