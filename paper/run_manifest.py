@@ -50,7 +50,6 @@ from paper.methods import METHOD_IDS
 from paper.provenance import git_sha, now_iso
 from paper.train_config import N_FOLDS, SEEDS
 from paper.validate import (
-    load_split,
     validate_predictions,
     validate_probs_bundle,
     validate_probs_run,
@@ -242,13 +241,17 @@ def consistency(root, splits_dir, data, rows) -> list[dict]:
         if info["data_checksum"] != data["data_checksum"]
     ]))
 
+    # An empty set of results must report "skipped", not "pass": a vacuous pass
+    # is indistinguishable from a verified one in the printed output, and the
+    # normal state for most of the study is that these files do not exist yet.
+    results = sorted((Path(root) / "results").glob("*.json"))
     checks.append(_check("results still point at the predictions they summarise",
-                         _predictions_links(root)))
+                         _predictions_links(root) if results else None))
     checks.append(_check("results were built against this data", [
         f"{name}: results record {recorded}, data give {data['data_checksum']}"
         for name, recorded in _results_checksums(root)
         if recorded != data["data_checksum"]
-    ]))
+    ] if results else None))
 
     predictions = sorted((Path(root) / "predictions").glob("*.csv.gz"))
     if not predictions:

@@ -78,8 +78,14 @@ def test_absent_bundles_are_recorded_rather_than_refused(tmp_path):
     (tmp_path / "results").mkdir()
     manifest = build_manifest(tmp_path)
     assert manifest["probs"]["present"] == 0
-    assert _verdict(manifest, "probability bundles")["status"] == "skipped"
-    assert _verdict(manifest, "one training recipe across the study")["status"] == "skipped"
+    assert [c["status"] for c in manifest["consistency"]] == [
+        "skipped",              # probability bundles
+        "skipped",              # one training recipe across the study
+        "pass",                 # splits carry the data checksum -- splits do exist
+        "skipped",              # results -> predictions link
+        "skipped",              # results were built against this data
+        "skipped",              # per-row files
+    ], "a check with nothing to check must not report a vacuous pass"
 
 
 # --- what it refuses to let slide -------------------------------------------
