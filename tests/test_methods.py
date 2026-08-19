@@ -156,9 +156,18 @@ def test_projection_never_revisits_the_parent(run):
     assert all(r["pred_ps"] == by_id[r["id"]]["pred_ps"] for r in m0)
 
 
-def test_an_unimplemented_calibration_fails_loudly(run):
-    with pytest.raises(NotImplementedError, match="calibration"):
-        run_method("M3", run, ROWS, SPLIT)
+def test_the_driver_records_a_bias_for_exactly_the_calibrated_methods(run):
+    """The results file is the audit trail for what a method actually did. A
+    calibrated arm with no recorded bias, or an uncalibrated one carrying a
+    bias, would be a different method from the one the table names."""
+    cache: dict = {}
+    for method_id in METHOD_IDS:
+        _, params = run_method(method_id, run, ROWS, SPLIT, cache)
+        recorded = [params[str(k)]["calibration_biases"] for k in range(5)]
+        if METHODS[method_id].calibration is None:
+            assert all(r is None for r in recorded), method_id
+        else:
+            assert all(r for r in recorded), method_id
 
 
 def test_a_short_run_is_refused(tmp_path):
