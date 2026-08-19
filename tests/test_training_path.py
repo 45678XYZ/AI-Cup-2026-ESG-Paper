@@ -106,14 +106,8 @@ def test_layerwise_decay_produces_a_ladder(model):
 
 
 # --- the loop and its output ----------------------------------------------
-
-def test_a_short_final_accumulation_window_is_not_dropped():
-    import paper.train_fold as tf
-
-    assert [tf._accumulation_window(i, 3) for i in range(3)] == [
-        (2, False), (2, True), (1, True),
-    ]
-
+# The accumulation arithmetic itself is in tests/test_accumulation.py, which
+# runs without torch; what needs a real loop is only what follows.
 
 @pytest.fixture(scope="module")
 def probs(tiny_model_dir):
