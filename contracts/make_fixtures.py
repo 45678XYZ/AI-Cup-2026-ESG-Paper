@@ -29,6 +29,24 @@ Measured on rotation 0 of pdf_group_seed42, as a guide when picking a value:
 
 Fixtures are synthetic by construction and must never reach a results table:
 main-table numbers come from cross-fitted probabilities only.
+
+**They are also biased in a specific direction, which matters when reading a
+smoke run.** Each field is drawn independently around its own gold label, so a
+row whose ``promise_status`` comes out wrong can still have its
+``verification_timeline`` right -- the fields do not share a mistake. A real
+encoder's errors are correlated across fields: a paragraph that reads as
+non-promissory pushes PS toward No *and* VT toward N/A together.
+
+The consequence is that M0 looks unrealistically strong here and every rule
+that propagates a parent decision (M1-M6) looks unrealistically weak. Measured
+on rotation 0 of pdf_group_seed42, M1 loses ~0.09 weighted F1 to M0 purely
+through this effect. Nothing about the relative ordering of the methods on
+fixtures carries over to real probabilities; only the plumbing does.
+
+A second gap worth knowing: ``(1 - c) * noise + c * onehot`` has a noise floor
+strictly above zero, so no fixture probability is ever exactly 0. Real float32
+softmax underflows on losing classes routinely, which is why the log floor in
+``paper/methods.py`` is covered by unit tests rather than by these fixtures.
 """
 
 import argparse

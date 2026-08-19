@@ -247,10 +247,16 @@ probs/{protocol}_seed{seed}_r{k}/
 3. 每個 `.npy` 的 shape[0] 等於對應 id 清單長度。
 4. `model_revision` 不得為 `main`／`latest`／空字串。
 5. 所有 `.npy` 的實際 sha256 與 `artifacts` 記載相符。
+6. 一個 run 的五個 rotation 必須出自**同一套訓練配方**：`model_name`、`model_revision`、`train_config_sha256`、`checkpoint_rule`、`checkpoint_last_k`、`epochs` 六項跨 rotation 一致。A 會把五個 test partition 串成單一 2,000 列再計一次分，中途換過配方的 bundle 每一份單看都合法，混在一起卻等於把兩個模型算成一個數字。`git_sha` 與 `hardware` **不比對**——跨 pull 或換一張卡不改變 fit，真正定義 fit 的東西已經進了 `train_config_sha256`。
+7. **同一套配方還必須跨 run 成立**，也就是整份研究的 30 個 bundle 六項全部一致。不變量 6 一次只看得到五個 bundle，因此兩個 run 之間改過 config 時，每一組單獨檢查都會過。但 §4.5 的 3-seed mean±std 要能被描述成整條流程的變異、Table 3 的雙 protocol 對照要能歸因於 protocol，前提都是 §3.1 的 base model 全程固定；配方若在 seed 42 與 seed 123 之間動過，那個 std 就變成流程變異與 config 變更的混合，而表面上看不出來。由 `paper/validate.py::validate_probs_study` 檢查，`python -m paper.validate --all` 會自動涵蓋。
 
 ### A 的替代輸入
 
-`contracts/examples/probs/` 提供 synthetic fixtures：以已知 bias 生成、M0–M6 的**預期輸出可解析求得**，用來 smoke-test 整條決策管線。真實機率到位後只換路徑。
+`contracts/examples/probs/` 提供 synthetic fixtures（`contracts/make_fixtures.py`）：每欄各自繞著自己的 gold 標籤獨立抽樣，集中度由 `concentration` 控制。用來 smoke-test 整條決策管線，真實機率到位後只換路徑。
+
+**可預先斷定的是性質，不是分數。** fixtures 沒有套任何 bias，方法之間的高低也無法解析求得；能事先確定的只有兩件事：`concentration ≥ 0.5` 時 gold 由構造保證勝出，M0–M6 全部得 1.0、彼此無從分辨；任何 concentration 下 M1–M6 的 `invalid_tuple_rate` 必為 0，而 M0 不為 0。
+
+而且各欄獨立抽樣使 fixtures **系統性偏袒 M0**——父欄錯了子欄仍可能是對的，真實 encoder 的錯誤則跨欄相關。實測 M1 因此比 M0 低約 0.09 weighted F1。fixture 上的方法排序不得外推到真實機率，能外推的只有管線本身。
 
 ---
 
@@ -434,6 +440,9 @@ A 提供 placeholder `.tex`（欄數、欄序、對齊與正式版相同，數�
 | `paper/run_training.py` | ✅ | 訓練驅動腳本：讀 split → 只用 train_ids 訓練 → 對 calib／test 推論 → 寫成契約格式。B 只要跑，不必自己拼裝 |
 | `paper/artifacts.py` | ✅ | 契約檔的唯一寫入點；驅動腳本與 fixture 產生器共用，兩者結構不可能分岔 |
 | `paper/projection.py` | ✅ | 完整雙向 hierarchy projection（M1–M3 的 output rule） |
+| `paper/decoder.py` | ✅ | 17 個合法狀態的 joint decoding，α 固定為 1（M4–M6 的 output rule） |
+| `paper/methods.py` | ✅ | M0–M6 的定義與 dispatch；統一在 `log p + b` 的 score space 運作 |
+| `paper/run_decisions.py` | ✅ | 決策驅動腳本：讀 5 個 probs bundle → 決策 → 拼成 2,000 列 → 寫契約 3。一次 invocation 跑完所有方法，「同一組機率、同一批 rows」因此是結構保證 |
 | `paper/evaluate.py` | ✅ | 由逐列 predictions 產生契約 3 的**完整**結果物件（含信封），真實 runner 與範例產生器共用 |
 | `paper/validate.py` | ✅ | 契約檔的入境檢查；A 每收到一組 bundle 就跑 |
 | `contracts/states.json` | ✅ | 由 `paper/labels.py` 產生，測試斷言不漂移 |
