@@ -54,7 +54,7 @@ find probs -mindepth 2 -maxdepth 2 -name meta.json | wc -l
 conda run -n aicup-esg pytest -q
 ```
 
-Final observed output on 2026-08-16:
+Final observed output on 2026-08-16, on this branch before the merge:
 
 - bundle count: `30`
 - `row_strat seed456`: `5 artifact(s) checked: clean`
@@ -62,4 +62,12 @@ Final observed output on 2026-08-16:
 - test suite: `92 passed, 2 warnings`
 
 The two warnings are SWIG deprecation warnings emitted during interpreter
-shutdown and do not affect validation or training artifacts.
+shutdown in the `aicup-esg` environment; they do not affect validation or
+training artifacts.
+
+The suite count is the one number here that does not carry forward: the merge
+brings in A's decision-stage and C's analysis tests, so the same command now
+reports `248 passed, 3 skipped`. The three skips are this branch's
+`tests/test_training_path.py`, which needs torch, and the two figure tests,
+which need `latexmk`. The bundle and validation counts are properties of the
+artifacts and are unchanged by the merge.

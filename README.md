@@ -38,6 +38,7 @@ paper/          study code: label space, data, training, contract artifacts
   decoder.py      joint decoding over the 17 legal states
   methods.py      the M0-M6 table, and scoring in log space
   calibration.py  class biases estimated on the Calibration partition only
+  accumulation.py gradient-accumulation windows (torch-free, so CI checks them)
   train_fold.py   trains one rotation, emits raw probabilities only
   run_training.py driver: split manifest in, contract bundle out
   run_decisions.py driver: probability bundles in, contract-3 files out
@@ -58,9 +59,15 @@ contracts/      interface schemas and example files
 docs/           paper plan and interface contract
 figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
 splits/         generated split manifests (version controlled)
+probs/          30 probability bundles, one per rotation, from the official fits
+predictions/    42 per-row prediction files (.csv.gz), one per protocol/seed/method
+results/        42 aggregate result manifests, one per predictions file
 tests/          pytest suite
 dataset/        AI CUP development and test data
 ```
+
+The last three hold the official run and are deliberately version controlled;
+`.gitignore` records what each one keeps and why.
 
 ## Setup
 
@@ -212,6 +219,12 @@ than something the operator has to remember. It refuses to start unless
 `MODEL_REVISION` is pinned; `--allow-unpinned-revision` overrides that for a
 throwaway smoke test.
 
+The backbone is fetched once per invocation and reused for all five rotations,
+downloading it if the Hugging Face cache is cold. Because `from_pretrained`
+ignores `revision` once it is handed a local directory, the driver checks that
+the resolved snapshot really is the pinned commit and refuses to train
+otherwise — that check, not the argument, is what enforces the pin.
+
 ## Decision runs
 
 CPU only. This is the step between B's probabilities and the analysis: it
@@ -222,6 +235,10 @@ python -m paper.run_decisions --protocol pdf_group --seed 42
 python -m paper.run_decisions --protocol pdf_group --seed 42 \
     --methods M0 M1 M4 --probs-dir contracts/examples/probs --out-dir /tmp/smoke
 ```
+
+Both arguments are required and each invocation covers one (protocol, seed), so
+the full study is the same 6 invocations as the training stage — 42 predictions
+files and 42 results files, a few seconds in total.
 
 One invocation loads the five rotations once and runs every requested method
 over that one loaded set, which is what makes "identical probabilities on
@@ -267,14 +284,16 @@ Face revision is pinned, the fixed budget is 12 epochs, and the last three epoch
 states are averaged. All 30 cross-fitted probability bundles have been produced
 and validated; see `docs/gpu_training_progress.md` for the completion record.
 
-Run the controlled decision study on CPU after all probability bundles validate:
-
-```bash
-python -m paper.run_decision
-python -m paper.validate predictions/*.csv.gz
-```
-
 The full official run has been materialised: `predictions/` and `results/`
 contain all 42 protocol/seed/method outputs, and all 42 prediction files pass
-the contract validator. Their result manifests identify decision-code commit
-`68a2504e566d0e5a113a02532b3970a6c34ea3e6`.
+the contract validator. Reproduce them from the committed bundles with the six
+invocations under [Decision runs](#decision-runs) — one per (protocol, seed),
+about a second and a half each — then `python -m paper.validate --all`.
+
+Their result manifests record `5108128f7b5fc4815eb5e564850d77bfed5b5cab-dirty`,
+which is a stamp rather than a provenance chain: the `-dirty` suffix means no
+commit reproduces that tree, and the named commit predates the rename of
+`run_decision.py` to `run_decisions.py`, so it does not contain the module that
+wrote the files. Regenerating the 42 outputs from a clean checkout re-stamps
+them; the outputs themselves are byte-identical. `python -m paper.run_manifest`
+reports this under `warnings` until it is done.

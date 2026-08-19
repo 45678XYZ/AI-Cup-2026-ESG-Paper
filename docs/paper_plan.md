@@ -141,10 +141,12 @@ z_t,c(x) = log p_t,c(x) + b_t,c
 所有 bias 只能由 calibration partition 學習，不能在同一批 OOF labels 上調好再回報同一批分數。`Misleading` 若在 calibration partition 沒有樣本，不單獨調其 bias，並在 manifest 記錄 fallback 規則。
 
 **最佳化程序（實作凍結）**：每個欄位分開以 deterministic coordinate
-ascent 最大化 calibration macro-F1；bias grid 為 `[-5, 5]`、step `0.25`，
-最多 10 passes，無嚴格改善即停止。global 與 conditional 各 rotation 只擬合
-一次；M2／M5 共用同一組 global biases，M3／M6 共用同一組 conditional
-biases，避免把 decoder-specific tuning 混入比較。
+ascent 最大化 calibration macro-F1；bias grid 為 log-probability 單位的
+`[-3, 3]`、step `0.05`（121 個格點），最多 20 passes，無嚴格改善即停止。
+數值以 `paper/calibration.py` 的 `GRID` 與 `MAX_PASSES` 為準，Methods 不得
+另行敘述。global 與 conditional 各 rotation 只擬合一次；M2／M5 共用同一組
+global biases，M3／M6 共用同一組 conditional biases，避免把 decoder-specific
+tuning 混入比較。
 
 **conditional bias 的定義域（已定案，須寫入 Methods）**：conditional 估計下，子欄的 `N/A` 在其條件子集中出現次數**恆為 0**——gold `PS=Yes` 的樣本裡 VT、ES 永遠不是 `N/A`，gold `ES=Yes` 的樣本裡 EQ 永遠不是 `N/A`。這不是稀有類，是階層的定義使然，因此 calibration 目標函數在 `b_vt,N/A`、`b_es,N/A`、`b_eq,N/A` 三個座標上完全平坦，參數不可識別。
 
