@@ -31,9 +31,7 @@ until the study was finished would be useless exactly when it is needed.
 
 import argparse
 import json
-import platform
 import sys
-from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from paper.data import (
@@ -47,7 +45,7 @@ from paper.data import (
 )
 from paper.labels import FIELDS
 from paper.methods import METHOD_IDS
-from paper.provenance import git_sha, now_iso
+from paper.provenance import environment, git_sha, now_iso
 from paper.train_config import N_FOLDS, SEEDS
 from paper.validate import (
     validate_predictions,
@@ -58,25 +56,6 @@ from paper.validate import (
 
 MANIFEST_VERSION = "1.0"
 PROTOCOLS = ("pdf_group", "row_strat")
-
-# Recorded because a version change here moves the numbers without touching a
-# line of this repository's code. torch is optional: A's half of the study runs
-# without it, and its absence is a fact worth recording rather than an error.
-PACKAGES = ("numpy", "scikit-learn", "pandas", "torch", "transformers")
-
-
-def environment() -> dict:
-    versions = {}
-    for name in PACKAGES:
-        try:
-            versions[name] = version(name)
-        except PackageNotFoundError:
-            versions[name] = None
-    return {
-        "python": sys.version.split()[0],
-        "platform": platform.platform(),
-        "packages": versions,
-    }
 
 
 def data_section(rows) -> dict:
@@ -331,6 +310,7 @@ def warnings_for(manifest) -> list[str]:
         notes.append(f"{len(manifest['probs']['missing'])} probability bundles are absent.")
     if (manifest["git_sha"] or "").endswith("-dirty"):
         notes.append("the working tree had uncommitted code changes; this run is not reproducible from a commit.")
+
     return notes
 
 
