@@ -22,6 +22,7 @@ from pathlib import Path
 import numpy as np
 
 from paper.artifacts import prediction_row, write_predictions
+from paper.calibration import as_json, fit_biases
 from paper.data import REPO_ROOT, data_checksum, index_by_id, load_dev
 from paper.evaluate import build_results, write_results
 from paper.labels import FIELDS
@@ -70,8 +71,15 @@ def load_run(probs_dir, protocol, seed, split) -> list[tuple[dict, dict]]:
     return [load_bundle(d) for d in dirs]
 
 
-def run_method(method_id, run, rows, split) -> tuple[list[dict], dict]:
-    """One method over all five rotations, concatenated in rotation order."""
+def run_method(method_id, run, rows, split, bias_cache=None) -> tuple[list[dict], dict]:
+    """One method over all five rotations, concatenated in rotation order.
+
+    ``bias_cache`` is keyed by ``(mode, rotation)`` and shared across methods by
+    ``main``, so M2 and M5 are handed the *same* global bias object and M3 and
+    M6 the same conditional one. The factorial reading of the results table
+    rests on that identity, and this makes it structural rather than a
+    consequence of the estimator happening to be deterministic.
+    """
     method = METHODS[method_id]
     by_id = index_by_id(rows)
     records, decision_params = [], {}
@@ -79,14 +87,21 @@ def run_method(method_id, run, rows, split) -> tuple[list[dict], dict]:
     for meta, probs in run:
         rotation = meta["rotation"]
         # Biases are estimated on the Calibration partition only; the
-        # uncalibrated methods get None. M2/M3/M5/M6 land here once
-        # paper/calibration.py exists.
-        biases = None
+        # uncalibrated methods get None.
+        biases, fallback = None, None
         if method.calibration is not None:
-            raise NotImplementedError(
-                f"{method_id} needs calibration={method.calibration!r}, "
-                "which paper/calibration.py does not implement yet"
-            )
+            key = (method.calibration, rotation)
+            if bias_cache is not None and key in bias_cache:
+                biases, fallback = bias_cache[key]
+            else:
+                biases, fallback = fit_biases(
+                    method.calibration, probs["calibration"],
+                    meta["calibration_ids"],
+                    next(r for r in split["rotations"] if r["k"] == rotation),
+                    rows,
+                )
+                if bias_cache is not None:
+                    bias_cache[key] = (biases, fallback)
 
         preds = decide(method, probs["test"], biases)
         test_ids = meta["test_ids"]
@@ -99,12 +114,8 @@ def run_method(method_id, run, rows, split) -> tuple[list[dict], dict]:
             for row_id, pred in zip(test_ids, preds)
         ]
         decision_params[str(rotation)] = {
-            "calibration_biases": biases,
-            "fallback_applied": (
-                next(r for r in split["rotations"] if r["k"] == rotation)
-                ["calibration_absent_classes"]
-                if method.calibration is not None else None
-            ),
+            "calibration_biases": as_json(biases) if biases is not None else None,
+            "fallback_applied": fallback,
             "decoder": ({"alpha": [1.0] * len(FIELDS), "mode": "fixed"}
                         if method.output_rule == "decoder" else None),
         }
@@ -144,8 +155,9 @@ def main() -> None:
     run = load_run(args.probs_dir, args.protocol, args.seed, split)
     print(f"{args.protocol} seed{args.seed}: {len(run)} rotations validated", flush=True)
 
+    bias_cache: dict = {}
     for method_id in args.methods:
-        records, decision_params = run_method(method_id, run, rows, split)
+        records, decision_params = run_method(method_id, run, rows, split, bias_cache)
         _check_complete(records, rows, method_id)
 
         stem = f"{args.protocol}_seed{args.seed}_{method_id}"

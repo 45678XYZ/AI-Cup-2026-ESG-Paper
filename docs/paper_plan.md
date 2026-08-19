@@ -149,6 +149,18 @@ z_t,c(x) = log p_t,c(x) + b_t,c
 1. **M3 不受影響**：projection 只在父欄要求時才輸出子欄 `N/A`，該情況下任何 bias 都改不了結果。
 2. **M6 受影響**：state 0 `(No, N/A, N/A, N/A)` 的分數含三個子欄 `N/A` 項，其 bias 全為 pinned，而 M5 的 global bias 四項皆有估計。因此 §4.4 的 M6 vs. M5 contrast 要讀成「conditional vs. global，**包含兩者可估參數集合的差異**」——這個差異正是 conditioning 的內容，不是實作瑕疵；但若不揭露，讀者會誤以為兩者只差在估計子集。
 
+**目標函數（已定案，須寫入 Methods）**：bias 以**各欄自己的 macro-F1** 為目標，在套用 output rule **之前**評分。四欄因此完全解耦，且**一組估計同時供兩種 output rule 使用**——M2 與 M5 共用同一組 global bias，M3 與 M6 共用同一組 conditional bias。
+
+這是為了讓 §3.4 的表能以 factorial 解讀。若改為對「套完 projection／decoder 之後」的加權總分最佳化，M2 與 M5 會得到不同的 bias，M6 vs. M3 的差異就同時包含「換成 decoder」與「bias 為 decoder 重估過」兩件事，而那正是 RQ2 後半段（互補性）唯一能靠的對比。這與 §3.3 對 α 的處理是同一個理由的兩種表現。
+
+逐欄最大化不是計算上的妥協：在 bias 被定義的空間（independent argmax）中，官方加權總分就是四欄 macro-F1 的加權和，每一項只依賴自己那欄的 bias，因此逐欄各自最大化與最大化加權總分**完全等價**；權重只在一個旋鈕要跨欄取捨時才起作用，而此處沒有這種旋鈕。
+
+**代價必須寫進 Limitations**：bias 對合法化**之前**的指標最優，合法化仍可能把它抵銷（例如調高 `PS=Yes` 改善了 PS，卻使被投影出的 EQ 變差），因此 M2／M3／M5／M6 有可能**低估** metric-aware calibration 的實力。此偏差方向對本文主張不利而非有利，據實說明即可。
+
+**搜尋程序（已定案）**：座標上升 + 固定網格。格點 `[-3, +3]`、步長 `0.05`，起點全零（即未校準的規則），依凍結的欄序與類別序輪掃；**只有嚴格改善才移動座標**，平手取 `|b|` 較小者（再取較負者）；整輪無改善即停止，上限 20 輪。F1 對 bias 是分段常數，梯度法無效，故不使用任何最佳化套件；此程序完全決定性，不含亂數種子。
+
+每欄的 bias 只確定到一個可加常數（同一欄四個類別同時加同一常數，不改變該欄 argmax、也不改變 projection 或 decoder 的輸出，因為 17 個狀態的分數整體平移）。本研究**不做正規化**，直接報告上述決定性程序的輸出——如此 absent 類別的 bias 嚴格為 `0.0`，與 manifest 記錄的 fallback 一致。
+
 ### 3.3 兩種合法化方式
 
 **Deterministic hierarchy projection**  
@@ -364,10 +376,10 @@ artifact 的版控規則：`splits/`、`results/` 與 `probs/` 都進 git（`pro
 - [x] 新增固定 PDF-group 與 row-stratified rotating split 產生器；row protocol 必須驗證每個 Calibration／Test PDF 在 Train 皆有其他 row，並將檢查結果寫入 manifest。
 - [x] 新增完整 17-state validator 與 projection unit tests。（`paper/projection.py`、`tests/test_projection.py`，120 種 argmax 結果全數窮舉）
 - [x] 新增契約檔的入境檢查（`paper/validate.py`）：機率值域、bundle↔split 對應、跨 rotation 一致性、artifact checksum、逐列檔的列錯位偵測。
-- [ ] 將 calibration API 改為明確接收 calibration labels，拒絕 Test labels。
+- [x] 將 calibration API 改為明確接收 calibration labels，拒絕 Test labels。（`paper/calibration.py::fit_biases` 比對 split manifest 的 `calibration_ids`，傳入 Test partition 直接 raise）
 - [x] 將 joint decoder 拆成固定 probabilities／固定 scales 的乾淨模式。（`paper/decoder.py`，α 固定為 1；對 17 狀態暴力枚舉的參考實作比對）
 - [x] 把需手動改 Python 常數的實驗改成 CLI／config，避免 run 間污染。（split generator、`run_training.py`、`run_decisions.py` 皆有 CLI）
-- [ ] 建立 `run_manifest.json`。（一鍵重算 tables 已由 `python -m analysis` 提供）
+- [x] 建立 `run_manifest.json`。（`paper/run_manifest.py`：掃過現有 artifacts 產生索引與跨檔一致性判定，不轉抄任何分數；一鍵重算 tables 由 `python -m analysis` 提供）
 - [ ] 建立只涵蓋 controlled study 的英文 README，從乾淨環境驗證至少一條 inference／evaluation command。（README 已建立；乾淨環境驗證尚未做）
 
 完成前不要在論文寫「repository is fully reproducible」。
@@ -545,8 +557,8 @@ W2 的 B 與 C 相對空閒：B 可先把 W4 的封存腳本寫好，C 可先做
 | 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone 已定案；`MODEL_REVISION` 與 `EPOCHS` 兩個常數留給 B 在 GPU 機上定值 |
 | 完整 17-state projection 與 validator | ✅ `paper/projection.py` | 雙向投影，120 種 argmax 結果全數窮舉測試 |
 | 契約檔入境檢查 | ✅ `paper/validate.py` | 值域、bundle↔split 對應、跨 rotation 一致性、checksum、列錯位 |
-| Calibration-only class-bias API | ⬜ 未實作 | 只接收 calibration labels、拒絕 test labels，並保存 fallback／biases；conditional 的三個結構性 pinned 類別見 §3.2 |
+| Calibration-only class-bias API | ✅ `paper/calibration.py` | 只接收 calibration labels、拒絕 test labels；biases 與 fallback 逐 rotation 存入 `decision_params`；conditional 的三個結構性 pinned 類別見 §3.2 |
 | 17-state joint decoder | ✅ `paper/decoder.py` | α 固定為 1，不夾帶額外可調參數；exploratory 用的 α 參數存在但主表一律不傳 |
-| M0–M6 與評估輸出 | 🟡 `paper/run_decisions.py` | M0、M1、M4 已可產出契約 3；M2/M3/M5/M6 待 calibration API |
+| M0–M6 與評估輸出 | ✅ `paper/run_decisions.py` | 七個方法皆可產出契約 3；一次 invocation 內 M2/M5 與 M3/M6 各共用一組 bias |
 
 任何論文敘述以**正式凍結後的程式與 manifest**為準，不以 README、舊 log 或開發時記憶為準。
