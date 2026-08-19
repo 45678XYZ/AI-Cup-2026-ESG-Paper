@@ -45,6 +45,7 @@ paper/          study code: label space, data, training, contract artifacts
   evaluate.py     per-row predictions -> the contract-3 results file
   validate.py     inbound conformance checks on received artifacts
   provenance.py   the git stamp every generated artifact carries
+  run_manifest.py one index for the whole study, with cross-file verdicts
 analysis/       audit, statistics, tables and figure (consumes the contracts)
   audit.py        dataset and split audit; the numbers behind Table 1
   metrics.py      subset-aware weighted macro-F1, pinned to paper/score.py
@@ -170,6 +171,28 @@ python -m paper.validate --all
 Run it on every bundle as it arrives. These failures do not raise; they produce
 a plausible results table, which is why they get a validator rather than a
 convention.
+
+One level up, a single command indexes the whole study — environment, commit,
+the sha256 of every split, bundle, predictions and results file, and a verdict
+on whether they are mutually consistent:
+
+```bash
+python -m paper.run_manifest                              # -> run_manifest.json
+python -m paper.run_manifest --root contracts/examples --out /tmp/manifest.json
+```
+
+It records checksums and verdicts, never scores: the per-row files are the
+authority on every number, and a copy here could disagree with them. It also
+performs the one check nothing else does — that each results file's
+`predictions_sha256` still matches the predictions file on disk. That link is
+written once when the results are generated and never verified again, so a
+predictions file regenerated afterwards would leave every table attributable to
+a file that no longer exists in that form.
+
+An incomplete study is indexed rather than refused (before B delivers, `probs`
+is simply 0 of 30), and a manifest built from the synthetic fixtures says so in
+its `warnings`, because otherwise it is indistinguishable from one built from a
+real run. Generate it at results freeze and commit it alongside the artifacts.
 
 ## Training runs
 

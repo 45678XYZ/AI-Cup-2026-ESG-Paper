@@ -379,7 +379,7 @@ artifact 的版控規則：`splits/`、`results/` 與 `probs/` 都進 git（`pro
 - [x] 將 calibration API 改為明確接收 calibration labels，拒絕 Test labels。（`paper/calibration.py::fit_biases` 比對 split manifest 的 `calibration_ids`，傳入 Test partition 直接 raise）
 - [x] 將 joint decoder 拆成固定 probabilities／固定 scales 的乾淨模式。（`paper/decoder.py`，α 固定為 1；對 17 狀態暴力枚舉的參考實作比對）
 - [x] 把需手動改 Python 常數的實驗改成 CLI／config，避免 run 間污染。（split generator、`run_training.py`、`run_decisions.py` 皆有 CLI）
-- [ ] 建立 `run_manifest.json`。（一鍵重算 tables 已由 `python -m analysis` 提供）
+- [x] 建立 `run_manifest.json`。（`paper/run_manifest.py`：掃過現有 artifacts 產生索引與跨檔一致性判定，不轉抄任何分數；一鍵重算 tables 由 `python -m analysis` 提供）
 - [ ] 建立只涵蓋 controlled study 的英文 README，從乾淨環境驗證至少一條 inference／evaluation command。（README 已建立；乾淨環境驗證尚未做）
 
 完成前不要在論文寫「repository is fully reproducible」。
