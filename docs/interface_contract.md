@@ -425,6 +425,21 @@ tables/manifest.json
 
 **空的 `input_files` 必須報錯，不得寫出。** 一份空 manifest 與一份完整 manifest 長得一樣，卻什麼都沒有擔保；只有 `predictions/` 而無 `results/` 的目錄是 W3 的常態，不能讓它靜默產出無效稽核紀錄。
 
+### 補充材料：`tables/case_analysis.json`
+
+**不是契約 4 的凍結交付物**——§5 凍結的是三張 `tabular`、其 caption 與 `manifest.json`。這一份放在同一個目錄，因為 D 由它撰寫 Discussion。
+
+它回答 Table 2 表面上的矛盾：結構化解碼把 invalid rate 從 12.7% 降到 0，卻幾乎不動 weighted macro-F1。兩組計數解釋了原因：
+
+| 欄位 | 內容 |
+|---|---|
+| `totals.by_rule` | M0 違反的是哪一條階層規則。四個 head 各自獨立預測，沒有機制阻止子欄填寫一個父欄已經關閉的分支 |
+| `totals.fields_repaired` / `fields_destroyed` / `fields_wrong_either_way` | 投影覆寫子欄時的得失。父欄判斷正確時修好一格，父欄判斷錯誤時弄壞一格；只報淨值會蓋掉「兩者都在發生」這個事實 |
+
+`fields_wrong_either_way` 單獨計列的理由：一格可能從一個錯的標籤被改成另一個錯的標籤，預測變了而分數沒變。併入任一欄都會高估規則的效果。
+
+由 `analysis/cases.py` 產生，`python -m analysis` 一併輸出。
+
 ### D 的替代輸入
 
 A 提供 placeholder `.tex`（欄數、欄序、對齊與正式版相同，數值填 `--`），D 從 W1 就能排版並測 8 頁預算。
