@@ -4,40 +4,40 @@
  "seed": 456,
  "method": "M1",
  "predictions_file": "predictions/row_strat_seed456_M1.csv.gz",
- "predictions_sha256": "sha256:4e2eec111a8084f64cda8506456d795e3b545bc6d1c309072c5a524d3e357191",
+ "predictions_sha256": "sha256:da31f913feb1747c4ee17c96ae402d45270a9bbd8505aec717ddff454fb027b4",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "5108128f7b5fc4815eb5e564850d77bfed5b5cab-dirty",
- "created_at": "2026-08-19T11:32:42.742867+00:00",
+ "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+ "created_at": "2026-08-21T11:34:10.936282+00:00",
  "n_rows": 2000,
- "weighted_macro_f1": 0.5801089515449203,
+ "weighted_macro_f1": 0.5804415228493462,
  "per_field_macro_f1": {
-  "promise_status": 0.7971446273265739,
-  "verification_timeline": 0.48579376075269065,
-  "evidence_status": 0.665807565316103,
-  "evidence_quality": 0.42305340677677417
+  "promise_status": 0.7940742411390636,
+  "verification_timeline": 0.48429925382992234,
+  "evidence_status": 0.6652594185605119,
+  "evidence_quality": 0.42686845993969025
  },
  "per_class_f1": {
   "promise_status": {
-   "Yes": 0.9232192414431082,
-   "No": 0.6710700132100397
+   "Yes": 0.922365988909427,
+   "No": 0.6657824933687002
   },
   "verification_timeline": {
-   "already": 0.5025295109612141,
-   "within_2_years": 0.10309278350515463,
-   "between_2_and_5_years": 0.5360602798708288,
+   "already": 0.5029337803855826,
+   "within_2_years": 0.10178117048346055,
+   "between_2_and_5_years": 0.5347826086956522,
    "more_than_5_years": 0.6162162162162163,
-   "N/A": 0.6710700132100397
+   "N/A": 0.6657824933687002
   },
   "evidence_status": {
-   "Yes": 0.8202551217626595,
-   "No": 0.5060975609756098,
-   "N/A": 0.6710700132100397
+   "Yes": 0.8208494208494208,
+   "No": 0.5091463414634146,
+   "N/A": 0.6657824933687002
   },
   "evidence_quality": {
-   "Clear": 0.7595419847328244,
-   "Not Clear": 0.261758691206544,
+   "Clear": 0.7577639751552795,
+   "Not Clear": 0.2787878787878788,
    "Misleading": 0.0,
-   "N/A": 0.6709129511677282
+   "N/A": 0.6709219858156028
   }
  },
  "per_class_support": {
@@ -65,11 +65,11 @@
   }
  },
  "conditional_f1": {
-  "verification_timeline_given_ps_yes": 0.45364090448527916,
-  "evidence_status_given_ps_yes": 0.6912021194534352,
-  "evidence_quality_given_es_yes": 0.36854105361194506
+  "verification_timeline_given_ps_yes": 0.4532432711346927,
+  "evidence_status_given_ps_yes": 0.6936114665621865,
+  "evidence_quality_given_es_yes": 0.37418623316231797
  },
- "tuple_exact_match": 0.4145,
+ "tuple_exact_match": 0.416,
  "invalid_tuple_rate": 0.0,
  "decision_params": {
   "0": {

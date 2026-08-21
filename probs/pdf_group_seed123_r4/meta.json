@@ -815,60 +815,60 @@
   "11992",
   "11996"
  ],
- "git_sha": "1e1913cf7cf3f758184409d627d19e1c4f1800a1",
- "created_at": "2026-08-15T08:23:55.784328+00:00",
+ "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+ "created_at": "2026-08-21T09:47:45.617289+00:00",
  "artifacts": {
   "calibration_promise_status.npy": {
-   "sha256": "sha256:e292466c1d42de0aeaf56fa5811f53ed9ac5efc6197b085958023620ce129f5f",
+   "sha256": "sha256:d19d4cb808221934d40b1b90f203b4010e3907db8bad2ff7e5b4d834a43d324c",
    "shape": [
     396,
     2
    ]
   },
   "calibration_verification_timeline.npy": {
-   "sha256": "sha256:deb4ee3dd8c7cfe639800054e8dd8b0f8eb4dfa53a87e307dfc9538398ceb024",
+   "sha256": "sha256:5984606ebc639520104305420e8dbb6d8ddc00549a17951c0fffcfe1d55cc1cd",
    "shape": [
     396,
     5
    ]
   },
   "calibration_evidence_status.npy": {
-   "sha256": "sha256:92779af7df53faa6d8212e97d79e3af4c0302e63401ee6aebd0f07c2e5b217e4",
+   "sha256": "sha256:2077f885360ee754d687a485cff4d1934e34c8ef4bf5ac8e89f69ba0e34c7310",
    "shape": [
     396,
     3
    ]
   },
   "calibration_evidence_quality.npy": {
-   "sha256": "sha256:21db707b7a8dcf2317f7c1d740132c1ba540c45f5b60aca3c8fe3f91a1ceb650",
+   "sha256": "sha256:f49429b5a98b2bb9bbe9d212dfe464d2c404e5c4a1727bd33056ff3bc36bff21",
    "shape": [
     396,
     4
    ]
   },
   "test_promise_status.npy": {
-   "sha256": "sha256:4a12a030c96fd230e71afbb2e48b3866e497fcb0d0d95a17260362bca1c27005",
+   "sha256": "sha256:b72150666dfc6d21990b312dcf7353ff402a13c2eeaad1074ac510074e8be2c1",
    "shape": [
     409,
     2
    ]
   },
   "test_verification_timeline.npy": {
-   "sha256": "sha256:0336d640c6fa7bbff31f5f0b171b8794d3bdc944c92c3fe9f4e49502e9fff656",
+   "sha256": "sha256:c5093d57afd1b2f4477ad9be3d8e130c9349677db35b9c736c0561171947c343",
    "shape": [
     409,
     5
    ]
   },
   "test_evidence_status.npy": {
-   "sha256": "sha256:8ec9ffee58d9e7cbe8e98799d2b11e9951e36d995a3c86f542ef4164f458775d",
+   "sha256": "sha256:e8a25e3af78110a3d3f144bf94430c095f5d8786b5f761580336c74c6eb73fd8",
    "shape": [
     409,
     3
    ]
   },
   "test_evidence_quality.npy": {
-   "sha256": "sha256:41ab947ef97b9fb1e629df2b4888628147be70064ba30ed92be54c34a910bdb1",
+   "sha256": "sha256:8b2b393e2f0b337b29e4ee7bc7e7de195440e0082a6ca1b29f0e76ec07ab638a",
    "shape": [
     409,
     4
@@ -877,20 +877,28 @@
  },
  "model_name": "hfl/chinese-roberta-wwm-ext-large",
  "model_revision": "a25cc9e05974bd9687e528edd516f2cfdb3f5db9",
- "train_config_sha256": "sha256:8a5d06847e77b1547ce91534f2bbc0b493bd2f4d37197d231ec68249c779f7e2",
+ "train_config_sha256": "sha256:ebef1c618747e263762c86bddc14f6a6ff5faef1b9f4d6fd10a1b3c926929b4c",
  "checkpoint_rule": "avg_last_k",
  "checkpoint_last_k": 3,
  "epochs": 12,
  "hardware": "NVIDIA GeForce RTX 3090 (cuda:0 of 1)",
- "started_at": "2026-08-15T08:16:45.526118+00:00",
- "finished_at": "2026-08-15T08:23:55.774655+00:00",
- "train_seconds": 430.2,
+ "started_at": "2026-08-21T09:40:45.826053+00:00",
+ "finished_at": "2026-08-21T09:47:45.569137+00:00",
+ "train_seconds": 419.7,
  "n_train_rows": 1195,
- "command": "/home/tom1030507/miniconda3/envs/aicup-esg/bin/python /home/tom1030507/AI-Cup-2026-ESG-Paper/AI-Cup-2026-ESG-Paper/paper/run_training.py --protocol pdf_group --seed 123 --skip-existing",
- "python_version": "3.10.20",
- "torch_version": "2.2.2+cu121",
+ "command": "python -u -m paper.run_training --protocol pdf_group --seed 123",
+ "environment": {
+  "python": "3.10.20",
+  "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+  "packages": {
+   "numpy": "1.26.4",
+   "scikit-learn": "1.7.2",
+   "pandas": "2.3.3",
+   "torch": "2.2.2+cu121",
+   "transformers": "4.40.2"
+  }
+ },
  "torch_cuda_version": "12.1",
- "transformers_version": "4.40.2",
  "cuda_device_order": "PCI_BUS_ID",
  "cuda_visible_devices": "1"
 }

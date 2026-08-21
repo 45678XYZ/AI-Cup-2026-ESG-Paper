@@ -4,40 +4,40 @@
  "seed": 456,
  "method": "M4",
  "predictions_file": "predictions/pdf_group_seed456_M4.csv.gz",
- "predictions_sha256": "sha256:bae864a8c207c5b8f49d058ed2f3d5e2cb36ebd0305353e09c63bf6d8340a473",
+ "predictions_sha256": "sha256:c2d70a14f4ca1b2d2b5170e349b99d5181ac829fa8f2fa6206447deb3695b201",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "5108128f7b5fc4815eb5e564850d77bfed5b5cab-dirty",
- "created_at": "2026-08-19T11:32:31.496032+00:00",
+ "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+ "created_at": "2026-08-21T11:34:07.210065+00:00",
  "n_rows": 2000,
- "weighted_macro_f1": 0.5776698944939609,
+ "weighted_macro_f1": 0.5764324522546974,
  "per_field_macro_f1": {
-  "promise_status": 0.8028390318449402,
-  "verification_timeline": 0.4718904638600436,
-  "evidence_status": 0.65417055027849,
-  "evidence_quality": 0.4287638670354835
+  "promise_status": 0.8015592631233971,
+  "verification_timeline": 0.4722030395630307,
+  "evidence_status": 0.6544406957918897,
+  "evidence_quality": 0.42559409987999
  },
  "per_class_f1": {
   "promise_status": {
-   "Yes": 0.9305007587253414,
-   "No": 0.675177304964539
+   "Yes": 0.9298511995141209,
+   "No": 0.6732673267326733
   },
   "verification_timeline": {
-   "already": 0.48006644518272423,
-   "within_2_years": 0.09610983981693363,
-   "between_2_and_5_years": 0.49064906490649063,
-   "more_than_5_years": 0.6174496644295302,
-   "N/A": 0.675177304964539
+   "already": 0.47626977518734387,
+   "within_2_years": 0.09417040358744394,
+   "between_2_and_5_years": 0.49230769230769234,
+   "more_than_5_years": 0.625,
+   "N/A": 0.6732673267326733
   },
   "evidence_status": {
-   "Yes": 0.827016885553471,
-   "No": 0.4603174603174603,
-   "N/A": 0.675177304964539
+   "Yes": 0.8258258258258259,
+   "No": 0.4642289348171701,
+   "N/A": 0.6732673267326733
   },
   "evidence_quality": {
-   "Clear": 0.7698077824660103,
-   "Not Clear": 0.29056603773584905,
+   "Clear": 0.7650375939849624,
+   "Not Clear": 0.2846441947565543,
    "Misleading": 0.0,
-   "N/A": 0.6546816479400749
+   "N/A": 0.6526946107784432
   }
  },
  "per_class_support": {
@@ -65,11 +65,11 @@
   }
  },
  "conditional_f1": {
-  "verification_timeline_given_ps_yes": 0.43523443744244344,
-  "evidence_status_given_ps_yes": 0.6740601582891302,
-  "evidence_quality_given_es_yes": 0.3893955446920117
+  "verification_timeline_given_ps_yes": 0.4359019433366075,
+  "evidence_status_given_ps_yes": 0.6753043963683091,
+  "evidence_quality_given_es_yes": 0.3853433363797565
  },
- "tuple_exact_match": 0.3905,
+ "tuple_exact_match": 0.385,
  "invalid_tuple_rate": 0.0,
  "decision_params": {
   "0": {

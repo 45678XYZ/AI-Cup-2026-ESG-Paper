@@ -4,40 +4,40 @@
  "seed": 42,
  "method": "M1",
  "predictions_file": "predictions/pdf_group_seed42_M1.csv.gz",
- "predictions_sha256": "sha256:c5eea4a86d3a55bddc4d9d4b1dfb42c497e8228ec9a90d7689ca2eb5b3c508c7",
+ "predictions_sha256": "sha256:734e8f7a61c87faab35e9802804ec5d766c4ac263db8692e29501ae75c77c78d",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "5108128f7b5fc4815eb5e564850d77bfed5b5cab-dirty",
- "created_at": "2026-08-19T11:32:22.759949+00:00",
+ "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+ "created_at": "2026-08-21T11:33:47.310651+00:00",
  "n_rows": 2000,
- "weighted_macro_f1": 0.5715903206244807,
+ "weighted_macro_f1": 0.5702932669895099,
  "per_field_macro_f1": {
-  "promise_status": 0.7951444412444131,
-  "verification_timeline": 0.4722577016634887,
-  "evidence_status": 0.652049103560911,
-  "evidence_quality": 0.41745156016514706
+  "promise_status": 0.7961489813869573,
+  "verification_timeline": 0.47264858447153524,
+  "evidence_status": 0.6494436567624934,
+  "evidence_quality": 0.4152373886075433
  },
  "per_class_f1": {
   "promise_status": {
-   "Yes": 0.9210281820997213,
-   "No": 0.669260700389105
+   "Yes": 0.9213135068153655,
+   "No": 0.6709844559585493
   },
   "verification_timeline": {
-   "already": 0.4688026981450253,
-   "within_2_years": 0.1,
-   "between_2_and_5_years": 0.5135699373695198,
-   "more_than_5_years": 0.6096551724137931,
-   "N/A": 0.669260700389105
+   "already": 0.4610169491525424,
+   "within_2_years": 0.09863013698630137,
+   "between_2_and_5_years": 0.5182863113897597,
+   "more_than_5_years": 0.6143250688705234,
+   "N/A": 0.6709844559585493
   },
   "evidence_status": {
-   "Yes": 0.8152173913043478,
-   "No": 0.47166921898928027,
-   "N/A": 0.669260700389105
+   "Yes": 0.8153310104529616,
+   "No": 0.462015503875969,
+   "N/A": 0.6709844559585493
   },
   "evidence_quality": {
-   "Clear": 0.7525035765379113,
-   "Not Clear": 0.25157232704402516,
+   "Clear": 0.7496423462088698,
+   "Not Clear": 0.24793388429752067,
    "Misleading": 0.0,
-   "N/A": 0.6657303370786517
+   "N/A": 0.6633733239237827
   }
  },
  "per_class_support": {
@@ -65,11 +65,11 @@
   }
  },
  "conditional_f1": {
-  "verification_timeline_given_ps_yes": 0.4361033303062766,
-  "evidence_status_given_ps_yes": 0.669166419598063,
-  "evidence_quality_given_es_yes": 0.36221353254737165
+  "verification_timeline_given_ps_yes": 0.43608797407401656,
+  "evidence_status_given_ps_yes": 0.6640984715412367,
+  "evidence_quality_given_es_yes": 0.3605134463997064
  },
- "tuple_exact_match": 0.399,
+ "tuple_exact_match": 0.3985,
  "invalid_tuple_rate": 0.0,
  "decision_params": {
   "0": {

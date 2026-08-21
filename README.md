@@ -284,12 +284,11 @@ Face revision is pinned, the fixed budget is 12 epochs, and the last three epoch
 states are averaged. All 30 cross-fitted probability bundles have been produced
 and validated.
 
-**They are pending a re-run.** The bundles were fitted before the short-batch
-loss scaling was corrected (`paper/accumulation.py::loss_scale`), so they no
-longer match `paper/train_fold.py`; 29 of the 30 are affected. They remain valid
-artifacts and every number derived from them is reproducible, but they were
-produced by a superseded recipe. `docs/gpu_training_progress.md` records what
-changed, which rotations it touches and the command to redo them.
+The 30 bundles were re-run on 2026-08-21 after the short-batch loss scaling was
+corrected (`paper/accumulation.py::loss_scale`). All record the clean source
+commit `35dea657eede733ea6c8945f3976a1561cfab80d`, the same training-configuration
+hash and the RTX 3090 environment. `docs/gpu_training_progress.md` records the
+original defect, the epoch evidence, the smoke test and the completed campaign.
 
 The full official run has been materialised: `predictions/` and `results/`
 contain all 42 protocol/seed/method outputs, and all 42 prediction files pass
@@ -297,10 +296,7 @@ the contract validator. Reproduce them from the committed bundles with the six
 invocations under [Decision runs](#decision-runs) — one per (protocol, seed),
 about a second and a half each — then `python -m paper.validate --all`.
 
-Their result manifests record `5108128f7b5fc4815eb5e564850d77bfed5b5cab-dirty`,
-which is a stamp rather than a provenance chain: the `-dirty` suffix means no
-commit reproduces that tree, and the named commit predates the rename of
-`run_decision.py` to `run_decisions.py`, so it does not contain the module that
-wrote the files. Regenerating the 42 outputs from a clean checkout re-stamps
-them; the outputs themselves are byte-identical. `python -m paper.run_manifest`
-reports this under `warnings` until it is done.
+The six decision invocations were regenerated from that clean source commit.
+`python -m paper.run_manifest` indexes all 30 probability bundles, 42
+predictions, 42 results and eight table artifacts; all six cross-file checks
+pass with no warnings or notes.

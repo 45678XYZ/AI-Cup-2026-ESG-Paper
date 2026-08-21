@@ -4,40 +4,40 @@
  "seed": 123,
  "method": "M5",
  "predictions_file": "predictions/pdf_group_seed123_M5.csv.gz",
- "predictions_sha256": "sha256:c28cf29f32376dc1df837cb6a684f7ef1c913aa827dea54825ea9144990822e9",
+ "predictions_sha256": "sha256:6e647a9f5c6896773972c2616692051110340e7be9030c3048f63442f17c4473",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "5108128f7b5fc4815eb5e564850d77bfed5b5cab-dirty",
- "created_at": "2026-08-19T11:32:27.664040+00:00",
+ "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+ "created_at": "2026-08-21T11:33:58.010938+00:00",
  "n_rows": 2000,
- "weighted_macro_f1": 0.5722786163054584,
+ "weighted_macro_f1": 0.5749316615863255,
  "per_field_macro_f1": {
-  "promise_status": 0.7954972206213167,
-  "verification_timeline": 0.5006972130437539,
-  "evidence_status": 0.6491587185670503,
-  "evidence_quality": 0.40950564187004823
+  "promise_status": 0.7978661882553546,
+  "verification_timeline": 0.5039945132456479,
+  "evidence_status": 0.6438698099254139,
+  "evidence_quality": 0.41885229705938076
  },
  "per_class_f1": {
   "promise_status": {
-   "Yes": 0.9261744966442953,
-   "No": 0.6648199445983379
+   "Yes": 0.9263222256190767,
+   "No": 0.6694101508916324
   },
   "verification_timeline": {
-   "already": 0.554320987654321,
-   "within_2_years": 0.24561403508771928,
-   "between_2_and_5_years": 0.47345132743362833,
-   "more_than_5_years": 0.5652797704447633,
-   "N/A": 0.6648199445983379
+   "already": 0.5490699166132136,
+   "within_2_years": 0.25396825396825395,
+   "between_2_and_5_years": 0.4863731656184486,
+   "more_than_5_years": 0.5611510791366906,
+   "N/A": 0.6694101508916324
   },
   "evidence_status": {
-   "Yes": 0.8259895444361464,
-   "No": 0.45666666666666667,
-   "N/A": 0.6648199445983379
+   "Yes": 0.8203007518796992,
+   "No": 0.44189852700491,
+   "N/A": 0.6694101508916324
   },
   "evidence_quality": {
-   "Clear": 0.7816298964430437,
-   "Not Clear": 0.2088888888888889,
+   "Clear": 0.779064381658175,
+   "Not Clear": 0.2530612244897959,
    "Misleading": 0.0,
-   "N/A": 0.6475037821482602
+   "N/A": 0.6432835820895523
   }
  },
  "per_class_support": {
@@ -65,34 +65,34 @@
   }
  },
  "conditional_f1": {
-  "verification_timeline_given_ps_yes": 0.47806566960677543,
-  "evidence_status_given_ps_yes": 0.6698654402997786,
-  "evidence_quality_given_es_yes": 0.36319759299364485
+  "verification_timeline_given_ps_yes": 0.4807827897771857,
+  "evidence_status_given_ps_yes": 0.6590710341216417,
+  "evidence_quality_given_es_yes": 0.3795109492892335
  },
- "tuple_exact_match": 0.4325,
+ "tuple_exact_match": 0.429,
  "invalid_tuple_rate": 0.0,
  "decision_params": {
   "0": {
    "calibration_biases": {
     "promise_status": {
-     "Yes": 1.9,
+     "Yes": 1.35,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 1.7,
+     "already": 1.65,
      "within_2_years": 0.0,
      "between_2_and_5_years": 0.25,
-     "more_than_5_years": 0.8,
-     "N/A": 0.2
+     "more_than_5_years": 0.85,
+     "N/A": 0.15
     },
     "evidence_status": {
-     "Yes": 1.95,
-     "No": 1.05,
-     "N/A": -0.05
+     "Yes": 0.9,
+     "No": 1.0,
+     "N/A": -0.25
     },
     "evidence_quality": {
-     "Clear": 1.45,
-     "Not Clear": 0.0,
+     "Clear": 0.95,
+     "Not Clear": 0.1,
      "Misleading": 0.0,
      "N/A": 0.0
     }
@@ -115,24 +115,24 @@
   "1": {
    "calibration_biases": {
     "promise_status": {
-     "Yes": 0.1,
+     "Yes": 0.35,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 0.85,
-     "within_2_years": -1.5,
-     "between_2_and_5_years": 0.9,
-     "more_than_5_years": 0.75,
-     "N/A": 0.15
+     "already": 0.55,
+     "within_2_years": -1.45,
+     "between_2_and_5_years": 0.6,
+     "more_than_5_years": 0.3,
+     "N/A": -0.15
     },
     "evidence_status": {
-     "Yes": -0.2,
-     "No": 0.0,
-     "N/A": 0.05
+     "Yes": -0.5,
+     "No": -0.05,
+     "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": 0.7,
-     "Not Clear": 0.35,
+     "Clear": 0.55,
+     "Not Clear": 0.0,
      "Misleading": 0.0,
      "N/A": 1.6
     }
@@ -155,26 +155,26 @@
   "2": {
    "calibration_biases": {
     "promise_status": {
-     "Yes": -0.05,
+     "Yes": -0.15,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 0.45,
+     "already": 0.4,
      "within_2_years": -1.65,
      "between_2_and_5_years": 0.75,
-     "more_than_5_years": 0.15,
-     "N/A": 2.2
+     "more_than_5_years": -0.05,
+     "N/A": 2.25
     },
     "evidence_status": {
-     "Yes": -0.6,
-     "No": -0.85,
-     "N/A": 0.05
+     "Yes": -0.55,
+     "No": -0.75,
+     "N/A": 0.4
     },
     "evidence_quality": {
-     "Clear": -0.9,
-     "Not Clear": -0.45,
+     "Clear": -0.8,
+     "Not Clear": -0.0,
      "Misleading": 0.0,
-     "N/A": 0.95
+     "N/A": 0.35
     }
    },
    "fallback_applied": {
@@ -195,26 +195,26 @@
   "3": {
    "calibration_biases": {
     "promise_status": {
-     "Yes": -0.1,
+     "Yes": 0.1,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 2.9,
-     "within_2_years": -0.2,
-     "between_2_and_5_years": 1.5,
-     "more_than_5_years": 0.0,
-     "N/A": 0.0
+     "already": 2.55,
+     "within_2_years": 0.05,
+     "between_2_and_5_years": 2.4,
+     "more_than_5_years": -0.3,
+     "N/A": 0.35
     },
     "evidence_status": {
-     "Yes": 0.55,
-     "No": -0.2,
-     "N/A": 0.4
+     "Yes": 0.35,
+     "No": 0.1,
+     "N/A": 0.85
     },
     "evidence_quality": {
-     "Clear": -0.25,
-     "Not Clear": 0.15,
-     "Misleading": -0.0,
-     "N/A": 1.1
+     "Clear": -1.15,
+     "Not Clear": -0.9,
+     "Misleading": 0.6,
+     "N/A": 0.2
     }
    },
    "fallback_applied": {},
@@ -231,26 +231,26 @@
   "4": {
    "calibration_biases": {
     "promise_status": {
-     "Yes": 0.65,
+     "Yes": 0.45,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 0.25,
-     "within_2_years": -0.7,
+     "already": 0.15,
+     "within_2_years": -0.75,
      "between_2_and_5_years": 0.0,
-     "more_than_5_years": 0.25,
-     "N/A": 0.95
+     "more_than_5_years": 0.1,
+     "N/A": 0.45
     },
     "evidence_status": {
-     "Yes": 0.35,
+     "Yes": 0.8,
      "No": -0.55,
-     "N/A": 0.0
+     "N/A": 0.25
     },
     "evidence_quality": {
-     "Clear": 1.3,
-     "Not Clear": -2.5,
-     "Misleading": 1.55,
-     "N/A": -0.35
+     "Clear": 1.7,
+     "Not Clear": 0.8,
+     "Misleading": 2.3,
+     "N/A": 0.0
     }
    },
    "fallback_applied": {},

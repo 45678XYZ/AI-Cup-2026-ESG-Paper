@@ -4,40 +4,40 @@
  "seed": 123,
  "method": "M6",
  "predictions_file": "predictions/row_strat_seed123_M6.csv.gz",
- "predictions_sha256": "sha256:9d38928226c1bccb1b6a2dea81c8c3ea81d54cbf0ca1a6c7147cd20dba6ae998",
+ "predictions_sha256": "sha256:a1e70deaaf60ea6b819d34e8e464ff4c01f2afe6defdb71f33ed3b05c7ae27fd",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "5108128f7b5fc4815eb5e564850d77bfed5b5cab-dirty",
- "created_at": "2026-08-19T11:32:39.808224+00:00",
+ "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+ "created_at": "2026-08-21T11:34:02.923294+00:00",
  "n_rows": 2000,
- "weighted_macro_f1": 0.5858864273006116,
+ "weighted_macro_f1": 0.5855205806351718,
  "per_field_macro_f1": {
-  "promise_status": 0.7887485648679678,
-  "verification_timeline": 0.5129193110221146,
-  "evidence_status": 0.6627371724026,
-  "evidence_quality": 0.43536475986548795
+  "promise_status": 0.7897896251126453,
+  "verification_timeline": 0.5187823824086686,
+  "evidence_status": 0.6602368745046128,
+  "evidence_quality": 0.43335495971416726
  },
  "per_class_f1": {
   "promise_status": {
-   "Yes": 0.9313432835820895,
-   "No": 0.6461538461538462
+   "Yes": 0.931261207411835,
+   "No": 0.6483180428134556
   },
   "verification_timeline": {
-   "already": 0.5914249684741488,
-   "within_2_years": 0.21359223300970873,
-   "between_2_and_5_years": 0.5022421524663677,
-   "more_than_5_years": 0.611183355006502,
-   "N/A": 0.6461538461538462
+   "already": 0.5949288806431664,
+   "within_2_years": 0.23529411764705882,
+   "between_2_and_5_years": 0.5016722408026756,
+   "more_than_5_years": 0.6136986301369863,
+   "N/A": 0.6483180428134556
   },
   "evidence_status": {
-   "Yes": 0.8513513513513513,
-   "No": 0.49070631970260226,
-   "N/A": 0.6461538461538462
+   "Yes": 0.8500178126113288,
+   "No": 0.48237476808905383,
+   "N/A": 0.6483180428134556
   },
   "evidence_quality": {
-   "Clear": 0.7968682035667681,
-   "Not Clear": 0.2964426877470356,
+   "Clear": 0.7972027972027972,
+   "Not Clear": 0.2891089108910891,
    "Misleading": 0.0,
-   "N/A": 0.6481481481481481
+   "N/A": 0.647108130762783
   }
  },
  "per_class_support": {
@@ -65,35 +65,35 @@
   }
  },
  "conditional_f1": {
-  "verification_timeline_given_ps_yes": 0.5022303266226276,
-  "evidence_status_given_ps_yes": 0.706996820630575,
-  "evidence_quality_given_es_yes": 0.40841621895913405
+  "verification_timeline_given_ps_yes": 0.5087576653555483,
+  "evidence_status_given_ps_yes": 0.7018919591735125,
+  "evidence_quality_given_es_yes": 0.4052028340142925
  },
- "tuple_exact_match": 0.459,
+ "tuple_exact_match": 0.4555,
  "invalid_tuple_rate": 0.0,
  "decision_params": {
   "0": {
    "calibration_biases": {
     "promise_status": {
-     "Yes": 0.25,
+     "Yes": 0.5,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 1.3,
-     "within_2_years": -0.4,
-     "between_2_and_5_years": 0.3,
-     "more_than_5_years": 1.2,
+     "already": 1.1,
+     "within_2_years": -0.35,
+     "between_2_and_5_years": 0.35,
+     "more_than_5_years": 1.1,
      "N/A": 0.0
     },
     "evidence_status": {
-     "Yes": 0.8,
-     "No": 0.25,
+     "Yes": 0.35,
+     "No": 0.0,
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": -0.1,
-     "Not Clear": 0.0,
-     "Misleading": 1.25,
+     "Clear": 0.4,
+     "Not Clear": 0.65,
+     "Misleading": 2.0,
      "N/A": 0.0
     }
    },
@@ -111,23 +111,23 @@
   "1": {
    "calibration_biases": {
     "promise_status": {
-     "Yes": 1.4,
+     "Yes": 0.6,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 0.8,
-     "within_2_years": -1.1,
-     "between_2_and_5_years": 0.05,
-     "more_than_5_years": -0.0,
+     "already": 0.65,
+     "within_2_years": -1.05,
+     "between_2_and_5_years": 0.1,
+     "more_than_5_years": 0.0,
      "N/A": 0.0
     },
     "evidence_status": {
-     "Yes": 1.75,
+     "Yes": 1.95,
      "No": 0.0,
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": 1.1,
+     "Clear": 1.5,
      "Not Clear": 0.0,
      "Misleading": 0.0,
      "N/A": 0.0
@@ -151,25 +151,25 @@
   "2": {
    "calibration_biases": {
     "promise_status": {
-     "Yes": 1.1,
+     "Yes": 1.25,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 0.9,
-     "within_2_years": -1.15,
-     "between_2_and_5_years": 0.0,
-     "more_than_5_years": 0.0,
+     "already": 1.05,
+     "within_2_years": -1.2,
+     "between_2_and_5_years": 0.25,
+     "more_than_5_years": 0.05,
      "N/A": 0.0
     },
     "evidence_status": {
-     "Yes": 0.4,
-     "No": 0.25,
+     "Yes": -0.15,
+     "No": 0.0,
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": 2.25,
-     "Not Clear": 1.2,
-     "Misleading": 2.5,
+     "Clear": 1.75,
+     "Not Clear": 0.7,
+     "Misleading": 0.0,
      "N/A": 0.0
     }
    },
@@ -187,24 +187,24 @@
   "3": {
    "calibration_biases": {
     "promise_status": {
-     "Yes": 0.8,
+     "Yes": 0.85,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 0.3,
-     "within_2_years": -0.0,
-     "between_2_and_5_years": 0.3,
-     "more_than_5_years": 0.55,
+     "already": 0.25,
+     "within_2_years": -0.35,
+     "between_2_and_5_years": 0.0,
+     "more_than_5_years": -0.75,
      "N/A": 0.0
     },
     "evidence_status": {
-     "Yes": 1.25,
-     "No": 0.55,
+     "Yes": 0.9,
+     "No": 0.0,
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": 1.35,
-     "Not Clear": 0.05,
+     "Clear": 1.7,
+     "Not Clear": 0.5,
      "Misleading": 0.0,
      "N/A": 0.0
     }
@@ -227,24 +227,24 @@
   "4": {
    "calibration_biases": {
     "promise_status": {
-     "Yes": 1.0,
+     "Yes": 1.3,
      "No": 0.0
     },
     "verification_timeline": {
-     "already": 1.4,
-     "within_2_years": -1.65,
-     "between_2_and_5_years": 0.75,
+     "already": 1.45,
+     "within_2_years": -1.75,
+     "between_2_and_5_years": 0.65,
      "more_than_5_years": 0.0,
      "N/A": 0.0
     },
     "evidence_status": {
-     "Yes": 0.95,
+     "Yes": 0.9,
      "No": 0.0,
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": 0.8,
-     "Not Clear": 0.7,
+     "Clear": 0.1,
+     "Not Clear": 0.0,
      "Misleading": 0.0,
      "N/A": 0.0
     }
