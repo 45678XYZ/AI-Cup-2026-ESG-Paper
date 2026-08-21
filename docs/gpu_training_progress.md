@@ -71,3 +71,49 @@ reports `248 passed, 3 skipped`. The three skips are this branch's
 `tests/test_training_path.py`, which needs torch, and the two figure tests,
 which need `latexmk`. The bundle and validation counts are properties of the
 artifacts and are unchanged by the merge.
+
+## Pending Re-run: loss scaling of short batches
+
+**Status: the 30 committed bundles no longer match `paper/train_fold.py`.** They
+remain valid, validated artifacts and every number derived from them is
+reproducible; what changed is the recipe that produced them.
+
+The losses are `reduction="mean"`, so a batch holding fewer than `BATCH_SIZE`
+rows has already inflated each of its rows before any accumulation divisor is
+applied. The committed code then divided by the *window's batch count*, which
+compounded it. Measured per row, against a normal row's `1/16` of an optimiser
+step:
+
+| rotation shape | rows in final batch | weight of those rows |
+|---|---:|---:|
+| 149 batches (odd), n_train 1185 | 1 | **16x** |
+| 151 batches (odd), n_train 1202 | 2 | **8x** |
+| 150 batches (even), n_train 1198 | 6 | 1.3x |
+| 148 batches (even), n_train 1184 | 8 | 1x (unaffected) |
+
+`paper/accumulation.py::loss_scale` now scales each batch by its real row count
+against a fixed denominator, so every row carries `1/16` of a step wherever it
+lands and a short window simply takes a proportionally smaller step.
+`tests/test_accumulation.py` asserts the property directly.
+
+29 of the 30 bundles have a final batch that is not full and are therefore
+affected; only `pdf_group_seed42_r4` (n_train 1184, exactly divisible by 8) is
+not. Re-run **all six invocations** rather than 29 rotations: the extra fit
+costs about seven minutes and leaves the whole study stamped with one commit,
+which `python -m paper.run_manifest` otherwise reports as a mixture.
+
+```bash
+for seed in 42 123 456; do
+  for protocol in pdf_group row_strat; do
+    python -m paper.run_training --protocol $protocol --seed $seed
+  done
+done
+```
+
+Confirm `EPOCHS` before starting: the evidence closing its TODO is unresolved
+(see `paper/train_config.py`), and it is the one constant that would have to
+change inside this same re-run rather than after it.
+
+After the fits, regenerate the decision stage from a clean checkout — six
+invocations of `paper.run_decisions`, a few seconds — so `results/` stops
+carrying the `-dirty` stamp, then rebuild the tables.

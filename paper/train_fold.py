@@ -22,7 +22,11 @@ from transformers import (
     get_linear_schedule_with_warmup,
 )
 
-from paper.accumulation import accumulation_window, optimiser_steps_per_epoch
+from paper.accumulation import (
+    accumulation_window,
+    loss_scale,
+    optimiser_steps_per_epoch,
+)
 from paper.dataset import ESGDataset, collate_fn
 from paper.labels import EVAL_FIELDS, FIELD_WEIGHTS, LABEL2ID, NUM_LABELS
 from paper.model import MultiTaskEncoder
@@ -142,8 +146,8 @@ def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None,
 
             with torch.cuda.amp.autocast():
                 logits = model(input_ids, attention_mask)
-                window_size, update_due = accumulation_window(step, len(loader))
-                loss = _loss(criteria, logits, labels) / window_size
+                _, update_due = accumulation_window(step, len(loader))
+                loss = _loss(criteria, logits, labels) * loss_scale(len(input_ids))
 
             scaler.scale(loss).backward()
 
