@@ -29,15 +29,19 @@ GRAD_ACCUM_STEPS = 2          # effective batch = 16
 # Fixed budget: every rotation trains exactly this many epochs and there is no
 # early stopping (see the checkpoint block below for why).
 #
-# B audited the 15 standard-loss Chinese RoBERTa folds from the competition
-# runs (seeds 42, 123 and 456) on 2026-08-15. Their early-stop/full-budget
-# terminal epochs were:
+# B re-audited the original standard-loss Chinese RoBERTa logs on 2026-08-21.
+# Those runs used a 15-epoch cap with patience=3. Reading "Early stop at epoch"
+# (or 15 for the one fold that exhausted the cap), their terminal epochs were:
 #
-#   12, 10, 10, 15, 9, 14, 14, 10, 6, 14, 12, 11, 11, 14, 9
+#   seed 42:  12, 10, 10, 15, 9
+#   seed 123: 14, 14, 10,  6, 14
+#   seed 456: 12, 11, 11, 14, 9
 #
-# The median is 11 and the mean is 11.4, so the protocol's "typical stopping
-# epoch, rounded up" rule gives a fixed budget of 12. Evidence is archived in
-# the original competition repository under artifacts/oof_run_roberta_s*.log.
+# Define the protocol's formerly ambiguous "typical stopping epoch, rounded
+# up" as the ceiling of the arithmetic mean across all 15 folds:
+# ceil(171 / 15) = ceil(11.4) = 12. The median is 11, but is descriptive only;
+# it is not the frozen aggregation rule. The per-fold audit and hashes of the
+# three source logs are recorded in docs/competition_epoch_evidence.md.
 #
 # Why it matters in both directions, and why nobody downstream can catch a bad
 # value:

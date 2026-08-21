@@ -562,7 +562,7 @@ W2 的 B 與 C 相對空閒：B 可先把 W4 的封存腳本寫好，C 可先做
 | 論文需要的元件 | 現況 | 待處理 |
 |---|---|---|
 | Rotating split generator（PDF-group 與 row-stratified） | ✅ `paper/splits.py`，六個 manifest 已產出 | — |
-| 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone、精確 model revision、last-3 checkpoint averaging 均已凍結；30/30 fits 已完成並驗證，但短 batch 的 loss 縮放已修正（`paper/accumulation.py::loss_scale`），30 個 bundle 待重跑；`EPOCHS = 12` 的佐證尚未確認，須在同一次重跑前定案，見 `docs/gpu_training_progress.md` |
+| 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone、精確 model revision、last-3 checkpoint averaging 均已凍結；30/30 fits 已完成並驗證，但短 batch 的 loss 縮放已修正（`paper/accumulation.py::loss_scale`），30 個 bundle 待重跑；`EPOCHS = 12` 已按 15 個 competition folds 的平均 terminal epoch 向上取整重新確認，見 `docs/competition_epoch_evidence.md` |
 | 完整 17-state projection 與 validator | ✅ `paper/projection.py` | 雙向投影，120 種 argmax 結果全數窮舉測試 |
 | 契約檔入境檢查 | ✅ `paper/validate.py` | 值域、bundle↔split 對應、跨 rotation 一致性、checksum、列錯位 |
 | Calibration-only class-bias API | ✅ `paper/calibration.py` | 只接收 calibration labels、拒絕 test labels；biases 與 fallback 逐 rotation 存入 `decision_params`；conditional 的三個結構性 pinned 類別見 §3.2 |

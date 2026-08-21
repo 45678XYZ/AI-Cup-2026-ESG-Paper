@@ -1,6 +1,6 @@
 # GPU Training Progress
 
-Last updated: 2026-08-16 (Asia/Taipei)
+Last updated: 2026-08-21 (Asia/Taipei)
 
 ## Frozen Setup
 
@@ -18,8 +18,28 @@ Last updated: 2026-08-16 (Asia/Taipei)
   projection, argmax, or scoring is applied by the training path.
 
 The 12-epoch budget is supported by the 15 standard-loss Chinese RoBERTa
-competition folds. Their terminal epochs have median 11 and mean 11.4. The
-evidence and exact values are recorded in `paper/train_config.py`.
+competition folds. The frozen aggregation rule is the ceiling of their
+arithmetic-mean terminal epoch: `ceil(171 / 15) = ceil(11.4) = 12`. The median
+of 11 is descriptive only. The exact per-fold values and hashes of the three
+source logs are recorded in `docs/competition_epoch_evidence.md`.
+
+## Pre-run GPU smoke test
+
+On 2026-08-21, B ran the requested single-rotation smoke test on the RTX 3090
+before replacing any committed bundle:
+
+```bash
+CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1 \
+  conda run -n aicup-esg --no-capture-output \
+  python -u -m paper.run_training \
+  --protocol pdf_group --seed 42 --rotations 0 --out-dir /tmp/smoke
+```
+
+The real `huggingface_hub.snapshot_download` returned a directory named
+`a25cc9e05974bd9687e528edd516f2cfdb3f5db9`, so the new pinned-revision check
+accepted the intended snapshot. All 12 epochs completed on the RTX 3090 in
+422.0 seconds, and `python -m paper.validate /tmp/smoke/pdf_group_seed42_r0`
+reported `1 artifact(s) checked: clean`.
 
 ## Completed Artifacts
 
@@ -68,11 +88,11 @@ shutdown in the `aicup-esg` environment; they do not affect validation or
 training artifacts.
 
 The suite count is the one number here that does not carry forward: the merge
-brings in A's decision-stage and C's analysis tests, so the same command now
-reports `248 passed, 3 skipped`. The three skips are this branch's
-`tests/test_training_path.py`, which needs torch, and the two figure tests,
-which need `latexmk`. The bundle and validation counts are properties of the
-artifacts and are unchanged by the merge.
+and review follow-up add A's decision-stage, C's analysis and the accumulation
+tests. On 2026-08-21 the GPU environment reported `273 passed, 2 skipped`; the
+two skips need `latexmk`. A CPU environment without torch skips the training
+path as well. The bundle and validation counts are properties of the artifacts
+and are unchanged by those optional dependencies.
 
 ## Pending Re-run: loss scaling of short batches
 
@@ -112,9 +132,9 @@ for seed in 42 123 456; do
 done
 ```
 
-Confirm `EPOCHS` before starting: the evidence closing its TODO is unresolved
-(see `paper/train_config.py`), and it is the one constant that would have to
-change inside this same re-run rather than after it.
+`EPOCHS = 12` was re-confirmed from the original competition logs before this
+re-run. See `docs/competition_epoch_evidence.md` for the per-fold audit and the
+explicit aggregation rule.
 
 After the fits, regenerate the decision stage from a clean checkout — six
 invocations of `paper.run_decisions`, a few seconds — so `results/` stops
