@@ -1,0 +1,144 @@
+{
+ "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+ "development": {
+  "paragraphs": 2000,
+  "pdfs": 49,
+  "companies": 50,
+  "labelled": true,
+  "paragraphs_per_pdf": {
+   "min": 4,
+   "median": 39,
+   "max": 91
+  },
+  "legal_states_observed": 15,
+  "invalid_rows": 0,
+  "class_support": {
+   "promise_status": {
+    "Yes": 1627,
+    "No": 373
+   },
+   "verification_timeline": {
+    "already": 718,
+    "within_2_years": 34,
+    "between_2_and_5_years": 498,
+    "more_than_5_years": 377,
+    "N/A": 373
+   },
+   "evidence_status": {
+    "Yes": 1345,
+    "No": 282,
+    "N/A": 373
+   },
+   "evidence_quality": {
+    "Clear": 1118,
+    "Not Clear": 225,
+    "Misleading": 2,
+    "N/A": 655
+   }
+  },
+  "tuple_support": {
+   "0": 373,
+   "1": 73,
+   "2": 579,
+   "3": 65,
+   "4": 1,
+   "5": 7,
+   "6": 26,
+   "7": 1,
+   "9": 149,
+   "10": 248,
+   "11": 100,
+   "12": 1,
+   "13": 53,
+   "14": 265,
+   "15": 59
+  }
+ },
+ "test": {
+  "paragraphs": 2000,
+  "pdfs": 49,
+  "companies": 50,
+  "labelled": false,
+  "paragraphs_per_pdf": {
+   "min": 4,
+   "median": 39,
+   "max": 97
+  }
+ },
+ "pdf_overlap": {
+  "n_shared": 49,
+  "dev_only": 0,
+  "test_only": 0
+ },
+ "duplicates": {
+  "within_dev": [],
+  "dev_test": [
+   [
+    "10404",
+    "12550"
+   ]
+  ]
+ },
+ "splits": {
+  "misleading_rows": [
+   {
+    "id": "10017",
+    "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+    "company": "unipresident"
+   },
+   {
+    "id": "11836",
+    "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+    "company": "aseh"
+   }
+  ],
+  "calibration_without_misleading": {
+   "n_rotations": 30,
+   "n_without": 18,
+   "per_split": {
+    "pdf_group_seed42": [
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    "pdf_group_seed123": [
+     0,
+     0,
+     0,
+     1,
+     1
+    ],
+    "pdf_group_seed456": [
+     0,
+     0,
+     0,
+     1,
+     1
+    ],
+    "row_strat_seed42": [
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    "row_strat_seed123": [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    "row_strat_seed456": [
+     0,
+     0,
+     1,
+     0,
+     1
+    ]
+   }
+  }
+ }
+}

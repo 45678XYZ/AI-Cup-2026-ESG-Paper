@@ -31,9 +31,7 @@ until the study was finished would be useless exactly when it is needed.
 
 import argparse
 import json
-import platform
 import sys
-from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from paper.data import (
@@ -47,7 +45,7 @@ from paper.data import (
 )
 from paper.labels import FIELDS
 from paper.methods import METHOD_IDS
-from paper.provenance import git_sha, now_iso
+from paper.provenance import environment, git_sha, now_iso
 from paper.train_config import N_FOLDS, SEEDS
 from paper.validate import (
     validate_predictions,
@@ -58,25 +56,6 @@ from paper.validate import (
 
 MANIFEST_VERSION = "1.0"
 PROTOCOLS = ("pdf_group", "row_strat")
-
-# Recorded because a version change here moves the numbers without touching a
-# line of this repository's code. torch is optional: A's half of the study runs
-# without it, and its absence is a fact worth recording rather than an error.
-PACKAGES = ("numpy", "scikit-learn", "pandas", "torch", "transformers")
-
-
-def environment() -> dict:
-    versions = {}
-    for name in PACKAGES:
-        try:
-            versions[name] = version(name)
-        except PackageNotFoundError:
-            versions[name] = None
-    return {
-        "python": sys.version.split()[0],
-        "platform": platform.platform(),
-        "packages": versions,
-    }
 
 
 def data_section(rows) -> dict:
@@ -183,6 +162,31 @@ def decisions_section(root) -> dict:
         "results": results,
         "incomplete": missing,
     }
+
+
+def stamps_section(root) -> dict:
+    """Every commit recorded *inside* the indexed artifacts.
+
+    The manifest's own ``git_sha`` answers "which code built this index", which
+    is not the question a reader has: they want to know which code built the
+    numbers. That is stamped per artifact, and the two can disagree -- a stage
+    re-run after a pull, or produced from a dirty tree -- with nothing else in
+    this file showing it. Collected per stage rather than merged, because a
+    mixture within one stage means something different from a mixture across
+    stages: the first puts two versions of the code into one score.
+    """
+    probs_dir = Path(root) / "probs"
+    probs = sorted({
+        _meta_of(probs_dir, d.name).get("git_sha")
+        for d in probs_dir.iterdir()
+        if d.is_dir() and (d / "meta.json").exists()
+    } - {None}) if probs_dir.is_dir() else []
+
+    decisions = set()
+    for path in sorted((Path(root) / "results").glob("*.json")):
+        with open(path, encoding="utf-8") as f:
+            decisions.add(json.load(f).get("git_sha"))
+    return {"probs": probs, "decisions": sorted(decisions - {None})}
 
 
 def outputs_section(root) -> dict:
@@ -331,6 +335,25 @@ def warnings_for(manifest) -> list[str]:
         notes.append(f"{len(manifest['probs']['missing'])} probability bundles are absent.")
     if (manifest["git_sha"] or "").endswith("-dirty"):
         notes.append("the working tree had uncommitted code changes; this run is not reproducible from a commit.")
+
+    # The stamp inside an artifact is the one that matters: it names the code
+    # that produced the number. A dirty stamp there is not reproducible from
+    # any commit, and two stamps within one stage mean two versions of the code
+    # went into a single score. Neither is visible in the checks above, which
+    # compare artifacts against each other and never against their own claims.
+    for stage, stamps in manifest["stamps"].items():
+        dirty = [s for s in stamps if s.endswith("-dirty")]
+        if dirty:
+            notes.append(
+                f"{stage}: artifacts are stamped with an uncommitted tree "
+                f"({', '.join(dirty)}); regenerate them from a clean checkout "
+                "before the results freeze."
+            )
+        if len(stamps) > 1:
+            notes.append(
+                f"{stage}: artifacts carry {len(stamps)} different commits "
+                f"({', '.join(stamps)}); check they are the same recipe."
+            )
     return notes
 
 
@@ -351,6 +374,7 @@ def build_manifest(root=REPO_ROOT, splits_dir=None) -> dict:
         "splits": splits_section(splits_dir),
         "probs": probs_section(root / "probs"),
         "decisions": decisions_section(root),
+        "stamps": stamps_section(root),
         "outputs": outputs_section(root),
         "consistency": consistency(root, splits_dir, data, rows),
     }

@@ -22,6 +22,11 @@ from transformers import (
     get_linear_schedule_with_warmup,
 )
 
+from paper.accumulation import (
+    accumulation_window,
+    loss_scale,
+    optimiser_steps_per_epoch,
+)
 from paper.dataset import ESGDataset, collate_fn
 from paper.labels import EVAL_FIELDS, FIELD_WEIGHTS, LABEL2ID, NUM_LABELS
 from paper.model import MultiTaskEncoder
@@ -30,7 +35,6 @@ from paper.train_config import (
     BATCH_SIZE,
     CHECKPOINT_LAST_K,
     EPOCHS,
-    GRAD_ACCUM_STEPS,
     HEAD_LR,
     LABEL_SMOOTHING,
     LR_SCHEDULE,
@@ -92,7 +96,8 @@ def _loss(criteria, logits, labels):
     return total
 
 
-def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None):
+def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None,
+                   local_files_only=False):
     """Train the anchor on ``train_data`` only.
 
     Returns ``(model, avg_state)``: the model already carries the averaged
@@ -107,10 +112,11 @@ def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None):
     )
     model = MultiTaskEncoder(
         model_name or MODEL_NAME, NUM_LABELS, revision=revision or MODEL_REVISION,
+        local_files_only=local_files_only,
     ).to(DEVICE)
     optimizer = AdamW(model.get_optimizer_groups(BACKBONE_LR, HEAD_LR))
 
-    total_steps = (len(loader) // GRAD_ACCUM_STEPS) * EPOCHS
+    total_steps = optimiser_steps_per_epoch(len(loader)) * EPOCHS
     warmup_steps = int(WARMUP_RATIO * total_steps)
     make_schedule = (
         get_cosine_schedule_with_warmup if LR_SCHEDULE == "cosine"
@@ -140,11 +146,12 @@ def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None):
 
             with torch.cuda.amp.autocast():
                 logits = model(input_ids, attention_mask)
-                loss = _loss(criteria, logits, labels) / GRAD_ACCUM_STEPS
+                _, update_due = accumulation_window(step, len(loader))
+                loss = _loss(criteria, logits, labels) * loss_scale(len(input_ids))
 
             scaler.scale(loss).backward()
 
-            if (step + 1) % GRAD_ACCUM_STEPS == 0:
+            if update_due:
                 scaler.unscale_(optimizer)
                 nn.utils.clip_grad_norm_(model.parameters(), MAX_GRAD_NORM)
                 old_scale = scaler.get_scale()

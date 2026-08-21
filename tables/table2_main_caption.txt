@@ -1,0 +1,1 @@
+Controlled comparison of decision rules on identical base probabilities and identical test rows. Each cell is the mean over three seeds of a single score computed on all 2,000 concatenated test rows; $\pm$ is the sample standard deviation across seeds, which reflects the variability of the whole pipeline -- fold assignment and training together -- rather than model stability.

@@ -15,19 +15,10 @@ and a manifest entry.
 # rather than implying the RoBERTa architecture.
 MODEL_NAME = "hfl/chinese-roberta-wwm-ext-large"
 
-# TODO(B): PIN THIS BEFORE STARTING P0.
-#
-# Left to B because B is the one who downloads the weights, and the revision
-# that actually gets used is only knowable on that machine. After the first
-# download, read the resolved commit hash from either
-#   ~/.cache/huggingface/hub/models--hfl--chinese-roberta-wwm-ext-large/snapshots/<hash>/
-# or `model.config._commit_hash`, then hard-code it here so every one of the 15
-# fits requests that exact revision rather than whatever the Hub serves that day.
-#
-# Leaving it None is caught at launch: paper/run_training.py refuses to start
-# unless it is pinned, so no GPU time is spent on weights that cannot be
-# identified afterwards.
-MODEL_REVISION = None
+# Resolved on B's GPU machine from both the Hugging Face cache snapshot path
+# and refs/main before the first official run (2026-08-15). Every fit requests
+# this exact commit rather than whatever the Hub serves later.
+MODEL_REVISION = "a25cc9e05974bd9687e528edd516f2cfdb3f5db9"
 
 MAX_LEN = 384
 
@@ -38,18 +29,19 @@ GRAD_ACCUM_STEPS = 2          # effective batch = 16
 # Fixed budget: every rotation trains exactly this many epochs and there is no
 # early stopping (see the checkpoint block below for why).
 #
-# TODO(B): SET THIS FROM THE COMPETITION TRAINING LOGS BEFORE STARTING P0.
+# B re-audited the original standard-loss Chinese RoBERTa logs on 2026-08-21.
+# Those runs used a 15-epoch cap with patience=3. Reading "Early stop at epoch"
+# (or 15 for the one fold that exhausted the cap), their terminal epochs were:
 #
-# 12 is a placeholder inherited from the competition configuration, where early
-# stopping with patience=3 backstopped it -- runs there rarely reached epoch 12,
-# so the number itself was never validated. The logs are not in this repository
-# (the competition .gitignore excluded *.log); they should still be on the GPU
-# machine.
+#   seed 42:  12, 10, 10, 15, 9
+#   seed 123: 14, 14, 10,  6, 14
+#   seed 456: 12, 11, 11, 14, 9
 #
-#   What to look for: the epoch at which early stopping typically fired across
-#   the competition folds -- that is the only empirical evidence available.
-#   What to set: that epoch, rounded up. Record the chosen value and the log
-#   evidence in the run manifest.
+# Define the protocol's formerly ambiguous "typical stopping epoch, rounded
+# up" as the ceiling of the arithmetic mean across all 15 folds:
+# ceil(171 / 15) = ceil(11.4) = 12. The median is 11, but is descriptive only;
+# it is not the frozen aggregation rule. The per-fold audit and hashes of the
+# three source logs are recorded in docs/competition_epoch_evidence.md.
 #
 # Why it matters in both directions, and why nobody downstream can catch a bad
 # value:
@@ -60,9 +52,7 @@ GRAD_ACCUM_STEPS = 2          # effective batch = 16
 #     logs show runs settling around epoch 8, keeping 12 burns ~50% more GPU
 #     time for nothing.
 #
-# This constant is the one deliberate exception to the protocol freeze: it is
-# left open for B to set, and is frozen from the moment P0 starts. Changing it
-# afterwards invalidates every fit completed before the change.
+# Frozen before P0. Changing it invalidates every completed official fit.
 EPOCHS = 12
 
 BACKBONE_LR = 2e-5

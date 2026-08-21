@@ -38,6 +38,7 @@ paper/          study code: label space, data, training, contract artifacts
   decoder.py      joint decoding over the 17 legal states
   methods.py      the M0-M6 table, and scoring in log space
   calibration.py  class biases estimated on the Calibration partition only
+  accumulation.py gradient-accumulation windows (torch-free, so CI checks them)
   train_fold.py   trains one rotation, emits raw probabilities only
   run_training.py driver: split manifest in, contract bundle out
   run_decisions.py driver: probability bundles in, contract-3 files out
@@ -58,9 +59,19 @@ contracts/      interface schemas and example files
 docs/           paper plan and interface contract
 figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
 splits/         generated split manifests (version controlled)
+probs/          30 probability bundles, one per rotation, from the official fits
+predictions/    42 per-row prediction files (.csv.gz), one per protocol/seed/method
+results/        42 aggregate result manifests, one per predictions file
+tables/         contract-4 deliverables: Table 1-3, their captions, the dataset
+                audit, and the manifest tying each printed number to its inputs
 tests/          pytest suite
 dataset/        AI CUP development and test data
+run_manifest.json  the generated study index, committed at results freeze
 ```
+
+The four artifact directories above and `run_manifest.json` hold the official
+run and are deliberately version controlled; `.gitignore` records what each one
+keeps and why.
 
 ## Setup
 
@@ -136,9 +147,10 @@ python -m analysis --predictions-root contracts/examples   # against the synthet
 python -m analysis                                         # against real results/
 ```
 
-It writes `tables/table{1,2,3}*.tex`, their captions, `tables/manifest.json`
-(recording the sha256 of every input, so any printed number traces back to the
-artifacts behind it) and `figures/figure1_hierarchy.pdf`. The 10,000-resample
+It writes `tables/table{1,2,3}*.tex`, their captions, `tables/audit.json`,
+`tables/manifest.json` (recording the sha256 of every input, so any printed
+number traces back to the artifacts behind it) and
+`figures/figure1_hierarchy.pdf`. The 10,000-resample
 paired PDF-cluster bootstrap takes about 90 seconds.
 
 Nothing here transcribes a score: `analysis/metrics.py` is a vectorised
@@ -212,6 +224,12 @@ than something the operator has to remember. It refuses to start unless
 `MODEL_REVISION` is pinned; `--allow-unpinned-revision` overrides that for a
 throwaway smoke test.
 
+The backbone is fetched once per invocation and reused for all five rotations,
+downloading it if the Hugging Face cache is cold. Because `from_pretrained`
+ignores `revision` once it is handed a local directory, the driver checks that
+the resolved snapshot really is the pinned commit and refuses to train
+otherwise — that check, not the argument, is what enforces the pin.
+
 ## Decision runs
 
 CPU only. This is the step between B's probabilities and the analysis: it
@@ -222,6 +240,10 @@ python -m paper.run_decisions --protocol pdf_group --seed 42
 python -m paper.run_decisions --protocol pdf_group --seed 42 \
     --methods M0 M1 M4 --probs-dir contracts/examples/probs --out-dir /tmp/smoke
 ```
+
+Both arguments are required and each invocation covers one (protocol, seed), so
+the full study is the same 6 invocations as the training stage — 42 predictions
+files and 42 results files, a few seconds in total.
 
 One invocation loads the five rotations once and runs every requested method
 over that one loaded set, which is what makes "identical probabilities on
@@ -244,14 +266,15 @@ lets the results table be read as a factorial rather than as seven systems.
 
 Done: frozen label space and 17-state definitions, data layer with checksums,
 split generation for both protocols, the hierarchy-constrained projection, the
-joint 17-state decoder, the M0-M6 method table, calibration-partition class
-biases, the training and decision drivers, artifact validation, and synthetic
-example files for every handoff.
+training and decision drivers, artifact validation, and synthetic example
+files for every handoff.
 
-The decision stage is complete: all seven methods run end to end on the
-fixtures. What is missing is real input — no probabilities have been produced
-yet, so every file under `contracts/examples/` is still fabricated and no
-number anywhere in this repository is a result.
+Implemented: the calibration-only bias API, the fixed-scale joint 17-state
+decoder, the M0-M6 method table, calibration-partition class biases, and the
+decision driver `paper/run_decisions.py`. Consuming the 30 validated probability
+bundles, it writes the 42 per-row prediction files plus their 42 aggregate
+result manifests. Files under `contracts/examples/` remain fabricated fixtures
+and must never be used as paper results.
 
 One design point in that code is easy to misread: under conditional
 (hierarchy-constrained) estimation, the three child-field `N/A` biases are
@@ -261,8 +284,24 @@ definition (`paper/labels.py::CONDITIONAL_PINNED_CLASSES`), which leaves M3
 unaffected but gives M6 three pinned terms where M5 fits four. See
 [docs/paper_plan.md](docs/paper_plan.md) §3.2.
 
-Two values in `paper/train_config.py` are marked `TODO(B)` and must be settled
-on the GPU machine before the first official run: `MODEL_REVISION` (pin to the
-exact Hugging Face revision that gets downloaded) and `EPOCHS` (set from the
-competition training logs — there is no early stopping, so the budget is
-whatever this constant says).
+The official GPU setup is frozen in `paper/train_config.py`: the exact Hugging
+Face revision is pinned, the fixed budget is 12 epochs, and the last three epoch
+states are averaged. All 30 cross-fitted probability bundles have been produced
+and validated.
+
+The 30 bundles were re-run on 2026-08-21 after the short-batch loss scaling was
+corrected (`paper/accumulation.py::loss_scale`). All record the clean source
+commit `35dea657eede733ea6c8945f3976a1561cfab80d`, the same training-configuration
+hash and the RTX 3090 environment. `docs/gpu_training_progress.md` records the
+original defect, the epoch evidence, the smoke test and the completed campaign.
+
+The full official run has been materialised: `predictions/` and `results/`
+contain all 42 protocol/seed/method outputs, and all 42 prediction files pass
+the contract validator. Reproduce them from the committed bundles with the six
+invocations under [Decision runs](#decision-runs) — one per (protocol, seed),
+about a second and a half each — then `python -m paper.validate --all`.
+
+The six decision invocations were regenerated from that clean source commit.
+`python -m paper.run_manifest` indexes all 30 probability bundles, 42
+predictions, 42 results and eight table artifacts; all six cross-file checks
+pass with no warnings or notes.

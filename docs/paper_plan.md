@@ -140,6 +140,14 @@ z_t,c(x) = log p_t,c(x) + b_t,c
 
 所有 bias 只能由 calibration partition 學習，不能在同一批 OOF labels 上調好再回報同一批分數。`Misleading` 若在 calibration partition 沒有樣本，不單獨調其 bias，並在 manifest 記錄 fallback 規則。
 
+**最佳化程序（實作凍結）**：每個欄位分開以 deterministic coordinate
+ascent 最大化 calibration macro-F1；bias grid 為 log-probability 單位的
+`[-3, 3]`、step `0.05`（121 個格點），最多 20 passes，無嚴格改善即停止。
+數值以 `paper/calibration.py` 的 `GRID` 與 `MAX_PASSES` 為準，Methods 不得
+另行敘述。global 與 conditional 各 rotation 只擬合一次；M2／M5 共用同一組
+global biases，M3／M6 共用同一組 conditional biases，避免把 decoder-specific
+tuning 混入比較。
+
 **conditional bias 的定義域（已定案，須寫入 Methods）**：conditional 估計下，子欄的 `N/A` 在其條件子集中出現次數**恆為 0**——gold `PS=Yes` 的樣本裡 VT、ES 永遠不是 `N/A`，gold `ES=Yes` 的樣本裡 EQ 永遠不是 `N/A`。這不是稀有類，是階層的定義使然，因此 calibration 目標函數在 `b_vt,N/A`、`b_es,N/A`、`b_eq,N/A` 三個座標上完全平坦，參數不可識別。
 
 故 **conditional bias 只定義在各欄的實質（admissible）類別上，三個結構性 `N/A` 依定義固定為 0.0**，不視為 fallback。由 `paper/labels.py::CONDITIONAL_PINNED_CLASSES` 從 17 個狀態推導，並有 unit tests 同時對狀態空間與真實資料斷言。
@@ -554,11 +562,11 @@ W2 的 B 與 C 相對空閒：B 可先把 W4 的封存腳本寫好，C 可先做
 | 論文需要的元件 | 現況 | 待處理 |
 |---|---|---|
 | Rotating split generator（PDF-group 與 row-stratified） | ✅ `paper/splits.py`，六個 manifest 已產出 | — |
-| 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone 已定案；`MODEL_REVISION` 與 `EPOCHS` 兩個常數留給 B 在 GPU 機上定值 |
+| 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone、精確 model revision、last-3 checkpoint averaging 均已凍結；短 batch 的 loss 縮放已修正（`paper/accumulation.py::loss_scale`），30/30 fits 已於 2026-08-21 重跑並驗證；`EPOCHS = 12` 已按 15 個 competition folds 的平均 terminal epoch 向上取整重新確認，見 `docs/competition_epoch_evidence.md` |
 | 完整 17-state projection 與 validator | ✅ `paper/projection.py` | 雙向投影，120 種 argmax 結果全數窮舉測試 |
 | 契約檔入境檢查 | ✅ `paper/validate.py` | 值域、bundle↔split 對應、跨 rotation 一致性、checksum、列錯位 |
 | Calibration-only class-bias API | ✅ `paper/calibration.py` | 只接收 calibration labels、拒絕 test labels；biases 與 fallback 逐 rotation 存入 `decision_params`；conditional 的三個結構性 pinned 類別見 §3.2 |
 | 17-state joint decoder | ✅ `paper/decoder.py` | α 固定為 1，不夾帶額外可調參數；exploratory 用的 α 參數存在但主表一律不傳 |
-| M0–M6 與評估輸出 | ✅ `paper/run_decisions.py` | 七個方法皆可產出契約 3；一次 invocation 內 M2/M5 與 M3/M6 各共用一組 bias |
+| M0–M6 與評估輸出 | ✅ `paper/run_decisions.py` | 七個方法皆可產出契約 3；一次 invocation 內 M2/M5 與 M3/M6 各共用一組 bias；42 predictions + 42 results 已由 30 個正式 bundles 產生並驗證 |
 
 任何論文敘述以**正式凍結後的程式與 manifest**為準，不以 README、舊 log 或開發時記憶為準。

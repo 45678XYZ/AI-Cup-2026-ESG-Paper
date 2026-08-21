@@ -106,6 +106,8 @@ def test_layerwise_decay_produces_a_ladder(model):
 
 
 # --- the loop and its output ----------------------------------------------
+# The accumulation arithmetic itself is in tests/test_accumulation.py, which
+# runs without torch; what needs a real loop is only what follows.
 
 @pytest.fixture(scope="module")
 def probs(tiny_model_dir):

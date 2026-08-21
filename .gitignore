@@ -6,6 +6,13 @@
 # probs/       COMMITTED  — 72 KB per rotation, ~2.1 MB for all 30. Small enough
 #                           that committing them removes the B-to-A transfer step
 #                           entirely and makes the study reproducible from a clone.
+# tables/      COMMITTED  — the contract-4 deliverables D includes, plus the
+#                           manifest that ties each printed number back to the
+#                           artifacts it was computed from
+# run_manifest.json
+#              COMMITTED  — generated at results freeze; the single index tying
+#                           splits, probabilities, decisions and tables to one
+#                           commit, one environment and a set of checksums
 # model.pt     IGNORED    — ~1.3 GB per rotation; archived out-of-band, and the
 #                           bundle's meta.json carries its checksum
 #

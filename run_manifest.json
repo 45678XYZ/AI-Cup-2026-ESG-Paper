@@ -1,0 +1,506 @@
+{
+  "manifest_version": "1.0",
+  "generated_at": "2026-08-21T11:41:58.036634+00:00",
+  "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+  "artifact_root": ".",
+  "fields": [
+    "promise_status",
+    "verification_timeline",
+    "evidence_status",
+    "evidence_quality"
+  ],
+  "methods": [
+    "M0",
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "M6"
+  ],
+  "environment": {
+    "python": "3.10.20",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "packages": {
+      "numpy": "1.26.4",
+      "scikit-learn": "1.7.2",
+      "pandas": "2.3.3",
+      "torch": "2.2.2+cu121",
+      "transformers": "4.40.2"
+    }
+  },
+  "data": {
+    "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+    "n_rows": 2000,
+    "files": {
+      "dataset/vpesg4k_train_1000.json": "sha256:0268533fb6a17ec572cae38c55dd0c4d105569da90208c9daa0f96e604c80082",
+      "dataset/vpesg4k_val_1000.json": "sha256:9840901d490a66f431ec535fa236cc0c011d0976b43e2a7edcaa489e6427dc25",
+      "dataset/vpesg4k_test_2000.json": "sha256:634653abc0feb254a951e817c66583ebf9e4c1b65c1147c31b695a7167c2c862"
+    }
+  },
+  "splits": {
+    "pdf_group_seed42.json": {
+      "sha256": "sha256:d2bf27d74abaffbf6b77c3686f056baad1b4213456dc5a9f1f3d20dee3777288",
+      "split_fingerprint": "sha256:066ed5455a59fc604479bd255ed26a03a17ca7ff4d3b27c269d316d7eabeeb85",
+      "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+      "resample_attempts": 0
+    },
+    "pdf_group_seed123.json": {
+      "sha256": "sha256:70de27db40f836d770d9680e6d3a9413624df08595faa0ef871dedb2df21f749",
+      "split_fingerprint": "sha256:c6a966707dcf69d2546b4b9e0183f68d9ba7acc521d1eb346f89a53869c25a74",
+      "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+      "resample_attempts": 0
+    },
+    "pdf_group_seed456.json": {
+      "sha256": "sha256:d62bcb701d79e049dd61286ec797fcd782b7af59e4a034e6e235809a8f3cb166",
+      "split_fingerprint": "sha256:eb6e26642833e19f493de162e0e979b841a317d077891e22e6249c658122dc14",
+      "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+      "resample_attempts": 0
+    },
+    "row_strat_seed42.json": {
+      "sha256": "sha256:669bbda9786ae30afe5e7454e4e3480bffde3f3c4adf5313d413304cd4c76354",
+      "split_fingerprint": "sha256:248afdaeb9369e14a8f347065f293832d1b43da08644d5b19de2126c06431bfd",
+      "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+      "resample_attempts": 0
+    },
+    "row_strat_seed123.json": {
+      "sha256": "sha256:d9925b1f74a89b242ba436a6ceb877e084a9d50ebcfc8bc634e60e9a88fcba43",
+      "split_fingerprint": "sha256:b77c919f18711313694f2b5ed4deb23b13c810e80fbe57c6d109158781566b68",
+      "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+      "resample_attempts": 0
+    },
+    "row_strat_seed456.json": {
+      "sha256": "sha256:87aa01a9e7da3f9d38759f50c4e0e3e543eeac34ce7d4ca7f108f2d1e4206df4",
+      "split_fingerprint": "sha256:d51b7aafde2eec0d705017b720709c1e34504c729c0031f16f18e2568db7f29f",
+      "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+      "resample_attempts": 0
+    }
+  },
+  "probs": {
+    "expected": 30,
+    "present": 30,
+    "missing": [],
+    "runs": {
+      "pdf_group_seed42": {
+        "recipe": {
+          "model_name": "hfl/chinese-roberta-wwm-ext-large",
+          "model_revision": "a25cc9e05974bd9687e528edd516f2cfdb3f5db9",
+          "train_config_sha256": "sha256:ebef1c618747e263762c86bddc14f6a6ff5faef1b9f4d6fd10a1b3c926929b4c",
+          "checkpoint_rule": "avg_last_k",
+          "checkpoint_last_k": 3,
+          "epochs": 12
+        },
+        "hardware": [
+          "NVIDIA GeForce RTX 3090 (cuda:0 of 1)"
+        ],
+        "bundles": {
+          "pdf_group_seed42_r0": {
+            "meta_sha256": "sha256:a6889e4ec498a26bf7b37d98cf2e1d29476bd0d133a2fd8556df4ae4503f1ac6",
+            "split_fingerprint": "sha256:066ed5455a59fc604479bd255ed26a03a17ca7ff4d3b27c269d316d7eabeeb85",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed42_r1": {
+            "meta_sha256": "sha256:eaf1600f34659048120a6240c8560f88a56747dc71604956b33e6d02846951b7",
+            "split_fingerprint": "sha256:066ed5455a59fc604479bd255ed26a03a17ca7ff4d3b27c269d316d7eabeeb85",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed42_r2": {
+            "meta_sha256": "sha256:5b6415f1b2262b3e730dde708dc24917cf31a62c9ee2003b147c71d1897429ca",
+            "split_fingerprint": "sha256:066ed5455a59fc604479bd255ed26a03a17ca7ff4d3b27c269d316d7eabeeb85",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed42_r3": {
+            "meta_sha256": "sha256:f678f7a06a010ba5254dcefca86a327d0496c9603976b411701e9df43a1fbc11",
+            "split_fingerprint": "sha256:066ed5455a59fc604479bd255ed26a03a17ca7ff4d3b27c269d316d7eabeeb85",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed42_r4": {
+            "meta_sha256": "sha256:30298a020ea6d28d6e457febb29b43fdd3e4250d176275aef59ff96fed425bc2",
+            "split_fingerprint": "sha256:066ed5455a59fc604479bd255ed26a03a17ca7ff4d3b27c269d316d7eabeeb85",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          }
+        }
+      },
+      "pdf_group_seed123": {
+        "recipe": {
+          "model_name": "hfl/chinese-roberta-wwm-ext-large",
+          "model_revision": "a25cc9e05974bd9687e528edd516f2cfdb3f5db9",
+          "train_config_sha256": "sha256:ebef1c618747e263762c86bddc14f6a6ff5faef1b9f4d6fd10a1b3c926929b4c",
+          "checkpoint_rule": "avg_last_k",
+          "checkpoint_last_k": 3,
+          "epochs": 12
+        },
+        "hardware": [
+          "NVIDIA GeForce RTX 3090 (cuda:0 of 1)"
+        ],
+        "bundles": {
+          "pdf_group_seed123_r0": {
+            "meta_sha256": "sha256:86f02f5783480cdd8c5d932cd6655320527d414f9e057ce689fe8ee2bd524910",
+            "split_fingerprint": "sha256:c6a966707dcf69d2546b4b9e0183f68d9ba7acc521d1eb346f89a53869c25a74",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed123_r1": {
+            "meta_sha256": "sha256:1929c67ddccfaf0835e9bd2bb0bbaad475d5a492f285f340388a8bd5a817db97",
+            "split_fingerprint": "sha256:c6a966707dcf69d2546b4b9e0183f68d9ba7acc521d1eb346f89a53869c25a74",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed123_r2": {
+            "meta_sha256": "sha256:89f93aed1ddb9f94e5658925aa500ec29da73881da7e3dc0baeea3d088288be0",
+            "split_fingerprint": "sha256:c6a966707dcf69d2546b4b9e0183f68d9ba7acc521d1eb346f89a53869c25a74",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed123_r3": {
+            "meta_sha256": "sha256:170ac8a1c5614fc84848b7ec3575e69d292c102b4037db845698d9a7dfcf0570",
+            "split_fingerprint": "sha256:c6a966707dcf69d2546b4b9e0183f68d9ba7acc521d1eb346f89a53869c25a74",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed123_r4": {
+            "meta_sha256": "sha256:7a29eab3aa22c07cc36e04b8d3d0d296e6e67ef97adb7028ba526280a5e6cfb5",
+            "split_fingerprint": "sha256:c6a966707dcf69d2546b4b9e0183f68d9ba7acc521d1eb346f89a53869c25a74",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          }
+        }
+      },
+      "pdf_group_seed456": {
+        "recipe": {
+          "model_name": "hfl/chinese-roberta-wwm-ext-large",
+          "model_revision": "a25cc9e05974bd9687e528edd516f2cfdb3f5db9",
+          "train_config_sha256": "sha256:ebef1c618747e263762c86bddc14f6a6ff5faef1b9f4d6fd10a1b3c926929b4c",
+          "checkpoint_rule": "avg_last_k",
+          "checkpoint_last_k": 3,
+          "epochs": 12
+        },
+        "hardware": [
+          "NVIDIA GeForce RTX 3090 (cuda:0 of 1)"
+        ],
+        "bundles": {
+          "pdf_group_seed456_r0": {
+            "meta_sha256": "sha256:c8c9a9cb6ee5ce61f5de4f9307418968428eb7af3b97be27041aae4453a1beda",
+            "split_fingerprint": "sha256:eb6e26642833e19f493de162e0e979b841a317d077891e22e6249c658122dc14",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed456_r1": {
+            "meta_sha256": "sha256:36f69efc47d143f3eedb330e715990b1d698badd755446c6ff27fcf049505150",
+            "split_fingerprint": "sha256:eb6e26642833e19f493de162e0e979b841a317d077891e22e6249c658122dc14",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed456_r2": {
+            "meta_sha256": "sha256:ef70d1aab24a9837a4164fe764781739252f4b90a88e561111ac224cd1e0660b",
+            "split_fingerprint": "sha256:eb6e26642833e19f493de162e0e979b841a317d077891e22e6249c658122dc14",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed456_r3": {
+            "meta_sha256": "sha256:7d7b88c701051274e8678add8530857a9ec4772bcf7f607939139ddb7c0b03f2",
+            "split_fingerprint": "sha256:eb6e26642833e19f493de162e0e979b841a317d077891e22e6249c658122dc14",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "pdf_group_seed456_r4": {
+            "meta_sha256": "sha256:9c32c8107a96a40c66a4a9bf73c3b2d1ae8b828b7dd01fd7587a858a88720b64",
+            "split_fingerprint": "sha256:eb6e26642833e19f493de162e0e979b841a317d077891e22e6249c658122dc14",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          }
+        }
+      },
+      "row_strat_seed42": {
+        "recipe": {
+          "model_name": "hfl/chinese-roberta-wwm-ext-large",
+          "model_revision": "a25cc9e05974bd9687e528edd516f2cfdb3f5db9",
+          "train_config_sha256": "sha256:ebef1c618747e263762c86bddc14f6a6ff5faef1b9f4d6fd10a1b3c926929b4c",
+          "checkpoint_rule": "avg_last_k",
+          "checkpoint_last_k": 3,
+          "epochs": 12
+        },
+        "hardware": [
+          "NVIDIA GeForce RTX 3090 (cuda:0 of 1)"
+        ],
+        "bundles": {
+          "row_strat_seed42_r0": {
+            "meta_sha256": "sha256:332dbf666ac1914500544fd93f4e3f1dea61a5011f320d8a7281aa9986531b3d",
+            "split_fingerprint": "sha256:248afdaeb9369e14a8f347065f293832d1b43da08644d5b19de2126c06431bfd",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed42_r1": {
+            "meta_sha256": "sha256:bbd05f70c4e96b08981a59c3720050d6ed5cf19dd7e4f228a3dfc2df413c3a62",
+            "split_fingerprint": "sha256:248afdaeb9369e14a8f347065f293832d1b43da08644d5b19de2126c06431bfd",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed42_r2": {
+            "meta_sha256": "sha256:40577a58e8b37e975602bc4f217afdd6363938e158ffbdc7d5dec87597706971",
+            "split_fingerprint": "sha256:248afdaeb9369e14a8f347065f293832d1b43da08644d5b19de2126c06431bfd",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed42_r3": {
+            "meta_sha256": "sha256:707ba50a7e8caaa07a76a1b78c6176db0be09778289339dc48cf27458930cbd6",
+            "split_fingerprint": "sha256:248afdaeb9369e14a8f347065f293832d1b43da08644d5b19de2126c06431bfd",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed42_r4": {
+            "meta_sha256": "sha256:1a178a9a0b8f461d4691f9fc5d1d7561986d567c729d2c87d173c27eba5a0902",
+            "split_fingerprint": "sha256:248afdaeb9369e14a8f347065f293832d1b43da08644d5b19de2126c06431bfd",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          }
+        }
+      },
+      "row_strat_seed123": {
+        "recipe": {
+          "model_name": "hfl/chinese-roberta-wwm-ext-large",
+          "model_revision": "a25cc9e05974bd9687e528edd516f2cfdb3f5db9",
+          "train_config_sha256": "sha256:ebef1c618747e263762c86bddc14f6a6ff5faef1b9f4d6fd10a1b3c926929b4c",
+          "checkpoint_rule": "avg_last_k",
+          "checkpoint_last_k": 3,
+          "epochs": 12
+        },
+        "hardware": [
+          "NVIDIA GeForce RTX 3090 (cuda:0 of 1)"
+        ],
+        "bundles": {
+          "row_strat_seed123_r0": {
+            "meta_sha256": "sha256:4a7baa6ad8a03207f1d8bda0444ff0124a25cad8a770f1879d36229f6fae8f07",
+            "split_fingerprint": "sha256:b77c919f18711313694f2b5ed4deb23b13c810e80fbe57c6d109158781566b68",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed123_r1": {
+            "meta_sha256": "sha256:736490f1b662cd1c8249b9b68300ffe3a62abebdd66fc1e411de1b44798824a1",
+            "split_fingerprint": "sha256:b77c919f18711313694f2b5ed4deb23b13c810e80fbe57c6d109158781566b68",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed123_r2": {
+            "meta_sha256": "sha256:d709900d00d2e832f979d13f880d82b1a47082395c27b09639cd17087092876f",
+            "split_fingerprint": "sha256:b77c919f18711313694f2b5ed4deb23b13c810e80fbe57c6d109158781566b68",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed123_r3": {
+            "meta_sha256": "sha256:205fff1466ee1e355a56be730a5ea1efa59e0725d1ae7dbb3ee0ca37126c587e",
+            "split_fingerprint": "sha256:b77c919f18711313694f2b5ed4deb23b13c810e80fbe57c6d109158781566b68",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed123_r4": {
+            "meta_sha256": "sha256:957d01362504575b514bfb9a0245d470df600124ec40a961e52892461fd55c7a",
+            "split_fingerprint": "sha256:b77c919f18711313694f2b5ed4deb23b13c810e80fbe57c6d109158781566b68",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          }
+        }
+      },
+      "row_strat_seed456": {
+        "recipe": {
+          "model_name": "hfl/chinese-roberta-wwm-ext-large",
+          "model_revision": "a25cc9e05974bd9687e528edd516f2cfdb3f5db9",
+          "train_config_sha256": "sha256:ebef1c618747e263762c86bddc14f6a6ff5faef1b9f4d6fd10a1b3c926929b4c",
+          "checkpoint_rule": "avg_last_k",
+          "checkpoint_last_k": 3,
+          "epochs": 12
+        },
+        "hardware": [
+          "NVIDIA GeForce RTX 3090 (cuda:0 of 1)"
+        ],
+        "bundles": {
+          "row_strat_seed456_r0": {
+            "meta_sha256": "sha256:003d9235085afc660c203e4f4e2cac7e9a22d7ad0c7d7875fc54d2ae95470758",
+            "split_fingerprint": "sha256:d51b7aafde2eec0d705017b720709c1e34504c729c0031f16f18e2568db7f29f",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed456_r1": {
+            "meta_sha256": "sha256:d2fcb43decd156d13fc985073216cdaebe3af1d7738b48d5d867db9807149a62",
+            "split_fingerprint": "sha256:d51b7aafde2eec0d705017b720709c1e34504c729c0031f16f18e2568db7f29f",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed456_r2": {
+            "meta_sha256": "sha256:d1b9c653b258a36557f6c734e05ccfeb4a2920a42332dfb59e401710cb601423",
+            "split_fingerprint": "sha256:d51b7aafde2eec0d705017b720709c1e34504c729c0031f16f18e2568db7f29f",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed456_r3": {
+            "meta_sha256": "sha256:577c252ba194b687af7132d42d5c09ae91eb77cef68958d960e3cd3c07fa786a",
+            "split_fingerprint": "sha256:d51b7aafde2eec0d705017b720709c1e34504c729c0031f16f18e2568db7f29f",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          },
+          "row_strat_seed456_r4": {
+            "meta_sha256": "sha256:7459fa6505464400da83241c346e1c334964de0b582bc4d829a9a6c7c8bda1dd",
+            "split_fingerprint": "sha256:d51b7aafde2eec0d705017b720709c1e34504c729c0031f16f18e2568db7f29f",
+            "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
+            "synthetic": false
+          }
+        }
+      }
+    }
+  },
+  "decisions": {
+    "expected": 42,
+    "predictions": {
+      "pdf_group_seed42_M0.csv.gz": "sha256:7c6094b0c38117ae61bef9fe0047e81d02765d7c43ec41a386e430bf5bc98514",
+      "pdf_group_seed42_M1.csv.gz": "sha256:734e8f7a61c87faab35e9802804ec5d766c4ac263db8692e29501ae75c77c78d",
+      "pdf_group_seed42_M2.csv.gz": "sha256:ca87bb2d3c6ca8a5bea983bfc73542c08dc376e9771aff067c72f11679a59fcb",
+      "pdf_group_seed42_M3.csv.gz": "sha256:2d4ab9f1b884a00bcab48b52d67954d777e9cfdaf597cc44b40fae560df43762",
+      "pdf_group_seed42_M4.csv.gz": "sha256:1e0bc927e0c8d88b661b780677aed1e85027db4ad4bdaf4d3882c195608ba200",
+      "pdf_group_seed42_M5.csv.gz": "sha256:5eacb45126199e668236f0d35863f9fb74edfe998fd1afc207576c9b18c2e6c0",
+      "pdf_group_seed42_M6.csv.gz": "sha256:c8edd2b2026d3c316703dd5d2f499348f00b4039c1c8587624ddc727ca107b43",
+      "pdf_group_seed123_M0.csv.gz": "sha256:c2e5a5d7365542586997f8c074376edeafb6689ebcae919c0eab0ad9c3d110ba",
+      "pdf_group_seed123_M1.csv.gz": "sha256:17e5c001f01eaa695fa00addb5a3702626f1fd48f872cc78ac0e176ce32fc988",
+      "pdf_group_seed123_M2.csv.gz": "sha256:e73c0cdd6b83f8c5865c5a978764e56c2ad2558e5c5c29e259ae7593105f967e",
+      "pdf_group_seed123_M3.csv.gz": "sha256:9024663d84a049cb12aebc4a2499fa20253719530c19d1eaa6e14a741feb8003",
+      "pdf_group_seed123_M4.csv.gz": "sha256:2a37ec99679af516dfab7500aaf8bb1e9a00f0b166c9bfb4b25a235a54c32a39",
+      "pdf_group_seed123_M5.csv.gz": "sha256:6e647a9f5c6896773972c2616692051110340e7be9030c3048f63442f17c4473",
+      "pdf_group_seed123_M6.csv.gz": "sha256:cf54a24f73a3b39947cf00e965defbad11457ff37ec46db94718ab0dd6ce57f9",
+      "pdf_group_seed456_M0.csv.gz": "sha256:756be1e3ad9407af132f8ef97e006c0d24e12d1f46a3d1297a06ca4e645a88c7",
+      "pdf_group_seed456_M1.csv.gz": "sha256:0a3f0180cc464f876e7ae4a4afcb6ab2afe55279e802773e4d59fd9f06b4649f",
+      "pdf_group_seed456_M2.csv.gz": "sha256:b7b5a29ca4b4f5a57d4f7297d7936428559b9b0715b350ed145ef47e023c0eac",
+      "pdf_group_seed456_M3.csv.gz": "sha256:63b55489fa8916245e657e044e97009915375f38eb975baeb9ff4a4e90f66cc8",
+      "pdf_group_seed456_M4.csv.gz": "sha256:c2d70a14f4ca1b2d2b5170e349b99d5181ac829fa8f2fa6206447deb3695b201",
+      "pdf_group_seed456_M5.csv.gz": "sha256:26f2dc7a94edf474d880dc3b4acbdf862aa93085bac63c3cc7dc866046fd870b",
+      "pdf_group_seed456_M6.csv.gz": "sha256:28fb436844ec67d26ee3a6d0d3d2c472d66d5184636897849e2b2f88c58b1c48",
+      "row_strat_seed42_M0.csv.gz": "sha256:1e0d9852aae6febe56aa6ee54f51ed4d9b8040a972f8f5e60e725094e97bdbb1",
+      "row_strat_seed42_M1.csv.gz": "sha256:c393046df2d642adf7a6f047d1f629f7e6a8a4fa895d1e6380b8bc7bc96271b2",
+      "row_strat_seed42_M2.csv.gz": "sha256:ec91828e372c9757b44b3d76539281b091370c27e00566d25a2f38a9f0b8de0b",
+      "row_strat_seed42_M3.csv.gz": "sha256:2ac7e56b9b022730864fe80406077b6ba534c7f2f2adabd21b3a1a235d203f6a",
+      "row_strat_seed42_M4.csv.gz": "sha256:9dfcada064155ed2abe578b4626302f5d33403a2f4200b551330e652e8c344ee",
+      "row_strat_seed42_M5.csv.gz": "sha256:6da9388b5ae172a0c470d43cb761eeab4d0f58420a40c5218b16cfc808001421",
+      "row_strat_seed42_M6.csv.gz": "sha256:7f75c665f609ba9fabca4abde7ff8be710c4989e1a16b79f2b0f27199ce48ccc",
+      "row_strat_seed123_M0.csv.gz": "sha256:0dca55c187924f72e15517a56d40088ab23bdb5ffd952545b12c13e35454f9a0",
+      "row_strat_seed123_M1.csv.gz": "sha256:575ccf436e27e3db0063f8f153cff1f9fb33b082473fc10c273f6af3e97947a6",
+      "row_strat_seed123_M2.csv.gz": "sha256:793221334ef6da43b870735ed1a544785641b83676cd013a771053deae0b525c",
+      "row_strat_seed123_M3.csv.gz": "sha256:52f6e827495c462264e804e698d7115028fc75821075c638615a684ba2d769fe",
+      "row_strat_seed123_M4.csv.gz": "sha256:b983a9b372c1cd3c6555c9825de181f54b45ad344c4fb98d554e073a01689ccf",
+      "row_strat_seed123_M5.csv.gz": "sha256:cd24d4a4d4227f04c46531af5cf051f55fefd863cf6503c0480decd8fcbf2574",
+      "row_strat_seed123_M6.csv.gz": "sha256:a1e70deaaf60ea6b819d34e8e464ff4c01f2afe6defdb71f33ed3b05c7ae27fd",
+      "row_strat_seed456_M0.csv.gz": "sha256:570155107d526b8f258035cb837d7d860edee9a814baf2d9cd16fbf676dd0de4",
+      "row_strat_seed456_M1.csv.gz": "sha256:da31f913feb1747c4ee17c96ae402d45270a9bbd8505aec717ddff454fb027b4",
+      "row_strat_seed456_M2.csv.gz": "sha256:79b84ca531ddbd8b8848f9155904d581526a8885e564377e9c7c98f2d62b63e1",
+      "row_strat_seed456_M3.csv.gz": "sha256:4ae4cf4d031d253b21c07747123b6f0c2a52854f02f825488ea61ba455c787d6",
+      "row_strat_seed456_M4.csv.gz": "sha256:8bd9d761c6c6f61ac3cb6d707face04d143ed5656b2dc8b978ff287875d2cd22",
+      "row_strat_seed456_M5.csv.gz": "sha256:301db90147f7ca89594c62705e0f2563059aeefddcfeaafe5c9044879ca5f192",
+      "row_strat_seed456_M6.csv.gz": "sha256:99d4361400a3711f009603541ccb9f03f3aacaf2ff349e82a97f303dbe61a5cc"
+    },
+    "results": {
+      "pdf_group_seed42_M0.json": "sha256:9f91f6b860b6e2239891bf66cc16a149d21465de3c6fb93a0f3dcd85b6366631",
+      "pdf_group_seed42_M1.json": "sha256:47006d481ea1a0f3c50c0791a03df14175980cbbd2e4cb7b99dda8078a8f9e8a",
+      "pdf_group_seed42_M2.json": "sha256:83db7db039e7a298b241c8264f8372bdc9b945671366eabe394d6abfc75e3fda",
+      "pdf_group_seed42_M3.json": "sha256:a31f5daa409fe46fcf67b6714d32f5482e85dac7e64a8516f88c7f83b95128b1",
+      "pdf_group_seed42_M4.json": "sha256:fe7cb060f0ed4feaf93bddfa0d0315b82fece4931561fe239715bd84000830da",
+      "pdf_group_seed42_M5.json": "sha256:bbffaf56a96f5790687a56863439a0d2d2505a44f9c328f76051e70f62412e2e",
+      "pdf_group_seed42_M6.json": "sha256:7d78157a8edabb5f0d5dce0a850b8f37ce515a383b84c154568ed23bfbbfb7ed",
+      "pdf_group_seed123_M0.json": "sha256:0c2831073c6fc3978fd5064eb2d0b25a076ecf9bef5f6d70c22cbdf7c80bff8f",
+      "pdf_group_seed123_M1.json": "sha256:680c32c0a0e4351b59c0f3f2ba13ebb0611755da3d5c4937f1610477e043dc7e",
+      "pdf_group_seed123_M2.json": "sha256:e56dcc3bb4ef476367835c10890697165a89763a8cc48be4c8a4d49b42f12252",
+      "pdf_group_seed123_M3.json": "sha256:29b3f30cce71e5f6bcb78ccc666019c3ac513c0ddeec5036798185a5e25f0819",
+      "pdf_group_seed123_M4.json": "sha256:d453bbd7bd2cdd3fb5602154dc595064ab53a93838af28966b969fbb6049c096",
+      "pdf_group_seed123_M5.json": "sha256:1f4920e8901f7ee6d451ac6f5ed33b9625a2215e37589fc664cee71315f1c425",
+      "pdf_group_seed123_M6.json": "sha256:539169063b18e4f75a77f970609e8974b2c71a50e10df15befe1de73707e1104",
+      "pdf_group_seed456_M0.json": "sha256:b7fd27b619b8c5bb92d83d192a9fafbc4f8be537b65eec6e02ab218da692f808",
+      "pdf_group_seed456_M1.json": "sha256:41dbd0b1abd69f41399542a644966a70daeba6c13b3c5c1fb020fca3df60fe99",
+      "pdf_group_seed456_M2.json": "sha256:1084170e3244542b096b21242b63d641c53af422c925be18bb4ceea203344dae",
+      "pdf_group_seed456_M3.json": "sha256:615bd6d72bb82db01df8190eeb74bff74533227b7bcc4fa9a318f93d57fdf7e8",
+      "pdf_group_seed456_M4.json": "sha256:e45259f97d8e6b6d6f97f1adaa792560a2925649f8de4ceed81534681401f0dc",
+      "pdf_group_seed456_M5.json": "sha256:a48676bde1108a192528ff58c2dba260100ac0c7ff8d4b710d9fa2f66e03c0a8",
+      "pdf_group_seed456_M6.json": "sha256:942b2b55403e2168922a490be3fa417a03477e8ddf560fa8029f64cf33c8c501",
+      "row_strat_seed42_M0.json": "sha256:cd02889c6a5e7462003439a4ef2209bfe3be925df6eb33842a884f0511545eeb",
+      "row_strat_seed42_M1.json": "sha256:19eb177e3b20add0892989cb912c2b865be0300749dfa135943046b575357dd1",
+      "row_strat_seed42_M2.json": "sha256:d5d6c5ee5c5071e258e1c2f4e2beccc5ddcb6aa9b7ec4494b3280acb1130c8af",
+      "row_strat_seed42_M3.json": "sha256:97a7304d12bd37e8e3269ab9e08818cf175f3e8f2cc006a527dba8bffdd1fa57",
+      "row_strat_seed42_M4.json": "sha256:786288bbf30c0e616a4b1c5455320f442bebac541ae1989b0b96a521c1f6ead1",
+      "row_strat_seed42_M5.json": "sha256:04bbf9e0cd8e2d21fc3d732ce04f14a3f6fc445c04ef3ae61d4a46a3f9b913b3",
+      "row_strat_seed42_M6.json": "sha256:c890c2479cd70a88575fc1872d02203a840e63eb7260be723d6413454374da92",
+      "row_strat_seed123_M0.json": "sha256:9d94d7c95a5768dc7f24a49d17d88d6894151a47718b2adc3e8758ec47a4c518",
+      "row_strat_seed123_M1.json": "sha256:54023e0e223479937166d311a7326393b245b1a9e0beebba1b23955d68a1996b",
+      "row_strat_seed123_M2.json": "sha256:87b8946bd95af35732bf1ba8687b4be8f21b4a2563cfb7f9739d0eaf22063273",
+      "row_strat_seed123_M3.json": "sha256:bb569d57db40ba9754c8eb7ff9d5635ac20f0899cddef13393fdc2e0cf964134",
+      "row_strat_seed123_M4.json": "sha256:c4b0b113577e1c458c9574db8a9f4f9d0ff2cd14572e18bed9ea86060a83e082",
+      "row_strat_seed123_M5.json": "sha256:200d7ac2e3d9bf3c17a82b23a20c8133de8a2b31c2130aab961d53fa3bb59321",
+      "row_strat_seed123_M6.json": "sha256:85c37df58e00a0cb0dfa52fe12375e81d1109d67b0018d97f5935c8a56c5a123",
+      "row_strat_seed456_M0.json": "sha256:a2bce5e4f2acaba80ecc8595fcf51b9a027dcc6605173bc1a0d1710dab68ae1d",
+      "row_strat_seed456_M1.json": "sha256:7a8315d65e8e3be49704e451f7c37a5e9a8cd083b925e496fb44258e30fa5b2b",
+      "row_strat_seed456_M2.json": "sha256:69f42e4e7e9e85e7289cc19dd01b6fad2d96ed939e2ba0f9cf7d7c9594fe068c",
+      "row_strat_seed456_M3.json": "sha256:3de941cb68e1180e9da16b6d701af66c21c68c0c26c4f5f0c2b89ebda1c70f75",
+      "row_strat_seed456_M4.json": "sha256:fee73cc84fce04c04b734876a9419eba6bf4ad630cb8fcec1b30e9538274f6a8",
+      "row_strat_seed456_M5.json": "sha256:eefd2a19c02703efe281bd258aab1f9e1dae01943d1a0f66d612607f9d66eee0",
+      "row_strat_seed456_M6.json": "sha256:7e0146c7ff7410f9a1e796a22d17ae48aef97e51b7a64574fe25fc7957b457d8"
+    },
+    "incomplete": []
+  },
+  "stamps": {
+    "probs": [
+      "35dea657eede733ea6c8945f3976a1561cfab80d"
+    ],
+    "decisions": [
+      "35dea657eede733ea6c8945f3976a1561cfab80d"
+    ]
+  },
+  "outputs": {
+    "tables": {
+      "audit.json": "sha256:600926051613f50d388bbecad3315e50639522453da7bad4795b9f11a8f9d3da",
+      "manifest.json": "sha256:3effe3c3527735c321f6b3892a262512a43ea7bf5523f24950a9965f24d386e5",
+      "table1_dataset.tex": "sha256:52a2f4236f77e5275fdb84e401f2514e6790846716a662cac2fc5884ec14184d",
+      "table1_dataset_caption.txt": "sha256:81d3181b0e27428ef4713d8fafc6735de8f7f2beb0cf8072b84176efdd7638a4",
+      "table2_main.tex": "sha256:f9192e1ea269ebf6f2b82a46b7273d77d36a8ee6c8b6714814860393704c4429",
+      "table2_main_caption.txt": "sha256:fc03032182e192cf789da731df45c0ec21553498f48076bdba9e4e20d736aabe",
+      "table3_regimes.tex": "sha256:759c5504a39f7de962d53cccae5bd54767edd535f6eaf3ef9dec06730f832efb",
+      "table3_regimes_caption.txt": "sha256:4a703a985f3ef75942a354ecad8dbb6c3e6a71b845ab9a3028d202eb34ffc39f"
+    },
+    "figures": {
+      "figure1_defs.tex": "sha256:44c164b3f4ff5beafce1e3093717a29c646c00d7f7a64bc604df0a26cad7ed32",
+      "figure1_hierarchy.pdf": "sha256:09281d547c406081198512b9855556efe77bfc3977653f11385b0813a393e92e",
+      "figure1_hierarchy.tex": "sha256:cfcee14c5fad551d609eca3863889e8009b09848629002de51c06b36a3baaa29"
+    }
+  },
+  "consistency": [
+    {
+      "check": "probability bundles",
+      "status": "pass",
+      "problems": []
+    },
+    {
+      "check": "one training recipe across the study",
+      "status": "pass",
+      "problems": []
+    },
+    {
+      "check": "splits carry the data checksum",
+      "status": "pass",
+      "problems": []
+    },
+    {
+      "check": "results still point at the predictions they summarise",
+      "status": "pass",
+      "problems": []
+    },
+    {
+      "check": "results were built against this data",
+      "status": "pass",
+      "problems": []
+    },
+    {
+      "check": "per-row files are aligned and legal",
+      "status": "pass",
+      "problems": []
+    }
+  ],
+  "warnings": []
+}

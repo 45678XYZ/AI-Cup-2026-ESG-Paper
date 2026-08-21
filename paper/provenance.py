@@ -6,8 +6,11 @@ deliberately dependency-free so splits can be regenerated on the GPU box
 without the study environment.
 """
 
+import platform
 import subprocess
+import sys
 from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version
 
 from paper.data import REPO_ROOT
 
@@ -55,3 +58,30 @@ def git_sha(repo_root=REPO_ROOT):
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
+
+
+# Recorded because a version change here moves the numbers without touching a
+# line of this repository's code. torch is optional: A's half of the study runs
+# without it, and its absence is a fact worth recording rather than an error.
+PACKAGES = ("numpy", "scikit-learn", "pandas", "torch", "transformers")
+
+
+def environment() -> dict:
+    """Interpreter and package versions behind a generated artifact.
+
+    Lives beside git_sha rather than in either writer because both need it, and
+    a stamp comparable only to itself is not provenance: the bundle written by
+    run_training and the manifest written at results freeze must carry the same
+    shape, or no one can check that the run and the index agree.
+    """
+    versions = {}
+    for name in PACKAGES:
+        try:
+            versions[name] = version(name)
+        except PackageNotFoundError:
+            versions[name] = None
+    return {
+        "python": sys.version.split()[0],
+        "platform": platform.platform(),
+        "packages": versions,
+    }

@@ -170,10 +170,39 @@ def test_synthetic_inputs_are_stated_not_implied(manifest):
                for note in manifest["warnings"])
 
 
-def test_a_clean_real_run_carries_no_synthetic_note():
-    fabricated = {
+def _clean_manifest(**overrides):
+    manifest = {
         "git_sha": "abc123",
         "probs": {"missing": [], "runs": {"pdf_group_seed42": {"bundles": {
             f"pdf_group_seed42_r{k}": {"synthetic": False} for k in range(5)}}}},
+        "stamps": {"probs": ["abc123"], "decisions": ["abc123"]},
     }
-    assert warnings_for(fabricated) == []
+    manifest.update(overrides)
+    return manifest
+
+
+def test_a_clean_real_run_carries_no_synthetic_note():
+    assert warnings_for(_clean_manifest()) == []
+
+
+def test_an_artifact_stamped_dirty_is_reported_even_when_the_index_is_clean():
+    """The index is built long after the artifacts and normally from a clean
+    tree, so its own git_sha says nothing about how the numbers were made. A
+    dirty stamp inside results/ is not reproducible from any commit, and every
+    cross-file check still passes because they compare artifacts to each other."""
+    notes = warnings_for(_clean_manifest(
+        stamps={"probs": ["abc123"], "decisions": ["def456-dirty"]},
+    ))
+
+    assert any("decisions" in n and "uncommitted tree" in n for n in notes), notes
+    assert not any("probs:" in n for n in notes), notes
+
+
+def test_two_commits_within_one_stage_are_reported():
+    """Five rotations built by two versions of the code go into one 2,000-row
+    score; per-bundle validation cannot see the mixture."""
+    notes = warnings_for(_clean_manifest(
+        stamps={"probs": ["abc123", "def456"], "decisions": ["abc123"]},
+    ))
+
+    assert any("probs" in n and "2 different commits" in n for n in notes), notes
