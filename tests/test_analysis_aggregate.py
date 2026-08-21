@@ -88,3 +88,39 @@ def test_per_field_means_cover_all_four_fields():
         "evidence_status", "evidence_quality",
     }
     assert all(0.0 <= v <= 1.0 for v in per_field.values())
+
+
+# --------------------------------------------- two Holm families, not one
+# The five contrasts are pre-specified once and evaluated on two metrics that
+# answer different questions: weighted macro-F1 is the competition's ranking
+# rule, tuple accuracy is whether a row is usable at all. Correcting them as
+# one family of ten would treat them as ten shots at the same question, which
+# they are not; correcting each family of five keeps the pre-specified
+# structure intact and is stated as such in the caption.
+
+
+def test_summary_carries_both_contrast_families():
+    out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
+                           n_boot=120, dev=DEV)
+    assert set(out["contrasts"]) == set(out["tuple_contrasts"])
+    assert len(out["tuple_contrasts"]) == 5
+
+
+def test_each_family_is_corrected_over_five_hypotheses_not_ten():
+    out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
+                           n_boot=120, dev=DEV)
+    for family in ("contrasts", "tuple_contrasts"):
+        rows = out[family]
+        raw = {k: r["p_value"] for k, r in rows.items()}
+        smallest = min(raw.values())
+        # Holm 對最小的 p 乘以家族大小；家族是 5 就不能是 10
+        assert rows[min(raw, key=raw.get)]["p_holm"] <= min(1.0, 5 * smallest) + 1e-12
+
+
+def test_tuple_contrasts_measure_a_different_thing():
+    """If both families produced the same deltas, one of them is wired wrong."""
+    out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
+                           n_boot=120, dev=DEV)
+    primary = {k: r["delta"] for k, r in out["contrasts"].items()}
+    secondary = {k: r["delta"] for k, r in out["tuple_contrasts"].items()}
+    assert primary != secondary

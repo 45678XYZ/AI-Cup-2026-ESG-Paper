@@ -281,6 +281,18 @@ def test_contrast_sentence_agrees_in_number():
             }
         return out
 
-    assert "One of the five intervals excludes zero" in _contrast_sentence(rows(1))
-    assert "Two of the five intervals exclude zero" in _contrast_sentence(rows(2))
-    assert "None of the five intervals exclude zero" in _contrast_sentence(rows(0))
+    assert "One of the five intervals excludes zero" in _contrast_sentence(rows(1), "m")
+    assert "Two of the five intervals exclude zero" in _contrast_sentence(rows(2), "m")
+    assert "None of the five intervals exclude zero" in _contrast_sentence(rows(0), "m")
+
+
+def test_table2_caption_carries_both_metric_families():
+    """Table 2 prints Tuple Acc. as a column, so its interval belongs under the
+    table too — and the caption must say which family the competition ranks on."""
+    primary = SUMMARIES["pdf_group"]["contrasts"]
+    secondary = SUMMARIES["pdf_group"]["tuple_contrasts"]
+    cap = build_captions(AUDIT, contrasts=primary, tuple_contrasts=secondary)["table2_main"]
+    assert "tuple accuracy" in cap.lower()
+    for key in secondary:
+        assert key in cap
+    assert cap.count("Holm") >= 1

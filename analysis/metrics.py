@@ -83,3 +83,17 @@ def weighted_macro_f1(gold, pred, idx=None) -> float:
         WEIGHTS[j] * _macro_f1(gold[:, j], pred[:, j], N_CLASSES[j])
         for j in range(len(FIELDS))
     ))
+
+
+def tuple_accuracy(gold, pred, idx=None) -> float:
+    """Rows where all four fields are correct.
+
+    The complement of the official metric on a hierarchical task: weighted
+    macro-F1 scores each field independently and therefore rewards a prediction
+    that is right about three fields while being a combination the label space
+    forbids. This one only counts a row when the whole tuple is right, so an
+    illegal prediction scores zero by construction rather than by penalty.
+    """
+    if idx is not None:
+        gold, pred = gold[idx], pred[idx]
+    return float(np.all(gold == pred, axis=1).mean())

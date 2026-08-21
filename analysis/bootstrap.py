@@ -34,14 +34,15 @@ def resample_indices(clusters, rng) -> np.ndarray:
     return np.concatenate([clusters[i] for i in picked])
 
 
-def _mean_difference(sets_a, sets_b, idx=None) -> float:
+def _mean_difference(sets_a, sets_b, idx=None, score=weighted_macro_f1) -> float:
     return float(np.mean([
-        weighted_macro_f1(gold_a, pred_a, idx) - weighted_macro_f1(gold_b, pred_b, idx)
+        score(gold_a, pred_a, idx) - score(gold_b, pred_b, idx)
         for (gold_a, pred_a), (gold_b, pred_b) in zip(sets_a, sets_b)
     ]))
 
 
-def paired_delta(sets_a, sets_b, clusters, n_boot=N_BOOT, seed=BOOTSTRAP_SEED) -> dict:
+def paired_delta(sets_a, sets_b, clusters, n_boot=N_BOOT, seed=BOOTSTRAP_SEED,
+                 score=weighted_macro_f1) -> dict:
     """Bootstrap the seed-averaged difference ``A - B`` in weighted macro-F1.
 
     ``sets_a`` / ``sets_b`` are lists of ``(gold, pred)`` arrays, one per seed,
@@ -56,11 +57,12 @@ def paired_delta(sets_a, sets_b, clusters, n_boot=N_BOOT, seed=BOOTSTRAP_SEED) -
     rng = np.random.default_rng(seed)
     draws = np.empty(n_boot, dtype=float)
     for b in range(n_boot):
-        draws[b] = _mean_difference(sets_a, sets_b, resample_indices(clusters, rng))
+        draws[b] = _mean_difference(sets_a, sets_b,
+                                    resample_indices(clusters, rng), score)
 
     low, high = np.percentile(draws, CI_PERCENTILES)
     return {
-        "delta": _mean_difference(sets_a, sets_b),
+        "delta": _mean_difference(sets_a, sets_b, score=score),
         "ci_low": float(low),
         "ci_high": float(high),
         "p_value": _two_sided_p(draws),

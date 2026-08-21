@@ -14,7 +14,7 @@ import numpy as np
 
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT, holm, paired_delta
 from analysis.load import METHODS, load_all
-from analysis.metrics import field_macro_f1, weighted_macro_f1
+from analysis.metrics import field_macro_f1, tuple_accuracy, weighted_macro_f1
 from paper.data import load_dev
 from paper.labels import EVAL_FIELDS, FIELDS, INVALID_STATE_ID, tuple_to_state_id
 from paper.train_config import SEEDS
@@ -114,21 +114,32 @@ def protocol_summary(protocol, order, root, clusters, n_boot=N_BOOT,
         for method in METHODS
     }
 
-    raw = {}
-    for a, b, description in CONTRASTS:
-        raw[f"{a}-{b}"] = {
-            **paired_delta(
-                [by_seed[s][a] for s in seeds], [by_seed[s][b] for s in seeds],
-                clusters, n_boot=n_boot, seed=bootstrap_seed,
-            ),
-            "description": description,
-        }
-    adjusted = holm({key: row["p_value"] for key, row in raw.items()})
-    for key, row in raw.items():
-        row["p_holm"] = adjusted[key]
+    def family(score):
+        """One Holm family: the same pre-specified contrasts, one metric.
 
-    return {"protocol": protocol, "seeds": list(seeds),
-            "methods": methods, "contrasts": raw}
+        The two metrics answer different questions -- weighted macro-F1 is the
+        competition's ranking rule, tuple accuracy is whether a row is usable
+        at all -- so they are corrected separately. Pooling them into a family
+        of ten would treat them as ten attempts at one question and inflate the
+        correction against contrasts that were specified once, not twice.
+        """
+        rows = {}
+        for a, b, description in CONTRASTS:
+            rows[f"{a}-{b}"] = {
+                **paired_delta(
+                    [by_seed[s][a] for s in seeds], [by_seed[s][b] for s in seeds],
+                    clusters, n_boot=n_boot, seed=bootstrap_seed, score=score,
+                ),
+                "description": description,
+            }
+        adjusted = holm({key: row["p_value"] for key, row in rows.items()})
+        for key, row in rows.items():
+            row["p_holm"] = adjusted[key]
+        return rows
+
+    return {"protocol": protocol, "seeds": list(seeds), "methods": methods,
+            "contrasts": family(weighted_macro_f1),
+            "tuple_contrasts": family(tuple_accuracy)}
 
 
 def regime_comparison(summaries, order, root, clusters, n_boot=N_BOOT,
