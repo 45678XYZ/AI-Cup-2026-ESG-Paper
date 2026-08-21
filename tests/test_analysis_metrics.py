@@ -10,16 +10,26 @@ import numpy as np
 import pytest
 
 from analysis.load import EXAMPLES_ROOT, METHODS, load_aligned, pdf_clusters
-from analysis.metrics import encode, field_macro_f1, weighted_macro_f1
+from analysis.metrics import (
+    consistent_weighted_macro_f1,
+    encode,
+    enforce_ancestors,
+    field_macro_f1,
+    weighted_macro_f1,
+)
 from paper.artifacts import read_predictions
 from paper.data import canonical_row_order, load_dev
-from paper.labels import FIELD_ALIAS, FIELDS
+from paper.labels import EVAL_FIELDS, FIELD_ALIAS, FIELDS, LABEL2ID, STATES
 from paper.score import compute_per_field_f1, compute_weighted_macro_f1
 
 DEV = load_dev()
 ORDER = canonical_row_order(DEV)
 RECORDS = read_predictions(
     EXAMPLES_ROOT / "predictions" / "pdf_group_seed42_M3.csv.gz"
+)
+# The unconstrained arm: the only one whose predictions break the hierarchy.
+RECORDS_M0 = read_predictions(
+    EXAMPLES_ROOT / "predictions" / "pdf_group_seed42_M0.csv.gz"
 )
 
 
@@ -110,3 +120,99 @@ def test_encode_reindexes_by_id_not_by_position():
     gold_b, pred_b = encode(shuffled, order=ORDER)
     assert np.array_equal(gold_a, gold_b)
     assert np.array_equal(pred_a, pred_b)
+
+
+# --- path-constrained (C-)metrics ------------------------------------------
+#
+# The consistency-aware variant of the official metric: identical in every
+# respect -- per field, macro over present gold labels, same weights -- except
+# that a field whose ancestors were not predicted true is counted as a false
+# prediction. Adding it required widening ``_macro_f1``'s bincount to hold a
+# sentinel class, which is why the first test below scores every method
+# against paper/score.py: if that widening perturbed the official metric by so
+# much as a float ulp, Table 2, Table 3 and every interval would be wrong.
+
+
+def test_official_metric_is_unchanged_for_every_method():
+    # The regression net for the sentinel-capable scorer. M0 is the method
+    # whose predictions include illegal tuples, so it is the one that would
+    # move first if a sentinel ever leaked into the official metric.
+    for method in METHODS:
+        records = read_predictions(
+            EXAMPLES_ROOT / "predictions" / f"pdf_group_seed42_{method}.csv.gz"
+        )
+        gold, pred = encode(records)
+        g, p = _reference(records)
+        assert weighted_macro_f1(gold, pred) == pytest.approx(
+            compute_weighted_macro_f1(g, p), abs=1e-12
+        ), method
+
+
+def test_enforce_ancestors_invalidates_the_children_of_a_declined_promise():
+    # PS=No admits no timeline, no evidence and no quality, so all three
+    # substantive predictions below are unsupported by their ancestors.
+    pred = np.array([[1, 0, 0, 0]], dtype=np.int64)     # No / already / Yes / Clear
+    assert np.array_equal(enforce_ancestors(pred), [[1, 5, 3, 4]])
+
+
+def test_enforce_ancestors_invalidates_quality_when_evidence_is_not_yes():
+    pred = np.array([[0, 0, 1, 0]], dtype=np.int64)     # Yes / already / No / Clear
+    assert np.array_equal(enforce_ancestors(pred), [[0, 0, 1, 4]])
+
+
+def test_enforce_ancestors_leaves_every_legal_state_untouched():
+    # The 17 legal states are exactly the tuples whose every field is
+    # supported, so masking must be the identity on all of them.
+    legal = np.array(
+        [[LABEL2ID[f][lab] for f, lab in zip(FIELDS, (s.ps, s.vt, s.es, s.eq))]
+         for s in STATES],
+        dtype=np.int64,
+    )
+    assert np.array_equal(enforce_ancestors(legal), legal)
+
+
+def test_enforce_ancestors_does_not_mutate_its_argument():
+    pred = np.array([[1, 0, 0, 0]], dtype=np.int64)
+    enforce_ancestors(pred)
+    assert np.array_equal(pred, [[1, 0, 0, 0]])
+
+
+def test_consistent_metric_is_the_official_scorer_on_masked_labels():
+    # Pins the C-metric to paper/score.py the same way the official metric is
+    # pinned: an unsupported field becomes a label string absent from the gold,
+    # which sklearn scores as a miss for the true class and a false prediction
+    # for nobody. No second implementation of macro-F1 is introduced.
+    gold, pred = encode(RECORDS_M0)
+    masked = enforce_ancestors(pred)
+    g, _ = _reference(RECORDS_M0)
+    p = [
+        {f: ("INVALID" if row[j] == len(EVAL_FIELDS[f]) else EVAL_FIELDS[f][row[j]])
+         for j, f in enumerate(FIELDS)}
+        for row in masked
+    ]
+    assert consistent_weighted_macro_f1(gold, pred) == pytest.approx(
+        compute_weighted_macro_f1(g, p), abs=1e-12
+    )
+
+
+def test_consistent_metric_agrees_with_the_official_one_exactly_when_output_is_legal():
+    # The literature's own check on a path-constrained metric: a method that
+    # guarantees label consistency scores identically under both. M1-M6 do;
+    # unconstrained argmax does not, and must score strictly lower.
+    order, root = ORDER, EXAMPLES_ROOT
+    for method in METHODS:
+        gold, pred = load_aligned("pdf_group", 42, method, order, root)
+        official = weighted_macro_f1(gold, pred)
+        constrained = consistent_weighted_macro_f1(gold, pred)
+        if method == "M0":
+            assert constrained < official
+        else:
+            assert constrained == pytest.approx(official, abs=1e-12), method
+
+
+def test_consistent_metric_honours_the_subset_index():
+    gold, pred = encode(RECORDS_M0)
+    idx = np.arange(0, len(RECORDS_M0), 3)
+    assert consistent_weighted_macro_f1(gold, pred, idx) == pytest.approx(
+        consistent_weighted_macro_f1(gold[idx], pred[idx]), abs=1e-12
+    )
