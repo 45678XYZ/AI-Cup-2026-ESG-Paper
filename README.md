@@ -62,12 +62,16 @@ splits/         generated split manifests (version controlled)
 probs/          30 probability bundles, one per rotation, from the official fits
 predictions/    42 per-row prediction files (.csv.gz), one per protocol/seed/method
 results/        42 aggregate result manifests, one per predictions file
+tables/         contract-4 deliverables: Table 1-3, their captions, the dataset
+                audit, and the manifest tying each printed number to its inputs
 tests/          pytest suite
 dataset/        AI CUP development and test data
+run_manifest.json  the generated study index, committed at results freeze
 ```
 
-The last three hold the official run and are deliberately version controlled;
-`.gitignore` records what each one keeps and why.
+The four artifact directories above and `run_manifest.json` hold the official
+run and are deliberately version controlled; `.gitignore` records what each one
+keeps and why.
 
 ## Setup
 
@@ -143,9 +147,10 @@ python -m analysis --predictions-root contracts/examples   # against the synthet
 python -m analysis                                         # against real results/
 ```
 
-It writes `tables/table{1,2,3}*.tex`, their captions, `tables/manifest.json`
-(recording the sha256 of every input, so any printed number traces back to the
-artifacts behind it) and `figures/figure1_hierarchy.pdf`. The 10,000-resample
+It writes `tables/table{1,2,3}*.tex`, their captions, `tables/audit.json`,
+`tables/manifest.json` (recording the sha256 of every input, so any printed
+number traces back to the artifacts behind it) and
+`figures/figure1_hierarchy.pdf`. The 10,000-resample
 paired PDF-cluster bootstrap takes about 90 seconds.
 
 Nothing here transcribes a score: `analysis/metrics.py` is a vectorised

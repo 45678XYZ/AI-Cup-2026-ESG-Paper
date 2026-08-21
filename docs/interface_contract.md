@@ -453,6 +453,7 @@ A 提供 placeholder `.tex`（欄數、欄序、對齊與正式版相同，數�
 | `contracts/examples/probs/pdf_group_seed42_r{0..4}/` | ✅ 5 檔 | 契約 2 範例 bundle；五個 rotation 齊全，才能走完「拼接五折→2,000 列→計一次分」的路徑 |
 | `contracts/examples/predictions/`、`results/` | ✅ 各 42 檔 | 契約 3 範例，2 protocols × 3 seeds × M0–M6 全備，C 因此能測 3-seed std 與 Table 3 的雙設定對照 |
 | `predictions/`、`results/` | ✅ 各 42 檔 | 30 個正式 probability bundles 產生的真實 M0–M6 輸出；predictions 全數通過入境檢查 |
+| `tables/`、`run_manifest.json` | ✅ | 契約 4 的真實交付物與整份研究的索引，於 2026-08-21 重跑後由凍結 artifacts 重算；manifest 的六項跨檔檢查零 warning |
 | `contracts/examples/tables/` | ✅ | 契約 4 的 tabular placeholder、caption 與 manifest |
 
 **範例檔才是真正解鎖他人的東西。**規格文件本身不解除任何人的封鎖。
