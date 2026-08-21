@@ -206,6 +206,13 @@ is simply 0 of 30), and a manifest built from the synthetic fixtures says so in
 its `warnings`, because otherwise it is indistinguishable from one built from a
 real run. Generate it at results freeze and commit it alongside the artifacts.
 
+Two further files are written beside them, neither a contract-4 deliverable:
+`tables/case_analysis.json` counts which hierarchy rule the unconstrained
+baseline breaks and what the repair costs, and `tables/findings.md` states
+which claims the Holm-corrected intervals license — the distinction between
+"no detectable difference" and "no difference" is a computed output rather
+than an editorial decision.
+
 ## Training runs
 
 Requires a GPU and the conda environment.

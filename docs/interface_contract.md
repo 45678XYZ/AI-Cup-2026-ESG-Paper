@@ -440,6 +440,23 @@ tables/manifest.json
 
 由 `analysis/cases.py` 產生，`python -m analysis` 一併輸出。
 
+### 補充材料：`tables/findings.md`
+
+**不是契約 4 的凍結交付物。** 它回答 D 唯一無法自行判斷的問題：**這些數字准許寫成什麼句子。**
+
+C 是唯一看過重抽過程的人。把表格交出去、讓撰稿者自行斟酌措辭，正是「未偵測到差異」在試算表與投稿之間變成「沒有差異」的途徑。兩者不可互換——前者是寬區間支持的敘述，後者是關於世界的主張，49 個 PDF cluster 撐不起來。
+
+因此分類是區間的函數而非口頭約定：
+
+| 段落 | 內容 |
+|---|---|
+| Claims the intervals support | Holm 校正後區間排除 0 的對比，含方向（更好／更差） |
+| Claims the study cannot support | 區間跨越 0 者，一律寫成 *no detectable difference* |
+| Prohibitions | `Misleading` 不得有任何顯著性宣稱；`±` 是 seed spread 不是 CI；Table 3 的 Δ 是兩個估計目標的差距不是偏誤 |
+| Material for the Discussion | 由 `case_analysis.json` 導出的失效模式數字 |
+
+由 `analysis/findings.py` 產生，`python -m analysis` 一併輸出。**文中數字仍以表格與 caption 為準**，本檔案不得被轉抄。
+
 ### D 的替代輸入
 
 A 提供 placeholder `.tex`（欄數、欄序、對齊與正式版相同，數值填 `--`），D 從 W1 就能排版並測 8 頁預算。
