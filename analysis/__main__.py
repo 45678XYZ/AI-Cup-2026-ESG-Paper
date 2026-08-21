@@ -16,6 +16,7 @@ from pathlib import Path
 from analysis.aggregate import protocol_summary, regime_comparison
 from analysis.audit import full_audit
 from analysis.cases import write_case_analysis
+from analysis.findings import write_findings
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT
 from analysis.figure1 import build as build_figure1, tex_available
 from analysis.load import EXAMPLES_ROOT, REAL_ROOT, pdf_clusters
@@ -75,6 +76,13 @@ def main() -> None:
     cases = write_case_analysis(args.out_dir, order, args.predictions_root,
                                 dev=dev, seeds=SEEDS)
     print(f"cases   -> {cases}")
+
+    # What the intervals license D to write. Not a contract-4 deliverable;
+    # plan §9 picks the title at the freeze and this is its evidence.
+    brief = write_findings(args.out_dir, audit,
+                           summaries["pdf_group"]["contrasts"], regimes,
+                           cases=json.loads(cases.read_text(encoding="utf-8")))
+    print(f"brief   -> {brief}")
 
     inputs = table_inputs(args.predictions_root, seeds=SEEDS)
     write_tables(args.out_dir, audit, summaries, regimes, inputs, seeds=SEEDS)
