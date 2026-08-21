@@ -127,8 +127,33 @@ def _contrast_sentence(contrasts, metric, note="") -> str:
     )
 
 
+def _consistency_clause(methods) -> str:
+    """Where the secondary metric sits relative to the column the table prints.
+
+    The path-constrained variant has no column of its own, so the caption has
+    to locate it. Both halves are computed: how far the unconstrained arm falls
+    under it, and whether the constrained arms move at all. The second is the
+    literature's own check on such a metric -- a method that guarantees label
+    consistency must score identically under both -- and stating it as a
+    measured fact rather than a claim is what makes it evidence.
+    """
+    official = methods["M0"]["weighted_macro_f1_mean"]
+    constrained = methods["M0"]["consistent_weighted_macro_f1_mean"]
+    others = [m for m in METHODS if m != "M0"]
+    worst = max(abs(methods[m]["weighted_macro_f1_mean"]
+                    - methods[m]["consistent_weighted_macro_f1_mean"])
+                for m in others)
+    unchanged = ("M1--M6 score identically under both"
+                 if worst < 5e-4 else
+                 f"M1--M6 move by at most {worst:.3f}")
+    return (f" Under that variant M0 scores {constrained:.3f} against "
+            f"{official:.3f} on the official metric, while {unchanged}: only "
+            "the unconstrained arm predicts fields its own ancestors do not "
+            "support.")
+
+
 def build_captions(audit, seeds=SEEDS, contrasts=None,
-                   tuple_contrasts=None) -> dict:
+                   consistent_contrasts=None, methods=None) -> dict:
     """Captions computed from the audit rather than stored as text.
 
     Captions are contract-4 deliverables and reach the paper verbatim, so the
@@ -161,9 +186,13 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             + (_contrast_sentence(
                 contrasts, "the official weighted macro-F1") if contrasts else "")
             + (_contrast_sentence(
-                tuple_contrasts, "tuple accuracy",
-                ", corrected as its own family because the two metrics answer "
-                "different questions") if tuple_contrasts else "")
+                consistent_contrasts,
+                "the same metric's path-constrained variant, which counts a "
+                "field whose ancestors were not predicted as a false "
+                "prediction rather than scoring it on its own",
+                ", corrected as its own family because the two answer "
+                "different questions") if consistent_contrasts else "")
+            + (_consistency_clause(methods) if methods else "")
         ),
         "table3_regimes": (
             "Same-document versus document-disjoint evaluation. The left column "
@@ -278,9 +307,10 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
     # Table 2 reports the document-disjoint protocol, so its contrasts are
     # the ones that belong under it.
     contrasts = summaries["pdf_group"]["contrasts"]
-    captions = build_captions(audit, seeds=seeds, contrasts=contrasts,
-                              tuple_contrasts=summaries["pdf_group"]
-                              .get("tuple_contrasts"))
+    captions = build_captions(
+        audit, seeds=seeds, contrasts=contrasts,
+        consistent_contrasts=summaries["pdf_group"].get("consistent_contrasts"),
+        methods=summaries["pdf_group"]["methods"])
     for stem, caption in captions.items():
         (out_dir / f"{stem}_caption.txt").write_text(caption + "\n", encoding="utf-8")
 

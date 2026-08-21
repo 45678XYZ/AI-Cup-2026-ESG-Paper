@@ -71,9 +71,10 @@ def test_brief_separates_the_two_metric_families():
     primary = {"M1-M0": _contrast(-0.001, -0.006, 0.003, "legalisation")}
     secondary = {"M1-M0": _contrast(+0.035, 0.028, 0.043, "legalisation")}
     text = build_findings(AUDIT_STUB, primary, regimes={}, cases=None,
-                          tuple_contrasts=secondary)
+                          consistent_contrasts=secondary)
 
-    assert "weighted macro-F1" in text and "tuple accuracy" in text.lower()
+    assert "weighted macro-F1" in text
+    assert "path-constrained" in text.lower()
     assert "[0.028, 0.043]" in text
     assert "[-0.006, 0.003]" in text
     # 官方排名依據必須被明確指出
@@ -86,6 +87,6 @@ def test_brief_flags_a_contrast_that_disagrees_across_metrics():
     primary = {"M1-M0": _contrast(-0.001, -0.006, 0.003, "legalisation")}
     secondary = {"M1-M0": _contrast(+0.035, 0.028, 0.043, "legalisation")}
     text = build_findings(AUDIT_STUB, primary, regimes={}, cases=None,
-                          tuple_contrasts=secondary)
+                          consistent_contrasts=secondary)
     assert "disagree" in text.lower()
     assert "M1-M0" in text

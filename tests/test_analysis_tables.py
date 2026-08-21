@@ -287,12 +287,27 @@ def test_contrast_sentence_agrees_in_number():
 
 
 def test_table2_caption_carries_both_metric_families():
-    """Table 2 prints Tuple Acc. as a column, so its interval belongs under the
-    table too — and the caption must say which family the competition ranks on."""
+    """The secondary metric has no column of its own -- the column count is what
+    D measured the page budget against -- so the caption is the only place its
+    intervals can appear, and it must say which family the competition ranks on."""
     primary = SUMMARIES["pdf_group"]["contrasts"]
-    secondary = SUMMARIES["pdf_group"]["tuple_contrasts"]
-    cap = build_captions(AUDIT, contrasts=primary, tuple_contrasts=secondary)["table2_main"]
-    assert "tuple accuracy" in cap.lower()
+    secondary = SUMMARIES["pdf_group"]["consistent_contrasts"]
+    cap = build_captions(AUDIT, contrasts=primary,
+                         consistent_contrasts=secondary)["table2_main"]
+    assert "path-constrained" in cap.lower()
     for key in secondary:
         assert key in cap
     assert cap.count("Holm") >= 1
+
+
+def test_table2_caption_computes_the_gap_between_the_two_metrics():
+    """The secondary metric is absent from the table, so the caption has to
+    locate it: how far M0 falls under it, and that the constrained arms do not
+    move at all. Both are computed, never transcribed."""
+    primary = SUMMARIES["pdf_group"]["contrasts"]
+    secondary = SUMMARIES["pdf_group"]["consistent_contrasts"]
+    methods = SUMMARIES["pdf_group"]["methods"]
+    cap = build_captions(AUDIT, contrasts=primary, consistent_contrasts=secondary,
+                         methods=methods)["table2_main"]
+    assert f"{methods['M0']['consistent_weighted_macro_f1_mean']:.3f}" in cap
+    assert "M1--M6" in cap

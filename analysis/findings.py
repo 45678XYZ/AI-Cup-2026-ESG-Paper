@@ -44,7 +44,7 @@ def _fmt(row):
 
 
 def build_findings(audit, contrasts, regimes, cases=None,
-                   tuple_contrasts=None) -> str:
+                   consistent_contrasts=None) -> str:
     verdict = classify_contrasts(contrasts)
     dev = audit["development"]
     absent = audit["splits"]["calibration_without_misleading"]
@@ -69,25 +69,29 @@ def build_findings(audit, contrasts, regimes, cases=None,
                    f"{_fmt(contrasts[k])}")
     out.append("")
 
-    if tuple_contrasts:
-        second = classify_contrasts(tuple_contrasts)
-        out += ["## Secondary metric — tuple accuracy (whole-row correctness)",
+    if consistent_contrasts:
+        second = classify_contrasts(consistent_contrasts)
+        out += ["## Secondary metric — path-constrained weighted macro-F1 "
+                "(the official metric, consistency-aware)",
                 "",
                 "Same five pre-specified contrasts, same resamples, corrected as "
-                "its own Holm family. This metric scores a row only when all "
-                "four fields are right, so a prediction the label space forbids "
-                "scores zero by construction rather than by penalty.", ""]
+                "its own Holm family. This is the official metric with one "
+                "change and no others: a field whose ancestors were not "
+                "predicted counts as a false prediction instead of being scored "
+                "on its own. A difference between the two families is therefore "
+                "attributable to that single factor — which is why this metric "
+                "and not whole-row accuracy carries the secondary family.", ""]
         for k in second["better"]:
-            out.append(f"- **{k}** is better: {_fmt(tuple_contrasts[k])}")
+            out.append(f"- **{k}** is better: {_fmt(consistent_contrasts[k])}")
         for k in second["worse"]:
-            out.append(f"- **{k}** is *worse*: {_fmt(tuple_contrasts[k])}")
+            out.append(f"- **{k}** is *worse*: {_fmt(consistent_contrasts[k])}")
         for k in second["undetermined"]:
             out.append(f"- **{k}**: no detectable difference — "
-                       f"{_fmt(tuple_contrasts[k])}")
+                       f"{_fmt(consistent_contrasts[k])}")
         out.append("")
 
         crossed = [k for k in contrasts
-                   if k in tuple_contrasts
+                   if k in consistent_contrasts
                    and (k in verdict["undetermined"])
                    != (k in second["undetermined"])]
         if crossed:
@@ -98,7 +102,8 @@ def build_findings(audit, contrasts, regimes, cases=None,
                     "different things.", ""]
             for k in crossed:
                 out.append(f"- **{k}**: weighted macro-F1 {_fmt(contrasts[k])}; "
-                           f"tuple accuracy {_fmt(tuple_contrasts[k])}")
+                           f"path-constrained "
+                           f"{_fmt(consistent_contrasts[k])}")
             out.append("")
 
     if regimes:
@@ -183,12 +188,12 @@ def build_findings(audit, contrasts, regimes, cases=None,
 
 
 def write_findings(out_dir, audit, contrasts, regimes, cases=None,
-                   tuple_contrasts=None) -> Path:
+                   consistent_contrasts=None) -> Path:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "findings.md"
     header = (f"<!-- generated {now_iso()} from {git_sha()} -->\n\n")
     path.write_text(header + build_findings(audit, contrasts, regimes,
-                                           cases, tuple_contrasts),
+                                           cases, consistent_contrasts),
                     encoding="utf-8")
     return path

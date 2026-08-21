@@ -14,7 +14,11 @@ import numpy as np
 
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT, holm, paired_delta
 from analysis.load import METHODS, load_all
-from analysis.metrics import field_macro_f1, tuple_accuracy, weighted_macro_f1
+from analysis.metrics import (
+    consistent_weighted_macro_f1,
+    field_macro_f1,
+    weighted_macro_f1,
+)
 from paper.data import load_dev
 from paper.labels import EVAL_FIELDS, FIELDS, INVALID_STATE_ID, tuple_to_state_id
 from paper.train_config import SEEDS
@@ -85,10 +89,17 @@ def method_summary(sets_by_seed, idx=None, no_misleading_idx=None) -> dict:
         tuple_acc.append(float((gold_ids[sel] == pred_ids[sel]).mean()))
         invalid.append(float((pred_ids[sel] == INVALID_STATE_ID).mean()))
 
+    # The secondary metric, per method. It has no column of its own in Table 2
+    # -- the column count is D's page budget -- so this is where the caption
+    # gets the one number that locates it: how far the unconstrained arm falls
+    # when its ancestor-unsupported fields stop earning partial credit.
+    constrained = [consistent_weighted_macro_f1(g, p, idx) for g, p in sets_by_seed]
+
     out = {
         "weighted_macro_f1_per_seed": scores,
         "weighted_macro_f1_mean": mean,
         "weighted_macro_f1_std": std,
+        "consistent_weighted_macro_f1_mean": float(np.mean(constrained)),
         "per_field_mean": per_field,
         "tuple_exact_match_mean": float(np.mean(tuple_acc)),
         "invalid_tuple_rate_mean": float(np.mean(invalid)),
@@ -118,10 +129,15 @@ def protocol_summary(protocol, order, root, clusters, n_boot=N_BOOT,
         """One Holm family: the same pre-specified contrasts, one metric.
 
         The two metrics answer different questions -- weighted macro-F1 is the
-        competition's ranking rule, tuple accuracy is whether a row is usable
-        at all -- so they are corrected separately. Pooling them into a family
-        of ten would treat them as ten attempts at one question and inflate the
-        correction against contrasts that were specified once, not twice.
+        competition's ranking rule, its path-constrained variant asks the same
+        question of predictions the hierarchy actually supports -- so they are
+        corrected separately. Pooling them into a family of ten would treat them
+        as ten attempts at one question and inflate the correction against
+        contrasts that were specified once, not twice.
+
+        The secondary metric was chosen to differ from the primary one in
+        exactly one respect, so a contrast the two families resolve differently
+        is evidence about consistency and not about the shape of the metric.
         """
         rows = {}
         for a, b, description in CONTRASTS:
@@ -139,7 +155,7 @@ def protocol_summary(protocol, order, root, clusters, n_boot=N_BOOT,
 
     return {"protocol": protocol, "seeds": list(seeds), "methods": methods,
             "contrasts": family(weighted_macro_f1),
-            "tuple_contrasts": family(tuple_accuracy)}
+            "consistent_contrasts": family(consistent_weighted_macro_f1)}
 
 
 def regime_comparison(summaries, order, root, clusters, n_boot=N_BOOT,

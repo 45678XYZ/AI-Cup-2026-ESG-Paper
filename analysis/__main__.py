@@ -82,7 +82,7 @@ def main() -> None:
     brief = write_findings(args.out_dir, audit,
                            summaries["pdf_group"]["contrasts"], regimes,
                            cases=json.loads(cases.read_text(encoding="utf-8")),
-                           tuple_contrasts=summaries["pdf_group"]["tuple_contrasts"])
+                           consistent_contrasts=summaries["pdf_group"]["consistent_contrasts"])
     print(f"brief   -> {brief}")
 
     inputs = table_inputs(args.predictions_root, seeds=SEEDS)

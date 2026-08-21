@@ -93,23 +93,24 @@ def test_per_field_means_cover_all_four_fields():
 # --------------------------------------------- two Holm families, not one
 # The five contrasts are pre-specified once and evaluated on two metrics that
 # answer different questions: weighted macro-F1 is the competition's ranking
-# rule, tuple accuracy is whether a row is usable at all. Correcting them as
-# one family of ten would treat them as ten shots at the same question, which
-# they are not; correcting each family of five keeps the pre-specified
-# structure intact and is stated as such in the caption.
+# rule, its path-constrained variant is the same metric with ancestor-
+# unsupported predictions counted as misses. Correcting them as one family of
+# ten would treat them as ten shots at the same question, which they are not;
+# correcting each family of five keeps the pre-specified structure intact and
+# is stated as such in the caption.
 
 
 def test_summary_carries_both_contrast_families():
     out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
                            n_boot=120, dev=DEV)
-    assert set(out["contrasts"]) == set(out["tuple_contrasts"])
-    assert len(out["tuple_contrasts"]) == 5
+    assert set(out["contrasts"]) == set(out["consistent_contrasts"])
+    assert len(out["consistent_contrasts"]) == 5
 
 
 def test_each_family_is_corrected_over_five_hypotheses_not_ten():
     out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
                            n_boot=120, dev=DEV)
-    for family in ("contrasts", "tuple_contrasts"):
+    for family in ("contrasts", "consistent_contrasts"):
         rows = out[family]
         raw = {k: r["p_value"] for k, r in rows.items()}
         smallest = min(raw.values())
@@ -117,10 +118,25 @@ def test_each_family_is_corrected_over_five_hypotheses_not_ten():
         assert rows[min(raw, key=raw.get)]["p_holm"] <= min(1.0, 5 * smallest) + 1e-12
 
 
-def test_tuple_contrasts_measure_a_different_thing():
+def test_the_secondary_family_measures_a_different_thing():
     """If both families produced the same deltas, one of them is wired wrong."""
     out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
                            n_boot=120, dev=DEV)
     primary = {k: r["delta"] for k, r in out["contrasts"].items()}
-    secondary = {k: r["delta"] for k, r in out["tuple_contrasts"].items()}
+    secondary = {k: r["delta"] for k, r in out["consistent_contrasts"].items()}
     assert primary != secondary
+
+
+def test_summary_carries_the_path_constrained_score_per_method():
+    """The property that makes the secondary metric self-checking: a method that
+    guarantees legal output scores the same under both, so only M0 may move."""
+    out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
+                           n_boot=120, dev=DEV)
+    methods = out["methods"]
+    for method, row in methods.items():
+        official = row["weighted_macro_f1_mean"]
+        constrained = row["consistent_weighted_macro_f1_mean"]
+        if method == "M0":
+            assert constrained < official
+        else:
+            assert constrained == pytest.approx(official, abs=1e-12), method
