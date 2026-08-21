@@ -81,7 +81,8 @@ def main() -> None:
     # plan §9 picks the title at the freeze and this is its evidence.
     brief = write_findings(args.out_dir, audit,
                            summaries["pdf_group"]["contrasts"], regimes,
-                           cases=json.loads(cases.read_text(encoding="utf-8")))
+                           cases=json.loads(cases.read_text(encoding="utf-8")),
+                           tuple_contrasts=summaries["pdf_group"]["tuple_contrasts"])
     print(f"brief   -> {brief}")
 
     inputs = table_inputs(args.predictions_root, seeds=SEEDS)

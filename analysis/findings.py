@@ -43,7 +43,8 @@ def _fmt(row):
             f" — {row['description']}")
 
 
-def build_findings(audit, contrasts, regimes, cases=None) -> str:
+def build_findings(audit, contrasts, regimes, cases=None,
+                   tuple_contrasts=None) -> str:
     verdict = classify_contrasts(contrasts)
     dev = audit["development"]
     absent = audit["splits"]["calibration_without_misleading"]
@@ -55,7 +56,8 @@ def build_findings(audit, contrasts, regimes, cases=None) -> str:
            "into the paper** — the tabulars and their captions are the "
            "deliverables; this file exists to say what they license.", ""]
 
-    out += ["## Claims the intervals support", ""]
+    out += ["## Primary metric — weighted macro-F1 (the competition ranks on this)",
+            ""]
     if verdict["better"]:
         for k in verdict["better"]:
             out.append(f"- **{k}** is better: {_fmt(contrasts[k])}")
@@ -66,6 +68,38 @@ def build_findings(audit, contrasts, regimes, cases=None) -> str:
         out.append(f"- **{k}** is *worse*, and the interval excludes zero: "
                    f"{_fmt(contrasts[k])}")
     out.append("")
+
+    if tuple_contrasts:
+        second = classify_contrasts(tuple_contrasts)
+        out += ["## Secondary metric — tuple accuracy (whole-row correctness)",
+                "",
+                "Same five pre-specified contrasts, same resamples, corrected as "
+                "its own Holm family. This metric scores a row only when all "
+                "four fields are right, so a prediction the label space forbids "
+                "scores zero by construction rather than by penalty.", ""]
+        for k in second["better"]:
+            out.append(f"- **{k}** is better: {_fmt(tuple_contrasts[k])}")
+        for k in second["worse"]:
+            out.append(f"- **{k}** is *worse*: {_fmt(tuple_contrasts[k])}")
+        for k in second["undetermined"]:
+            out.append(f"- **{k}**: no detectable difference — "
+                       f"{_fmt(tuple_contrasts[k])}")
+        out.append("")
+
+        crossed = [k for k in contrasts
+                   if k in tuple_contrasts
+                   and (k in verdict["undetermined"])
+                   != (k in second["undetermined"])]
+        if crossed:
+            out += ["### Where the two metrics disagree", "",
+                    "These contrasts are resolved by one metric and not the "
+                    "other. This is the study's central observation, not an "
+                    "inconsistency to be reconciled — the metrics measure "
+                    "different things.", ""]
+            for k in crossed:
+                out.append(f"- **{k}**: weighted macro-F1 {_fmt(contrasts[k])}; "
+                           f"tuple accuracy {_fmt(tuple_contrasts[k])}")
+            out.append("")
 
     if regimes:
         out += ["## Evaluation regime", ""]
@@ -79,9 +113,11 @@ def build_findings(audit, contrasts, regimes, cases=None) -> str:
                 f"({sig})")
         out.append("")
 
-    out += ["## Claims the study cannot support", "",
-            "These are not statements that the effect is absent. Each interval "
-            "spans zero, which means this design could not resolve the sign:", ""]
+    out += ["## Claims the primary metric cannot resolve", "",
+            "These are not statements that the effect is absent, and several are "
+            "resolved by the secondary metric above. Each interval below spans "
+            "zero on weighted macro-F1, which means this design could not "
+            "resolve the sign *on the metric the competition ranks by*:", ""]
     for k in verdict["undetermined"]:
         out.append(f"- **{k}**: no detectable difference — {_fmt(contrasts[k])}")
     out += ["",
@@ -111,18 +147,48 @@ def build_findings(audit, contrasts, regimes, cases=None) -> str:
                 f"({top[1]/t['n_invalid']*100:.0f}%).",
                 f"- Projection repairs {t['fields_repaired']:,} fields and "
                 f"destroys {t['fields_destroyed']:,}, a net of "
-                f"{t['net_fields']:+,} over {t['n_rows']*4:,} field slots — which "
-                "is why a field-wise metric barely moves while the invalid rate "
-                "goes to zero.", ""]
+                f"{t['net_fields']:+,} over {t['n_rows']*4:,} field slots.", ""]
+        if "na" in t:
+            na, sub = t["na"], t["substantive"]
+            worst = min(t["by_class"].items(), key=lambda kv: kv[1]["net"])[0] \
+                if t.get("by_class") else None
+            out += [f"- **The exchange is not symmetric.** Repairs land on the "
+                    f"`N/A` classes ({na['net']:+,}) while the damage falls on "
+                    f"the substantive ones ({sub['net']:+,})"
+                    + (f", worst on `{worst}`" if worst else "") + ". macro-F1 "
+                    "weights every class equally and `N/A` is the easiest class "
+                    "to predict, so the two nearly cancel in the official metric "
+                    "while whole-row correctness rises.", ""]
+        if cases.get("runs"):
+            first = cases["runs"][0]["unobserved"]
+            n_unobs = next(iter(first.values()))["n_unobserved_in_gold"]
+            per_method = {
+                m: sum(r["unobserved"][m]["n_emitted_unobserved"]
+                       for r in cases["runs"])
+                for m in first
+            }
+            reached = [m for m, n in per_method.items() if n]
+            tally = ", ".join(f"{m} in {n}/{len(cases['runs'])} runs"
+                              for m, n in per_method.items())
+            out += [f"- {n_unobs} legal states never occur in gold. A decoder "
+                    f"searching the full legal space can reach them: {tally}. "
+                    + (f"Only the calibrated arms ({', '.join(reached)}) get "
+                       "there, which makes this a fact about calibration raising "
+                       "the rare classes rather than about the decoder itself."
+                       if reached else
+                       "None of them does, so the search space is effectively "
+                       "the observed states.") , ""]
 
     return "\n".join(out)
 
 
-def write_findings(out_dir, audit, contrasts, regimes, cases=None) -> Path:
+def write_findings(out_dir, audit, contrasts, regimes, cases=None,
+                   tuple_contrasts=None) -> Path:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "findings.md"
     header = (f"<!-- generated {now_iso()} from {git_sha()} -->\n\n")
-    path.write_text(header + build_findings(audit, contrasts, regimes, cases),
+    path.write_text(header + build_findings(audit, contrasts, regimes,
+                                           cases, tuple_contrasts),
                     encoding="utf-8")
     return path

@@ -105,3 +105,81 @@ def test_case_analysis_is_written_as_a_deliverable(tmp_path):
                                              for r in doc["runs"])
     # 規則分布必須加總回非法列數，否則有列沒有被歸類
     assert sum(doc["totals"]["by_rule"].values()) == doc["totals"]["n_invalid"]
+
+
+# ------------------------------------- where the repair lands, and what it costs
+# The net figure hides the mechanism. Projection overwrites a child field with
+# N/A whenever the parent forbids it, so its gains concentrate on the N/A
+# classes and its losses fall on the substantive ones. macro-F1 weights every
+# class equally, which is why a large gain in tuple accuracy can arrive with no
+# movement in the official metric at all.
+
+
+def test_ledger_by_class_separates_na_from_substantive():
+    from analysis.cases import repair_ledger_by_class
+
+    gold   = np.array([_row("No",  "N/A",     "N/A", "N/A"),
+                       _row("Yes", "already", "Yes", "Clear")])
+    before = np.array([_row("No",  "already", "N/A", "Clear"),   # 非法
+                       _row("Yes", "already", "Yes", "Clear")])
+    after  = np.array([_row("No",  "N/A",     "N/A", "N/A"),     # 投影修好
+                       _row("Yes", "already", "Yes", "Clear")])
+
+    led = repair_ledger_by_class(gold, before, after)
+    assert led["by_class"]["verification_timeline.N/A"]["repaired"] == 1
+    assert led["by_class"]["evidence_quality.N/A"]["repaired"] == 1
+    assert led["na"]["repaired"] == 2 and led["na"]["destroyed"] == 0
+    assert led["substantive"]["repaired"] == 0
+
+
+def test_ledger_records_a_substantive_class_being_destroyed():
+    from analysis.cases import repair_ledger_by_class
+
+    gold   = np.array([_row("Yes", "already", "Yes", "Clear")])
+    before = np.array([_row("No",  "already", "Yes", "Clear")])   # PS 錯，其餘對
+    after  = np.array([_row("No",  "N/A",     "N/A", "N/A")])     # 投影把對的抹掉
+
+    led = repair_ledger_by_class(gold, before, after)
+    assert led["substantive"]["destroyed"] == 3
+    assert led["na"]["repaired"] == 0
+    assert led["net"] == -3
+
+
+def test_unobserved_states_reports_what_gold_never_shows():
+    from analysis.cases import unobserved_states
+
+    gold = np.array([_row("No", "N/A", "N/A", "N/A")])
+    pred = np.array([_row("Yes", "already", "Yes", "Clear")])
+    out = unobserved_states(gold, pred)
+    assert out["n_unobserved_in_gold"] == 16          # 17 個合法狀態中 gold 只出現 1 個
+    assert out["n_emitted_unobserved"] == 1
+    assert ("Yes", "already", "Yes", "Clear") in [tuple(s) for s in out["emitted_unobserved"]]
+
+
+def test_case_analysis_carries_the_class_ledger_and_unobserved_states():
+    out = case_analysis("pdf_group", 42, ORDER, EXAMPLES_ROOT, dev=DEV)
+    assert set(out["by_class"]) >= {"by_class", "na", "substantive", "net"}
+    assert set(out["unobserved"]) == {"M4", "M5", "M6"}
+    for rec in out["unobserved"].values():
+        assert {"n_unobserved_in_gold", "n_emitted_unobserved"} <= set(rec)
+
+
+def test_written_totals_aggregate_the_na_split(tmp_path):
+    import json
+
+    from analysis.cases import write_case_analysis
+    out = write_case_analysis(tmp_path, ORDER, EXAMPLES_ROOT, dev=DEV,
+                              protocols=("pdf_group",), seeds=(42, 123))
+    doc = json.loads(out.read_text(encoding="utf-8"))
+    t = doc["totals"]
+    assert t["na"]["net"] + t["substantive"]["net"] == t["net_fields"]
+
+
+def test_unobserved_states_are_checked_on_the_decoders_not_the_projection():
+    """Projection can only ever emit a state its parent chain allows, so asking
+    it about unseen states answers nothing. The question is about M4-M6, which
+    search the whole legal space."""
+    out = case_analysis("pdf_group", 42, ORDER, EXAMPLES_ROOT, dev=DEV)
+    assert set(out["unobserved"]) == {"M4", "M5", "M6"}
+    for method, rec in out["unobserved"].items():
+        assert "n_emitted_unobserved" in rec

@@ -62,3 +62,30 @@ def test_brief_numbers_come_from_the_input():
     rows = {"M9-M8": _contrast(-0.042, -0.099, -0.011, "made up")}
     text = build_findings(AUDIT_STUB, rows, regimes={}, cases=None)
     assert "-0.042" in text and "[-0.099, -0.011]" in text and "made up" in text
+
+
+def test_brief_separates_the_two_metric_families():
+    """The headline is the disagreement, so both families must be visible and
+    labelled — a reader must never mistake the secondary metric for the one the
+    competition ranks on."""
+    primary = {"M1-M0": _contrast(-0.001, -0.006, 0.003, "legalisation")}
+    secondary = {"M1-M0": _contrast(+0.035, 0.028, 0.043, "legalisation")}
+    text = build_findings(AUDIT_STUB, primary, regimes={}, cases=None,
+                          tuple_contrasts=secondary)
+
+    assert "weighted macro-F1" in text and "tuple accuracy" in text.lower()
+    assert "[0.028, 0.043]" in text
+    assert "[-0.006, 0.003]" in text
+    # 官方排名依據必須被明確指出
+    assert "ranks" in text.lower() or "official" in text.lower()
+
+
+def test_brief_flags_a_contrast_that_disagrees_across_metrics():
+    """M1-M0 is the whole paper: undetectable on one metric, significant on the
+    other. If the brief does not say so explicitly, D has to notice it alone."""
+    primary = {"M1-M0": _contrast(-0.001, -0.006, 0.003, "legalisation")}
+    secondary = {"M1-M0": _contrast(+0.035, 0.028, 0.043, "legalisation")}
+    text = build_findings(AUDIT_STUB, primary, regimes={}, cases=None,
+                          tuple_contrasts=secondary)
+    assert "disagree" in text.lower()
+    assert "M1-M0" in text

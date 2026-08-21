@@ -25,12 +25,15 @@ import numpy as np
 
 from analysis.load import load_aligned
 from paper.data import load_dev
-from paper.labels import FIELDS, ID2LABEL, is_valid_tuple
+from paper.labels import FIELDS, ID2LABEL, STATES, is_valid_tuple
 from paper.provenance import git_sha, now_iso
 from paper.train_config import PROTOCOLS, SEEDS
 
 BASELINE = "M0"          # the only arm that can emit an illegal tuple
 PROJECTED = "M1"         # same probabilities, projection applied, no calibration
+# Only these search the whole legal space, so only these can land on a state
+# gold never shows. Projection is confined to what the parent chain allows.
+DECODERS = ("M4", "M5", "M6")
 
 # Ordered: each row is attributed to the first rule it breaks, so the counts
 # partition the invalid rows instead of double-counting a row that breaks two.
@@ -104,8 +107,78 @@ def projection_ledger(gold, before, after) -> dict:
     }
 
 
+NA = "N/A"
+
+
+def repair_ledger_by_class(gold, before, after) -> dict:
+    """Which classes the repair helps, and which it costs.
+
+    The net count says the exchange is roughly even; it does not say what was
+    exchanged. Projection replaces a child field with ``N/A`` whenever the
+    parent forbids it, so its repairs land almost entirely on the three ``N/A``
+    classes while its damage falls on the substantive ones. That asymmetry is
+    the mechanism behind the headline result: macro-F1 averages over classes
+    with equal weight, and ``N/A`` is both the easiest class to predict and the
+    one gaining, so a real improvement in whole-tuple correctness arrives as
+    almost no movement in the official metric.
+    """
+    gold, before, after = np.asarray(gold), np.asarray(before), np.asarray(after)
+    by_class = {}
+    for i in range(len(gold)):
+        for j, field in enumerate(FIELDS):
+            was, now, truth = int(before[i, j]), int(after[i, j]), int(gold[i, j])
+            if was == now:
+                continue
+            label = ID2LABEL[field][truth]
+            entry = by_class.setdefault(f"{field}.{label}",
+                                        {"repaired": 0, "destroyed": 0})
+            if now == truth:
+                entry["repaired"] += 1
+            elif was == truth:
+                entry["destroyed"] += 1
+
+    groups = {"na": {"repaired": 0, "destroyed": 0},
+              "substantive": {"repaired": 0, "destroyed": 0}}
+    for key, entry in by_class.items():
+        bucket = "na" if key.endswith(f".{NA}") else "substantive"
+        groups[bucket]["repaired"] += entry["repaired"]
+        groups[bucket]["destroyed"] += entry["destroyed"]
+    for bucket in groups.values():
+        bucket["net"] = bucket["repaired"] - bucket["destroyed"]
+
+    return {
+        "by_class": by_class,
+        **groups,
+        "net": groups["na"]["net"] + groups["substantive"]["net"],
+    }
+
+
+def unobserved_states(gold, pred) -> dict:
+    """Legal states absent from gold that a decoder nevertheless emits.
+
+    Two of the seventeen legal tuples never occur in the development set, both
+    of them involving ``Misleading``. A decoder searching the whole legal space
+    can reach them; whether it does is a fact about calibration rather than
+    about the decoder, and it is the first thing a reviewer asks when a model
+    is allowed to output combinations it has never seen.
+    """
+    gold, pred = np.asarray(gold), np.asarray(pred)
+    legal = [(s.ps, s.vt, s.es, s.eq) for s in STATES]
+    seen = {_labels(gold[i]) for i in range(len(gold))}
+    emitted = {_labels(pred[i]) for i in range(len(pred))}
+    unobserved = [s for s in legal if s not in seen]
+    hit = [s for s in unobserved if s in emitted]
+    return {
+        "n_unobserved_in_gold": len(unobserved),
+        "unobserved_in_gold": [list(s) for s in unobserved],
+        "n_emitted_unobserved": len(hit),
+        "emitted_unobserved": [list(s) for s in hit],
+    }
+
+
 def case_analysis(protocol, seed, order, root, dev=None,
-                  baseline=BASELINE, projected=PROJECTED) -> dict:
+                  baseline=BASELINE, projected=PROJECTED,
+                  decoders=DECODERS) -> dict:
     """The qualitative record for one (protocol, seed)."""
     if baseline != BASELINE:
         raise ValueError(
@@ -123,6 +196,12 @@ def case_analysis(protocol, seed, order, root, dev=None,
         "independent": violation_breakdown(raw),
         "after_projection": violation_breakdown(projected_pred),
         "projection": projection_ledger(gold, raw, projected_pred),
+        "by_class": repair_ledger_by_class(gold, raw, projected_pred),
+        "unobserved": {
+            method: unobserved_states(
+                gold, load_aligned(protocol, seed, method, order, root)[1])
+            for method in decoders
+        },
     }
 
 
@@ -154,6 +233,23 @@ def write_case_analysis(out_dir, order, root, dev=None,
         "fields_wrong_either_way": sum(
             r["projection"]["fields_wrong_either_way"] for r in runs),
     }
+    for bucket in ("na", "substantive"):
+        totals[bucket] = {
+            k: sum(r["by_class"][bucket][k] for r in runs)
+            for k in ("repaired", "destroyed")
+        }
+        totals[bucket]["net"] = (totals[bucket]["repaired"]
+                                 - totals[bucket]["destroyed"])
+    per_class = {}
+    for r in runs:
+        for key, entry in r["by_class"]["by_class"].items():
+            acc = per_class.setdefault(key, {"repaired": 0, "destroyed": 0})
+            acc["repaired"] += entry["repaired"]
+            acc["destroyed"] += entry["destroyed"]
+    for entry in per_class.values():
+        entry["net"] = entry["repaired"] - entry["destroyed"]
+    totals["by_class"] = dict(sorted(per_class.items(),
+                                     key=lambda kv: kv[1]["net"]))
     totals["net_fields"] = totals["fields_repaired"] - totals["fields_destroyed"]
     totals["invalid_rate"] = (totals["n_invalid"] / totals["n_rows"]
                               if totals["n_rows"] else 0.0)
