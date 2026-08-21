@@ -212,3 +212,75 @@ def test_table2_and_3_captions_follow_the_audit_too():
     assert "three seeds" not in captions["table2_main"]
     assert "same 7 reports" in captions["table3_regimes"]
     assert "49" not in captions["table3_regimes"]
+
+
+# ------------------------------------------------------- table 2 contrasts
+# Plan §5 asks for the paired Δ and 95% CI "under the table". aggregate.py
+# computes them for the five pre-specified contrasts and Holm-corrects the
+# family, but nothing used to carry them into a deliverable: the table shipped
+# with seed spread and no interval, so a reader could not tell whether any
+# difference in it survives resampling.
+
+
+def test_table2_caption_carries_every_pre_specified_contrast():
+    contrasts = SUMMARIES["pdf_group"]["contrasts"]
+    caption = build_captions(AUDIT, contrasts=contrasts)["table2_main"]
+
+    assert len(contrasts) == 5, "the frozen family is five contrasts"
+    for key, row in contrasts.items():
+        assert key in caption, f"{key} missing from the caption"
+        assert row["description"] in caption
+        assert f"{row['ci_low']:.3f}" in caption and f"{row['ci_high']:.3f}" in caption
+    assert "Holm" in caption
+    assert "10,000" in caption
+
+
+def test_table2_caption_states_how_many_intervals_exclude_zero():
+    """The one sentence a reader needs before reading any individual row."""
+    contrasts = SUMMARIES["pdf_group"]["contrasts"]
+    caption = build_captions(AUDIT, contrasts=contrasts)["table2_main"]
+    n = sum(1 for r in contrasts.values() if r["ci_low"] > 0 or r["ci_high"] < 0)
+    words = {0: "none", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
+    assert words[n] in caption.lower()
+
+
+def test_table2_caption_follows_the_numbers_rather_than_repeating_them():
+    """A transcribed interval would not move when the study is re-run."""
+    contrasts = copy.deepcopy(SUMMARIES["pdf_group"]["contrasts"])
+    key = next(iter(contrasts))
+    contrasts[key].update(delta=0.123, ci_low=0.111, ci_high=0.222)
+    caption = build_captions(AUDIT, contrasts=contrasts)["table2_main"]
+    assert "0.123" in caption
+    assert "[0.111, 0.222]" in caption
+
+
+def test_captions_still_build_without_contrasts():
+    """Table 1 and 3 never needed them; omitting them must not break the run."""
+    assert build_captions(AUDIT)["table2_main"].strip()
+
+
+def test_written_caption_includes_the_contrasts(tmp_path):
+    write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, INPUTS)
+    caption = (tmp_path / "table2_main_caption.txt").read_text(encoding="utf-8")
+    assert "Holm" in caption, "write_tables must pass the contrasts through"
+
+
+def test_contrast_sentence_agrees_in_number():
+    """The caption is copied verbatim into the paper, so "one ... exclude" is
+    not a typo anyone downstream is expected to catch."""
+    from analysis.tables import _contrast_sentence
+
+    def rows(n_excluding, total=5):
+        out = {}
+        for i in range(total):
+            excl = i < n_excluding
+            out[f"M{i+1}-M{i}"] = {
+                "delta": -0.01, "ci_low": -0.02 if excl else -0.02,
+                "ci_high": -0.001 if excl else 0.01,
+                "description": "d", "p_value": 0.1, "p_holm": 0.1,
+            }
+        return out
+
+    assert "One of the five intervals excludes zero" in _contrast_sentence(rows(1))
+    assert "Two of the five intervals exclude zero" in _contrast_sentence(rows(2))
+    assert "None of the five intervals exclude zero" in _contrast_sentence(rows(0))

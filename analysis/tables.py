@@ -18,6 +18,7 @@ import json
 from pathlib import Path
 
 from analysis.audit import SPLITS_DIR
+from analysis.bootstrap import N_BOOT
 from analysis.load import METHODS, predictions_path
 from paper.data import REPO_ROOT, TEST_PATH, TRAIN_PATH, VAL_PATH, file_sha256
 from paper.labels import FIELDS
@@ -46,7 +47,7 @@ TABLE2_ROWS = (
     ("M6", "Conditional", "17-state"),
 )
 
-_NUMBER_WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
+_NUMBER_WORDS = {0: "none", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
                  6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}
 
 
@@ -100,7 +101,32 @@ def table_inputs(predictions_root, protocols=PROTOCOLS, seeds=SEEDS,
     }
 
 
-def build_captions(audit, seeds=SEEDS) -> dict:
+def _contrast_sentence(contrasts) -> str:
+    """The paired Δ and 95% CI plan §5 asks for under Table 2.
+
+    The table itself carries seed spread, which says how much a number moves
+    when the pipeline is re-run; it says nothing about whether the gap between
+    two methods survives resampling. That is what the family below answers, and
+    it is Holm-corrected because the five contrasts were pre-specified together
+    (analysis/aggregate.py::CONTRASTS) -- reporting them uncorrected would let
+    the family's error rate ride on however many comparisons happened to be run.
+    """
+    rows = "; ".join(
+        f"{key} ({row['description']}) {row['delta']:+.3f} "
+        f"[{row['ci_low']:.3f}, {row['ci_high']:.3f}]"
+        for key, row in contrasts.items()
+    )
+    excluding = sum(1 for row in contrasts.values()
+                    if row["ci_low"] > 0 or row["ci_high"] < 0)
+    return (
+        f" Paired PDF-cluster bootstrap over {N_BOOT:,} resamples, Holm-corrected "
+        f"across the {_word(len(contrasts))} pre-specified contrasts: {rows}. "
+        f"{_word(excluding).capitalize()} of the {_word(len(contrasts))} intervals "
+        f"{'excludes' if excluding == 1 else 'exclude'} zero."
+    )
+
+
+def build_captions(audit, seeds=SEEDS, contrasts=None) -> dict:
     """Captions computed from the audit rather than stored as text.
 
     Captions are contract-4 deliverables and reach the paper verbatim, so the
@@ -130,6 +156,7 @@ def build_captions(audit, seeds=SEEDS) -> dict:
             "standard deviation across seeds, which reflects the variability of "
             "the whole pipeline -- fold assignment and training together -- "
             "rather than model stability."
+            + (_contrast_sentence(contrasts) if contrasts else "")
         ),
         "table3_regimes": (
             "Same-document versus document-disjoint evaluation. The left column "
@@ -241,7 +268,11 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
     }
     for name, content in rendered.items():
         (out_dir / name).write_text(content, encoding="utf-8")
-    for stem, caption in build_captions(audit, seeds=seeds).items():
+    # Table 2 reports the document-disjoint protocol, so its contrasts are
+    # the ones that belong under it.
+    contrasts = summaries["pdf_group"]["contrasts"]
+    captions = build_captions(audit, seeds=seeds, contrasts=contrasts)
+    for stem, caption in captions.items():
         (out_dir / f"{stem}_caption.txt").write_text(caption + "\n", encoding="utf-8")
 
     def entry(name):
