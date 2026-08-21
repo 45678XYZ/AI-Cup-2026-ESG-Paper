@@ -38,7 +38,9 @@ SHA; their `train_config_sha256` and training-code contents are unchanged.
 | `row_strat` | 456 | r0-r4 | validated clean |
 
 The final five `row_strat seed456` rotations completed on 2026-08-16 in 6.9-7.0
-minutes per fit. All 30 official fits are now complete; no GPU training remains.
+minutes per fit, so all 30 official fits completed on the recipe as it stood
+then. That recipe has since changed — see **Pending Re-run** at the end of this
+file. The table above records what was produced, not what is current.
 
 Training logs are under `logs/` and intentionally ignored by Git. The completed
 bundles carry the exact CLI, Python/Torch/Transformers/CUDA versions, GPU name,

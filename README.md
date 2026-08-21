@@ -282,7 +282,14 @@ unaffected but gives M6 three pinned terms where M5 fits four. See
 The official GPU setup is frozen in `paper/train_config.py`: the exact Hugging
 Face revision is pinned, the fixed budget is 12 epochs, and the last three epoch
 states are averaged. All 30 cross-fitted probability bundles have been produced
-and validated; see `docs/gpu_training_progress.md` for the completion record.
+and validated.
+
+**They are pending a re-run.** The bundles were fitted before the short-batch
+loss scaling was corrected (`paper/accumulation.py::loss_scale`), so they no
+longer match `paper/train_fold.py`; 29 of the 30 are affected. They remain valid
+artifacts and every number derived from them is reproducible, but they were
+produced by a superseded recipe. `docs/gpu_training_progress.md` records what
+changed, which rotations it touches and the command to redo them.
 
 The full official run has been materialised: `predictions/` and `results/`
 contain all 42 protocol/seed/method outputs, and all 42 prediction files pass
