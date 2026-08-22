@@ -229,9 +229,12 @@ rendered, together with their captions and figure 1:
 python -m analysis.preview                                # -> tables/preview.pdf
 ```
 
-It needs a local `latexmk` and is a convenience rather than a deliverable, so
-the PDF is not committed — latexmk stamps a fresh creation date into every
-build.
+Building it needs a local `latexmk`, but reading it does not: the PDF is
+committed, so the rendered tables are one click away for anyone without a TeX
+installation. It is a convenience rather than a deliverable — no number is
+computed here and the paper cites none of it — and rebuilding is a no-op,
+because `SOURCE_DATE_EPOCH` and `\pdftrailerid{}` pin the two things pdfTeX
+would otherwise vary between runs.
 
 ## Training runs
 

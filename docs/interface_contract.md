@@ -410,7 +410,9 @@ tables/manifest.json
 python -m analysis.preview          # → tables/preview.pdf
 ```
 
-它把五張表連同各自的 caption、以及 Figure 1 包成一份 PDF。**這是便利工具，不是交付物**：不計算任何數字、不進版控（`latexmk` 會在每次建置寫入時戳，進版控只會製造雜訊）。沒有 TeX 的機器跑不動，但那不影響 `python -m analysis` 重算表格。
+它把五張表連同各自的 caption、以及 Figure 1 包成一份 PDF。**這是便利工具，不是交付物**：不計算任何數字，論文不引用它。
+
+`tables/preview.pdf` **有進版控**，所以沒有 TeX 的人也看得到渲染後的表。前提是建置必須可重現：`SOURCE_DATE_EPOCH` 釘住日期、`\pdftrailerid{}` 釘住 PDF 的 `/ID`，兩次建置逐位元相同（`tests/test_analysis_preview.py::test_two_builds_are_byte_identical` 守著）。沒有這兩項它每次都會變，進版控只會製造雜訊。
 
 ### 契約 4 的現況（2026-08-22）
 

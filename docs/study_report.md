@@ -1127,7 +1127,9 @@ export PATH="$HOME/texlive/2026/bin/universal-darwin:$PATH"   # 本機 TeX
 python -m analysis.preview                                     # → tables/preview.pdf
 ```
 
-五張表連同各自的 caption、以及 Figure 1，包成一份 PDF。**這是便利工具，不進版控**（`latexmk` 每次建置都會寫入不同的時戳）。
+五張表連同各自的 caption、以及 Figure 1，包成一份 PDF。
+
+**`tables/preview.pdf` 已進版控**，所以你不必裝 TeX 就能在 GitHub 上直接點開看。它是便利工具、不是交付物，論文不引用它。建置是可重現的（`SOURCE_DATE_EPOCH` + `\pdftrailerid{}`），兩次跑出來逐位元相同，所以重新產生不會在 `git status` 留下雜訊。
 
 ⚠️ **Table 4 的視覺效果本身就是論點**：第一個區塊（官方指標）**沒有任何粗體**，其餘三個區塊都有。讀者不必讀完每一列就能看到結論。
 

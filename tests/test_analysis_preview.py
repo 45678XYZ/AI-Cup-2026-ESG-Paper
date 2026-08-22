@@ -31,3 +31,20 @@ def test_preview_renders_every_delivered_table(tmp_path):
     # one page per table plus the figure; a silently empty preview would pass
     # a mere "file exists" check
     assert len(TABLE_FILES) >= 5
+
+
+@pytest.mark.skipif(not tex_available(), reason="needs latexmk")
+def test_two_builds_are_byte_identical(tmp_path):
+    """The preview is only committable if rebuilding it is a no-op.
+
+    pdfTeX stamps a creation date and a document ID into every build, so two
+    runs of the same source differ in bytes while being identical as documents.
+    That is why the file was gitignored. Pinning SOURCE_DATE_EPOCH removes the
+    only source of variation, which is what lets the rendered tables live in
+    the repository for anyone without a local TeX installation.
+    """
+    first = build(REPO_ROOT / "tables", tmp_path / "a.pdf").read_bytes()
+    second = build(REPO_ROOT / "tables", tmp_path / "b.pdf").read_bytes()
+    assert first == second, (
+        "two builds of the same tables differ; the preview cannot be "
+        "committed until the build is deterministic")

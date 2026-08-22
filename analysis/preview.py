@@ -14,6 +14,7 @@ paper, no number is computed, and the file is regenerated on demand.
 """
 
 import argparse
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -22,6 +23,17 @@ from analysis.figure1 import tex_available
 from analysis.tables import TABLE_FILES
 from paper.data import REPO_ROOT
 
+# pdfTeX stamps a creation date and a document ID into every build, so two
+# runs of the same tables produce different bytes while being the same
+# document. That is why this file used to be gitignored. Pinning the epoch
+# makes the build reproducible, which is what lets the rendered preview live
+# in the repository for anyone who has no local TeX installation.
+#
+# The value is 2026-08-23T00:00:00Z, the results freeze: a preview built after
+# the freeze describes tables that cannot change again, so the stamp is not a
+# lie about when the content was settled.
+SOURCE_DATE_EPOCH = 1787443200
+
 PREAMBLE = r"""\documentclass[11pt]{article}
 \usepackage[a4paper,margin=2cm,landscape]{geometry}
 \usepackage{booktabs}
@@ -29,6 +41,10 @@ PREAMBLE = r"""\documentclass[11pt]{article}
 \usepackage{graphicx}
 \usepackage{parskip}
 \setlength{\parindent}{0pt}
+% pdfTeX derives the trailer /ID from the time and the output path, both of
+% which differ between runs even with SOURCE_DATE_EPOCH pinned. Fixing it is
+% the last thing standing between this build and byte reproducibility.
+\ifdefined\pdftrailerid\pdftrailerid{}\fi
 \begin{document}
 \begin{center}\Large\textbf{Delivered tables --- preview}\end{center}
 \emph{Not a deliverable. Layout here is arbitrary; the paper's floats are D's
@@ -98,7 +114,9 @@ def build(tables_dir=None, out_path=None) -> Path:
         subprocess.run(
             ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error",
              f"-outdir={tmp}", str(source)],
-            check=True, capture_output=True, text=True)
+            check=True, capture_output=True, text=True,
+            env={**os.environ, "SOURCE_DATE_EPOCH": str(SOURCE_DATE_EPOCH),
+                 "FORCE_SOURCE_DATE": "1"})
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_bytes((Path(tmp) / "preview.pdf").read_bytes())
     return out_path
