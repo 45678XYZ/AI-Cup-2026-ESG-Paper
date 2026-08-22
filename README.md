@@ -213,6 +213,26 @@ which claims the Holm-corrected intervals license — the distinction between
 "no detectable difference" and "no difference" is a computed output rather
 than an editorial decision.
 
+Two tables past the three the contract names are written as well.
+`tables/table4_contrasts.tex` puts the five pre-specified contrasts against
+all four Holm families side by side with their corrected p-values; it is where
+the study's statistical result actually lives, and its first block — the
+metric the competition ranks by — carries no bold at all.
+`tables/table5_metrics.tex` scores the seven decision rules under six metric
+columns and is descriptive, so it is the one to drop first against a page
+budget.
+
+The `.tex` files hold a bare `tabular` and do not compile alone. To see them
+rendered, together with their captions and figure 1:
+
+```bash
+python -m analysis.preview                                # -> tables/preview.pdf
+```
+
+It needs a local `latexmk` and is a convenience rather than a deliverable, so
+the PDF is not committed — latexmk stamps a fresh creation date into every
+build.
+
 ## Training runs
 
 Requires a GPU and the conda environment.
