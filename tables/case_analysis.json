@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-08-21T21:52:46.013514+00:00",
- "git_sha": "3d9d209078d690af3ebc406de416483600046066",
+ "generated_at": "2026-08-22T00:05:12.149458+00:00",
+ "git_sha": "5b8ead5759c6552f7d8905cff3352ae606cc8fbc",
  "totals": {
   "n_rows": 12000,
   "n_invalid": 1527,

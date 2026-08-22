@@ -90,3 +90,28 @@ def test_brief_flags_a_contrast_that_disagrees_across_metrics():
                           consistent_contrasts=secondary)
     assert "disagree" in text.lower()
     assert "M1-M0" in text
+
+
+def test_brief_reports_the_pre_specified_family_it_did_not_headline():
+    """tuple accuracy no longer carries the argument, but it was named in the
+    analysis plan and one of its contrasts runs against us. Dropping it from
+    the brief would be selective reporting."""
+    primary = {"M1-M0": _contrast(-0.001, -0.006, 0.003, "legalisation")}
+    tuples = {"M4-M1": _contrast(-0.006, -0.010, -0.002, "decoding")}
+    text = build_findings(AUDIT_STUB, primary, regimes={}, cases=None,
+                          tuple_contrasts=tuples)
+    assert "tuple accuracy" in text.lower()
+    assert "[-0.010, -0.002]" in text
+    assert "pre-specified" in text.lower()
+
+
+def test_brief_localises_the_disagreement_to_a_single_factor():
+    """The reason this metric was chosen over whole-row accuracy: it differs
+    from the official one in exactly one respect, so a disagreement is evidence
+    about that respect and not about the shape of the metric."""
+    primary = {"M1-M0": _contrast(-0.001, -0.006, 0.003, "legalisation")}
+    secondary = {"M1-M0": _contrast(+0.004, 0.001, 0.007, "legalisation")}
+    text = build_findings(AUDIT_STUB, primary, regimes={}, cases=None,
+                          consistent_contrasts=secondary)
+    section = text.split("### Where the two metrics disagree")[1]
+    assert "exactly one" in section.lower()

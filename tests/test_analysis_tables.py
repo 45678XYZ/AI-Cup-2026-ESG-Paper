@@ -300,6 +300,30 @@ def test_table2_caption_carries_both_metric_families():
     assert cap.count("Holm") >= 1
 
 
+def test_table2_caption_discloses_which_family_was_not_pre_specified():
+    """The path-constrained metric was adopted after the primary analysis. A
+    caption that reports its intervals without saying so presents a post-hoc
+    choice as a planned one."""
+    cap = build_captions(
+        AUDIT, contrasts=SUMMARIES["pdf_group"]["contrasts"],
+        consistent_contrasts=SUMMARIES["pdf_group"]["consistent_contrasts"],
+        tuple_contrasts=SUMMARIES["pdf_group"]["tuple_contrasts"],
+    )["table2_main"]
+    assert "not pre-specified" in cap
+    assert "pre-specified in the analysis plan" in cap
+
+
+def test_table2_caption_reports_the_pre_specified_secondary_family():
+    """tuple accuracy is a printed column and a planned family; its intervals
+    belong under the table whatever the newer metric says."""
+    tuples = SUMMARIES["pdf_group"]["tuple_contrasts"]
+    cap = build_captions(AUDIT, contrasts=SUMMARIES["pdf_group"]["contrasts"],
+                         tuple_contrasts=tuples)["table2_main"]
+    assert "tuple accuracy" in cap.lower()
+    for key in tuples:
+        assert key in cap
+
+
 def test_table2_caption_computes_the_gap_between_the_two_metrics():
     """The secondary metric is absent from the table, so the caption has to
     locate it: how far M0 falls under it, and that the constrained arms do not

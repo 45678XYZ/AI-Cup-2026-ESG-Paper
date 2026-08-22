@@ -100,17 +100,24 @@ def test_per_field_means_cover_all_four_fields():
 # is stated as such in the caption.
 
 
-def test_summary_carries_both_contrast_families():
+FAMILIES = ("contrasts", "consistent_contrasts", "tuple_contrasts")
+
+
+def test_summary_carries_every_contrast_family():
+    """Three metrics, one pre-specified set of five contrasts. tuple accuracy
+    keeps its family because the analysis plan named it: retiring it after
+    seeing the numbers would drop M4-M1, a result that runs against us."""
     out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
                            n_boot=120, dev=DEV)
-    assert set(out["contrasts"]) == set(out["consistent_contrasts"])
-    assert len(out["consistent_contrasts"]) == 5
+    for family in FAMILIES:
+        assert set(out[family]) == set(out["contrasts"])
+        assert len(out[family]) == 5
 
 
 def test_each_family_is_corrected_over_five_hypotheses_not_ten():
     out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
                            n_boot=120, dev=DEV)
-    for family in ("contrasts", "consistent_contrasts"):
+    for family in FAMILIES:
         rows = out[family]
         raw = {k: r["p_value"] for k, r in rows.items()}
         smallest = min(raw.values())

@@ -44,7 +44,7 @@ def _fmt(row):
 
 
 def build_findings(audit, contrasts, regimes, cases=None,
-                   consistent_contrasts=None) -> str:
+                   consistent_contrasts=None, tuple_contrasts=None) -> str:
     verdict = classify_contrasts(contrasts)
     dev = audit["development"]
     absent = audit["splits"]["calibration_without_misleading"]
@@ -96,15 +96,39 @@ def build_findings(audit, contrasts, regimes, cases=None,
                    != (k in second["undetermined"])]
         if crossed:
             out += ["### Where the two metrics disagree", "",
-                    "These contrasts are resolved by one metric and not the "
-                    "other. This is the study's central observation, not an "
-                    "inconsistency to be reconciled — the metrics measure "
-                    "different things.", ""]
+                    "These contrasts are resolved by one family and not the "
+                    "other. The two metrics differ in exactly one respect — "
+                    "whether a prediction its own ancestors do not support is "
+                    "scored on its own merits — so a disagreement localises the "
+                    "effect to that respect and nothing else. This is the "
+                    "study's central observation, not an inconsistency to be "
+                    "reconciled.", ""]
             for k in crossed:
                 out.append(f"- **{k}**: weighted macro-F1 {_fmt(contrasts[k])}; "
                            f"path-constrained "
                            f"{_fmt(consistent_contrasts[k])}")
             out.append("")
+
+    if tuple_contrasts:
+        third = classify_contrasts(tuple_contrasts)
+        out += ["## Also reported — whole-row tuple accuracy",
+                "",
+                "Pre-specified in the analysis plan as the secondary reporting "
+                "metric, and reported in full for that reason. It no longer "
+                "carries the argument — it changes two things at once relative "
+                "to the official metric, per-field to per-row and partial "
+                "credit to all-or-nothing, so a difference cannot be attributed "
+                "to either — but it was named in advance and one of its "
+                "contrasts runs against the methods. Dropping a planned family "
+                "after seeing which way it pointed is selective reporting.", ""]
+        for k in third["better"]:
+            out.append(f"- **{k}** is better: {_fmt(tuple_contrasts[k])}")
+        for k in third["worse"]:
+            out.append(f"- **{k}** is *worse*: {_fmt(tuple_contrasts[k])}")
+        for k in third["undetermined"]:
+            out.append(f"- **{k}**: no detectable difference — "
+                       f"{_fmt(tuple_contrasts[k])}")
+        out.append("")
 
     if regimes:
         out += ["## Evaluation regime", ""]
@@ -134,6 +158,10 @@ def build_findings(audit, contrasts, regimes, cases=None,
             f"improvement claim.** It is absent from the Calibration partition "
             f"of {absent['n_without']} of the {absent['n_rotations']} rotations, "
             "so most rotations cannot estimate a bias for it at all.",
+            "- **The path-constrained family was not pre-specified.** It was "
+            "adopted after the primary analysis because it isolates a single "
+            "factor. Say so wherever its intervals appear; presenting it as a "
+            "planned analysis would misrepresent how it was chosen.",
             "- **`±` in Table 2 is seed spread, not a confidence interval.** It "
             "describes the whole pipeline — fold assignment and training "
             "together — and must not be described as model stability.",
@@ -188,12 +216,13 @@ def build_findings(audit, contrasts, regimes, cases=None,
 
 
 def write_findings(out_dir, audit, contrasts, regimes, cases=None,
-                   consistent_contrasts=None) -> Path:
+                   consistent_contrasts=None, tuple_contrasts=None) -> Path:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "findings.md"
     header = (f"<!-- generated {now_iso()} from {git_sha()} -->\n\n")
-    path.write_text(header + build_findings(audit, contrasts, regimes,
-                                           cases, consistent_contrasts),
+    path.write_text(header + build_findings(audit, contrasts, regimes, cases,
+                                           consistent_contrasts,
+                                           tuple_contrasts),
                     encoding="utf-8")
     return path

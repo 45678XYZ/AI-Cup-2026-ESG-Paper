@@ -450,9 +450,11 @@ C 是唯一看過重抽過程的人。把表格交出去、讓撰稿者自行斟
 
 | 段落 | 內容 |
 |---|---|
-| Claims the intervals support | Holm 校正後區間排除 0 的對比，含方向（更好／更差） |
-| Claims the study cannot support | 區間跨越 0 者，一律寫成 *no detectable difference* |
-| Prohibitions | `Misleading` 不得有任何顯著性宣稱；`±` 是 seed spread 不是 CI；Table 3 的 Δ 是兩個估計目標的差距不是偏誤 |
+| Primary metric | 官方 weighted macro-F1 的五組對比，Holm 校正後排除 0 者含方向（更好／更差） |
+| Secondary metric | path-constrained weighted macro-F1（官方指標加祖先檢查，**事後採用**）；與主要家族結論不一致之處單獨列出 |
+| Also reported | tuple accuracy（計畫 §10 事先指定），完整報告，含對本研究不利的結果 |
+| Claims the primary metric cannot resolve | 區間跨越 0 者，一律寫成 *no detectable difference* |
+| Prohibitions | `Misleading` 不得有任何顯著性宣稱；`±` 是 seed spread 不是 CI；Table 3 的 Δ 是兩個估計目標的差距不是偏誤；path-constrained 家族非事先指定，引用時須明說 |
 | Material for the Discussion | 由 `case_analysis.json` 導出的失效模式數字 |
 
 由 `analysis/findings.py` 產生，`python -m analysis` 一併輸出。**文中數字仍以表格與 caption 為準**，本檔案不得被轉抄。
@@ -520,15 +522,15 @@ C 消費契約 3（`predictions/`、`results/`），產出契約 4（`tables/`�
 |---|---|---|
 | `analysis/audit.py` | ✅ | 資料／support／duplicate 稽核，Table 1 的全部數字；`Misleading=2` 落在哪兩份 PDF 由它認定 |
 | `analysis/load.py` | ✅ | 把 42 個 predictions 檔對齊到同一組 canonical row order，錯位在此攔截而非在統計階段 |
-| `analysis/metrics.py` | ✅ | subset-aware weighted macro-F1，向量化以支撐 bootstrap，並釘住 `paper/score.py`（測試斷言兩者同分） |
+| `analysis/metrics.py` | ✅ | subset-aware weighted macro-F1，向量化以支撐 bootstrap，並釘住 `paper/score.py`（測試斷言兩者同分）；另含 `tuple_accuracy` 與 path-constrained 變體 `consistent_weighted_macro_f1` |
 | `analysis/bootstrap.py` | ✅ | 10,000 次 paired PDF-cluster bootstrap 與 Holm 校正；以 PDF 為重抽單位，同一抽樣上計兩法差值 |
-| `analysis/aggregate.py` | ✅ | 跨 seed 聚合、§3.4 預先指定的對比、sensitivity |
+| `analysis/aggregate.py` | ✅ | 跨 seed 聚合、§3.4 預先指定的對比、三個各自校正的 Holm 家族、sensitivity |
 | `analysis/tables.py` | ✅ | 契約 4 的三張 `tabular`、caption 純文字檔與 provenance manifest |
 | `analysis/figure1.py` | ✅ | Figure 1 的數字（由 `paper/labels.py` 推導）與 latexmk 建置 |
 | `analysis/__main__.py` | ✅ | 一鍵重算：`python -m analysis`，凍結後只能重算不能改動的那道指令 |
 | `tables/table{1,2,3}*.tex`、`*_caption.txt`、`manifest.json` | ✅ | 契約 4 交付物 |
 | `figures/figure1_hierarchy.pdf` | ✅ | 契約 4 交付物；`.tex` 與 `_defs.tex` 為其來源，見 §5 |
-| `tests/test_analysis_*.py` | ✅ 6 檔 | audit、metrics、bootstrap、aggregate、tables、figure1 各一 |
+| `tests/test_analysis_*.py` | ✅ 8 檔 | audit、metrics、bootstrap、aggregate、tables、figure1、cases、findings 各一 |
 
 ### 實作歷程
 

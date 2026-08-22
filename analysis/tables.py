@@ -153,7 +153,8 @@ def _consistency_clause(methods) -> str:
 
 
 def build_captions(audit, seeds=SEEDS, contrasts=None,
-                   consistent_contrasts=None, methods=None) -> dict:
+                   consistent_contrasts=None, tuple_contrasts=None,
+                   methods=None) -> dict:
     """Captions computed from the audit rather than stored as text.
 
     Captions are contract-4 deliverables and reach the paper verbatim, so the
@@ -187,11 +188,17 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
                 contrasts, "the official weighted macro-F1") if contrasts else "")
             + (_contrast_sentence(
                 consistent_contrasts,
-                "the same metric's path-constrained variant, which counts a "
-                "field whose ancestors were not predicted as a false "
-                "prediction rather than scoring it on its own",
-                ", corrected as its own family because the two answer "
-                "different questions") if consistent_contrasts else "")
+                "the same metric's path-constrained variant, in which a field "
+                "whose ancestors were not predicted counts as a false "
+                "prediction",
+                ", as a family of its own because the two differ in exactly "
+                "that respect, and not pre-specified: it was adopted after the "
+                "primary analysis") if consistent_contrasts else "")
+            + (_contrast_sentence(
+                tuple_contrasts, "whole-row tuple accuracy",
+                ", pre-specified in the analysis plan as the secondary "
+                "reporting metric and corrected as its own family")
+               if tuple_contrasts else "")
             + (_consistency_clause(methods) if methods else "")
         ),
         "table3_regimes": (
@@ -310,6 +317,7 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
     captions = build_captions(
         audit, seeds=seeds, contrasts=contrasts,
         consistent_contrasts=summaries["pdf_group"].get("consistent_contrasts"),
+        tuple_contrasts=summaries["pdf_group"].get("tuple_contrasts"),
         methods=summaries["pdf_group"]["methods"])
     for stem, caption in captions.items():
         (out_dir / f"{stem}_caption.txt").write_text(caption + "\n", encoding="utf-8")

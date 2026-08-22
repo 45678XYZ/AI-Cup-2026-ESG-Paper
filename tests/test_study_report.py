@@ -31,8 +31,12 @@ INTERVAL = re.compile(r"\[[-+]?\d+\.\d+,\s*[-+]?\d+\.\d+\]")
 
 
 def _delivered_intervals():
+    # findings.md too: it carries every family the run computed, including any
+    # the caption summarises rather than prints in full. An interval the report
+    # quotes has to exist in something a rerun regenerates.
     text = ((TABLES / "table2_main_caption.txt").read_text(encoding="utf-8")
-            + (TABLES / "table3_regimes.tex").read_text(encoding="utf-8"))
+            + (TABLES / "table3_regimes.tex").read_text(encoding="utf-8")
+            + (TABLES / "findings.md").read_text(encoding="utf-8"))
     return set(INTERVAL.findall(text))
 
 

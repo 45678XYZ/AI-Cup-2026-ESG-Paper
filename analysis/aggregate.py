@@ -17,6 +17,7 @@ from analysis.load import METHODS, load_all
 from analysis.metrics import (
     consistent_weighted_macro_f1,
     field_macro_f1,
+    tuple_accuracy,
     weighted_macro_f1,
 )
 from paper.data import load_dev
@@ -153,9 +154,16 @@ def protocol_summary(protocol, order, root, clusters, n_boot=N_BOOT,
             row["p_holm"] = adjusted[key]
         return rows
 
+    # Three metrics, one pre-specified set of contrasts. ``tuple_contrasts``
+    # keeps its family even though the path-constrained metric now carries the
+    # argument: the analysis plan named tuple accuracy in advance, and one of
+    # its contrasts (M4-M1) runs against the methods. Retiring a planned family
+    # after seeing which way it pointed is selective reporting, whichever way
+    # it points.
     return {"protocol": protocol, "seeds": list(seeds), "methods": methods,
             "contrasts": family(weighted_macro_f1),
-            "consistent_contrasts": family(consistent_weighted_macro_f1)}
+            "consistent_contrasts": family(consistent_weighted_macro_f1),
+            "tuple_contrasts": family(tuple_accuracy)}
 
 
 def regime_comparison(summaries, order, root, clusters, n_boot=N_BOOT,

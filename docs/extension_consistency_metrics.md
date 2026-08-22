@@ -1,8 +1,13 @@
 # 延伸探索：path-constrained macro-F1
 
-> **狀態：探索性，尚未決定是否寫入論文。**
-> 本文件不是交付物，數字未經 `python -m analysis` 產生，也不受 `tests/test_study_report.py` 守護。
-> 若決定採用，必須先正式實作進 `analysis/metrics.py` 並納入既有的 bootstrap 家族，數字才能進論文。
+> **狀態：已採用（2026-08-22）。本文件保留為決策紀錄，不再是數字來源。**
+>
+> 正式實作為 `analysis/metrics.py::consistent_weighted_macro_f1`，由 `analysis/aggregate.py`
+> 納為**次要 Holm 家族**，數字由 `python -m analysis` 產生並受 `tests/test_study_report.py` 守護。
+> **引用數字請看 `tables/` 與 `docs/study_report.md`，不要引用本文件。**
+>
+> 與本文件當初建議的差異一處：`tuple accuracy` **沒有**被取代掉，而是保留為第三個家族。
+> 理由見下方〈最終採用的形式〉。
 
 ---
 
@@ -108,12 +113,23 @@ C-metric 的效果量（+0.0039）**遠小於** tuple accuracy（+0.035）。原
 
 ---
 
-## 若要寫進論文，還需要什麼
+## 最終採用的形式
 
-1. **正式實作**：`analysis/metrics.py` 加 `consistent_weighted_macro_f1`，`_macro_f1` 擴充以容納哨兵，並加測試斷言「保證一致的方法在兩個指標上等值」——那是一個很強的性質測試。
-2. **決定 Holm 家族**：目前有主要（官方）與次要（tuple accuracy）兩個家族。加入 C-metric 是第三個家族，或取代 tuple accuracy 成為次要家族？**建議取代**，理由是它與官方指標可直接比較，而 tuple accuracy 改變了太多變因。若三個並列，必須在論文說明家族劃分的依據。
-3. **確認文獻引用**：C-metrics 的原始出處需要查證並正確引用，不能只引二手描述。
-4. **⚠️ 時間**：8/23 results freeze。這是對既有 predictions 的重新計分，不是新 run，因此不違反凍結；但若要進論文，實作與驗證必須在 freeze 前完成。
+實作與驗證於 2026-08-22 完成（freeze 前一日；這是對既有 predictions 的重新計分，不是新 run，不違反凍結）。
+
+**三個家族並列，各自 Holm 校正**：
+
+| 家族 | 指標 | 來歷 | 角色 |
+|---|---|---|---|
+| 主要 | weighted macro-F1 | 競賽排名依據，事先指定 | 必報 |
+| 次要 | path-constrained weighted macro-F1 | **事後採用** | 論證主力 |
+| 第三 | tuple accuracy | 計畫 §10 事先指定 | 完整報告 |
+
+**為何沒有照本文件原本的建議取代 tuple accuracy**：`tuple accuracy` 是計畫 §10 事先指定要報告的指標，而它的 `M4-M1 −0.006 [−0.010, −0.002]` 是**對本研究不利**的顯著結果。看過方向之後才決定撤掉一個事先指定的家族，無論方向為何都構成選擇性報告；而保留它的成本只有約 40 秒的重抽時間。C-metric 因此是「增列並承載論證」，不是「取代」。
+
+**實作上的一個風險與其處置**：加入哨兵類別需要把 `analysis/metrics.py::_macro_f1` 的 `bincount` 寬度加一，而那是官方指標的計算核心。處置是先寫回歸測試，對 M0–M6 全部斷言官方分數與 `paper/score.py` 逐位元相同，再動實作；重跑後 `table1/2/3.tex` 逐位元未變，只有 caption 與 findings 改變。
+
+**仍未完成**：C-metrics 的原始出處尚未查證。Related Work 若要引用，必須先找到原始文獻，不能只引二手描述。
 
 ---
 
