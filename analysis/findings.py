@@ -283,7 +283,7 @@ def _disagreements(families) -> list:
     return out
 
 
-def _secondary_protocol(secondary) -> list:
+def _secondary_protocol(secondary, methods=None) -> list:
     """Does the finding hold under the other evaluation target?"""
     if not secondary:
         return []
@@ -316,11 +316,59 @@ def _secondary_protocol(secondary) -> list:
             f"{_fmt(headline)}. "
             + ("The direction agrees with the document-disjoint result but the "
                "correction is not cleared, so it must be described as not "
-               "replicated rather than replicated weakly. The plausible reason "
-               "is that this protocol scores rows from reports the model has "
-               "partly seen, where fewer predictions break the hierarchy in the "
-               "first place — but that is a hypothesis, not a measurement."
+               "replicated rather than replicated weakly."
                if not resolved else ""), ""]
+    out += _decomposition(methods, (secondary or {}).get("methods"))
+    return out
+
+
+def _decomposition(primary, other) -> list:
+    """Why the headline contrast moves between protocols, as arithmetic.
+
+    Every method legal by construction scores the same under both rules, so
+    ``C-wF1(M1) == official(M1)`` and the contrast splits exactly into what
+    projection costs on the official metric plus the partial credit the
+    unconstrained arm stops collecting. The split is worth reporting because
+    the two terms behave differently across protocols -- and because an
+    earlier draft guessed at a mechanism the measurement refutes. The guess
+    was that the same-document protocol breaks the hierarchy less often; it
+    breaks it slightly more.
+    """
+    rows = []
+    for label, methods in (("document-disjoint (primary)", primary),
+                           ("same-document", other)):
+        if not methods or "M0" not in methods or "M1" not in methods:
+            return []
+        m0, m1 = methods["M0"], methods["M1"]
+        try:
+            credit = (m0["weighted_macro_f1_mean"]
+                      - m0["consistent_weighted_macro_f1_mean"])
+            cost = m1["weighted_macro_f1_mean"] - m0["weighted_macro_f1_mean"]
+            rows.append((label, m0["invalid_tuple_rate_mean"], cost, credit))
+        except KeyError:
+            return []
+
+    out = [
+        "**Why, as arithmetic rather than as a guess.** `C-wF1` equals the "
+        "official score for every method that is legal by construction, so "
+        "the contrast splits exactly:", "",
+        "`C-wF1(M1-M0)  =  official(M1-M0)  +  [official(M0) - C-wF1(M0)]`", "",
+        "| Protocol | M0 breaks the hierarchy on | official(M1-M0) | "
+        "M0's cancelled credit | C-wF1(M1-M0) |",
+        "|---|---|---|---|---|",
+    ]
+    for label, invalid, cost, credit in rows:
+        out.append(f"| {label} | {invalid * 100:.2f}% | {cost:+.4f} | "
+                   f"{credit:+.4f} | {cost + credit:+.4f} |")
+    out += [
+        "",
+        "The cancelled credit is stable across the two protocols; what changes "
+        "is what projection itself costs on the official metric. **The "
+        "same-document protocol does not break the hierarchy less often -- it "
+        "breaks it slightly more, and repairing it costs more there.** Write "
+        "this rather than speculating about partly-seen reports: the "
+        "decomposition is measured, and the intuitive guess is backwards.", "",
+    ]
     return out
 
 
@@ -543,7 +591,7 @@ def build_findings(audit, contrasts, regimes, cases=None,
     out += _metric_study(methods)
     out += _families(families)
     out += _disagreements(families)
-    out += _secondary_protocol(secondary)
+    out += _secondary_protocol(secondary, methods)
     out += _regimes(regimes)
     out += _conditional(methods)
     out += _sensitivity(methods)

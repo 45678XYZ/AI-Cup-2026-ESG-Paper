@@ -228,3 +228,47 @@ def test_brief_reports_the_hierarchical_metric_family_and_ranking():
     assert "hF" in text
     assert "0.6951" in text and "0.7287" in text
     assert "[0.001, 0.005]" in text
+
+
+def test_brief_decomposes_the_non_replication_instead_of_guessing():
+    """The headline contrast fails to replicate on the second protocol.
+
+    An earlier draft guessed why -- that protocol scores rows from reports the
+    model has partly seen, so fewer predictions break the hierarchy. Measuring
+    it refuted the guess: that protocol breaks the hierarchy slightly *more*
+    often. The brief must carry the arithmetic instead, which is exact because
+    C-wF1 equals the official score for every method legal by construction:
+
+        C-wF1(M1-M0) = official(M1-M0) + [official(M0) - C-wF1(M0)]
+
+    so the two protocols differ in what projection itself costs, not in how
+    much partial credit the unconstrained arm was collecting.
+    """
+    primary = {"M0": {"weighted_macro_f1_mean": 0.5723,
+                      "consistent_weighted_macro_f1_mean": 0.5673,
+                      "invalid_tuple_rate_mean": 0.1255},
+               "M1": {"weighted_macro_f1_mean": 0.5712,
+                      "consistent_weighted_macro_f1_mean": 0.5712,
+                      "invalid_tuple_rate_mean": 0.0}}
+    secondary = {
+        "methods": {"M0": {"weighted_macro_f1_mean": 0.5847,
+                           "consistent_weighted_macro_f1_mean": 0.5791,
+                           "invalid_tuple_rate_mean": 0.1290},
+                    "M1": {"weighted_macro_f1_mean": 0.5809,
+                           "consistent_weighted_macro_f1_mean": 0.5809,
+                           "invalid_tuple_rate_mean": 0.0}},
+        "consistent_contrasts": {
+            "M1-M0": _contrast(+0.002, -0.001, 0.005, "legalisation",
+                               p_holm=0.739)},
+    }
+    text = build_findings(AUDIT_STUB, {}, {}, methods=primary,
+                          secondary=secondary)
+
+    assert "fewer predictions break the hierarchy" not in text, (
+        "the brief still carries the hypothesis the measurement refuted")
+    # Both violation rates, so the reader can see the guess was backwards.
+    assert "12.55%" in text and "12.90%" in text
+    # The cancelled partial credit: stable across protocols.
+    assert "+0.0050" in text and "+0.0056" in text
+    # What projection itself costs on the official metric: this is what moved.
+    assert "-0.0011" in text and "-0.0038" in text
