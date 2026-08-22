@@ -19,20 +19,13 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from analysis.figure1 import tex_available
+from analysis.figure1 import LATEX_ENV, tex_available
 from analysis.tables import TABLE_FILES
 from paper.data import REPO_ROOT
 
-# pdfTeX stamps a creation date and a document ID into every build, so two
-# runs of the same tables produce different bytes while being the same
-# document. That is why this file used to be gitignored. Pinning the epoch
-# makes the build reproducible, which is what lets the rendered preview live
-# in the repository for anyone who has no local TeX installation.
-#
-# The value is 2026-08-23T00:00:00Z, the results freeze: a preview built after
-# the freeze describes tables that cannot change again, so the stamp is not a
-# lie about when the content was settled.
-SOURCE_DATE_EPOCH = 1787443200
+# Reproducibility is shared with figure 1, which this preview embeds: see
+# analysis/figure1.py for why both PDFs need the clock and the trailer /ID
+# pinned before they can be committed.
 
 PREAMBLE = r"""\documentclass[11pt]{article}
 \usepackage[a4paper,margin=2cm,landscape]{geometry}
@@ -115,8 +108,7 @@ def build(tables_dir=None, out_path=None) -> Path:
             ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error",
              f"-outdir={tmp}", str(source)],
             check=True, capture_output=True, text=True,
-            env={**os.environ, "SOURCE_DATE_EPOCH": str(SOURCE_DATE_EPOCH),
-                 "FORCE_SOURCE_DATE": "1"})
+            env={**os.environ, **LATEX_ENV})
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_bytes((Path(tmp) / "preview.pdf").read_bytes())
     return out_path

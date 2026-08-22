@@ -159,3 +159,23 @@ def test_build_is_reproducible_from_a_clean_directory(tmp_path):
     out = build(tmp_path / "nested" / "figure1_hierarchy.pdf")
     assert out.exists()
     assert (out.parent / DEFS_NAME).exists()
+
+
+@pytest.mark.skipif(shutil.which("latexmk") is None, reason="no TeX installation")
+def test_two_builds_in_different_directories_are_byte_identical(tmp_path):
+    """Figure 1 is committed, so rebuilding it must be a no-op.
+
+    It was not: pdfTeX stamps a creation date and a trailer /ID into every
+    build, so `python -m analysis` left the figure modified in the working
+    tree every single run, and a clean-clone reproduction could only ever
+    claim the .tex and caption files. Two different output directories are
+    used because the /ID is derived from the output path as well as the time.
+
+    The preview embeds this file, so an unpinned figure made the preview
+    unreproducible too.
+    """
+    first = build(tmp_path / "a" / "figure1_hierarchy.pdf").read_bytes()
+    second = build(tmp_path / "b" / "figure1_hierarchy.pdf").read_bytes()
+    assert first == second, (
+        "two builds of figure 1 differ; it cannot stay committed without "
+        "churning the working tree on every regeneration")

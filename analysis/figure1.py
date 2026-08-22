@@ -25,6 +25,7 @@ drawing replaced.
 
 import math
 import shutil
+import os
 import subprocess
 from pathlib import Path
 
@@ -32,6 +33,21 @@ from paper.labels import EVAL_FIELDS, NUM_LABELS, STATES
 
 SOURCE = Path(__file__).resolve().parents[1] / "figures" / "figure1_hierarchy.tex"
 DEFS_NAME = "figure1_defs.tex"
+
+# Both PDFs this repository commits -- figure 1 and the tables preview, which
+# embeds it -- have to rebuild to the same bytes, or `python -m analysis`
+# leaves the working tree modified on every single run and the clean-clone
+# reproduction can only ever speak for the .tex and caption files.
+#
+# pdfTeX varies two things between runs: the creation date, pinned here, and
+# the trailer /ID, pinned by \pdftrailerid{} in the .tex sources because it is
+# derived from the output path as well as the clock.
+#
+# 2026-08-23T00:00:00Z is the results freeze: a figure built after it draws a
+# hierarchy that cannot change again.
+SOURCE_DATE_EPOCH = 1787443200
+LATEX_ENV = {"SOURCE_DATE_EPOCH": str(SOURCE_DATE_EPOCH),
+             "FORCE_SOURCE_DATE": "1"}
 LATEXMK = "latexmk"
 
 _GENERATED_HEADER = (
@@ -115,6 +131,7 @@ def build(out_path) -> Path:
         ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error",
          source.name],
         cwd=source.parent, capture_output=True, text=True,
+        env={**os.environ, **LATEX_ENV},
     )
     log = source.with_suffix(".log")
     tail = log.read_text(errors="replace")[-2000:] if log.exists() else result.stdout[-2000:]

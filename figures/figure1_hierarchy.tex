@@ -15,6 +15,10 @@
 % them past the running text, and no single-column reduction leaves them
 % legible; this figure carries too much to fit one column.
 \documentclass[border=1pt]{standalone}
+% Pinned so two builds produce the same bytes: pdfTeX derives the trailer /ID
+% from the output path and the clock. The date half is pinned by
+% SOURCE_DATE_EPOCH in analysis/figure1.py.
+\ifdefined\pdftrailerid\pdftrailerid{}\fi
 
 \usepackage[T1]{fontenc}
 \usepackage[tt=false,type1=true]{libertine}
