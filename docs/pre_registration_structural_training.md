@@ -59,7 +59,8 @@ class weights、checkpoint 規則。`paper/train_config.py` **不會被修改** 
 候選值固定為 `LAMBDA_GRID = (0.1, 0.3, 1.0)`，涵蓋遠低於到略高於 base loss。
 
 1. 只在 **`pdf_group` seed 42** 這一組上，對三個 λ 各跑 5 個 rotation（共 15 fits），
-   輸出至 `probs_lambda_sweep/`。
+   **每個 λ 輸出至自己的子目錄** `probs_lambda_sweep/lambda_<λ>/` —— 三者產生的
+   bundle 名稱相同，寫在同一層會互相覆蓋。`select_lambda` 會遞迴尋找。
 
 2. 判準由 `paper/select_lambda.py` **以程式定義**，不由執行者臨場決定：
    五個 rotation 的 Calibration partition 上，**各欄獨立 argmax** 的官方
@@ -135,9 +136,8 @@ sweep 產生的 15 個 bundle **不進入任何結果表**，但會保留並提�
 - `analysis/aggregate.py::CONTRASTS` 的五組預先指定對比
 - 既有的 30 個 bundle、42 個 predictions、42 個 results
 
-## 10. 這需要團隊修改 8/23 的 results freeze 決議
+## 10. 與 8/23 results freeze 的關係
 
-計畫 §8 的 gate 寫明「8/23 起不再啟動任何新 run」。本 arm 違反該條，因此需要團隊同意
-並記錄理由。freeze 的目的是保護寫作時間，不是禁止有計畫的擴充；提出的修改是：
-**於 8/23 前完成本 arm，此後回復 freeze**。若團隊不同意，本 arm 取消，
-本文件保留為未執行的紀錄。
+計畫 §8 的 gate 寫明「8/23 起不再啟動任何新 run」。本 arm 於 **2026-08-22 經團隊同意執行**，
+於 8/23 前完成，此後回復 freeze。記錄於此是因為外部讀者對照計畫時會問這個問題，
+而「有計畫的擴充」與「看過結果後的搜尋」的差別，正是本文件存在的理由。

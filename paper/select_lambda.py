@@ -58,13 +58,15 @@ def sweep_scores(probs_dir, by_id=None) -> dict:
     """
     by_id = by_id if by_id is not None else index_by_id(load_dev())
     grouped = defaultdict(list)
-    for d in sorted(Path(probs_dir).iterdir()):
-        if not (d / "meta.json").exists():
-            continue
+    # Recursive: the sweep writes each lambda to its own subdirectory, because
+    # all three produce the same five bundle names and a flat directory would
+    # have them overwrite each other.
+    for d in sorted(p.parent for p in Path(probs_dir).rglob("meta.json")):
         with open(d / "meta.json", encoding="utf-8") as f:
             meta = json.load(f)
+        label = str(d.relative_to(Path(probs_dir)))
         grouped[recipe_value(meta, "structure_lambda")].append(
-            (d.name, calibration_score(d, by_id))
+            (label, calibration_score(d, by_id))
         )
     return {
         lam: {
