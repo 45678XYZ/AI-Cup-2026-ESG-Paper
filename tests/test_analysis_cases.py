@@ -10,13 +10,14 @@ import numpy as np
 import pytest
 
 from analysis.cases import (
+    misleading_cases,
     case_analysis,
     projection_ledger,
     violation_breakdown,
 )
-from analysis.load import EXAMPLES_ROOT, load_aligned
+from analysis.load import EXAMPLES_ROOT, METHODS, load_aligned
 from paper.data import canonical_row_order, load_dev
-from paper.labels import FIELDS, LABEL2ID
+from paper.labels import EVAL_FIELDS, FIELDS, LABEL2ID
 
 DEV = load_dev()
 ORDER = canonical_row_order(DEV)
@@ -183,3 +184,28 @@ def test_unobserved_states_are_checked_on_the_decoders_not_the_projection():
     assert set(out["unobserved"]) == {"M4", "M5", "M6"}
     for method, rec in out["unobserved"].items():
         assert "n_emitted_unobserved" in rec
+
+
+def test_misleading_cases_records_every_gold_instance_per_method():
+    """Plan section 4.5 permits exactly two treatments of a class with n=2: the
+    per-instance record and a sensitivity score computed without it. This is
+    the first one, and until now it was missing from every deliverable."""
+    dev = load_dev()
+    order = canonical_row_order(dev)
+    rows = misleading_cases(order, dev, "pdf_group", 42, EXAMPLES_ROOT)
+    gold_rows = [r for r in dev if r["evidence_quality"] == "Misleading"]
+    assert len(rows) == len(gold_rows) == 2
+    for row in rows:
+        assert row["gold"]["evidence_quality"] == "Misleading"
+        assert set(row["predicted"]) == set(METHODS)
+        assert row["pdf_url"]
+        # every prediction is a real label, not an index
+        for pred in row["predicted"].values():
+            assert pred in EVAL_FIELDS["evidence_quality"]
+
+
+def test_case_analysis_carries_the_misleading_instances():
+    dev = load_dev()
+    order = canonical_row_order(dev)
+    out = case_analysis("pdf_group", 42, order, EXAMPLES_ROOT, dev=dev)
+    assert len(out["misleading_cases"]) == 2

@@ -1,4 +1,4 @@
-<!-- generated 2026-08-22T00:41:48.068196+00:00 from 7868a1b76cdf9851d7a65d2ea0b613f4de0487fb -->
+<!-- generated 2026-08-22T00:51:30.640407+00:00 from dfb128ef0eb917b7e21d587466709e5d63a359d8 -->
 
 # Findings brief
 
@@ -51,6 +51,22 @@ Reported because the unconditioned score mixes two questions — choosing the ri
 | M5 | 0.796 / 0.796 | 0.493 / 0.468 | 0.649 / 0.670 | 0.423 / 0.387 |
 | M6 | 0.784 / 0.784 | 0.494 / 0.479 | 0.636 / 0.667 | 0.414 / 0.390 |
 
+## Misleading-free sensitivity (plan §4.5)
+
+The official metric recomputed without the two gold `Misleading` paragraphs. It is the only aggregate the plan permits around a class with n=2, and it exists to show that no conclusion rests on those two rows.
+
+| Method | weighted macro-F1 | without `Misleading` | Δ |
+|---|---|---|---|
+| M0 | 0.5723 | 0.6220 | +0.0497 |
+| M1 | 0.5712 | 0.6202 | +0.0490 |
+| M2 | 0.5744 | 0.6234 | +0.0490 |
+| M3 | 0.5737 | 0.6219 | +0.0482 |
+| M4 | 0.5712 | 0.6204 | +0.0492 |
+| M5 | 0.5756 | 0.6251 | +0.0495 |
+| M6 | 0.5668 | 0.6153 | +0.0485 |
+
+⚠️ The gap is a property of removing an unlearnable class from a macro average, **not** a result about the class.
+
 ## Evaluation regime
 
 - **M0**: same-document 0.585 vs document-disjoint 0.572, Δ 0.012 [0.004, 0.022] (excludes zero)
@@ -81,5 +97,11 @@ Write these as *no detectable difference*, never as *no difference* and never as
 - Projection repairs 822 fields and destroys 637, a net of +185 over 48,000 field slots.
 
 - **The exchange is not symmetric.** Repairs land on the `N/A` classes (+759) while the damage falls on the substantive ones (-574), worst on `evidence_quality.Clear`. macro-F1 weights every class equally and `N/A` is the easiest class to predict, so the two nearly cancel in the official metric while whole-row correctness rises.
+
+
+**The two `Misleading` paragraphs, one by one** (plan §4.5 allows the per-instance record and nothing aggregated over two rows):
+
+- `10017` in https://esg.sp88.tw/upload/pj/202508071622071323.pdf: M0→`N/A`, M1→`N/A`, M2→`N/A`, M3→`N/A`, M4→`N/A`, M5→`N/A`, M6→`N/A`
+- `11836` in https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf: M0→`Clear`, M1→`Clear`, M2→`Clear`, M3→`Clear`, M4→`Clear`, M5→`Clear`, M6→`Clear`
 
 - 2 legal states never occur in gold. A decoder searching the full legal space can reach them: M4 in 0/6 runs, M5 in 2/6 runs, M6 in 3/6 runs. Only the calibrated arms (M5, M6) get there, which makes this a fact about calibration raising the rare classes rather than about the decoder itself.

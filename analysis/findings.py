@@ -155,6 +155,25 @@ def build_findings(audit, contrasts, regimes, cases=None,
             out.append(f"| {method} | {cells} |")
         out.append("")
 
+    if methods and any("weighted_macro_f1_mean_no_misleading" in row
+                       for row in methods.values()):
+        out += ["## Misleading-free sensitivity (plan §4.5)", "",
+                "The official metric recomputed without the two gold "
+                "`Misleading` paragraphs. It is the only aggregate the plan "
+                "permits around a class with n=2, and it exists to show that no "
+                "conclusion rests on those two rows.", ""]
+        out.append("| Method | weighted macro-F1 | without `Misleading` | Δ |")
+        out.append("|---|---|---|---|")
+        for method, row in methods.items():
+            full = row["weighted_macro_f1_mean"]
+            free = row.get("weighted_macro_f1_mean_no_misleading")
+            if free is None:
+                continue
+            out.append(f"| {method} | {full:.4f} | {free:.4f} | {free - full:+.4f} |")
+        out += ["",
+                "⚠️ The gap is a property of removing an unlearnable class from "
+                "a macro average, **not** a result about the class.", ""]
+
     if regimes:
         out += ["## Evaluation regime", ""]
         for name, row in regimes.items():
@@ -198,11 +217,15 @@ def build_findings(audit, contrasts, regimes, cases=None,
     if cases:
         t = cases["totals"]
         top = max(t["by_rule"].items(), key=lambda kv: kv[1])
+        # A run with no illegal output is the outcome the constraints are for;
+        # the brief has to survive it rather than divide by its count.
+        share = (f" ({top[1] / t['n_invalid'] * 100:.0f}%)"
+                 if t["n_invalid"] else "")
         out += ["## Material for the Discussion", "",
                 f"- Independent argmax emits {t['n_invalid']:,} illegal tuples "
                 f"across {t['n_rows']:,} rows ({t['invalid_rate']*100:.2f}%); the "
-                f"most common single violation is `{top[0]}` at {top[1]:,} "
-                f"({top[1]/t['n_invalid']*100:.0f}%).",
+                f"most common single violation is `{top[0]}` at "
+                f"{top[1]:,}{share}.",
                 f"- Projection repairs {t['fields_repaired']:,} fields and "
                 f"destroys {t['fields_destroyed']:,}, a net of "
                 f"{t['net_fields']:+,} over {t['n_rows']*4:,} field slots.", ""]
@@ -217,7 +240,17 @@ def build_findings(audit, contrasts, regimes, cases=None,
                     "weights every class equally and `N/A` is the easiest class "
                     "to predict, so the two nearly cancel in the official metric "
                     "while whole-row correctness rises.", ""]
-        if cases.get("runs"):
+        instances = cases["runs"][0].get("misleading_cases") if cases.get("runs") else None
+        if instances:
+            out += ["", "**The two `Misleading` paragraphs, one by one** "
+                    "(plan §4.5 allows the per-instance record and nothing "
+                    "aggregated over two rows):", ""]
+            for case in instances:
+                guessed = ", ".join(f"{m}→`{p}`" for m, p in case["predicted"].items())
+                out.append(f"- `{case['id']}` in {case['pdf_url']}: {guessed}")
+            out.append("")
+
+        if cases.get("runs") and cases["runs"][0].get("unobserved"):
             first = cases["runs"][0]["unobserved"]
             n_unobs = next(iter(first.values()))["n_unobserved_in_gold"]
             per_method = {

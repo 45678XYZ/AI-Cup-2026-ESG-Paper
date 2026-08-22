@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-08-22T00:41:48.056101+00:00",
- "git_sha": "7868a1b76cdf9851d7a65d2ea0b613f4de0487fb",
+ "generated_at": "2026-08-22T00:51:30.626579+00:00",
+ "git_sha": "dfb128ef0eb917b7e21d587466709e5d63a359d8",
  "totals": {
   "n_rows": 12000,
   "n_invalid": 1527,
@@ -178,6 +178,46 @@
     },
     "net": 44
    },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "N/A",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
    "unobserved": {
     "M4": {
      "n_unobserved_in_gold": 2,
@@ -345,6 +385,46 @@
     },
     "net": 41
    },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "N/A",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
    "unobserved": {
     "M4": {
      "n_unobserved_in_gold": 2,
@@ -494,6 +574,46 @@
     },
     "net": 46
    },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "N/A",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
    "unobserved": {
     "M4": {
      "n_unobserved_in_gold": 2,
@@ -651,6 +771,46 @@
     },
     "net": 16
    },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Not Clear",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
    "unobserved": {
     "M4": {
      "n_unobserved_in_gold": 2,
@@ -808,6 +968,46 @@
     },
     "net": 42
    },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Not Clear",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
    "unobserved": {
     "M4": {
      "n_unobserved_in_gold": 2,
@@ -981,6 +1181,46 @@
     },
     "net": -4
    },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "N/A",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
    "unobserved": {
     "M4": {
      "n_unobserved_in_gold": 2,

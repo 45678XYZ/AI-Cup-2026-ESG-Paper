@@ -129,3 +129,30 @@ def test_brief_reports_the_conditional_field_scores():
     assert "conditional" in text.lower()
     assert "0.31" in text
     assert "evidence_quality" in text
+
+
+def test_brief_reports_the_misleading_free_sensitivity():
+    """The plan asks for a score computed without the two Misleading rows. It
+    was being computed and thrown away."""
+    methods = {
+        "M0": {"per_field_mean": {"promise_status": 0.8},
+               "conditional_per_field_mean": {"promise_status": 0.8},
+               "weighted_macro_f1_mean": 0.5723,
+               "weighted_macro_f1_mean_no_misleading": 0.5881},
+    }
+    text = build_findings(AUDIT_STUB, {}, regimes={}, cases=None, methods=methods)
+    assert "0.588" in text
+    assert "sensitivity" in text.lower()
+
+
+def test_brief_records_the_two_misleading_instances_one_by_one():
+    cases = {"totals": {"n_rows": 4, "n_invalid": 0, "invalid_rate": 0.0,
+                        "by_rule": {"promise_no_children_set": 0},
+                        "fields_repaired": 0, "fields_destroyed": 0,
+                        "net_fields": 0},
+             "runs": [{"misleading_cases": [
+                 {"id": "42", "pdf_url": "http://x", 
+                  "gold": {"evidence_quality": "Misleading"},
+                  "predicted": {"M0": "Clear", "M1": "Clear"}}]}]}
+    text = build_findings(AUDIT_STUB, {}, regimes={}, cases=cases)
+    assert "42" in text and "Clear" in text

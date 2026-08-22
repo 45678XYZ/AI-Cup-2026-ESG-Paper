@@ -23,9 +23,9 @@ from pathlib import Path
 
 import numpy as np
 
-from analysis.load import load_aligned
+from analysis.load import METHODS, load_aligned
 from paper.data import load_dev
-from paper.labels import FIELDS, ID2LABEL, STATES, is_valid_tuple
+from paper.labels import EVAL_FIELDS, FIELDS, ID2LABEL, STATES, is_valid_tuple
 from paper.provenance import git_sha, now_iso
 from paper.train_config import PROTOCOLS, SEEDS
 
@@ -176,6 +176,37 @@ def unobserved_states(gold, pred) -> dict:
     }
 
 
+def misleading_cases(order, dev, protocol, seed, root, methods=METHODS) -> list:
+    """What every method predicted on each gold ``Misleading`` paragraph.
+
+    Plan §4.5 permits exactly two treatments of a class with n=2: the
+    per-instance record and a score computed without it. This is the first.
+    Nothing here is aggregated -- a rate over two rows would invite exactly the
+    claim the plan forbids -- so the rows are listed as they are, with the
+    report they came from, and the reader counts them.
+    """
+    by_id = {r["id"]: r for r in dev}
+    positions = [i for i, row_id in enumerate(order)
+                 if by_id[row_id]["evidence_quality"] == "Misleading"]
+    predictions = {
+        method: load_aligned(protocol, seed, method, order, root)[1]
+        for method in methods
+    }
+    column = FIELDS.index("evidence_quality")
+    return [
+        {
+            "id": order[i],
+            "pdf_url": by_id[order[i]]["pdf_url"],
+            "gold": {field: by_id[order[i]][field] for field in FIELDS},
+            "predicted": {
+                method: EVAL_FIELDS["evidence_quality"][pred[i, column]]
+                for method, pred in predictions.items()
+            },
+        }
+        for i in positions
+    ]
+
+
 def case_analysis(protocol, seed, order, root, dev=None,
                   baseline=BASELINE, projected=PROJECTED,
                   decoders=DECODERS) -> dict:
@@ -197,6 +228,7 @@ def case_analysis(protocol, seed, order, root, dev=None,
         "after_projection": violation_breakdown(projected_pred),
         "projection": projection_ledger(gold, raw, projected_pred),
         "by_class": repair_ledger_by_class(gold, raw, projected_pred),
+        "misleading_cases": misleading_cases(order, dev, protocol, seed, root),
         "unobserved": {
             method: unobserved_states(
                 gold, load_aligned(protocol, seed, method, order, root)[1])
