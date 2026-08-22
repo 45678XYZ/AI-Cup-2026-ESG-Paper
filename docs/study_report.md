@@ -57,7 +57,7 @@ weighted macro-F1 = PS×0.20 + VT×0.15 + ES×0.30 + EQ×0.35，四欄各自算�
 
 ### ⑥ 只要求官方指標承認「祖先不成立的預測無效」，同一組對比就顯著為正
 
-把官方指標改一件事、其餘全不動：一個欄位若它的祖先未被預測，計為錯誤預測，而不是照樣拿自己那一欄的分數。這不是自創的量尺，是階層分類文獻既有的 **path-constrained（C-）指標**。
+把官方指標改一件事、其餘全不動：一個欄位若它的祖先未被預測，計為錯誤預測，而不是照樣拿自己那一欄的分數。這不是自創的量尺，是階層分類文獻既有的 **path-constrained（C-）指標**（定義、文獻依據與實測驗證見 Part II）。
 
 ```
 M1-M0（純投影）  path-constrained weighted macro-F1  +0.004 [0.001, 0.007]   ← 排除 0
@@ -175,6 +175,58 @@ Test split 不附標籤，所有由標籤推導的統計一律標 `n/a`——填
 | M6 | Conditional | 17-state | 0.567±0.009 | 0.784 | 0.494 | 0.636 | 0.414 | 0.426 | 0.0 |
 
 ⚠️ `±` 是三個 seed 之間的樣本標準差，反映**整條流程**（切分抽樣與訓練隨機性合在一起）的變異，**不是信賴區間，也不是模型穩定度**。
+
+## 次要指標的來歷：path-constrained（C-）metrics
+
+### 為什麼不是自己發明一個量尺
+
+用 tuple accuracy 說「官方指標看不見結構一致性的改善」有一個弱點：**tuple accuracy 是我們自己選的**。審稿人可以問，是不是挑了一個對自己有利的量尺。
+
+階層分類文獻已有現成的答案。**path-constrained metrics（文獻稱 C-metrics）** 的定義：
+
+> a node predicted as true will be considered a valid prediction **if and only if all its ancestors are also predicted as true**. Otherwise, it will be considered as a false prediction.
+
+以及一個可直接驗證的性質：
+
+> Methods that have guaranteed label consistency show the **same results** on each metric and its corresponding path-constrained variant.
+
+⚠️ **原始出處尚未查證，目前只有二手描述。** Related Work 要引用它之前必須先找到原始論文。這是 C 明確沒做完的一件事，不可先寫進去再補。
+
+### 定義
+
+任務的階層鏈與對應的祖先條件：
+
+| 欄位 | 有效條件 |
+|---|---|
+| `promise_status` | 無祖先，永遠有效 |
+| `verification_timeline` | 需 `PS = Yes` |
+| `evidence_status` | 需 `PS = Yes` |
+| `evidence_quality` | 需 `PS = Yes` **且** `ES = Yes` |
+
+不滿足條件的欄位計為錯誤預測。其餘一切——逐欄計分、macro 平均、四個權重、present-labels-only 慣例——與官方指標**完全相同**。
+
+`N/A` 不受影響：在「沒有承諾」之下預測「沒有時程」是階層自洽，不是祖先不支持的宣稱。
+
+實作為 `analysis/metrics.py::consistent_weighted_macro_f1`，在計分前對預測做一次 masking，違反祖先條件的欄位換成哨兵類別（哨兵不存在於 gold，因此必然計為錯誤預測）。masking 不依賴抽樣，與 bootstrap 完全正交。
+
+### 文獻性質的實測驗證
+
+| ID | weighted F1 | path-constrained | Δ |
+|---|---|---|---|
+| M0 | 0.572 | **0.567** | **-0.005** |
+| M1–M6 | 見上方主表 | 與左欄完全相同 | ±0.000 |
+
+M1–M6 保證輸出合法，因此沒有任何預測會被 masking 影響；**只有 M0 掉下來**。這正是文獻對這類指標的預期行為，等於一次獨立的實作正確性驗證，並已固定成測試（`tests/test_analysis_metrics.py`）。
+
+⚠️ 實作上動到了 `_macro_f1` 的 `bincount` 寬度，而那是官方指標的計算核心。處置見 Part III 的〈C〉。
+
+### 一個更細緻的觀察（適合放 Discussion）
+
+C-metric 的效果量（**+0.004**）遠小於 tuple accuracy（**+0.035**）。原因是 C-metric 仍然逐類別做 macro 平均，單一列的不一致被稀釋掉了。
+
+> 即使採用文獻推薦的 consistency-aware 指標，逐類別平均的結構仍然大幅稀釋了一致性的價值。
+
+這值得一提，但**需要謹慎表述、不宜過度延伸**——我們只有一個資料集、一種階層，不足以宣稱「所有階層指標都不夠」。
 
 ## 五組預先指定對比 —— 三個 Holm 家族
 
@@ -377,6 +429,8 @@ D 寫 Methods 需要這一節。三個人的產出透過 checksum 串成一條�
 | 我們在競賽指標上更好 | **誠實承認官方排名依據上沒有優勢**——這反而讓「指標選擇有後果」的論述更有力 |
 | 把 path-constrained 指標寫成計畫的一部分 | 它是主要分析之後才採用的，須明說；事先指定的是官方指標與 tuple accuracy |
 | 只報 C-metric、不報 tuple accuracy | 三個家族全報，包含對我們不利的 `M4-M1` |
+| 引用 C-metrics 卻只引二手描述 | 先查證原始出處；查不到就只描述指標定義，不掛引用 |
+| 所有階層指標都不夠用 | 只能說：在本資料集上，逐類別平均稀釋了一致性的價值 |
 
 ## 限制（必須寫進 Discussion）
 
