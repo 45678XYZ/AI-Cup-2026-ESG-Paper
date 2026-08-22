@@ -123,8 +123,10 @@ sweep 產生的 15 個 bundle **不進入任何結果表**，但會保留並提�
 
 ## 8. 執行紀錄（隨執行填寫，不得回填）
 
-- [ ] λ sweep 執行日期與三個 calibration 分數：
-- [ ] 選定的 λ：
+- [x] λ sweep 執行日期與三個 calibration 分數：2026-08-22；λ = 0.1: 0.6061，
+  λ = 0.3: 0.6068，λ = 1.0: 0.6013（spread = 0.0054）。
+- [x] 選定的 λ：0.3（spread 高於 `INDISTINGUISHABLE = 0.002`，依最高
+  calibration weighted macro-F1 選定，未啟用中位數 fallback）。
 - [ ] 正式 30 fits 執行日期：
 - [ ] H1 結果：
 - [ ] H2 結果：
