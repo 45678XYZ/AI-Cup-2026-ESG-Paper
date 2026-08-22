@@ -179,3 +179,23 @@ def test_two_builds_in_different_directories_are_byte_identical(tmp_path):
     assert first == second, (
         "two builds of figure 1 differ; it cannot stay committed without "
         "churning the working tree on every regeneration")
+
+
+@pytest.mark.skipif(shutil.which("latexmk") is None, reason="no TeX installation")
+def test_a_leftover_build_cache_does_not_change_the_output(tmp_path):
+    """Building twice into the *same* directory must give the same bytes.
+
+    latexmk keeps an .fdb_latexmk next to its output and decides from it what
+    still needs doing. That cache made a pinned build produce an unpinned
+    date: the committed figure carried a wall-clock stamp while a fresh clone
+    of the same commit produced the pinned one, so the two disagreed while
+    both looked correct. Building into a fresh temporary directory each time
+    is what makes leftover state impossible rather than merely unlikely.
+    """
+    out = tmp_path / "figure1_hierarchy.pdf"
+    first = build(out).read_bytes()
+    assert list(tmp_path.iterdir()) or True
+    second = build(out).read_bytes()
+    assert first == second, (
+        "a second build in the same directory differs; leftover latexmk state "
+        "is reaching the output")

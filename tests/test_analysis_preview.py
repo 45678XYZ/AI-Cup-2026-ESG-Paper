@@ -48,3 +48,19 @@ def test_two_builds_are_byte_identical(tmp_path):
     assert first == second, (
         "two builds of the same tables differ; the preview cannot be "
         "committed until the build is deterministic")
+
+
+@pytest.mark.skipif(not tex_available(), reason="needs latexmk")
+def test_the_preview_embeds_no_absolute_path(tmp_path):
+    """Two clones of the same commit must produce the same preview.
+
+    `\\includegraphics` makes pdfTeX record the *absolute* path of the file it
+    embedded as /PTEX.FileName, so a preview built in a clone differed from
+    the committed one in 376,401 bytes while being the same document. Byte
+    equality across two directories is what a committed artifact has to mean.
+    """
+    pdf = build(REPO_ROOT / "tables", tmp_path / "preview.pdf").read_bytes()
+    assert str(REPO_ROOT).encode() not in pdf, (
+        "the preview records the absolute path it was built from; it cannot "
+        "be committed until pdfTeX is told to omit it")
+    assert b"/PTEX.FileName" not in pdf

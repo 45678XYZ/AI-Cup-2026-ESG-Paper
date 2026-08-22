@@ -35,9 +35,12 @@ PREAMBLE = r"""\documentclass[11pt]{article}
 \usepackage{parskip}
 \setlength{\parindent}{0pt}
 % pdfTeX derives the trailer /ID from the time and the output path, both of
-% which differ between runs even with SOURCE_DATE_EPOCH pinned. Fixing it is
-% the last thing standing between this build and byte reproducibility.
+% which differ between runs even with SOURCE_DATE_EPOCH pinned.
 \ifdefined\pdftrailerid\pdftrailerid{}\fi
+% \includegraphics makes pdfTeX record the absolute path of the file it
+% embedded as /PTEX.FileName. Two clones of one commit then produce previews
+% differing in hundreds of thousands of bytes while being the same document.
+\ifdefined\pdfsuppressptexinfo\pdfsuppressptexinfo=-1\fi
 \begin{document}
 \begin{center}\Large\textbf{Delivered tables --- preview}\end{center}
 \emph{Not a deliverable. Layout here is arbitrary; the paper's floats are D's

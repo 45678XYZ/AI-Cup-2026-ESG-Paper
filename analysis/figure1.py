@@ -127,6 +127,15 @@ def build(out_path) -> Path:
     if source.resolve() != SOURCE.resolve():
         shutil.copy(SOURCE, source)
 
+    # latexmk decides what still needs doing from the .fdb_latexmk it left
+    # beside the output. A cache written by a differently-configured run makes
+    # the next build inherit that configuration silently: the committed figure
+    # once carried a wall-clock date while a fresh clone of the same commit
+    # produced the pinned one, and both looked correct. Removing the state is
+    # what makes the build depend on its inputs alone.
+    for suffix in (".aux", ".fdb_latexmk", ".fls", ".log", ".synctex.gz"):
+        source.with_suffix(suffix).unlink(missing_ok=True)
+
     result = subprocess.run(
         ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error",
          source.name],
