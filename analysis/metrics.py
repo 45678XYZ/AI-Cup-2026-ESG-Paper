@@ -137,6 +137,60 @@ def weighted_macro_f1(gold, pred, idx=None) -> float:
     ))
 
 
+def _node_counts(codes) -> np.ndarray:
+    """Per row, the number of hierarchy nodes a label assignment asserts.
+
+    A field holding anything other than ``N/A`` names one node of the path;
+    ``N/A`` names none, because it is the hierarchy saying the branch does not
+    exist rather than a claim about it. ``promise_status`` has no ``N/A``, so
+    every row asserts at least one node.
+    """
+    present = np.ones(codes.shape, dtype=bool)
+    for j, na in enumerate(_NA):
+        if na is not None:
+            present[:, j] = codes[:, j] != na
+    return present
+
+
+def hierarchical_prf(gold, pred, idx=None) -> dict:
+    """Ancestor-based hierarchical precision, recall and F1 (hP, hR, hF).
+
+    The set-based measure the hierarchical-classification literature reaches
+    for: each label is the set of nodes on its path, and the three quantities
+    are the micro-averaged overlaps
+
+        hP = Σ|Ŷ ∩ Y| / Σ|Ŷ|,   hR = Σ|Ŷ ∩ Y| / Σ|Y|,
+        hF = 2·hP·hR / (hP + hR).
+
+    Because each field contributes at most one node, ``|Ŷ ∩ Y|`` is simply the
+    number of fields that agree on a non-``N/A`` value.
+
+    **On ancestor augmentation.** The usual formulation closes the predicted
+    set under ancestors before scoring. That cannot be done here and is not an
+    oversight: in a field-wise encoding the parent already holds a value, so
+    "adding the missing ancestor" to a row predicting ``promise_status = No``
+    with a timeline attached would put ``promise_status = Yes`` into a set that
+    already contains ``No``. The sets are therefore scored as the model emitted
+    them. For M1-M6, whose output is legal by construction, the two conventions
+    coincide; only the unconstrained arm is affected.
+    """
+    if idx is not None:
+        gold, pred = gold[idx], pred[idx]
+    gold_nodes, pred_nodes = _node_counts(gold), _node_counts(pred)
+    overlap = float((gold_nodes & pred_nodes & (gold == pred)).sum())
+    n_pred, n_gold = float(pred_nodes.sum()), float(gold_nodes.sum())
+
+    hp = overlap / n_pred if n_pred else 0.0
+    hr = overlap / n_gold if n_gold else 0.0
+    hf = 2 * hp * hr / (hp + hr) if (hp + hr) else 0.0
+    return {"hP": hp, "hR": hr, "hF": hf}
+
+
+def hierarchical_f1(gold, pred, idx=None) -> float:
+    """``hierarchical_prf``'s F1 alone, for the bootstrap's scorer argument."""
+    return hierarchical_prf(gold, pred, idx)["hF"]
+
+
 def tuple_accuracy(gold, pred, idx=None) -> float:
     """Rows where all four fields are correct.
 

@@ -84,6 +84,7 @@ def main() -> None:
                            cases=json.loads(cases.read_text(encoding="utf-8")),
                            consistent_contrasts=summaries["pdf_group"]["consistent_contrasts"],
                            tuple_contrasts=summaries["pdf_group"]["tuple_contrasts"],
+                           hierarchical_contrasts=summaries["pdf_group"]["hierarchical_contrasts"],
                            methods=summaries["pdf_group"]["methods"])
     print(f"brief   -> {brief}")
 

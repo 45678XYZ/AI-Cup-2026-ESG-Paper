@@ -235,13 +235,17 @@ def test_table2_caption_carries_every_pre_specified_contrast():
     assert "10,000" in caption
 
 
-def test_table2_caption_states_how_many_intervals_exclude_zero():
-    """The one sentence a reader needs before reading any individual row."""
+def test_table2_caption_counts_what_survives_the_correction_not_the_intervals():
+    """The five contrasts are tested together. A caption that counts intervals
+    excluding zero states an uncorrected result under a sentence that says
+    "Holm-corrected", which is the multiplicity error the correction exists to
+    prevent."""
     contrasts = SUMMARIES["pdf_group"]["contrasts"]
     caption = build_captions(AUDIT, contrasts=contrasts)["table2_main"]
-    n = sum(1 for r in contrasts.values() if r["ci_low"] > 0 or r["ci_high"] < 0)
+    n = sum(1 for r in contrasts.values() if r["p_holm"] < 0.05)
     words = {0: "none", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
-    assert words[n] in caption.lower()
+    assert f"{words[n]} of the five" in caption.lower()
+    assert "uncorrected" in caption.lower()   # the intervals must be labelled
 
 
 def test_table2_caption_follows_the_numbers_rather_than_repeating_them():
@@ -270,20 +274,20 @@ def test_contrast_sentence_agrees_in_number():
     not a typo anyone downstream is expected to catch."""
     from analysis.tables import _contrast_sentence
 
-    def rows(n_excluding, total=5):
+    def rows(n_surviving, total=5):
         out = {}
         for i in range(total):
-            excl = i < n_excluding
+            lives = i < n_surviving
             out[f"M{i+1}-M{i}"] = {
-                "delta": -0.01, "ci_low": -0.02 if excl else -0.02,
-                "ci_high": -0.001 if excl else 0.01,
-                "description": "d", "p_value": 0.1, "p_holm": 0.1,
+                "delta": -0.01, "ci_low": -0.02, "ci_high": -0.001,
+                "description": "d", "p_value": 0.01,
+                "p_holm": 0.01 if lives else 0.4,
             }
         return out
 
-    assert "One of the five intervals excludes zero" in _contrast_sentence(rows(1), "m")
-    assert "Two of the five intervals exclude zero" in _contrast_sentence(rows(2), "m")
-    assert "None of the five intervals exclude zero" in _contrast_sentence(rows(0), "m")
+    assert "One of the five contrasts survives" in _contrast_sentence(rows(1), "m")
+    assert "Two of the five contrasts survive" in _contrast_sentence(rows(2), "m")
+    assert "None of the five contrasts survive" in _contrast_sentence(rows(0), "m")
 
 
 def test_table2_caption_carries_both_metric_families():

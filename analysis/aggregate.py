@@ -18,6 +18,8 @@ from analysis.metrics import (
     conditional_field_macro_f1,
     consistent_weighted_macro_f1,
     field_macro_f1,
+    hierarchical_f1,
+    hierarchical_prf,
     tuple_accuracy,
     weighted_macro_f1,
 )
@@ -103,11 +105,20 @@ def method_summary(sets_by_seed, idx=None, no_misleading_idx=None) -> dict:
     # when its ancestor-unsupported fields stop earning partial credit.
     constrained = [consistent_weighted_macro_f1(g, p, idx) for g, p in sets_by_seed]
 
+    # The set-based hierarchical measure. Reported per method because it ranks
+    # the methods differently from the official metric -- which is the study's
+    # subject, not an inconvenience.
+    hierarchical = [hierarchical_prf(g, p, idx) for g, p in sets_by_seed]
+
     out = {
         "weighted_macro_f1_per_seed": scores,
         "weighted_macro_f1_mean": mean,
         "weighted_macro_f1_std": std,
         "consistent_weighted_macro_f1_mean": float(np.mean(constrained)),
+        "hierarchical_mean": {
+            key: float(np.mean([h[key] for h in hierarchical]))
+            for key in ("hP", "hR", "hF")
+        },
         "per_field_mean": per_field,
         "conditional_per_field_mean": conditional,
         "tuple_exact_match_mean": float(np.mean(tuple_acc)),
@@ -171,7 +182,8 @@ def protocol_summary(protocol, order, root, clusters, n_boot=N_BOOT,
     return {"protocol": protocol, "seeds": list(seeds), "methods": methods,
             "contrasts": family(weighted_macro_f1),
             "consistent_contrasts": family(consistent_weighted_macro_f1),
-            "tuple_contrasts": family(tuple_accuracy)}
+            "tuple_contrasts": family(tuple_accuracy),
+            "hierarchical_contrasts": family(hierarchical_f1)}
 
 
 def regime_comparison(summaries, order, root, clusters, n_boot=N_BOOT,

@@ -12,6 +12,8 @@ import pytest
 from analysis.load import EXAMPLES_ROOT, METHODS, load_aligned, pdf_clusters
 from analysis.metrics import (
     conditional_field_macro_f1,
+    hierarchical_f1,
+    hierarchical_prf,
     consistent_weighted_macro_f1,
     encode,
     enforce_ancestors,
@@ -273,3 +275,47 @@ def test_conditional_f1_honours_the_subset_index():
     b = conditional_field_macro_f1(gold[idx], pred[idx])
     for field in FIELDS:
         assert a[field] == pytest.approx(b[field], abs=1e-12), field
+
+
+# --- ancestor-based hierarchical F1 -----------------------------------------
+#
+# The metric the hierarchical-classification literature reaches for first, and
+# the one a reviewer asks about the moment we claim the official metric suits
+# this task badly. Each row's label is a path: every field holding a value
+# other than N/A contributes one node, N/A contributes none. hP, hR and hF are
+# then the standard micro-averaged set overlaps.
+
+
+def test_hierarchical_prf_on_a_hand_computed_pair_of_rows():
+    # row 1: gold Yes/already/Yes/Clear, pred Yes/already/No/N/A
+    #        |Y|=4, |P|=3, overlap 2
+    # row 2: gold No/N/A/N/A/N/A, pred No/already/Yes/Clear  (hierarchy-invalid)
+    #        |Y|=1, |P|=4, overlap 1
+    gold = np.array([[0, 0, 0, 0], [1, 4, 2, 3]])
+    pred = np.array([[0, 0, 1, 3], [1, 0, 0, 0]])
+    out = hierarchical_prf(gold, pred)
+    assert out["hP"] == pytest.approx(3 / 7, abs=1e-12)
+    assert out["hR"] == pytest.approx(3 / 5, abs=1e-12)
+    assert out["hF"] == pytest.approx(0.5, abs=1e-12)
+    assert hierarchical_f1(gold, pred) == pytest.approx(out["hF"], abs=1e-12)
+
+
+def test_hierarchical_f1_is_one_for_a_perfect_prediction():
+    gold, _ = encode(RECORDS)
+    assert hierarchical_f1(gold, gold) == pytest.approx(1.0, abs=1e-12)
+
+
+def test_hierarchical_f1_penalises_a_node_whose_parent_disagrees():
+    # Same row scored twice: once legal, once with a child asserted under a
+    # parent that forbids it. The invalid version must score lower.
+    gold = np.array([[1, 4, 2, 3]])
+    legal = np.array([[1, 4, 2, 3]])
+    invalid = np.array([[1, 0, 0, 0]])
+    assert hierarchical_f1(gold, invalid) < hierarchical_f1(gold, legal)
+
+
+def test_hierarchical_f1_honours_the_subset_index():
+    gold, pred = encode(RECORDS)
+    idx = np.arange(0, len(RECORDS), 3)
+    assert hierarchical_f1(gold, pred, idx) == pytest.approx(
+        hierarchical_f1(gold[idx], pred[idx]), abs=1e-12)

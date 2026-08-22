@@ -100,7 +100,8 @@ def test_per_field_means_cover_all_four_fields():
 # is stated as such in the caption.
 
 
-FAMILIES = ("contrasts", "consistent_contrasts", "tuple_contrasts")
+FAMILIES = ("contrasts", "consistent_contrasts", "tuple_contrasts",
+            "hierarchical_contrasts")
 
 
 def test_summary_carries_every_contrast_family():
@@ -162,3 +163,14 @@ def test_summary_carries_the_conditional_field_scores():
             row["per_field_mean"]["promise_status"], abs=1e-12), method
         assert cond["evidence_quality"] != pytest.approx(
             row["per_field_mean"]["evidence_quality"], abs=1e-6), method
+
+
+def test_summary_carries_the_hierarchical_metric_per_method():
+    """The metric a hierarchical-classification reviewer asks about first. It
+    ranks the methods differently from the official one, which is the point."""
+    out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
+                           n_boot=120, dev=DEV)
+    for method, row in out["methods"].items():
+        h = row["hierarchical_mean"]
+        assert set(h) == {"hP", "hR", "hF"}, method
+        assert all(0.0 <= v <= 1.0 for v in h.values()), method

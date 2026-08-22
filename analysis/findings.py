@@ -20,32 +20,49 @@ from pathlib import Path
 from paper.provenance import git_sha, now_iso
 
 
-def classify_contrasts(contrasts) -> dict:
-    """Split the pre-specified family by what its intervals exclude.
+# The level every family is judged at. One number, in one place, so a verdict
+# cannot quietly follow a different threshold from the one the paper states.
+ALPHA = 0.05
 
-    ``undetermined`` is deliberately not called "null": an interval spanning
-    zero means the study could not resolve the sign, not that the effect is
-    absent.
+
+def classify_contrasts(contrasts, alpha=ALPHA) -> dict:
+    """Split a pre-specified family by its **Holm-corrected** p-values.
+
+    The five contrasts are tested together, so the verdict has to come from the
+    corrected p. The bootstrap percentile interval reported beside each Δ is
+    *uncorrected*, and reading significance off it would reintroduce exactly
+    the multiplicity Holm is there to remove -- a contrast can miss the
+    correction while its raw interval still excludes zero, and in this study
+    several do.
+
+    Direction comes from the sign of the point estimate rather than from the
+    interval, for the same reason.
+
+    ``undetermined`` is deliberately not called "null": failing to survive the
+    correction means the study could not resolve the sign, not that the effect
+    is absent.
     """
     better, worse, undetermined = [], [], []
     for key, row in contrasts.items():
-        if row["ci_low"] > 0:
-            better.append(key)
-        elif row["ci_high"] < 0:
-            worse.append(key)
-        else:
+        if row.get("p_holm", 1.0) >= alpha:
             undetermined.append(key)
+        elif row["delta"] > 0:
+            better.append(key)
+        else:
+            worse.append(key)
     return {"better": better, "worse": worse, "undetermined": undetermined}
 
 
 def _fmt(row):
-    return (f"{row['delta']:+.3f} [{row['ci_low']:.3f}, {row['ci_high']:.3f}]"
+    """Δ, its uncorrected interval, and the corrected p the verdict rests on."""
+    return (f"{row['delta']:+.3f} [{row['ci_low']:.3f}, {row['ci_high']:.3f}], "
+            f"p_Holm={row.get('p_holm', float('nan')):.3f}"
             f" — {row['description']}")
 
 
 def build_findings(audit, contrasts, regimes, cases=None,
                    consistent_contrasts=None, tuple_contrasts=None,
-                   methods=None) -> str:
+                   methods=None, hierarchical_contrasts=None) -> str:
     verdict = classify_contrasts(contrasts)
     dev = audit["development"]
     absent = audit["splits"]["calibration_without_misleading"]
@@ -64,7 +81,7 @@ def build_findings(audit, contrasts, regimes, cases=None,
             out.append(f"- **{k}** is better: {_fmt(contrasts[k])}")
     else:
         out.append("- **None.** No pre-specified contrast showed a positive "
-                   "effect whose Holm-corrected interval excludes zero.")
+                   "effect that survived the Holm correction.")
     for k in verdict["worse"]:
         out.append(f"- **{k}** is *worse*, and the interval excludes zero: "
                    f"{_fmt(contrasts[k])}")
@@ -129,6 +146,52 @@ def build_findings(audit, contrasts, regimes, cases=None,
         for k in third["undetermined"]:
             out.append(f"- **{k}**: no detectable difference — "
                        f"{_fmt(tuple_contrasts[k])}")
+        out.append("")
+
+    if methods and any("hierarchical_mean" in row for row in methods.values()):
+        out += ["## Metric study — the same runs under four scoring rules", "",
+                "The official metric is one choice among several, and the "
+                "choices disagree about which method is best. `hF` is the "
+                "ancestor-based hierarchical F1 of the hierarchical-"
+                "classification literature: each label is the set of nodes on "
+                "its path, and hP, hR, hF are the micro-averaged set overlaps. "
+                "It is reported because a reviewer asks for an established "
+                "structure-aware metric, not one of our own.", ""]
+        out.append("| Method | official wF1 | C-wF1 | hP | hR | hF |")
+        out.append("|---|---|---|---|---|---|")
+        for method, row in methods.items():
+            h = row.get("hierarchical_mean")
+            if not h:
+                continue
+            out.append(
+                f"| {method} | {row['weighted_macro_f1_mean']:.4f} | "
+                f"{row.get('consistent_weighted_macro_f1_mean', float('nan')):.4f} | "
+                f"{h['hP']:.4f} | {h['hR']:.4f} | {h['hF']:.4f} |")
+        ranked_official = max(methods, key=lambda m: methods[m]["weighted_macro_f1_mean"])
+        ranked_h = max((m for m in methods if methods[m].get("hierarchical_mean")),
+                       key=lambda m: methods[m]["hierarchical_mean"]["hF"])
+        worst_official = min(methods, key=lambda m: methods[m]["weighted_macro_f1_mean"])
+        note = (f"**The two metrics disagree about the winner: "
+                f"{ranked_official} on the official metric, {ranked_h} on hF"
+                + (f" — and {ranked_h} is the *worst* method on the official one"
+                   if ranked_h == worst_official else "")
+                + ".** State the ranking together with the metric that produced "
+                  "it; a bare \"best method\" claim is not well defined here.")
+        out += ["", note, ""]
+
+    if hierarchical_contrasts:
+        fourth = classify_contrasts(hierarchical_contrasts)
+        out += ["### hF over the same five pre-specified contrasts", "",
+                "Its own Holm family, like the others. ⚠️ **Also adopted after "
+                "the primary analysis** — it answers a question about the "
+                "literature's metric, and was not named in the plan.", ""]
+        for k in fourth["better"]:
+            out.append(f"- **{k}** is better: {_fmt(hierarchical_contrasts[k])}")
+        for k in fourth["worse"]:
+            out.append(f"- **{k}** is *worse*: {_fmt(hierarchical_contrasts[k])}")
+        for k in fourth["undetermined"]:
+            out.append(f"- **{k}**: no detectable difference — "
+                       f"{_fmt(hierarchical_contrasts[k])}")
         out.append("")
 
     if methods:
@@ -202,6 +265,12 @@ def build_findings(audit, contrasts, regimes, cases=None,
             f"improvement claim.** It is absent from the Calibration partition "
             f"of {absent['n_without']} of the {absent['n_rotations']} rotations, "
             "so most rotations cannot estimate a bias for it at all.",
+            "- **The bracketed intervals are uncorrected.** They are 95% "
+            "bootstrap percentile intervals for one contrast at a time. With "
+            "five contrasts tested together the verdict comes from "
+            "`p_Holm`, and several contrasts in this study have an interval "
+            "excluding zero while failing the correction. Never call a "
+            "contrast significant because its interval misses zero.",
             "- **Never write that the official metric *systematically* "
             "underestimates structured decoding.** The evidence is one "
             "benchmark, one backbone and seven decision rules: it supports "
@@ -298,13 +367,14 @@ def build_findings(audit, contrasts, regimes, cases=None,
 
 def write_findings(out_dir, audit, contrasts, regimes, cases=None,
                    consistent_contrasts=None, tuple_contrasts=None,
-                   methods=None) -> Path:
+                   methods=None, hierarchical_contrasts=None) -> Path:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "findings.md"
     header = (f"<!-- generated {now_iso()} from {git_sha()} -->\n\n")
     path.write_text(header + build_findings(audit, contrasts, regimes, cases,
                                            consistent_contrasts,
-                                           tuple_contrasts, methods),
+                                           tuple_contrasts, methods,
+                                           hierarchical_contrasts),
                     encoding="utf-8")
     return path

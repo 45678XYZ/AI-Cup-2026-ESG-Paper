@@ -19,6 +19,7 @@ from pathlib import Path
 
 from analysis.audit import SPLITS_DIR
 from analysis.bootstrap import N_BOOT
+from analysis.findings import ALPHA
 from analysis.load import METHODS, predictions_path
 from paper.data import REPO_ROOT, TEST_PATH, TRAIN_PATH, VAL_PATH, file_sha256
 from paper.labels import FIELDS
@@ -113,17 +114,21 @@ def _contrast_sentence(contrasts, metric, note="") -> str:
     """
     rows = "; ".join(
         f"{key} ({row['description']}) {row['delta']:+.3f} "
-        f"[{row['ci_low']:.3f}, {row['ci_high']:.3f}]"
+        f"[{row['ci_low']:.3f}, {row['ci_high']:.3f}], $p_{{\\mathrm{{Holm}}}}$="
+        f"{row['p_holm']:.3f}"
         for key, row in contrasts.items()
     )
-    excluding = sum(1 for row in contrasts.values()
-                    if row["ci_low"] > 0 or row["ci_high"] < 0)
+    surviving = sum(1 for row in contrasts.values() if row["p_holm"] < ALPHA)
     return (
         f" Paired PDF-cluster bootstrap over {N_BOOT:,} resamples on {metric}, "
         f"Holm-corrected across the {_word(len(contrasts))} pre-specified "
         f"contrasts{note}: {rows}. "
-        f"{_word(excluding).capitalize()} of the {_word(len(contrasts))} intervals "
-        f"{'excludes' if excluding == 1 else 'exclude'} zero."
+        f"{_word(surviving).capitalize()} of the {_word(len(contrasts))} contrasts "
+        f"{'survives' if surviving == 1 else 'survive'} the correction at "
+        f"$\\alpha$={ALPHA}. **The bracketed intervals are uncorrected 95\\% "
+        f"percentile intervals**: with {_word(len(contrasts))} contrasts tested "
+        f"together, significance is read from $p_{{\\mathrm{{Holm}}}}$, not from "
+        f"whether an interval excludes zero."
     )
 
 
