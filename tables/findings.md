@@ -1,4 +1,4 @@
-<!-- generated 2026-08-22T00:51:30.640407+00:00 from dfb128ef0eb917b7e21d587466709e5d63a359d8 -->
+<!-- generated 2026-08-22T01:22:05.486386+00:00 from 392950021cf0b43fcb018f8b99b499822bc4c3f5 -->
 
 # Findings brief
 
@@ -87,6 +87,7 @@ Write these as *no detectable difference*, never as *no difference* and never as
 ## Prohibitions
 
 - **`Misleading` (n=2) must not carry any significance or improvement claim.** It is absent from the Calibration partition of 18 of the 30 rotations, so most rotations cannot estimate a bias for it at all.
+- **Never write that the official metric *systematically* underestimates structured decoding.** The evidence is one benchmark, one backbone and seven decision rules: it supports *can substantially understate* or *may fail to reflect improvements in structured-output validity* on this task, and nothing about the metric in general.
 - **The path-constrained family was not pre-specified.** It was adopted after the primary analysis because it isolates a single factor. Say so wherever its intervals appear; presenting it as a planned analysis would misrepresent how it was chosen.
 - **`±` in Table 2 is seed spread, not a confidence interval.** It describes the whole pipeline — fold assignment and training together — and must not be described as model stability.
 - **Δ in Table 3 is the gap between two estimation targets, not a bias.** Development and test draw on the same 49 reports, so the same-document column is the competition's own distribution, not a mistake.
@@ -95,6 +96,8 @@ Write these as *no detectable difference*, never as *no difference* and never as
 
 - Independent argmax emits 1,527 illegal tuples across 12,000 rows (12.72%); the most common single violation is `evidence_no_quality_set` at 755 (49%).
 - Projection repairs 822 fields and destroys 637, a net of +185 over 48,000 field slots.
+
+- **The decoder makes the parent field *more* accurate and still loses whole rows.** Searching all 17 states revises `promise_status` on 339 of 12,000 rows relative to the projection on the same probabilities. On the field itself that is a net gain: 225 become correct against 114 broken. On those same rows whole-tuple correctness falls from 114 to 47. The exchange is asymmetric — repairing the parent rarely rescues the row, because the children are usually still wrong, while breaking the parent destroys the row outright. This is the mechanism behind M4-M1, and it is the opposite of the intuitive story that an unreliable field overturns a reliable one.
 
 - **The exchange is not symmetric.** Repairs land on the `N/A` classes (+759) while the damage falls on the substantive ones (-574), worst on `evidence_quality.Clear`. macro-F1 weights every class equally and `N/A` is the easiest class to predict, so the two nearly cancel in the official metric while whole-row correctness rises.
 

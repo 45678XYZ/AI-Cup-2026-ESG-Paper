@@ -156,3 +156,35 @@ def test_brief_records_the_two_misleading_instances_one_by_one():
                   "predicted": {"M0": "Clear", "M1": "Clear"}}]}]}
     text = build_findings(AUDIT_STUB, {}, regimes={}, cases=cases)
     assert "42" in text and "Clear" in text
+
+
+def test_brief_forbids_the_systematically_claim():
+    """One benchmark, one backbone, seven decision rules. The evidence supports
+    "can substantially understate" on this task; it does not support a claim
+    about the metric in general, and that is the single easiest thing for a
+    reviewer to attack."""
+    text = build_findings(AUDIT_STUB, {}, regimes={}, cases=None)
+    prohibitions = text.split("## Prohibitions")[1]
+    assert "systematically" in prohibitions
+    assert "substantially understate" in prohibitions
+
+
+def test_brief_reports_the_override_ledger():
+    """The mechanism behind M4-M1 has to arrive as counts. Stated as prose it
+    was not only unverifiable, it was wrong: the decoder makes the parent field
+    *more* accurate and still loses whole rows."""
+    cases = {"totals": {"n_rows": 6000, "n_invalid": 1527, "invalid_rate": 0.25,
+                        "by_rule": {"promise_no_children_set": 755},
+                        "fields_repaired": 822, "fields_destroyed": 637,
+                        "net_fields": 185,
+                        "parent_overrides": {
+                            "n_rows": 6000, "n_changed": 160,
+                            "to_correct": 104, "to_wrong": 56,
+                            "wrong_to_wrong": 0,
+                            "tuple_correct_before": 56,
+                            "tuple_correct_after": 20}},
+             "runs": []}
+    text = build_findings(AUDIT_STUB, {}, regimes={}, cases=cases)
+    assert "160" in text and "104" in text
+    assert "56" in text and "20" in text
+    assert "promise_status" in text

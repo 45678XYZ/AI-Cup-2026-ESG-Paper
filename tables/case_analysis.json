@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-08-22T00:51:30.626579+00:00",
- "git_sha": "dfb128ef0eb917b7e21d587466709e5d63a359d8",
+ "generated_at": "2026-08-22T01:22:05.472730+00:00",
+ "git_sha": "392950021cf0b43fcb018f8b99b499822bc4c3f5",
  "totals": {
   "n_rows": 12000,
   "n_invalid": 1527,
@@ -13,6 +13,15 @@
   "fields_repaired": 822,
   "fields_destroyed": 637,
   "fields_wrong_either_way": 595,
+  "parent_overrides": {
+   "n_rows": 12000,
+   "n_changed": 339,
+   "to_correct": 225,
+   "to_wrong": 114,
+   "wrong_to_wrong": 0,
+   "tuple_correct_before": 114,
+   "tuple_correct_after": 47
+  },
   "na": {
    "repaired": 796,
    "destroyed": 37,
@@ -177,6 +186,16 @@
      "net": -82
     },
     "net": 44
+   },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 50,
+    "to_correct": 30,
+    "to_wrong": 20,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 20,
+    "tuple_correct_after": 5
    },
    "misleading_cases": [
     {
@@ -385,6 +404,16 @@
     },
     "net": 41
    },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 58,
+    "to_correct": 38,
+    "to_wrong": 20,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 20,
+    "tuple_correct_after": 10
+   },
    "misleading_cases": [
     {
      "id": "10017",
@@ -573,6 +602,16 @@
      "net": -78
     },
     "net": 46
+   },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 52,
+    "to_correct": 36,
+    "to_wrong": 16,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 16,
+    "tuple_correct_after": 5
    },
    "misleading_cases": [
     {
@@ -771,6 +810,16 @@
     },
     "net": 16
    },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 50,
+    "to_correct": 33,
+    "to_wrong": 17,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 17,
+    "tuple_correct_after": 6
+   },
    "misleading_cases": [
     {
      "id": "10017",
@@ -967,6 +1016,16 @@
      "net": -107
     },
     "net": 42
+   },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 80,
+    "to_correct": 53,
+    "to_wrong": 27,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 27,
+    "tuple_correct_after": 11
    },
    "misleading_cases": [
     {
@@ -1180,6 +1239,16 @@
      "net": -100
     },
     "net": -4
+   },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 49,
+    "to_correct": 35,
+    "to_wrong": 14,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 14,
+    "tuple_correct_after": 10
    },
    "misleading_cases": [
     {

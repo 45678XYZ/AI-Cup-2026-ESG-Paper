@@ -11,6 +11,7 @@ import pytest
 
 from analysis.cases import (
     misleading_cases,
+    parent_overrides,
     case_analysis,
     projection_ledger,
     violation_breakdown,
@@ -209,3 +210,49 @@ def test_case_analysis_carries_the_misleading_instances():
     order = canonical_row_order(dev)
     out = case_analysis("pdf_group", 42, order, EXAMPLES_ROOT, dev=dev)
     assert len(out["misleading_cases"]) == 2
+
+
+# --- the mechanism behind M4-M1 --------------------------------------------
+#
+# The projection decides promise_status first and never reconsiders it. The
+# 17-state decoder scores whole tuples, so a confident evidence_quality can
+# overturn a marginal promise_status. That is the stated mechanism for the one
+# contrast where decoding loses to projection -- and until this function it was
+# an assertion with no number behind it.
+
+
+def test_parent_overrides_counts_only_the_rows_the_decoder_revised():
+    # row 0 unchanged; row 1 wrong -> correct; row 2 correct -> wrong.
+    gold      = np.array([[0, 0, 0, 0], [1, 4, 2, 3], [0, 0, 0, 0]])
+    projected = np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+    decoded   = np.array([[0, 0, 0, 0], [1, 4, 2, 3], [1, 4, 2, 3]])
+
+    out = parent_overrides(gold, projected, decoded)
+    assert out["field"] == "promise_status"
+    assert out["n_rows"] == 3
+    assert out["n_changed"] == 2
+    assert out["to_correct"] == 1
+    assert out["to_wrong"] == 1
+    assert out["wrong_to_wrong"] == 0
+    # the three buckets must partition the changed rows, or the ledger lies
+    assert out["to_correct"] + out["to_wrong"] + out["wrong_to_wrong"] == out["n_changed"]
+
+
+def test_parent_overrides_also_scores_the_whole_tuple_on_those_rows():
+    """Whether overturning the parent helped is not answerable from the parent
+    alone: the decoder rewrites the children to match."""
+    gold      = np.array([[1, 4, 2, 3]])
+    projected = np.array([[0, 0, 0, 0]])
+    decoded   = np.array([[1, 4, 2, 3]])
+    out = parent_overrides(gold, projected, decoded)
+    assert out["tuple_correct_before"] == 0
+    assert out["tuple_correct_after"] == 1
+
+
+def test_case_analysis_carries_the_override_ledger():
+    dev = load_dev()
+    order = canonical_row_order(dev)
+    out = case_analysis("pdf_group", 42, order, EXAMPLES_ROOT, dev=dev)
+    ledger = out["parent_overrides"]
+    assert ledger["n_rows"] == len(order)
+    assert 0 <= ledger["n_changed"] <= ledger["n_rows"]

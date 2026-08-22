@@ -202,6 +202,12 @@ def build_findings(audit, contrasts, regimes, cases=None,
             f"improvement claim.** It is absent from the Calibration partition "
             f"of {absent['n_without']} of the {absent['n_rotations']} rotations, "
             "so most rotations cannot estimate a bias for it at all.",
+            "- **Never write that the official metric *systematically* "
+            "underestimates structured decoding.** The evidence is one "
+            "benchmark, one backbone and seven decision rules: it supports "
+            "*can substantially understate* or *may fail to reflect improvements "
+            "in structured-output validity* on this task, and nothing about the "
+            "metric in general.",
             "- **The path-constrained family was not pre-specified.** It was "
             "adopted after the primary analysis because it isolates a single "
             "factor. Say so wherever its intervals appear; presenting it as a "
@@ -229,6 +235,23 @@ def build_findings(audit, contrasts, regimes, cases=None,
                 f"- Projection repairs {t['fields_repaired']:,} fields and "
                 f"destroys {t['fields_destroyed']:,}, a net of "
                 f"{t['net_fields']:+,} over {t['n_rows']*4:,} field slots.", ""]
+        if "parent_overrides" in t:
+            o = t["parent_overrides"]
+            out += [f"- **The decoder makes the parent field *more* accurate and "
+                    f"still loses whole rows.** Searching all 17 states revises "
+                    f"`{'promise_status'}` on {o['n_changed']:,} of "
+                    f"{o['n_rows']:,} rows relative to the projection on the same "
+                    f"probabilities. On the field itself that is a net gain: "
+                    f"{o['to_correct']:,} become correct against {o['to_wrong']:,} "
+                    f"broken. On those same rows whole-tuple correctness falls "
+                    f"from {o['tuple_correct_before']:,} to "
+                    f"{o['tuple_correct_after']:,}. The exchange is asymmetric — "
+                    f"repairing the parent rarely rescues the row, because the "
+                    f"children are usually still wrong, while breaking the parent "
+                    f"destroys the row outright. This is the mechanism behind "
+                    f"M4-M1, and it is the opposite of the intuitive story that "
+                    f"an unreliable field overturns a reliable one.", ""]
+
         if "na" in t:
             na, sub = t["na"], t["substantive"]
             worst = min(t["by_class"].items(), key=lambda kv: kv[1]["net"])[0] \

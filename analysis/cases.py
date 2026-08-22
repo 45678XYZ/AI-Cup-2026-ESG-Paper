@@ -176,6 +176,45 @@ def unobserved_states(gold, pred) -> dict:
     }
 
 
+def parent_overrides(gold, projected, decoded, field="promise_status") -> dict:
+    """How often the joint decoder revises the field the projection fixed first.
+
+    The projection decides ``promise_status`` from its own head and never
+    reconsiders it; the 17-state decoder scores whole tuples, so a confident
+    ``evidence_quality`` can overturn a marginal ``promise_status``. That is the
+    stated mechanism for M4 losing to M1 on whole-row correctness, and this
+    function is what turns it from an assertion into a count.
+
+    Both inputs must come from the **same probabilities** -- M1 against M4, or
+    M3 against M6 -- or the difference mixes the output rule with a bias.
+
+    Changed rows are partitioned three ways by what the revision did to that
+    field, and the whole tuple is scored on those rows as well: overturning the
+    parent also rewrites the children, so the parent alone cannot say whether
+    the revision helped.
+    """
+    column = FIELDS.index(field)
+    before, after, truth = (projected[:, column], decoded[:, column],
+                            gold[:, column])
+    changed = before != after
+    was_right, is_right = before == truth, after == truth
+
+    on_changed = np.flatnonzero(changed)
+    tuple_before = np.all(gold[on_changed] == projected[on_changed], axis=1)
+    tuple_after = np.all(gold[on_changed] == decoded[on_changed], axis=1)
+
+    return {
+        "field": field,
+        "n_rows": int(len(gold)),
+        "n_changed": int(changed.sum()),
+        "to_correct": int((changed & ~was_right & is_right).sum()),
+        "to_wrong": int((changed & was_right & ~is_right).sum()),
+        "wrong_to_wrong": int((changed & ~was_right & ~is_right).sum()),
+        "tuple_correct_before": int(tuple_before.sum()),
+        "tuple_correct_after": int(tuple_after.sum()),
+    }
+
+
 def misleading_cases(order, dev, protocol, seed, root, methods=METHODS) -> list:
     """What every method predicted on each gold ``Misleading`` paragraph.
 
@@ -228,6 +267,11 @@ def case_analysis(protocol, seed, order, root, dev=None,
         "after_projection": violation_breakdown(projected_pred),
         "projection": projection_ledger(gold, raw, projected_pred),
         "by_class": repair_ledger_by_class(gold, raw, projected_pred),
+        # M1 against M4: identical probabilities, no calibration on either, so
+        # the only difference is greedy projection versus whole-tuple search.
+        "parent_overrides": parent_overrides(
+            gold, projected_pred,
+            load_aligned(protocol, seed, "M4", order, root)[1]),
         "misleading_cases": misleading_cases(order, dev, protocol, seed, root),
         "unobserved": {
             method: unobserved_states(
@@ -264,6 +308,12 @@ def write_case_analysis(out_dir, order, root, dev=None,
         "fields_destroyed": sum(r["projection"]["fields_destroyed"] for r in runs),
         "fields_wrong_either_way": sum(
             r["projection"]["fields_wrong_either_way"] for r in runs),
+        "parent_overrides": {
+            key: sum(r["parent_overrides"][key] for r in runs)
+            for key in ("n_rows", "n_changed", "to_correct", "to_wrong",
+                        "wrong_to_wrong", "tuple_correct_before",
+                        "tuple_correct_after")
+        },
     }
     for bucket in ("na", "substantive"):
         totals[bucket] = {
