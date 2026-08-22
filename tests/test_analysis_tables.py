@@ -12,6 +12,8 @@ from analysis.audit import full_audit
 from analysis.load import EXAMPLES_ROOT, pdf_clusters
 from analysis.tables import (
     TABLE_FILES,
+    render_table4,
+    render_table5,
     build_captions,
     render_table1,
     render_table2,
@@ -222,40 +224,36 @@ def test_table2_and_3_captions_follow_the_audit_too():
 # difference in it survives resampling.
 
 
-def test_table2_caption_carries_every_pre_specified_contrast():
-    contrasts = SUMMARIES["pdf_group"]["contrasts"]
-    caption = build_captions(AUDIT, contrasts=contrasts)["table2_main"]
-
-    assert len(contrasts) == 5, "the frozen family is five contrasts"
-    for key, row in contrasts.items():
-        assert key in caption, f"{key} missing from the caption"
-        assert row["description"] in caption
-        assert f"{row['ci_low']:.3f}" in caption and f"{row['ci_high']:.3f}" in caption
-    assert "Holm" in caption
-    assert "10,000" in caption
+def test_table4_carries_every_pre_specified_contrast():
+    """Each contrast must appear once per family, or a reader cannot tell that
+    the same hypotheses were tested under every metric."""
+    summary = SUMMARIES["pdf_group"]
+    tex = render_table4(summary)
+    for key in summary["contrasts"]:
+        assert key in tex, f"{key} missing from table 4"
 
 
-def test_table2_caption_counts_what_survives_the_correction_not_the_intervals():
+def test_table4_caption_counts_what_survives_the_correction_not_the_intervals():
     """The five contrasts are tested together. A caption that counts intervals
     excluding zero states an uncorrected result under a sentence that says
     "Holm-corrected", which is the multiplicity error the correction exists to
     prevent."""
     contrasts = SUMMARIES["pdf_group"]["contrasts"]
-    caption = build_captions(AUDIT, contrasts=contrasts)["table2_main"]
+    caption = build_captions(AUDIT, contrasts=contrasts)["table4_contrasts"]
     n = sum(1 for r in contrasts.values() if r["p_holm"] < 0.05)
     words = {0: "none", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
-    assert f"{words[n]} of the five" in caption.lower()
+    assert f"{words[n]} on Weighted macro-F1" in caption
     assert "uncorrected" in caption.lower()   # the intervals must be labelled
 
 
-def test_table2_caption_follows_the_numbers_rather_than_repeating_them():
+def test_table4_follows_the_numbers_rather_than_repeating_them():
     """A transcribed interval would not move when the study is re-run."""
-    contrasts = copy.deepcopy(SUMMARIES["pdf_group"]["contrasts"])
-    key = next(iter(contrasts))
-    contrasts[key].update(delta=0.123, ci_low=0.111, ci_high=0.222)
-    caption = build_captions(AUDIT, contrasts=contrasts)["table2_main"]
-    assert "0.123" in caption
-    assert "[0.111, 0.222]" in caption
+    summary = copy.deepcopy(SUMMARIES["pdf_group"])
+    key = next(iter(summary["contrasts"]))
+    summary["contrasts"][key].update(delta=0.123, ci_low=0.111, ci_high=0.222)
+    tex = render_table4(summary)
+    assert "+0.123" in tex
+    assert "[0.111, 0.222]" in tex
 
 
 def test_captions_still_build_without_contrasts():
@@ -269,42 +267,39 @@ def test_written_caption_includes_the_contrasts(tmp_path):
     assert "Holm" in caption, "write_tables must pass the contrasts through"
 
 
-def test_contrast_sentence_agrees_in_number():
-    """The caption is copied verbatim into the paper, so "one ... exclude" is
-    not a typo anyone downstream is expected to catch."""
-    from analysis.tables import _contrast_sentence
+def test_survival_summary_counts_each_family_separately():
+    """The caption is copied verbatim into the paper, so the count has to come
+    from the corrected p-values of each family, not from a stored sentence."""
+    from analysis.tables import _survival_summary
 
     def rows(n_surviving, total=5):
-        out = {}
-        for i in range(total):
-            lives = i < n_surviving
-            out[f"M{i+1}-M{i}"] = {
-                "delta": -0.01, "ci_low": -0.02, "ci_high": -0.001,
-                "description": "d", "p_value": 0.01,
-                "p_holm": 0.01 if lives else 0.4,
-            }
-        return out
+        return {f"M{i+1}-M{i}": {
+            "delta": -0.01, "ci_low": -0.02, "ci_high": -0.001,
+            "description": "d", "p_value": 0.01,
+            "p_holm": 0.01 if i < n_surviving else 0.4,
+        } for i in range(total)}
 
-    assert "One of the five contrasts survives" in _contrast_sentence(rows(1), "m")
-    assert "Two of the five contrasts survive" in _contrast_sentence(rows(2), "m")
-    assert "None of the five contrasts survive" in _contrast_sentence(rows(0), "m")
+    sentence = _survival_summary({"contrasts": rows(0),
+                                  "tuple_contrasts": rows(2)})
+    assert "none on Weighted macro-F1" in sentence
+    assert "two on Tuple accuracy" in sentence
+    assert "Of the five contrasts" in sentence
 
 
-def test_table2_caption_carries_both_metric_families():
+def test_table4_caption_names_the_metrics_and_their_provenance():
     """The secondary metric has no column of its own -- the column count is what
     D measured the page budget against -- so the caption is the only place its
     intervals can appear, and it must say which family the competition ranks on."""
     primary = SUMMARIES["pdf_group"]["contrasts"]
     secondary = SUMMARIES["pdf_group"]["consistent_contrasts"]
     cap = build_captions(AUDIT, contrasts=primary,
-                         consistent_contrasts=secondary)["table2_main"]
+                         consistent_contrasts=secondary)["table4_contrasts"]
     assert "path-constrained" in cap.lower()
-    for key in secondary:
-        assert key in cap
+    assert "hierarchical" in cap.lower()
     assert cap.count("Holm") >= 1
 
 
-def test_table2_caption_discloses_which_family_was_not_pre_specified():
+def test_table4_caption_discloses_which_family_was_not_pre_specified():
     """The path-constrained metric was adopted after the primary analysis. A
     caption that reports its intervals without saying so presents a post-hoc
     choice as a planned one."""
@@ -312,20 +307,19 @@ def test_table2_caption_discloses_which_family_was_not_pre_specified():
         AUDIT, contrasts=SUMMARIES["pdf_group"]["contrasts"],
         consistent_contrasts=SUMMARIES["pdf_group"]["consistent_contrasts"],
         tuple_contrasts=SUMMARIES["pdf_group"]["tuple_contrasts"],
-    )["table2_main"]
+    )["table4_contrasts"]
     assert "not pre-specified" in cap
-    assert "named in advance by the analysis plan" in cap
+    assert "named in the analysis plan in advance" in cap
 
 
-def test_table2_caption_reports_the_pre_specified_secondary_family():
+def test_table4_caption_reports_the_pre_specified_secondary_family():
     """tuple accuracy is a printed column and a planned family; its intervals
     belong under the table whatever the newer metric says."""
     tuples = SUMMARIES["pdf_group"]["tuple_contrasts"]
     cap = build_captions(AUDIT, contrasts=SUMMARIES["pdf_group"]["contrasts"],
-                         tuple_contrasts=tuples)["table2_main"]
+                         tuple_contrasts=tuples)["table4_contrasts"]
     assert "tuple accuracy" in cap.lower()
-    for key in tuples:
-        assert key in cap
+    assert "named in the" in cap.lower()
 
 
 def test_table2_caption_computes_the_gap_between_the_two_metrics():
@@ -366,3 +360,61 @@ def test_table1_caption_states_the_overlap_and_the_duplicate():
     cap = build_captions(AUDIT)["table1_dataset"]
     assert str(AUDIT["pdf_overlap"]["n_shared"]) in cap
     assert "duplicate" in cap.lower()
+
+
+# --- table 4: the contrast families ----------------------------------------
+#
+# The study's central result is four metrics disagreeing about the same five
+# pre-specified contrasts. Until now it lived only in Table 2's caption, which
+# had grown to some 500 words and still had no room for the fourth family. A
+# statistical result of that size belongs in a table.
+
+
+def test_table4_lists_every_contrast_of_every_family():
+    summary = SUMMARIES["pdf_group"]
+    tex = render_table4(summary)
+    families = [k for k in ("contrasts", "consistent_contrasts",
+                            "hierarchical_contrasts", "tuple_contrasts")
+                if summary.get(k)]
+    body = [l for l in tex.splitlines() if l.endswith(r"\\") and "midrule" not in l]
+    # one header row plus one row per (family, contrast)
+    assert len(body) == 1 + sum(len(summary[k]) for k in families)
+    for key in summary["contrasts"]:
+        assert tex.count(key) == len(families)
+
+
+def test_table4_marks_what_survived_the_correction():
+    """The reader has to be able to see the verdict without recomputing it."""
+    summary = SUMMARIES["pdf_group"]
+    tex = render_table4(summary)
+    survivors = sum(1 for family in ("contrasts", "consistent_contrasts",
+                                     "hierarchical_contrasts", "tuple_contrasts")
+                    if summary.get(family)
+                    for row in summary[family].values() if row["p_holm"] < 0.05)
+    assert tex.count(r"\textbf{") >= survivors
+
+
+def test_table4_carries_only_a_tabular():
+    tex = render_table4(SUMMARIES["pdf_group"])
+    assert tex.lstrip().startswith(r"\begin{tabular}")
+    for forbidden in (r"\begin{table}", r"\caption", r"\label"):
+        assert forbidden not in tex
+
+
+# --- table 5: the metric study ----------------------------------------------
+
+
+def test_table5_scores_every_method_under_every_metric():
+    tex = render_table5(SUMMARIES["pdf_group"])
+    for method in ("M0", "M1", "M2", "M3", "M4", "M5", "M6"):
+        assert f"{method} &" in tex
+
+
+def test_table5_shows_the_two_metrics_disagreeing_about_the_winner():
+    """If the columns ever agreed on the best method the table would have no
+    reason to exist, and the paper would need a different argument."""
+    methods = SUMMARIES["pdf_group"]["methods"]
+    best_official = max(methods, key=lambda m: methods[m]["weighted_macro_f1_mean"])
+    best_h = max(methods, key=lambda m: methods[m]["hierarchical_mean"]["hF"])
+    tex = render_table5(SUMMARIES["pdf_group"])
+    assert best_official in tex and best_h in tex

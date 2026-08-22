@@ -28,13 +28,25 @@ from paper.train_config import PROTOCOLS, SEEDS
 
 CONTRACT_VERSION = "1.0"
 
-TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex")
+TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
+               "table4_contrasts.tex", "table5_metrics.tex")
+
+# How each Holm family is named in table 4. Held here rather than imported
+# from the brief so the tabular's wording cannot drift with prose edits.
+FAMILY_LABELS = (
+    ("contrasts", "Weighted macro-F1 (official)"),
+    ("consistent_contrasts", "Path-constrained wF1"),
+    ("hierarchical_contrasts", "Hierarchical F1 (hF)"),
+    ("tuple_contrasts", "Tuple accuracy"),
+)
 
 # The script that computed the numbers, not the one that formatted them.
 SOURCE_SCRIPTS = {
     "table1_dataset.tex": "analysis/audit.py",
     "table2_main.tex": "analysis/aggregate.py",
     "table3_regimes.tex": "analysis/aggregate.py",
+    "table4_contrasts.tex": "analysis/aggregate.py",
+    "table5_metrics.tex": "analysis/aggregate.py",
 }
 
 # The competition test split ships no labels, so its label-derived cells cannot
@@ -99,37 +111,31 @@ def table_inputs(predictions_root, protocols=PROTOCOLS, seeds=SEEDS,
         "table1_dataset.tex": audited,
         "table2_main.tex": scored["pdf_group"],
         "table3_regimes.tex": [p for protocol in protocols for p in scored[protocol]],
+        "table4_contrasts.tex": scored["pdf_group"],
+        "table5_metrics.tex": scored["pdf_group"],
     }
 
 
-def _contrast_sentence(contrasts, metric, note="") -> str:
-    """The paired Δ and 95% CI plan §5 asks for under Table 2.
+def _survival_summary(families) -> str:
+    """How many of each metric's five contrasts survived, spelled out.
 
-    The table itself carries seed spread, which says how much a number moves
-    when the pipeline is re-run; it says nothing about whether the gap between
-    two methods survives resampling. That is what the family below answers, and
-    it is Holm-corrected because the five contrasts were pre-specified together
-    (analysis/aggregate.py::CONTRASTS) -- reporting them uncorrected would let
-    the family's error rate ride on however many comparisons happened to be run.
+    Table 4 prints every contrast; this is the sentence that tells a reader
+    what the table adds up to before they read a single row. Counting is over
+    the corrected p, never over the intervals -- five contrasts are tested
+    together, and an interval that excludes zero decides nothing on its own.
     """
-    rows = "; ".join(
-        f"{key} ({row['description']}) {row['delta']:+.3f} "
-        f"[{row['ci_low']:.3f}, {row['ci_high']:.3f}], $p_{{\\mathrm{{Holm}}}}$="
-        f"{row['p_holm']:.3f}"
-        for key, row in contrasts.items()
-    )
-    surviving = sum(1 for row in contrasts.values() if row["p_holm"] < ALPHA)
-    return (
-        f" Paired PDF-cluster bootstrap over {N_BOOT:,} resamples on {metric}, "
-        f"Holm-corrected across the {_word(len(contrasts))} pre-specified "
-        f"contrasts{note}: {rows}. "
-        f"{_word(surviving).capitalize()} of the {_word(len(contrasts))} contrasts "
-        f"{'survives' if surviving == 1 else 'survive'} the correction at "
-        f"$\\alpha$={ALPHA}. **The bracketed intervals are uncorrected 95\\% "
-        f"percentile intervals**: with {_word(len(contrasts))} contrasts tested "
-        f"together, significance is read from $p_{{\\mathrm{{Holm}}}}$, not from "
-        f"whether an interval excludes zero."
-    )
+    parts = []
+    for key, label in FAMILY_LABELS:
+        family = families.get(key)
+        if not family:
+            continue
+        n = sum(1 for row in family.values() if row["p_holm"] < ALPHA)
+        parts.append(f"{_word(n)} on {label}")
+    if not parts:
+        return ""
+    listed = ", ".join(parts[:-1]) + (" and " if len(parts) > 1 else "") + parts[-1]
+    return (f" Of the {_word(len(next(iter(families.values()))))} contrasts, "
+            f"{listed} survive the correction at $\\alpha$={ALPHA}.")
 
 
 def _consistency_clause(methods) -> str:
@@ -157,9 +163,27 @@ def _consistency_clause(methods) -> str:
             "support.")
 
 
+def _ranking_sentence(methods) -> str:
+    """Which method each metric prefers -- computed, because the disagreement
+    is the point and a stored sentence would survive a rerun that changed it."""
+    scored = {m: r for m, r in methods.items() if r.get("hierarchical_mean")}
+    if not scored:
+        return ""
+    best_official = max(scored, key=lambda m: scored[m]["weighted_macro_f1_mean"])
+    worst_official = min(scored, key=lambda m: scored[m]["weighted_macro_f1_mean"])
+    best_h = max(scored, key=lambda m: scored[m]["hierarchical_mean"]["hF"])
+    if best_official == best_h:
+        return f" Both metrics rank {best_official} first."
+    tail = (f", which is the lowest-scoring rule on the official metric"
+            if best_h == worst_official else "")
+    return (f" The metrics disagree about the winner: {best_official} on the "
+            f"official metric and {best_h} on hF{tail}. A ranking is only "
+            "meaningful stated together with the metric that produced it.")
+
+
 def build_captions(audit, seeds=SEEDS, contrasts=None,
                    consistent_contrasts=None, tuple_contrasts=None,
-                   methods=None) -> dict:
+                   methods=None, hierarchical_contrasts=None) -> dict:
     """Captions computed from the audit rather than stored as text.
 
     Captions are contract-4 deliverables and reach the paper verbatim, so the
@@ -194,22 +218,41 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             "standard deviation across seeds, which reflects the variability of "
             "the whole pipeline -- fold assignment and training together -- "
             "rather than model stability."
-            + (_contrast_sentence(
-                contrasts, "the official weighted macro-F1") if contrasts else "")
-            + (_contrast_sentence(
-                consistent_contrasts,
-                "the same metric's path-constrained variant, in which a field "
-                "whose ancestors were not predicted counts as a false "
-                "prediction",
-                ", as a family of its own because the two differ in exactly "
-                "that respect, and not pre-specified — it was adopted after "
-                "the primary analysis") if consistent_contrasts else "")
-            + (_contrast_sentence(
-                tuple_contrasts, "whole-row tuple accuracy",
-                ", named in advance by the analysis plan as the secondary "
-                "reporting metric and corrected as its own family")
-               if tuple_contrasts else "")
+            + (" Paired contrasts between these rows, under each metric and "
+               "with their Holm-corrected p-values, are reported in Table 4."
+               if contrasts else "")
             + (_consistency_clause(methods) if methods else "")
+        ),
+        "table4_contrasts": (
+            "The five pre-specified contrasts of the analysis plan, each "
+            "evaluated under every metric. Paired PDF-cluster bootstrap over "
+            f"{N_BOOT:,} resamples on the document-disjoint protocol; the "
+            "resampling unit is the source report, not the paragraph. Each "
+            "metric is Holm-corrected as its own family of five rather than "
+            "pooled: the contrasts were specified once, not once per metric. "
+            "\\textbf{Bold $p_{\\mathrm{Holm}}$ marks a contrast that survives "
+            "the correction; the bracketed intervals are uncorrected 95\\% "
+            "percentile intervals and decide nothing on their own.}"
+            + _survival_summary({
+                "contrasts": contrasts,
+                "consistent_contrasts": consistent_contrasts,
+                "hierarchical_contrasts": hierarchical_contrasts,
+                "tuple_contrasts": tuple_contrasts,
+            })
+            + " The official metric and tuple accuracy were named in the "
+            "analysis plan in advance; the path-constrained variant and the "
+            "hierarchical F1 were adopted after the primary analysis and are "
+            "not pre-specified."
+        ),
+        "table5_metrics": (
+            "The same seven decision rules scored under each metric. C-wF1 is "
+            "the official metric with ancestor-unsupported fields counted as "
+            "false predictions; hP, hR and hF are the ancestor-based "
+            "hierarchical precision, recall and F1, which are micro-averaged "
+            "over path nodes rather than macro-averaged over classes. C-wF1 "
+            "equals the official score for every rule whose output is legal by "
+            "construction and falls below it only for the unconstrained one."
+            + (_ranking_sentence(methods) if methods else "")
         ),
         "table3_regimes": (
             "Same-document versus document-disjoint evaluation. The left column "
@@ -290,6 +333,55 @@ def render_table2(summary) -> str:
     return _tabular("llrrrrrrrr", header, body)
 
 
+def render_table4(summary) -> str:
+    """Every pre-specified contrast under every metric, with its corrected p.
+
+    This is the study's central result and it used to live in table 2's
+    caption, which had grown past 500 words and still had no room for the
+    fourth family. A four-by-five statistical result is not caption material:
+    a reader has to be able to scan down the official metric's column, see no
+    bold, then scan the others and see it.
+    """
+    body = []
+    for key, label in FAMILY_LABELS:
+        family = summary.get(key)
+        if not family:
+            continue
+        if body:
+            body.append("\\midrule")
+        for i, (contrast, row) in enumerate(family.items()):
+            p_holm = f"{row['p_holm']:.3f}"
+            if row["p_holm"] < ALPHA:
+                p_holm = f"\\textbf{{{p_holm}}}"
+            body.append(
+                f"{label if i == 0 else ''} & {contrast} & {row['delta']:+.3f} & "
+                f"[{row['ci_low']:.3f}, {row['ci_high']:.3f}] & {p_holm} \\\\")
+    header = ("Metric & Contrast & $\\Delta$ & 95\\% CI & "
+              "$p_{\\mathrm{Holm}}$")
+    return _tabular("llrrr", header, body)
+
+
+def render_table5(summary) -> str:
+    """The same seven decision rules scored under each metric.
+
+    Optional: the paper's argument rests on table 4. This one carries the
+    descriptive counterpart -- that the metrics do not even agree on which
+    method is best -- and is offered so D can include it or drop it against
+    the page budget.
+    """
+    body = []
+    for method, _, _ in TABLE2_ROWS:
+        row = summary["methods"][method]
+        h = row["hierarchical_mean"]
+        body.append(
+            f"{method} & {_f(row['weighted_macro_f1_mean'])} & "
+            f"{_f(row['consistent_weighted_macro_f1_mean'])} & "
+            f"{_f(h['hP'])} & {_f(h['hR'])} & {_f(h['hF'])} & "
+            f"{_f(row['tuple_exact_match_mean'])} \\\\")
+    header = "ID & Weighted F1 & C-wF1 & hP & hR & hF & Tuple Acc."
+    return _tabular("lrrrrrr", header, body)
+
+
 def render_table3(regimes) -> str:
     body = []
     for label, row in regimes.items():
@@ -328,6 +420,8 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
         # same-document protocol reaches the paper through Table 3.
         "table2_main.tex": render_table2(summaries["pdf_group"]),
         "table3_regimes.tex": render_table3(regimes),
+        "table4_contrasts.tex": render_table4(summaries["pdf_group"]),
+        "table5_metrics.tex": render_table5(summaries["pdf_group"]),
     }
     for name, content in rendered.items():
         (out_dir / name).write_text(content, encoding="utf-8")
@@ -338,6 +432,7 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
         audit, seeds=seeds, contrasts=contrasts,
         consistent_contrasts=summaries["pdf_group"].get("consistent_contrasts"),
         tuple_contrasts=summaries["pdf_group"].get("tuple_contrasts"),
+        hierarchical_contrasts=summaries["pdf_group"].get("hierarchical_contrasts"),
         methods=summaries["pdf_group"]["methods"])
     for stem, caption in captions.items():
         (out_dir / f"{stem}_caption.txt").write_text(caption + "\n", encoding="utf-8")

@@ -331,7 +331,7 @@ Test split 不附標籤，所有由標籤推導的統計一律標 `n/a`——填
 | M1-M0 | hierarchy legalisation | -0.001 [-0.006, 0.003] | 1.000 |
 | M3-M2 | conditional vs global（projection 下） | -0.001 [-0.006, 0.004] | 1.000 |
 | M4-M1 | 17-state vs projection | +0.000 [-0.005, 0.005] | 1.000 |
-| M6-M3 | 在 conditional 下加 decoder | -0.007 [-0.017, 0.003] | 0.482 |
+| M6-M3 | 在 conditional 下加 decoder | -0.007 [-0.017, 0.003] | 0.643 |
 | M6-M5 | conditional vs global（decoding 下） | -0.009 [-0.017, -0.001] | **0.135** |
 
 > **五組全部無法解析。** 注意最後一列：區間排除 0，但 `p_Holm = 0.135`。**不可寫成顯著。**
@@ -367,6 +367,8 @@ Test split 不附標籤，所有由標籤推導的統計一律標 `n/a`——填
 | **M4-M1** | **-0.006 [-0.010, -0.002]** | **0.028** ✅ |
 | M6-M3 | -0.005 [-0.014, 0.004] | 0.973 |
 | M6-M5 | -0.004 [-0.012, 0.004] | 0.973 |
+
+⚠️ **這四張表就是 `tables/table4_contrasts.tex`**，8/22 新增。先前它們只存在於 Table 2 的 caption 裡——一個 4×5 的統計結果不該由 caption 承載，而且第四個家族根本放不進去。新增 Table 4 之後 Table 2 的 caption 大幅縮短。
 
 ### 7.3 通過校正的只有這四筆
 
@@ -1034,10 +1036,25 @@ hF = 0.40
 | `tables/findings.md` | **判定、四個家族、禁令（衝突時以此為準）** |
 | `tables/case_analysis.json` | 失效模式、逐類別帳、parent override、未觀察狀態 |
 | `tables/manifest.json` | 每張表的來源 script 與輸入 checksum |
+| `tables/table4_contrasts.tex` + `_caption.txt` | **五組對比 × 四個指標的 Δ、95% CI 與 `p_Holm`——論文的核心統計結果** |
+| `tables/table5_metrics.tex` + `_caption.txt` | 七個決策規則 × 六個指標欄（**可選**，依頁面預算取捨） |
 | `tables/audit.json` | 完整資料稽核 |
 | `docs/related_work_citations.md` | **C-metrics 的三層出處、BibTeX、逐字引文與 Related Work 寫法** |
 
-⚠️ **hF 的家族不在 Table 2 的 caption 裡**（caption 已很長，且 hF 是佐證而非主證）。它在 `tables/findings.md` 與本文 §7.2③。若 D 要把它放進論文，數字已備妥。
+### 怎麼看渲染後的表
+
+`.tex` 只含 `tabular`，單獨不可編譯。要看渲染後的樣子：
+
+```bash
+export PATH="$HOME/texlive/2026/bin/universal-darwin:$PATH"   # 本機 TeX
+python -m analysis.preview                                     # → tables/preview.pdf
+```
+
+五張表連同各自的 caption、以及 Figure 1，包成一份 PDF。**這是便利工具，不進版控**（`latexmk` 每次建置都會寫入不同的時戳）。
+
+⚠️ **Table 4 的視覺效果本身就是論點**：第一個區塊（官方指標）**沒有任何粗體**，其餘三個區塊都有。讀者不必讀完每一列就能看到結論。
+
+⚠️ **hF 的家族在 Table 4 裡**，但**不在 Table 2 的 caption**。若頁面預算逼得只能留三張表，優先順序是 **Table 4 > Table 5**——Table 4 是論文的證據，Table 5 是描述性的補充。
 
 **Figure 1 的排版**：自然尺寸 15.4 × 7.0 cm，用 `figure*` 跨雙欄、**原尺寸放置**（此時圖上的字是 8pt，對比內文 9pt）。**不要 `width=\textwidth`**，會讓圖上的字大過內文。preamble **不需加任何 package**。
 

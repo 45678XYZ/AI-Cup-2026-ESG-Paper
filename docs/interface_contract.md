@@ -362,8 +362,19 @@ A 提供 `contracts/examples/predictions/` 與 `results/` 的合成檔（分數�
 tables/table1_dataset.tex      figures/figure1_hierarchy.pdf   ← 交付物，D 引入這個
 tables/table2_main.tex         figures/figure1_hierarchy.tex   ← 圖的原始碼（standalone TikZ）
 tables/table3_regimes.tex      figures/figure1_defs.tex        ← 圖印出的數字，由 script 生成
+tables/table4_contrasts.tex
+tables/table5_metrics.tex
 tables/manifest.json
 ```
+
+⚠️ **8/22 新增 table 4 與 table 5**，理由與 D 需要知道的事：
+
+| 表 | 內容 | 必要性 |
+|---|---|---|
+| `table4_contrasts` | 五組預先指定對比 × 四個指標的 Δ、95% CI 與 `p_Holm` | **必要。** 這是論文的核心統計結果，先前只存在於 table 2 的 caption（已逾 500 字），且第四個家族根本放不進去 |
+| `table5_metrics` | 七個決策規則 × 六個指標欄 | **可選。** 描述性的對照（官方指標選 M5、hF 選 M6），D 可依頁面預算取捨 |
+
+新增 table 4 之後 **table 2 的 caption 大幅縮短**——三段統計敘述移入 table 4，caption 只留下表格本身的說明與一句指向。這對 8 頁預算是淨減少。
 
 檔名在契約凍結時固定，D 的 `\input{}` 與 `\includegraphics{}` 因此不會因 C 改名而斷。
 
@@ -391,13 +402,23 @@ tables/manifest.json
 
 版面上，圖的自然尺寸是 15.4 × 7.0 cm（6.1 × 2.8 in），設計成用 `figure*` 跨雙欄、以原尺寸放置：此時圖上的字是 8pt，對比內文 9pt。放大到 `width=\textwidth` 會讓圖上的字大於內文；而這張圖承載四件事，縮到單欄不可能維持可讀，原本規格欄寫的「可縮至單欄不失真」應理解為向量圖的性質，不是建議的排版方式。
 
+### 怎麼看渲染後的表
+
+`.tex` 只含 `tabular`，單獨不可編譯，所以在 8/22 之前沒有人能直接看到渲染後的樣子。現在有：
+
+```bash
+python -m analysis.preview          # → tables/preview.pdf
+```
+
+它把五張表連同各自的 caption、以及 Figure 1 包成一份 PDF。**這是便利工具，不是交付物**：不計算任何數字、不進版控（`latexmk` 會在每次建置寫入時戳，進版控只會製造雜訊）。沒有 TeX 的機器跑不動，但那不影響 `python -m analysis` 重算表格。
+
 ### 契約 4 的現況（2026-08-22）
 
 三張表、三份 caption、manifest 與圖全部由**真實 artifacts** 產生，不再有任何合成數字。
 
 | 項目 | 狀態 |
 |---|---|
-| 欄數 | **完全未變**，仍與 `contracts/examples/tables/` 的 placeholder 相同——D 的 8 頁預算不受影響 |
+| 欄數 | table 1–3 **完全未變**，仍與 `contracts/examples/tables/` 的 placeholder 相同。table 4／5 是新增的，沒有 placeholder，D 需自行決定放法 |
 | Table 1 | 新增兩列：`duplicated across splits`（1／1）與 `shared across splits`（49／49）。**列數變動不影響欄寬**，且這兩列是 Table 3 存在的理由，契約 §5 的「內容歸 C」涵蓋它 |
 | Table 2 | 表身不變；caption 擴為**三個 Holm 家族**的 Δ 與 95% CI，並逐一載明各家族是事先指定還是事後採用 |
 | Table 3 | 完全不變 |

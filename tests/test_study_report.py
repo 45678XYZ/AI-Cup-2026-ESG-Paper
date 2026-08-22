@@ -28,12 +28,24 @@ TABLES = REPO_ROOT / "tables"
 
 REPORT = (DOCS / "study_report.md").read_text(encoding="utf-8")
 INTERVAL = re.compile(r"\[[-+]?\d+\.\d+,\s*[-+]?\d+\.\d+\]")
+# ``p_Holm=0.025`` in the brief, ``| 0.025 |`` in a report table: match the
+# number itself and compare the sets.
+P_HOLM = re.compile(r"p_?Holm[=\s]*([01]\.\d{3})", re.IGNORECASE)
+
+
+PAPER_SOURCES = ("table2_main_caption.txt", "table3_regimes.tex",
+                 "table4_contrasts.tex", "table4_contrasts_caption.txt")
 
 
 def _paper_intervals():
-    """Intervals that reach the paper: the table 2 caption and table 3."""
-    text = ((TABLES / "table2_main_caption.txt").read_text(encoding="utf-8")
-            + (TABLES / "table3_regimes.tex").read_text(encoding="utf-8"))
+    """Every interval printed in a tabular or caption that reaches the paper.
+
+    Table 4 carries the contrast families that used to live in table 2's
+    caption; both are listed so moving a number between them cannot let it
+    escape the report.
+    """
+    text = "".join((TABLES / name).read_text(encoding="utf-8")
+                   for name in PAPER_SOURCES)
     return set(INTERVAL.findall(text))
 
 
@@ -88,3 +100,52 @@ def test_report_defers_to_the_generated_brief():
     two disagree the generated one wins, and the report must say so."""
     assert "findings.md" in REPORT
     assert "為準" in REPORT or "takes precedence" in REPORT.lower()
+
+
+def _quoted_p_values():
+    """Corrected p-values the report states, and only those.
+
+    Two forms appear: ``p_Holm=0.025`` inline, and a ``p_Holm`` column in a
+    markdown table. The column is located from its header rather than by
+    position, so a reordered table does not silently stop being checked -- and
+    F1 scores in neighbouring columns are never mistaken for p-values.
+    """
+    found = set(P_HOLM.findall(REPORT))
+    column, header = None, None
+    for line in REPORT.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            column, header = None, None
+            continue
+        cells = [c.strip() for c in stripped.strip("|").split("|")]
+        if all(c and set(c) <= set("-: ") for c in cells):
+            # A separator row starts a table: the column is re-derived from the
+            # header just above it, so the previous table's index cannot leak
+            # into this one and pick up an F1 score.
+            column = next((i for i, c in enumerate(header or [])
+                           if "p_holm" in c.lower()), None)
+            continue
+        if column is not None and column < len(cells):
+            found |= set(re.findall(r"([01]\.\d{3})", cells[column]))
+        header = cells
+    return found
+
+
+def test_report_invents_no_corrected_p_value():
+    """The interval guard cannot see p-values, and a mistyped one is exactly as
+    wrong as a mistyped interval -- more so now that every verdict rests on it.
+
+    This caught a real error: the report carried 0.482 for a contrast whose
+    corrected p is 0.643, copied from the neighbouring family where the same Δ
+    and interval get a different rank under Holm.
+    """
+    delivered = set(P_HOLM.findall(
+        (TABLES / "findings.md").read_text(encoding="utf-8")))
+    delivered |= set(re.findall(r"([01]\.\d{3})", "".join(
+        (TABLES / name).read_text(encoding="utf-8") for name in PAPER_SOURCES)))
+
+    unknown = sorted(p for p in _quoted_p_values() if p not in delivered)
+    assert not unknown, (
+        "the report quotes corrected p-values that no deliverable contains: "
+        f"{unknown}"
+    )
