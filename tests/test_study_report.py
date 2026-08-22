@@ -30,19 +30,29 @@ REPORT = (DOCS / "study_report.md").read_text(encoding="utf-8")
 INTERVAL = re.compile(r"\[[-+]?\d+\.\d+,\s*[-+]?\d+\.\d+\]")
 
 
-def _delivered_intervals():
-    # findings.md too: it carries every family the run computed, including any
-    # the caption summarises rather than prints in full. An interval the report
-    # quotes has to exist in something a rerun regenerates.
+def _paper_intervals():
+    """Intervals that reach the paper: the table 2 caption and table 3."""
     text = ((TABLES / "table2_main_caption.txt").read_text(encoding="utf-8")
-            + (TABLES / "table3_regimes.tex").read_text(encoding="utf-8")
-            + (TABLES / "findings.md").read_text(encoding="utf-8"))
+            + (TABLES / "table3_regimes.tex").read_text(encoding="utf-8"))
     return set(INTERVAL.findall(text))
 
 
-def test_report_quotes_every_delivered_interval():
-    """Both Holm families and Table 3 -- if an interval moves, the report moves."""
-    missing = sorted(ci for ci in _delivered_intervals() if ci not in REPORT)
+def _delivered_intervals():
+    """Every interval any deliverable carries, the brief included.
+
+    The two directions are deliberately asymmetric. The report must quote
+    everything that reaches the paper, so a moved number cannot slip past. It
+    need not quote every interval in the brief -- the brief carries secondary
+    analyses at full length -- but it may not contain one that exists nowhere,
+    which is how a typo or an invented figure would show up.
+    """
+    return _paper_intervals() | set(INTERVAL.findall(
+        (TABLES / "findings.md").read_text(encoding="utf-8")))
+
+
+def test_report_quotes_every_interval_that_reaches_the_paper():
+    """Table 2's caption and Table 3 -- if one moves, the report moves."""
+    missing = sorted(ci for ci in _paper_intervals() if ci not in REPORT)
     assert not missing, (
         f"{len(missing)} interval(s) in tables/ are absent from the report; "
         f"rerun `python -m analysis`, then update docs/study_report.md: {missing}"

@@ -85,7 +85,8 @@ def main() -> None:
                            consistent_contrasts=summaries["pdf_group"]["consistent_contrasts"],
                            tuple_contrasts=summaries["pdf_group"]["tuple_contrasts"],
                            hierarchical_contrasts=summaries["pdf_group"]["hierarchical_contrasts"],
-                           methods=summaries["pdf_group"]["methods"])
+                           methods=summaries["pdf_group"]["methods"],
+                           secondary=summaries["row_strat"])
     print(f"brief   -> {brief}")
 
     inputs = table_inputs(args.predictions_root, seeds=SEEDS)

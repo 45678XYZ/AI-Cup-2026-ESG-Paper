@@ -182,7 +182,7 @@ def test_brief_forbids_the_systematically_claim():
     about the metric in general, and that is the single easiest thing for a
     reviewer to attack."""
     text = build_findings(AUDIT_STUB, {}, regimes={}, cases=None)
-    prohibitions = text.split("## Prohibitions")[1]
+    prohibitions = text.split("Prohibitions")[-1]
     assert "systematically" in prohibitions
     assert "substantially understate" in prohibitions
 
