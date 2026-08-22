@@ -10,6 +10,9 @@
 #              COMMITTED  — the 15 bundles behind the structural arm's lambda
 #                           choice. Kept so the pre-registered selection can be
 #                           audited; indexed by nothing and scored into no table
+# probs_structural/
+#              COMMITTED  — the 30 bundles from the selected-lambda arm. Kept
+#                           separately so the frozen lambda=0 bundles stay intact
 # tables/      COMMITTED  — the contract-4 deliverables D includes, plus the
 #                           manifest that ties each printed number back to the
 #                           artifacts it was computed from
@@ -32,6 +35,7 @@
 !contracts/examples/**/*.npy
 !/probs/**/*.npy
 !/probs_lambda_sweep/**/*.npy
+!/probs_structural/**/*.npy
 /checkpoints/
 /checkpoints_*/
 

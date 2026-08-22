@@ -1,6 +1,6 @@
 # 預先登記：訓練期結構化目標（structural arm）
 
-**登記日期：2026-08-22（Asia/Taipei）**　**登記者：A**　**狀態：已登記，尚未執行**
+**登記日期：2026-08-22（Asia/Taipei）**　**登記者：A**　**狀態：已登記並完成執行**
 
 這份文件在**任何 structural arm 的 fit 開始之前**寫成並提交。它存在的唯一目的，是讓
 「這個 arm 的結果不是從多個嘗試裡挑出來的」這件事可以被外部查證 —— 靠的是 commit
@@ -127,9 +127,16 @@ sweep 產生的 15 個 bundle **不進入任何結果表**，但會保留並提�
   λ = 0.3: 0.6068，λ = 1.0: 0.6013（spread = 0.0054）。
 - [x] 選定的 λ：0.3（spread 高於 `INDISTINGUISHABLE = 0.002`，依最高
   calibration weighted macro-F1 選定，未啟用中位數 fallback）。
-- [ ] 正式 30 fits 執行日期：
-- [ ] H1 結果：
-- [ ] H2 結果：
+- [x] 正式 30 fits 執行日期：2026-08-22；30 bundles 全數通過 validator，
+  皆記錄 λ = 0.3、RTX 3090 與選擇後 commit `aaa9bfc` 為 provenance。
+- [x] H1 結果：非法 tuple 率在 `pdf_group` 由 12.55% 降至 5.18%
+  （相對降幅 58.70%），在 `row_strat` 由 12.90% 降至 5.58%
+  （相對降幅 56.72%）；6/6 protocol-seed 配對皆下降。依預登記僅作描述，
+  不做檢定。
+- [x] H2 結果：`pdf_group` M1 的 structural − baseline weighted macro-F1
+  = +0.00250，95% paired PDF-cluster bootstrap CI [−0.00384, +0.00860]，
+  p = 0.4272；**不支持 H2**。完整紀錄見 `docs/structural_training_results.md`
+  與 `structural_arm/comparison.json`。
 
 ## 9. 本 arm **不會**改動的東西
 
