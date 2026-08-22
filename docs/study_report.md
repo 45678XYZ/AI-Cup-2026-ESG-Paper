@@ -182,15 +182,25 @@ Test split 不附標籤，所有由標籤推導的統計一律標 `n/a`——填
 
 用 tuple accuracy 說「官方指標看不見結構一致性的改善」有一個弱點：**tuple accuracy 是我們自己選的**。審稿人可以問，是不是挑了一個對自己有利的量尺。
 
-階層分類文獻已有現成的答案。**path-constrained metrics（文獻稱 C-metrics）** 的定義：
+階層分類文獻已有現成的答案。出處已於 2026-08-22 逐字查證完畢，**完整書目、BibTeX 與所有逐字引文見 `docs/related_work_citations.md`**。出處是三層，引用時不要引錯層：
 
-> a node predicted as true will be considered a valid prediction **if and only if all its ancestors are also predicted as true**. Otherwise, it will be considered as a false prediction.
+| 層 | 文獻 | 貢獻 |
+|---|---|---|
+| **原始出處** | Yu, Shen & Mao, SIGIR 2022 | **提出** path-constrained MicroF1／MacroF1 |
+| 命名 | Ji et al., ACL 2023 | 合稱為 **C-metric** |
+| 性質觀察 | Plaud et al., CoNLL 2024 | 一致的方法在兩指標上結果相同 |
 
-以及一個可直接驗證的性質：
+**指標本身要引 Yu et al. (2022)**，原文定義：
 
-> Methods that have guaranteed label consistency show the **same results** on each metric and its corresponding path-constrained variant.
+> The difference between these path-constrained variants and traditional metrics is that, the prediction result for a node will be regarded as "true" only when all its ancestor nodes have been predicted as "true".
+> —— Yu, Shen & Mao (2022), SIGIR '22
 
-⚠️ **原始出處尚未查證，目前只有二手描述。** Related Work 要引用它之前必須先找到原始論文。這是 C 明確沒做完的一件事，不可先寫進去再補。
+以及一個可直接驗證的性質，Plaud et al. 在 CoNLL 2024 的 Appendix A 觀察到：
+
+> Our analysis reveals that our top-down loss-based methods yield identical results for both metrics. This outcome is unsurprising since the C-metrics penalize inconsistent predictions, while these methods consistently generate coherent predictions.
+> —— Plaud et al. (2024), CoNLL
+
+⚠️ **同一段的下文是我們必須正面處理的張力**：他們接著說這個指標「does not significantly alter the ranking of other models」，因此**刻意不放進主表**。我們的結果看似相反。這不是矛盾——他們比的是模型排名的點估計，我們比的是配對差值的信賴區間，而我們的 M0 有 12.72% 的輸出非法。**Related Work 必須寫這一段**，寫法與可引用的句子見 `docs/related_work_citations.md`。
 
 ### 定義
 
@@ -208,6 +218,8 @@ Test split 不附標籤，所有由標籤推導的統計一律標 `n/a`——填
 `N/A` 不受影響：在「沒有承諾」之下預測「沒有時程」是階層自洽，不是祖先不支持的宣稱。
 
 實作為 `analysis/metrics.py::consistent_weighted_macro_f1`，在計分前對預測做一次 masking，違反祖先條件的欄位換成哨兵類別（哨兵不存在於 gold，因此必然計為錯誤預測）。masking 不依賴抽樣，與 bootstrap 完全正交。
+
+⚠️ **一處必須揭露的改寫。** 文獻的 C-metrics 定義在**多標籤節點集合**上（預測一組節點，每個節點 true／false），本任務是**四欄多任務分類**（每欄選一個類別）。對應關係是：「節點被預測為 true」對應「欄位預測了非 `N/A` 的類別」，「祖先也被預測為 true」對應「父欄位取了允許該子欄位的值」。此外我們套用的是**官方的加權 macro-F1**（0.20／0.15／0.30／0.35），所以正確的說法是「採用 Yu et al. (2022) 的 path-constrained 原則並套用於官方加權指標」，**不能說「我們使用 C-MacroF1」**——權重不同。
 
 ### 文獻性質的實測驗證
 
@@ -429,7 +441,9 @@ D 寫 Methods 需要這一節。三個人的產出透過 checksum 串成一條�
 | 我們在競賽指標上更好 | **誠實承認官方排名依據上沒有優勢**——這反而讓「指標選擇有後果」的論述更有力 |
 | 把 path-constrained 指標寫成計畫的一部分 | 它是主要分析之後才採用的，須明說；事先指定的是官方指標與 tuple accuracy |
 | 只報 C-metric、不報 tuple accuracy | 三個家族全報，包含對我們不利的 `M4-M1` |
-| 引用 C-metrics 卻只引二手描述 | 先查證原始出處；查不到就只描述指標定義，不掛引用 |
+| 我們使用 C-MacroF1 | 我們套用的是 Yu et al. (2022) 的 path-constrained 原則加上官方權重，不是文獻的 C-MacroF1 原型 |
+| 把 C-metrics 引成 Ji et al. 或 Plaud et al. 提出的 | 原始出處是 Yu, Shen & Mao (SIGIR 2022) |
+| 不提 Plaud et al. 認為該指標不改變排名 | 必須正面處理；他們比排名，我們比配對區間 |
 | 所有階層指標都不夠用 | 只能說：在本資料集上，逐類別平均稀釋了一致性的價值 |
 
 ## 限制（必須寫進 Discussion）
@@ -465,6 +479,7 @@ D 寫 Methods 需要這一節。三個人的產出透過 checksum 串成一條�
 | `tables/case_analysis.json` | 失效模式、逐類別帳、未觀察狀態 |
 | `tables/manifest.json` | 每張表的來源 script 與輸入 checksum |
 | `tables/audit.json` | 完整資料稽核 |
+| `docs/related_work_citations.md` | **C-metrics 的三層出處、BibTeX、逐字引文與 Related Work 寫法** |
 
 **Figure 1 的排版**：自然尺寸 15.4 × 7.0 cm，用 `figure*` 跨雙欄、**原尺寸放置**（此時圖上的字是 8pt，對比內文 9pt）。**不要 `width=\textwidth`**，會讓圖上的字大過內文。preamble **不需加任何 package**。
 
