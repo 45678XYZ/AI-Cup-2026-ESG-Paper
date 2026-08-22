@@ -1,4 +1,4 @@
-<!-- generated 2026-08-22T03:19:59.316737+00:00 from 7338d36c8193b356422114688febc138315953c4 -->
+<!-- generated 2026-08-22T06:04:02.453377+00:00 from 0264d16bf5027f8e4883a143877c4d71c97c1d36 -->
 
 # Findings brief
 
@@ -132,7 +132,18 @@ Everything above is the **document-disjoint** protocol, which the plan designate
 
 ⚠️ **The headline contrast does not replicate here.**
 
-`M1-M0` on C-wF1 under the same-document protocol: +0.002 [-0.001, 0.005], p_Holm=0.739 — hierarchy legalisation. The direction agrees with the document-disjoint result but the correction is not cleared, so it must be described as not replicated rather than replicated weakly. The plausible reason is that this protocol scores rows from reports the model has partly seen, where fewer predictions break the hierarchy in the first place — but that is a hypothesis, not a measurement.
+`M1-M0` on C-wF1 under the same-document protocol: +0.002 [-0.001, 0.005], p_Holm=0.739 — hierarchy legalisation. The direction agrees with the document-disjoint result but the correction is not cleared, so it must be described as not replicated rather than replicated weakly.
+
+**Why, as arithmetic rather than as a guess.** `C-wF1` equals the official score for every method that is legal by construction, so the contrast splits exactly:
+
+`C-wF1(M1-M0)  =  official(M1-M0)  +  [official(M0) - C-wF1(M0)]`
+
+| Protocol | M0 breaks the hierarchy on | official(M1-M0) | M0's cancelled credit | C-wF1(M1-M0) |
+|---|---|---|---|---|
+| document-disjoint (primary) | 12.55% | -0.0011 | +0.0050 | +0.0039 |
+| same-document | 12.90% | -0.0038 | +0.0056 | +0.0018 |
+
+The cancelled credit is stable across the two protocols; what changes is what projection itself costs on the official metric. **The same-document protocol does not break the hierarchy less often -- it breaks it slightly more, and repairing it costs more there.** Write this rather than speculating about partly-seen reports: the decomposition is measured, and the intuitive guess is backwards.
 
 ## 5. The two evaluation targets (Table 3)
 
