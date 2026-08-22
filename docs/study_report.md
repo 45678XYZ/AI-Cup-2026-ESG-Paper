@@ -2,7 +2,47 @@
 
 一份研究的完整記錄：故事、證據、證據怎麼來的、以及哪些話能寫。
 
+**最後更新 2026-08-22（C）** · 對應 commit 見 `tables/manifest.json` 的 `git_sha`
+
 > ⚠️ **本文的數字是說明用。** 論文中的每個數字都應取自 `tables/` 的 tabular 與 caption——那才是經過 provenance 追蹤的版本。`tables/findings.md` 是每次 `python -m analysis` 後重新生成的即時判定；**與本文不一致時以 `findings.md` 為準**，並回報 C 更新本文。本文的每個區間與計數由 `tests/test_study_report.py` 對照交付物驗證。
+
+---
+
+## 三分鐘版
+
+**主張**
+
+> 在輸出受硬性階層約束的任務上，官方的逐欄加權指標會系統性低估結構化解碼的價值——它對邏輯上不可能存在的答案給予部分分數。
+
+**四個撐住它的數字**
+
+| 數字 | 意思 |
+|---|---|
+| **12.72%** | 獨立 argmax 的輸出違反階層；95% 是同一種失效模式 |
+| **42.9%** | 那些非法列裡，仍然被官方指標算對的欄位比例 |
+| **-0.001 [-0.006, 0.003]** | 純投影 vs 獨立 argmax，官方指標——**偵測不到** |
+| **+0.004 [0.001, 0.007]** | 同一組對比，官方指標加上祖先檢查——**顯著為正** |
+
+**三條最容易踩的紅線**
+
+1. 不可寫「我們的方法提升了效能」——官方排名依據上五組對比無一正向顯著。
+2. 不可把 path-constrained 指標寫成計畫的一部分——它是**事後採用**的。
+3. 不可對 `Misleading`（n=2）做任何顯著性或改善宣稱。
+
+**數字去哪裡拿**：`tables/*.tex` 與 `*_caption.txt`（論文用）、`tables/findings.md`（判定與禁令，每次重算都更新）。
+
+## 怎麼讀這份文件
+
+| Part | 內容 | 對應論文的哪裡 |
+|---|---|---|
+| **I** | 論文的故事，十步因果鏈 | Introduction 的論證骨架、Discussion 的機制說明 |
+| **II** | 所有證據與表格 | Results；每個數字都能在 `tables/` 找到出處 |
+| **III** | A／B／C 各做了什麼 | **不進論文**——是稽核紀錄，供查證與回答審稿人 |
+| **IV** | 模型、協定、統計家族的方法學決定 | Methods、Experimental Setup |
+| **V** | 可主張的貢獻、措辭紅線、限制 | 寫作時逐條對照，特別是紅線表 |
+| **VI** | 交付物在哪、排版怎麼放 | 排版階段 |
+
+**相關文件**：`docs/related_work_citations.md`（引用與出處）、`docs/interface_contract.md` §5（交付介面）、`docs/paper_plan.md`（**預先指定的計畫，刻意不隨結果修改**——論文有數處主張依賴「這件事是事先決定的」，改寫它就無法查證了；執行狀態一律記在本文）。
 
 ---
 
@@ -11,6 +51,22 @@
 ## 一句話
 
 > **在輸出受硬性階層約束的任務上，官方採用的逐欄加權指標會系統性低估結構化解碼的價值——它對邏輯上不可能存在的答案給予部分分數。**
+
+## 這個主張是怎麼選出來的
+
+計畫 §9 事先寫好：8/23 results freeze 時依結果從三條路線裡選最誠實的一條。**實際結果對照如下**——這段要留著，因為它解釋了為什麼題目方向與最初設想不同。
+
+| 計畫 §9 的路線 | 判定 | 依據 |
+|---|---|---|
+| 1. conditional calibration／decoder 有穩定增益 | ❌ **不成立** | 官方指標五組對比無一正向顯著；`M6-M5` 反而顯著較差 |
+| 2. 方法增益小，但評估目標落差大且穩定 | ✅ **成立** | 三個區間全部排除 0；落差 0.012–0.015 > 方法間全距 0.0088 |
+| 3. 兩者都沒有穩定證據 | ❌ 不適用 | 路線 2 有證據，且另有下面這條 |
+
+**實際選的是計畫沒有預期到的第四條路線**：官方逐欄指標對違反階層的預測給部分分數，因而看不見結構約束的效果。
+
+理由：路線 2 雖然成立，但它是**關於 benchmark 切分**的發現，與方法無關；第四條路線同時解釋了「為什麼方法在官方指標上看不出效果」與「約束到底做了什麼」，而證據是**單一變因的對照**。**路線 2 保留為第二個獨立發現，不丟棄**（見本 Part 末）。
+
+⚠️ 兩件事必須分開講：**換題是計畫允許的**（§9 就是為此預留的），**換指標是事後決定、必須揭露**。
 
 ## 完整的因果鏈
 
@@ -412,6 +468,8 @@ D 寫 Methods 需要這一節。三個人的產出透過 checksum 串成一條�
 
 **聚合**（`analysis/aggregate.py`）：跨 seed 聚合、五組**預先指定**的對比（凍結在程式碼中）、三個 Holm 家族、conditional field F1、Misleading-free 敏感度。
 
+**計畫規格的逐條稽核**（8/22）：C 拿計畫的 §4.5、§7 與 §10 逐條對照實際交付物，補完四個缺口——conditional F1 未計算、`Misleading` 的逐例記錄與敏感度算了卻沒進交付物、Table 1 沒有醒目標示 dev/test 100% 重疊、乾淨環境重跑未驗證。順帶修掉 `findings.py` 在 `n_invalid == 0` 時會除以零的潛在缺陷。**這四項都是計畫寫了而先前沒做到的，不是新增的範圍。**
+
 **交付物**（`analysis/tables.py`）：三張 `tabular`、caption、provenance manifest。manifest 為**每張表分別**記錄其數字實際的計算來源與 sha256。
 
 **失效模式**（`analysis/cases.py`）：違反規則的分布、投影得失的逐類別帳、decoder 到達的未觀察狀態。
@@ -419,6 +477,10 @@ D 寫 Methods 需要這一節。三個人的產出透過 checksum 串成一條�
 **宣稱判定**（`analysis/findings.py`）：依區間是否排除 0 分類為 better／worse／undetermined，並強制 undetermined 的措辭為 *no detectable difference*。
 
 **Figure 1**：standalone TikZ，字型與 ACM 模板一致，所有計數由 `paper/labels.py` 推導。
+
+**守門測試**（`tests/test_study_report.py`）：本文引用的每個區間都必須存在於 `tables/`，反之亦然。它擋下過一次真實錯誤——早期草稿引用了一個不在凍結家族內的事後對比。
+
+**出處查證**（`docs/related_work_citations.md`）：path-constrained 指標的三層出處逐字查證，並發現本文早期一段「引文」其實是自己的轉述，已換成原文。
 
 ---
 
@@ -525,3 +587,38 @@ D 寫 Methods 需要這一節。三個人的產出透過 checksum 串成一條�
 **Figure 1 的排版**：自然尺寸 15.4 × 7.0 cm，用 `figure*` 跨雙欄、**原尺寸放置**（此時圖上的字是 8pt，對比內文 9pt）。**不要 `width=\textwidth`**，會讓圖上的字大過內文。preamble **不需加任何 package**。
 
 **表格的排版**：`.tex` 只含 `tabular`，浮動位置、寬度與 `\small` 由 D 決定（契約 §5）。僅允許 `booktabs` 與 `multirow`。
+
+⚠️ **Table 2 的 caption 很長**（三個家族各一句加一句定位句）。契約 §5 把排版判給 D：**8 頁裝不下時可以把統計句移進正文，但不得刪改任何數字或家族來歷的敘述**。
+
+---
+
+# Part VII — 執行狀態（2026-08-22）
+
+## Gate
+
+| Gate | 判準 | 結果 |
+|---|---|---|
+| 8/16 P0 完成 | PDF-group 3 seeds × 5 rotations | ✅ |
+| **8/22 主要數字完成** | **Table 2 全格有數字（含 CI）** | ✅ 七列全部有 `mean±std`；caption 帶三個家族的 Δ 與 95% CI |
+| 8/23 results freeze | 不再有新 run／search／tuning | C 在 8/22 的工作全部是對**既有 predictions 重新計分**，不違反凍結 |
+
+## C 的職責對照（計畫 §7）
+
+| 職責 | 狀態 | 交付位置 |
+|---|---|---|
+| 資料／support／duplicate audit + Table 1 | ✅ | `tables/table1_dataset.tex`、`audit.json` |
+| `Misleading` 落點與 calibration partition 可見性 | ✅ | `audit.json`；2 筆落在 2 份報告，18/30 rotation 的 Calibration 看不到 |
+| bootstrap／Holm／sensitivity／per-class／conditional | ✅ | Table 2 caption、`findings.md` |
+| Figure 1、Table 1–3、數字全由 script 生成 | ✅ | `figures/`、`tables/`，守門測試看著 |
+
+## 還沒完成的事
+
+| 事項 | 負責 |
+|---|---|
+| 論文本體 | D |
+| 英文 README（計畫 §6.2 前半） | D |
+| 最終 PDF 與文中數字交叉核對 | D |
+| 正式 git tag | A（freeze 後） |
+| C 的分析分支開 PR 併入 main | C |
+
+**已完成而計畫檢查清單上仍未勾選的**：乾淨環境重跑（計畫 §6.2 後半、§10 可重現性第三項）已於 8/22 由 C 驗證——`git clone` 到全新目錄執行 `python -m analysis`，六個 `.tex`／caption 與版控版本逐位元相同。**計畫文件刻意不回頭勾選**（見前述理由），狀態以本節為準。
