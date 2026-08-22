@@ -79,6 +79,28 @@
    ]
   ]
  },
+ "company_structure": {
+  "companies": 50,
+  "tickers": 49,
+  "companies_in_multiple_reports": 0,
+  "reports_with_multiple_companies": 1
+ },
+ "dataset_fields": [
+  "company",
+  "company_source",
+  "data",
+  "esg_type",
+  "evidence_quality",
+  "evidence_status",
+  "evidence_string",
+  "id",
+  "page_number",
+  "pdf_url",
+  "promise_status",
+  "promise_string",
+  "ticker",
+  "verification_timeline"
+ ],
  "splits": {
   "misleading_rows": [
    {

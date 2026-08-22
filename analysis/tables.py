@@ -181,8 +181,10 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             f"{absent['n_rotations']} rotations. All {audit['pdf_overlap']['n_shared']} "
             "development reports also appear in the test split, and "
             f"{_word(len(audit['duplicates']['dev_test']))} paragraph text is "
-            "duplicated across the two; the competition test split ships no "
-            "labels, so its label-derived cells are marked n/a."
+            "duplicated across the two. No company contributes more than one "
+            "report, so a document-disjoint split is also company-disjoint. The "
+            "competition test split ships no labels, so its label-derived cells "
+            "are marked n/a."
         ),
         "table2_main": (
             "Controlled comparison of decision rules on identical base "
@@ -255,12 +257,14 @@ def render_table1(audit) -> str:
     # to prose is what C's remit asks for.
     shared = audit["pdf_overlap"]["n_shared"]
     duplicated = len(audit["duplicates"]["dev_test"])
+    spanning = audit["company_structure"]["companies_in_multiple_reports"]
     body = [
         row("Paragraphs", dev["paragraphs"], test["paragraphs"]),
         row("\\quad duplicated across splits", duplicated, duplicated),
         row("Source reports (PDFs)", dev["pdfs"], test["pdfs"]),
         row("\\quad shared across splits", shared, shared),
         row("Companies", dev["companies"], test["companies"]),
+        row("\\quad spanning $>$1 report", spanning, NA),
         row("Legal states observed", f"{dev['legal_states_observed']} / 17", NA),
         "\\midrule",
         "\\multicolumn{3}{l}{\\emph{Rarest classes}} \\\\",

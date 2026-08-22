@@ -246,13 +246,32 @@ promise_status 被解碼器改寫        160 列
 | Source reports (PDFs) | **49** | **49** |
 |　└ shared across splits | **49** | **49** |
 | Companies | 50 | 50 |
+|　└ spanning >1 report | **0** | n/a |
 | Legal states observed | **15 / 17** | n/a |
 | `within_2_years` | 34 | n/a |
 | `Misleading` | **2** | n/a |
 
 Test split 不附標籤，所有由標籤推導的統計一律標 `n/a`——填入 development 的數字會是捏造。
 
-四個必須寫進論文的事實：**兩邊共用同一批 49 份 PDF**（100% 重疊，第二個發現的根源）、**有 1 段文字同時出現在兩邊**（計畫 §4.1 要求揭露）、**17 個合法狀態只觀察到 15 個**、**`Misleading` 只有 2 筆且在 30 個 rotation 中有 18 個的 Calibration partition 完全缺席**。
+五個必須寫進論文的事實：**兩邊共用同一批 49 份 PDF**（100% 重疊，第二個發現的根源）、**有 1 段文字同時出現在兩邊**（計畫 §4.1 要求揭露）、**沒有任何公司提供超過一份報告**（見下）、**17 個合法狀態只觀察到 15 個**、**`Misleading` 只有 2 筆且在 30 個 rotation 中有 18 個的 Calibration partition 完全缺席**。
+
+### 「那 company-disjoint 呢？」—— 這題不需要新實驗
+
+審稿人幾乎一定會問：document-disjoint 的落差換成 company-disjoint 是否還在。
+
+**在這個語料上，兩者是同一件事。** 50 家公司、49 份報告、49 個 ticker，而**沒有任何一家公司提供第二份報告**（`companies_in_multiple_reports = 0`，記在 `tables/audit.json`）。因此抽掉一份 PDF 就等於抽掉那家公司，**document-disjoint 已經是 company-disjoint**。
+
+唯一的例外方向是：**有 1 份報告涵蓋 2 家公司**（`reports_with_multiple_companies = 1`，所以公司數 50 > 報告數 49）。這不會破壞上述結論——那兩家公司仍然一起被抽掉。
+
+⚠️ 這是**資料的性質，不是我們做過的實驗**。寫法建議：「in this corpus a document-disjoint split is necessarily company-disjoint」，不要寫成「我們另外做了 company-disjoint 實驗」。
+
+### 「那 temporal split 呢？」—— 資料裡沒有時間
+
+釋出的資料集**沒有任何日期或年份欄位**。欄位清單記在 `tables/audit.json` 的 `dataset_fields`，可直接查核：`company`、`company_source`、`data`（段落全文）、`esg_type`、`evidence_*`、`id`、`page_number`、`pdf_url`、`promise_*`、`ticker`、`verification_timeline`。
+
+因此 temporal split **在不外掛額外中繼資料的前提下不可行**。部分 `pdf_url` 的檔名看得出年份（例如 `aseh-2024-...`），但那是啟發式解析，不足以支撐一個評估協定。
+
+⚠️ 這條要寫進 Limitations，寫成**資料的限制**而不是「我們沒做」。
 
 ⚠️ 重疊與重複這兩列是**表格本身的列**，不是 caption 附註——它們是 Table 3 存在的理由，不能只用散文帶過。
 
@@ -664,16 +683,19 @@ D 寫 Methods 需要這一節。三個人的產出透過 checksum 串成一條�
 2. **外部效度**：單一 backbone、單一語言、單一領域、單一資料集。
 3. **變異來源無法拆解**：seed 同時決定切分與訓練隨機性。
 4. **稀有類別**：`Misleading`（n=2）無法學習——七個方法在兩個實例上**都沒有預測出該類別**；把它排除後官方分數一致上升約 0.049，代表沒有任何結論建立在那兩列上。`within_2_years`（n=34）與 `Not Clear` 同樣偏低。
-5. **未比較 training-time structural objectives**：本研究只動決策階段。
-6. **未比較 LLM baseline**：現代 LLM 的 constrained decoding 在機制上與 M4–M6 相同。
-7. **單一超參數設定**：常數凍結於 P0 前，未做敏感度分析。
-8. **一個已修正的訓練缺陷**：見 Part III 的 accumulation 說明；所有數字來自修正後的重跑。
+5. **未比較 training-time structural objectives**：本研究只動決策階段。未比較直接訓練 17-class 分類器、classifier chains，或把約束寫進 loss 的做法。8/23 results freeze 之後不再啟動任何新 run，這些留給未來工作。
+6. **未比較 LLM baseline 與其他 backbone**：現代 LLM 的 constrained decoding 在機制上與 M4–M6 相同；亦未比較 DeBERTa／ESG-BERT。因此**所有結論都限於這一個 backbone**，不可寫成關於方法族的普遍宣稱。
+
+7. **無法做 temporal 或 industry split**：釋出的資料沒有日期欄位（見 Part II）。company-disjoint 則不需要另做——在這個語料上它與 document-disjoint 等價。
+8. **單一超參數設定**：常數凍結於 P0 前，未做敏感度分析。
+9. **一個已修正的訓練缺陷**：見 Part III 的 accumulation 說明；所有數字來自修正後的重跑。
+10. **一個已修正的統計缺陷**：8/22 之前判定用未校正的區間，見 Part II 末。所有判定已改用 `p_Holm`。
 
 ## 可重現性
 
 - `python -m analysis` 重算全部交付物；`.tex`、caption、figure 逐位元一致，僅時戳欄位改變
 - `python -m paper.validate --all`：72 artifacts clean
-- 全套測試 **339 passed**（本機無 TeX 時 337 passed、2 skipped）
+- 全套測試 **353 passed**（本機無 TeX 時 351 passed、2 skipped）
 - **乾淨 clone 重現驗證已完成**（計畫 §10 可重現性）：`git clone` 到全新目錄後執行 `python -m analysis`，三張 `.tex` 與三份 caption 與版控版本**逐位元相同**，`findings.md`／`case_analysis.json`／`manifest.json`／`audit.json` 除時戳外相同，manifest 的 `git_sha` 無 `-dirty` 後綴。**論文可以寫「the analysis pipeline reproduces every table from a clean checkout」**
 - 採用 path-constrained 指標前後，`table1/2/3.tex` 與 `figure1_hierarchy.pdf` **逐位元未變**——官方指標的數字沒有因為新增指標而移動
 - `tables/manifest.json` 為每張表分別記錄來源 script 與輸入 sha256
@@ -720,6 +742,19 @@ D 寫 Methods 需要這一節。三個人的產出透過 checksum 串成一條�
 | `Misleading` 落點與 calibration partition 可見性 | ✅ | `audit.json`；2 筆落在 2 份報告，18/30 rotation 的 Calibration 看不到 |
 | bootstrap／Holm／sensitivity／per-class／conditional | ✅ | Table 2 caption、`findings.md` |
 | Figure 1、Table 1–3、數字全由 script 生成 | ✅ | `figures/`、`tables/`，守門測試看著 |
+
+## 8/22 下半場：對照外部文獻評論補完的四件事
+
+一份外部的文獻／審稿模擬分析點出七項「S 級」建議。其中五項需要重新訓練模型（直接 17-class 分類器、DeBERTa／ESG-BERT、LLM baseline、training-time structural baseline、temporal split），**8/23 freeze 之後不可能做，也不是 C 的職責**——那些寫進 Limitations。剩下四項是 C 的，全部是對既有預測重新計分或稽核，已完成：
+
+| # | 事項 | 對應的審稿問題 | 結果 |
+|---|---|---|---|
+| 1 | 措辭由 *systematically underestimates* 降級 | 「一個 benchmark 憑什麼說 systematically？」 | 全文改為 *can substantially understate*，並由 `findings.py` 的禁令強制 |
+| 2 | 量化 decoder 推翻父欄位的宣稱 | 「這個機制有數字嗎？」 | 有了，**而且推翻了原本的說法**（見 Part I ⑩） |
+| 3 | 補上文獻既有的 hierarchical F1 | 「為何不比較既有的階層指標？」 | hF 成為第三個家族；`M1-M0` p_Holm=0.017 |
+| 4 | company-disjoint／temporal 的可行性 | 「換成 company-disjoint 還成立嗎？」 | 兩者在本語料等價，不需新實驗；temporal 因資料無日期欄位而不可行 |
+
+**過程中另外抓到一個嚴重的統計缺陷**：判定用未校正的百分位區間，見 Part II 末。這是四件事裡影響最大的一項——它讓官方指標唯一的「顯著」結果消失，同時讓論文的主張變得更乾淨。
 
 ## 還沒完成的事
 
