@@ -501,7 +501,8 @@ D 寫 Methods 需要這一節。三個人的產出透過 checksum 串成一條�
 
 - `python -m analysis` 重算全部交付物；`.tex`、caption、figure 逐位元一致，僅時戳欄位改變
 - `python -m paper.validate --all`：72 artifacts clean
-- 全套測試 324 passed、2 skipped
+- 全套測試 **339 passed**（本機無 TeX 時 337 passed、2 skipped）
+- **乾淨 clone 重現驗證已完成**（計畫 §10 可重現性）：`git clone` 到全新目錄後執行 `python -m analysis`，三張 `.tex` 與三份 caption 與版控版本**逐位元相同**，`findings.md`／`case_analysis.json`／`manifest.json`／`audit.json` 除時戳外相同，manifest 的 `git_sha` 無 `-dirty` 後綴。**論文可以寫「the analysis pipeline reproduces every table from a clean checkout」**
 - 採用 path-constrained 指標前後，`table1/2/3.tex` 與 `figure1_hierarchy.pdf` **逐位元未變**——官方指標的數字沒有因為新增指標而移動
 - `tables/manifest.json` 為每張表分別記錄來源 script 與輸入 sha256
 
