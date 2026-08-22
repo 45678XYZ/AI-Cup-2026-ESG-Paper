@@ -39,6 +39,8 @@ paper/          study code: label space, data, training, contract artifacts
   methods.py      the M0-M6 table, and scoring in log space
   calibration.py  class biases estimated on the Calibration partition only
   accumulation.py gradient-accumulation windows (torch-free, so CI checks them)
+  structure_loss.py training-time legality objective (off in the frozen study)
+  select_lambda.py  the structural arm's pre-registered selection criterion
   train_fold.py   trains one rotation, emits raw probabilities only
   run_training.py driver: split manifest in, contract bundle out
   run_decisions.py driver: probability bundles in, contract-3 files out
@@ -60,6 +62,7 @@ docs/           paper plan and interface contract
 figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
 splits/         generated split manifests (version controlled)
 probs/          30 probability bundles, one per rotation, from the official fits
+probs_lambda_sweep/  the structural arm's lambda sweep; scored into no table
 predictions/    42 per-row prediction files (.csv.gz), one per protocol/seed/method
 results/        42 aggregate result manifests, one per predictions file
 tables/         contract-4 deliverables: Table 1-3, their captions, the dataset

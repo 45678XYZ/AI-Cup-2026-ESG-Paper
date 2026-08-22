@@ -58,15 +58,34 @@ class weights、checkpoint 規則。`paper/train_config.py` **不會被修改** 
 初始化時兩項的量級為 base loss ≈ 1.20、penalty = −log(17/120) ≈ 1.95。
 候選值固定為 `LAMBDA_GRID = (0.1, 0.3, 1.0)`，涵蓋遠低於到略高於 base loss。
 
-1. 只在 **`pdf_group` seed 42** 這一組上，對三個 λ 各跑 5 個 rotation（共 15 fits）。
-2. 判準：**該組五個 rotation 的 Calibration partition 上的 weighted macro-F1 平均值**，
-   最高者勝。**不得檢視任何 Test partition 的數字。**
-3. 選定後 λ 即凍結，並記入本文件的 §8，然後才跑正式的 30 fits。
-4. 若三個 λ 的 calibration 分數差距小於 0.002（即 seed 噪音量級），**改採 λ = 0.3**
-   （網格中位數），並在論文載明 λ 實質上未被解析。
+1. 只在 **`pdf_group` seed 42** 這一組上，對三個 λ 各跑 5 個 rotation（共 15 fits），
+   輸出至 `probs_lambda_sweep/`。
 
-sweep 產生的 15 個 bundle 寫入 `probs_lambda_sweep/`，**不進入任何結果表**，
-但會保留並提交，以便查證選擇過程。
+2. 判準由 `paper/select_lambda.py` **以程式定義**，不由執行者臨場決定：
+   五個 rotation 的 Calibration partition 上，**各欄獨立 argmax** 的官方
+   weighted macro-F1，取平均，最高者勝。
+
+   **決策規則刻意不介入** —— 不投影、不解碼、不加 bias。sweep 要比較的是各個 λ
+   產生的**機率**，中間插入任何決策規則都會把「機率變好了嗎」和「規則修得多好」
+   混在一起。
+
+   **該模組結構上讀不到 Test partition**：它只開 `calibration_*.npy` 與
+   `meta.json:calibration_ids`，`tests/test_select_lambda.py` 以攔截 `np.load`
+   斷言此性質。整個選擇程序的正當性建立在這一條上。
+
+   ```bash
+   python -m paper.select_lambda --probs-dir probs_lambda_sweep
+   ```
+
+3. 選定後 λ 即凍結，並記入本文件的 §8，然後才跑正式的 30 fits。
+
+4. 若三個 λ 的 calibration 分數全距小於 `INDISTINGUISHABLE = 0.002`（低於
+   seed-to-seed std 約 0.004，即噪音量級），**改採網格中位數 λ = 0.3**，
+   並在論文載明 λ 實質上未被解析。此判斷由上述指令直接印出，不由人判讀。
+
+sweep 產生的 15 個 bundle **不進入任何結果表**，但會保留並提交
+（`probs_lambda_sweep/`，`.gitignore` 已載明），以便日後查證選擇過程。
+`paper/run_manifest.py` 只索引 `probs/`，因此 sweep 不會污染研究索引。
 
 ## 5. 正式執行
 
