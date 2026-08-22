@@ -25,10 +25,16 @@ from paper.data import REPO_ROOT
 #
 # The environment files are in because they pin torch and transformers, and a
 # version change there moves the numbers without touching a line of Python.
+# analysis/ is in for the same reason paper/ is: it writes four stamped files
+# under tables/, so an uncommitted edit there produces a brief whose git_sha
+# names code that did not generate it. It was missing until 8/22, and the test
+# that exists to catch exactly this listed the watched directories instead of
+# deriving them -- so it passed throughout.
 # Deliberately out: dataset/ (covered by data_checksum), splits/ (covered by
 # split_fingerprint), docs/ and tests/ (cannot change an artifact).
 CODE_PATHSPEC = (
     "paper",
+    "analysis",
     "contracts",
     "environment.yml",
     "pyproject.toml",
