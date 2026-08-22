@@ -310,7 +310,7 @@ def test_table2_caption_discloses_which_family_was_not_pre_specified():
         tuple_contrasts=SUMMARIES["pdf_group"]["tuple_contrasts"],
     )["table2_main"]
     assert "not pre-specified" in cap
-    assert "pre-specified in the analysis plan" in cap
+    assert "named in advance by the analysis plan" in cap
 
 
 def test_table2_caption_reports_the_pre_specified_secondary_family():

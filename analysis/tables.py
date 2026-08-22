@@ -192,11 +192,11 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
                 "whose ancestors were not predicted counts as a false "
                 "prediction",
                 ", as a family of its own because the two differ in exactly "
-                "that respect, and not pre-specified: it was adopted after the "
-                "primary analysis") if consistent_contrasts else "")
+                "that respect, and not pre-specified — it was adopted after "
+                "the primary analysis") if consistent_contrasts else "")
             + (_contrast_sentence(
                 tuple_contrasts, "whole-row tuple accuracy",
-                ", pre-specified in the analysis plan as the secondary "
+                ", named in advance by the analysis plan as the secondary "
                 "reporting metric and corrected as its own family")
                if tuple_contrasts else "")
             + (_consistency_clause(methods) if methods else "")
