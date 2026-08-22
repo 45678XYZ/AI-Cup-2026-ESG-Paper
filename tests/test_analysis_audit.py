@@ -71,3 +71,30 @@ def test_full_audit_carries_the_data_checksum():
     audit = full_audit()
     assert audit["data_checksum"].startswith("sha256:")
     assert set(audit) >= {"data_checksum", "development", "test", "splits"}
+
+
+# --- what a document-disjoint split does and does not buy -------------------
+
+
+def test_audit_records_whether_a_company_spans_more_than_one_report():
+    """Reviewers ask whether the document-disjoint result would survive a
+    company-disjoint split. In this corpus that is a property of the data, not
+    an experiment: if no company contributes two reports, splitting by document
+    already splits by company. Auditing it beats asserting it."""
+    audit = dataset_audit()
+    company = audit["company_structure"]
+    assert company["companies"] >= 1
+    assert company["tickers"] >= 1
+    assert company["companies_in_multiple_reports"] == 0
+    # the converse is not guaranteed and must be reported as it is
+    assert company["reports_with_multiple_companies"] >= 0
+
+
+def test_audit_lists_the_dataset_fields_so_absent_metadata_is_checkable():
+    """A temporal split needs a date. Recording the columns that exist makes
+    "the release carries no temporal field" a verifiable statement rather than
+    an excuse."""
+    audit = dataset_audit()
+    fields = audit["dataset_fields"]
+    assert "pdf_url" in fields and "promise_status" in fields
+    assert not [f for f in fields if f in ("year", "date", "published_at")]

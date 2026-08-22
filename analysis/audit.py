@@ -88,6 +88,30 @@ def _duplicate_texts(dev, test) -> dict:
     return {"within_dev": within, "dev_test": across}
 
 
+def _company_structure(rows) -> dict:
+    """How companies and reports line up.
+
+    Whether a document-disjoint split is also company-disjoint is a property of
+    this corpus, not a further experiment: if no company contributes two
+    reports, holding out a PDF holds out its company too. The reverse -- a
+    single report covering more than one company -- is reported as found rather
+    than assumed away.
+    """
+    from collections import defaultdict
+    by_pdf, by_company = defaultdict(set), defaultdict(set)
+    for row in rows:
+        by_pdf[row["pdf_url"]].add(row["company"])
+        by_company[row["company"]].add(row["pdf_url"])
+    return {
+        "companies": len(by_company),
+        "tickers": len({row["ticker"] for row in rows}),
+        "companies_in_multiple_reports":
+            sum(1 for pdfs in by_company.values() if len(pdfs) > 1),
+        "reports_with_multiple_companies":
+            sum(1 for names in by_pdf.values() if len(names) > 1),
+    }
+
+
 def dataset_audit(dev=None, test=None) -> dict:
     dev = dev if dev is not None else load_dev()
     test = test if test is not None else load_test()
@@ -103,6 +127,12 @@ def dataset_audit(dev=None, test=None) -> dict:
             "test_only": len(test_pdfs - dev_pdfs),
         },
         "duplicates": _duplicate_texts(dev, test),
+        "company_structure": _company_structure(dev),
+        # The columns the release actually ships. Recorded so that a claim
+        # about metadata the dataset does not carry -- a report year, for
+        # instance, which a temporal split would need -- is checkable against
+        # the deliverable instead of taken on trust.
+        "dataset_fields": sorted(dev[0]),
     }
 
 

@@ -18,6 +18,8 @@ import json
 from pathlib import Path
 
 from analysis.audit import SPLITS_DIR
+from analysis.bootstrap import N_BOOT
+from analysis.findings import ALPHA
 from analysis.load import METHODS, predictions_path
 from paper.data import REPO_ROOT, TEST_PATH, TRAIN_PATH, VAL_PATH, file_sha256
 from paper.labels import FIELDS
@@ -26,13 +28,25 @@ from paper.train_config import PROTOCOLS, SEEDS
 
 CONTRACT_VERSION = "1.0"
 
-TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex")
+TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
+               "table4_contrasts.tex", "table5_metrics.tex")
+
+# How each Holm family is named in table 4. Held here rather than imported
+# from the brief so the tabular's wording cannot drift with prose edits.
+FAMILY_LABELS = (
+    ("contrasts", "Weighted macro-F1 (official)"),
+    ("consistent_contrasts", "Path-constrained wF1"),
+    ("hierarchical_contrasts", "Hierarchical F1 (hF)"),
+    ("tuple_contrasts", "Tuple accuracy"),
+)
 
 # The script that computed the numbers, not the one that formatted them.
 SOURCE_SCRIPTS = {
     "table1_dataset.tex": "analysis/audit.py",
     "table2_main.tex": "analysis/aggregate.py",
     "table3_regimes.tex": "analysis/aggregate.py",
+    "table4_contrasts.tex": "analysis/aggregate.py",
+    "table5_metrics.tex": "analysis/aggregate.py",
 }
 
 # The competition test split ships no labels, so its label-derived cells cannot
@@ -46,7 +60,7 @@ TABLE2_ROWS = (
     ("M6", "Conditional", "17-state"),
 )
 
-_NUMBER_WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
+_NUMBER_WORDS = {0: "none", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
                  6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}
 
 
@@ -97,10 +111,79 @@ def table_inputs(predictions_root, protocols=PROTOCOLS, seeds=SEEDS,
         "table1_dataset.tex": audited,
         "table2_main.tex": scored["pdf_group"],
         "table3_regimes.tex": [p for protocol in protocols for p in scored[protocol]],
+        "table4_contrasts.tex": scored["pdf_group"],
+        "table5_metrics.tex": scored["pdf_group"],
     }
 
 
-def build_captions(audit, seeds=SEEDS) -> dict:
+def _survival_summary(families) -> str:
+    """How many of each metric's five contrasts survived, spelled out.
+
+    Table 4 prints every contrast; this is the sentence that tells a reader
+    what the table adds up to before they read a single row. Counting is over
+    the corrected p, never over the intervals -- five contrasts are tested
+    together, and an interval that excludes zero decides nothing on its own.
+    """
+    parts = []
+    for key, label in FAMILY_LABELS:
+        family = families.get(key)
+        if not family:
+            continue
+        n = sum(1 for row in family.values() if row["p_holm"] < ALPHA)
+        parts.append(f"{_word(n)} on {label}")
+    if not parts:
+        return ""
+    listed = ", ".join(parts[:-1]) + (" and " if len(parts) > 1 else "") + parts[-1]
+    return (f" Of the {_word(len(next(iter(families.values()))))} contrasts, "
+            f"{listed} survive the correction at $\\alpha$={ALPHA}.")
+
+
+def _consistency_clause(methods) -> str:
+    """Where the secondary metric sits relative to the column the table prints.
+
+    The path-constrained variant has no column of its own, so the caption has
+    to locate it. Both halves are computed: how far the unconstrained arm falls
+    under it, and whether the constrained arms move at all. The second is the
+    literature's own check on such a metric -- a method that guarantees label
+    consistency must score identically under both -- and stating it as a
+    measured fact rather than a claim is what makes it evidence.
+    """
+    official = methods["M0"]["weighted_macro_f1_mean"]
+    constrained = methods["M0"]["consistent_weighted_macro_f1_mean"]
+    others = [m for m in METHODS if m != "M0"]
+    worst = max(abs(methods[m]["weighted_macro_f1_mean"]
+                    - methods[m]["consistent_weighted_macro_f1_mean"])
+                for m in others)
+    unchanged = ("M1--M6 score identically under both"
+                 if worst < 5e-4 else
+                 f"M1--M6 move by at most {worst:.3f}")
+    return (f" Under that variant M0 scores {constrained:.3f} against "
+            f"{official:.3f} on the official metric, while {unchanged}: only "
+            "the unconstrained arm predicts fields its own ancestors do not "
+            "support.")
+
+
+def _ranking_sentence(methods) -> str:
+    """Which method each metric prefers -- computed, because the disagreement
+    is the point and a stored sentence would survive a rerun that changed it."""
+    scored = {m: r for m, r in methods.items() if r.get("hierarchical_mean")}
+    if not scored:
+        return ""
+    best_official = max(scored, key=lambda m: scored[m]["weighted_macro_f1_mean"])
+    worst_official = min(scored, key=lambda m: scored[m]["weighted_macro_f1_mean"])
+    best_h = max(scored, key=lambda m: scored[m]["hierarchical_mean"]["hF"])
+    if best_official == best_h:
+        return f" Both metrics rank {best_official} first."
+    tail = (f", which is the lowest-scoring rule on the official metric"
+            if best_h == worst_official else "")
+    return (f" The metrics disagree about the winner: {best_official} on the "
+            f"official metric and {best_h} on hF{tail}. A ranking is only "
+            "meaningful stated together with the metric that produced it.")
+
+
+def build_captions(audit, seeds=SEEDS, contrasts=None,
+                   consistent_contrasts=None, tuple_contrasts=None,
+                   methods=None, hierarchical_contrasts=None) -> dict:
     """Captions computed from the audit rather than stored as text.
 
     Captions are contract-4 deliverables and reach the paper verbatim, so the
@@ -119,8 +202,13 @@ def build_captions(audit, seeds=SEEDS) -> dict:
             f"by analysis/audit.py. Misleading occurs {_times(len(misleading))} in the "
             f"whole development set, in {_word(n_reports)} different reports, and is "
             f"absent from the Calibration partition of {absent['n_without']} of the "
-            f"{absent['n_rotations']} rotations. The competition test split ships "
-            "no labels, so its label-derived cells are marked n/a."
+            f"{absent['n_rotations']} rotations. All {audit['pdf_overlap']['n_shared']} "
+            "development reports also appear in the test split, and "
+            f"{_word(len(audit['duplicates']['dev_test']))} paragraph text is "
+            "duplicated across the two. No company contributes more than one "
+            "report, so a document-disjoint split is also company-disjoint. The "
+            "competition test split ships no labels, so its label-derived cells "
+            "are marked n/a."
         ),
         "table2_main": (
             "Controlled comparison of decision rules on identical base "
@@ -130,6 +218,41 @@ def build_captions(audit, seeds=SEEDS) -> dict:
             "standard deviation across seeds, which reflects the variability of "
             "the whole pipeline -- fold assignment and training together -- "
             "rather than model stability."
+            + (" Paired contrasts between these rows, under each metric and "
+               "with their Holm-corrected p-values, are reported in Table 4."
+               if contrasts else "")
+            + (_consistency_clause(methods) if methods else "")
+        ),
+        "table4_contrasts": (
+            "The five pre-specified contrasts of the analysis plan, each "
+            "evaluated under every metric. Paired PDF-cluster bootstrap over "
+            f"{N_BOOT:,} resamples on the document-disjoint protocol; the "
+            "resampling unit is the source report, not the paragraph. Each "
+            "metric is Holm-corrected as its own family of five rather than "
+            "pooled: the contrasts were specified once, not once per metric. "
+            "\\textbf{Bold $p_{\\mathrm{Holm}}$ marks a contrast that survives "
+            "the correction; the bracketed intervals are uncorrected 95\\% "
+            "percentile intervals and decide nothing on their own.}"
+            + _survival_summary({
+                "contrasts": contrasts,
+                "consistent_contrasts": consistent_contrasts,
+                "hierarchical_contrasts": hierarchical_contrasts,
+                "tuple_contrasts": tuple_contrasts,
+            })
+            + " The official metric and tuple accuracy were named in the "
+            "analysis plan in advance; the path-constrained variant and the "
+            "hierarchical F1 were adopted after the primary analysis and are "
+            "not pre-specified."
+        ),
+        "table5_metrics": (
+            "The same seven decision rules scored under each metric. C-wF1 is "
+            "the official metric with ancestor-unsupported fields counted as "
+            "false predictions; hP, hR and hF are the ancestor-based "
+            "hierarchical precision, recall and F1, which are micro-averaged "
+            "over path nodes rather than macro-averaged over classes. C-wF1 "
+            "equals the official score for every rule whose output is legal by "
+            "construction and falls below it only for the unconstrained one."
+            + (_ranking_sentence(methods) if methods else "")
         ),
         "table3_regimes": (
             "Same-document versus document-disjoint evaluation. The left column "
@@ -171,10 +294,20 @@ def render_table1(audit) -> str:
 
     eq = dev["class_support"]["evidence_quality"]
     vt = dev["class_support"]["verification_timeline"]
+    # The overlap is the reason Table 3 exists: development and test are drawn
+    # from the same reports, so the competition's own split measures
+    # seen-report generalisation. Printing it as a row rather than leaving it
+    # to prose is what C's remit asks for.
+    shared = audit["pdf_overlap"]["n_shared"]
+    duplicated = len(audit["duplicates"]["dev_test"])
+    spanning = audit["company_structure"]["companies_in_multiple_reports"]
     body = [
         row("Paragraphs", dev["paragraphs"], test["paragraphs"]),
+        row("\\quad duplicated across splits", duplicated, duplicated),
         row("Source reports (PDFs)", dev["pdfs"], test["pdfs"]),
+        row("\\quad shared across splits", shared, shared),
         row("Companies", dev["companies"], test["companies"]),
+        row("\\quad spanning $>$1 report", spanning, NA),
         row("Legal states observed", f"{dev['legal_states_observed']} / 17", NA),
         "\\midrule",
         "\\multicolumn{3}{l}{\\emph{Rarest classes}} \\\\",
@@ -198,6 +331,55 @@ def render_table2(summary) -> str:
     header = ("ID & Calibration & Decoding & Weighted F1 & PS & VT & ES & EQ "
               "& Tuple Acc. & Invalid \\%")
     return _tabular("llrrrrrrrr", header, body)
+
+
+def render_table4(summary) -> str:
+    """Every pre-specified contrast under every metric, with its corrected p.
+
+    This is the study's central result and it used to live in table 2's
+    caption, which had grown past 500 words and still had no room for the
+    fourth family. A four-by-five statistical result is not caption material:
+    a reader has to be able to scan down the official metric's column, see no
+    bold, then scan the others and see it.
+    """
+    body = []
+    for key, label in FAMILY_LABELS:
+        family = summary.get(key)
+        if not family:
+            continue
+        if body:
+            body.append("\\midrule")
+        for i, (contrast, row) in enumerate(family.items()):
+            p_holm = f"{row['p_holm']:.3f}"
+            if row["p_holm"] < ALPHA:
+                p_holm = f"\\textbf{{{p_holm}}}"
+            body.append(
+                f"{label if i == 0 else ''} & {contrast} & {row['delta']:+.3f} & "
+                f"[{row['ci_low']:.3f}, {row['ci_high']:.3f}] & {p_holm} \\\\")
+    header = ("Metric & Contrast & $\\Delta$ & 95\\% CI & "
+              "$p_{\\mathrm{Holm}}$")
+    return _tabular("llrrr", header, body)
+
+
+def render_table5(summary) -> str:
+    """The same seven decision rules scored under each metric.
+
+    Optional: the paper's argument rests on table 4. This one carries the
+    descriptive counterpart -- that the metrics do not even agree on which
+    method is best -- and is offered so D can include it or drop it against
+    the page budget.
+    """
+    body = []
+    for method, _, _ in TABLE2_ROWS:
+        row = summary["methods"][method]
+        h = row["hierarchical_mean"]
+        body.append(
+            f"{method} & {_f(row['weighted_macro_f1_mean'])} & "
+            f"{_f(row['consistent_weighted_macro_f1_mean'])} & "
+            f"{_f(h['hP'])} & {_f(h['hR'])} & {_f(h['hF'])} & "
+            f"{_f(row['tuple_exact_match_mean'])} \\\\")
+    header = "ID & Weighted F1 & C-wF1 & hP & hR & hF & Tuple Acc."
+    return _tabular("lrrrrrr", header, body)
 
 
 def render_table3(regimes) -> str:
@@ -238,10 +420,21 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
         # same-document protocol reaches the paper through Table 3.
         "table2_main.tex": render_table2(summaries["pdf_group"]),
         "table3_regimes.tex": render_table3(regimes),
+        "table4_contrasts.tex": render_table4(summaries["pdf_group"]),
+        "table5_metrics.tex": render_table5(summaries["pdf_group"]),
     }
     for name, content in rendered.items():
         (out_dir / name).write_text(content, encoding="utf-8")
-    for stem, caption in build_captions(audit, seeds=seeds).items():
+    # Table 2 reports the document-disjoint protocol, so its contrasts are
+    # the ones that belong under it.
+    contrasts = summaries["pdf_group"]["contrasts"]
+    captions = build_captions(
+        audit, seeds=seeds, contrasts=contrasts,
+        consistent_contrasts=summaries["pdf_group"].get("consistent_contrasts"),
+        tuple_contrasts=summaries["pdf_group"].get("tuple_contrasts"),
+        hierarchical_contrasts=summaries["pdf_group"].get("hierarchical_contrasts"),
+        methods=summaries["pdf_group"]["methods"])
+    for stem, caption in captions.items():
         (out_dir / f"{stem}_caption.txt").write_text(caption + "\n", encoding="utf-8")
 
     def entry(name):

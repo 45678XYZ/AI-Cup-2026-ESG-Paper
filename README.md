@@ -206,6 +206,36 @@ is simply 0 of 30), and a manifest built from the synthetic fixtures says so in
 its `warnings`, because otherwise it is indistinguishable from one built from a
 real run. Generate it at results freeze and commit it alongside the artifacts.
 
+Two further files are written beside them, neither a contract-4 deliverable:
+`tables/case_analysis.json` counts which hierarchy rule the unconstrained
+baseline breaks and what the repair costs, and `tables/findings.md` states
+which claims the Holm-corrected intervals license — the distinction between
+"no detectable difference" and "no difference" is a computed output rather
+than an editorial decision.
+
+Two tables past the three the contract names are written as well.
+`tables/table4_contrasts.tex` puts the five pre-specified contrasts against
+all four Holm families side by side with their corrected p-values; it is where
+the study's statistical result actually lives, and its first block — the
+metric the competition ranks by — carries no bold at all.
+`tables/table5_metrics.tex` scores the seven decision rules under six metric
+columns and is descriptive, so it is the one to drop first against a page
+budget.
+
+The `.tex` files hold a bare `tabular` and do not compile alone. To see them
+rendered, together with their captions and figure 1:
+
+```bash
+python -m analysis.preview                                # -> tables/preview.pdf
+```
+
+Building it needs a local `latexmk`, but reading it does not: the PDF is
+committed, so the rendered tables are one click away for anyone without a TeX
+installation. It is a convenience rather than a deliverable — no number is
+computed here and the paper cites none of it — and rebuilding is a no-op,
+because `SOURCE_DATE_EPOCH` and `\pdftrailerid{}` pin the two things pdfTeX
+would otherwise vary between runs.
+
 ## Training runs
 
 Requires a GPU and the conda environment.

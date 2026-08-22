@@ -15,6 +15,8 @@ from pathlib import Path
 
 from analysis.aggregate import protocol_summary, regime_comparison
 from analysis.audit import full_audit
+from analysis.cases import write_case_analysis
+from analysis.findings import write_findings
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT
 from analysis.figure1 import build as build_figure1, tex_available
 from analysis.load import EXAMPLES_ROOT, REAL_ROOT, pdf_clusters
@@ -71,6 +73,22 @@ def main() -> None:
 
     # Each table records the files its own numbers came from: the dataset and
     # split manifests for table 1, the per-row predictions for tables 2 and 3.
+    cases = write_case_analysis(args.out_dir, order, args.predictions_root,
+                                dev=dev, seeds=SEEDS)
+    print(f"cases   -> {cases}")
+
+    # What the intervals license D to write. Not a contract-4 deliverable;
+    # plan §9 picks the title at the freeze and this is its evidence.
+    brief = write_findings(args.out_dir, audit,
+                           summaries["pdf_group"]["contrasts"], regimes,
+                           cases=json.loads(cases.read_text(encoding="utf-8")),
+                           consistent_contrasts=summaries["pdf_group"]["consistent_contrasts"],
+                           tuple_contrasts=summaries["pdf_group"]["tuple_contrasts"],
+                           hierarchical_contrasts=summaries["pdf_group"]["hierarchical_contrasts"],
+                           methods=summaries["pdf_group"]["methods"],
+                           secondary=summaries["row_strat"])
+    print(f"brief   -> {brief}")
+
     inputs = table_inputs(args.predictions_root, seeds=SEEDS)
     write_tables(args.out_dir, audit, summaries, regimes, inputs, seeds=SEEDS)
     print(f"tables  -> {args.out_dir}")

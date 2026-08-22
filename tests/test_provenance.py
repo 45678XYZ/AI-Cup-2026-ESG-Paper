@@ -14,6 +14,7 @@ import subprocess
 
 import pytest
 
+from paper.data import REPO_ROOT
 from paper.provenance import CODE_PATHSPEC, git_sha
 
 
@@ -27,7 +28,8 @@ def repo(tmp_path):
     run("init", "-q")
     run("config", "user.email", "t@example.com")
     run("config", "user.name", "t")
-    for rel in ("paper/labels.py", "contracts/make_examples.py",
+    for rel in ("paper/labels.py", "analysis/findings.py",
+                "contracts/make_examples.py",
                 "contracts/examples/results/x.json", "docs/plan.md",
                 "tests/test_x.py", "splits/s.json", "environment.yml"):
         p = tmp_path / rel
@@ -49,7 +51,8 @@ def test_a_clean_tree_is_not_dirty(repo):
     assert len(git_sha(repo)) == 40
 
 
-@pytest.mark.parametrize("path", ["paper/labels.py", "contracts/make_examples.py",
+@pytest.mark.parametrize("path", ["paper/labels.py", "analysis/findings.py",
+                                  "contracts/make_examples.py",
                                   "environment.yml"])
 def test_editing_code_marks_the_stamp_dirty(repo, path):
     (repo / path).write_text("changed\n", encoding="utf-8")
@@ -86,10 +89,28 @@ def test_outside_a_repository_the_stamp_is_none_rather_than_invented(tmp_path):
     assert git_sha(tmp_path) is None
 
 
+# Directories that hold .py files but cannot change an artifact, so a stamp
+# must not fire on them. Anything else with Python in it is watched.
+INERT_CODE_DIRS = {"tests"}
+
+
 def test_the_pathspec_covers_every_directory_holding_study_code():
     """A new top-level code directory would silently stop being watched, and
-    every artifact after it would carry a stamp that reads clean."""
+    every artifact after it would carry a stamp that reads clean.
+
+    Derived from the tree rather than listed. Listing is what let ``analysis``
+    -- which writes four provenance-stamped files under ``tables/`` -- go
+    unwatched while an assertion named for this exact property passed.
+    """
     included = {p for p in CODE_PATHSPEC if not p.startswith(":")}
-    assert {"paper", "contracts"} <= included
+    code_dirs = {
+        d.name for d in REPO_ROOT.iterdir()
+        if d.is_dir() and not d.name.startswith(".")
+        and any(d.glob("*.py")) and d.name not in INERT_CODE_DIRS
+    }
+    assert code_dirs, "no code directories found; the derivation is broken"
+    assert code_dirs <= included, (
+        "these directories hold study code but the dirty marker cannot see "
+        f"them: {sorted(code_dirs - included)}")
     assert "environment.yml" in included, "dependency pins move results too"
     assert ":(exclude)contracts/examples" in CODE_PATHSPEC

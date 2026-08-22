@@ -362,8 +362,19 @@ A 提供 `contracts/examples/predictions/` 與 `results/` 的合成檔（分數�
 tables/table1_dataset.tex      figures/figure1_hierarchy.pdf   ← 交付物，D 引入這個
 tables/table2_main.tex         figures/figure1_hierarchy.tex   ← 圖的原始碼（standalone TikZ）
 tables/table3_regimes.tex      figures/figure1_defs.tex        ← 圖印出的數字，由 script 生成
+tables/table4_contrasts.tex
+tables/table5_metrics.tex
 tables/manifest.json
 ```
+
+⚠️ **8/22 新增 table 4 與 table 5**，理由與 D 需要知道的事：
+
+| 表 | 內容 | 必要性 |
+|---|---|---|
+| `table4_contrasts` | 五組預先指定對比 × 四個指標的 Δ、95% CI 與 `p_Holm` | **必要。** 這是論文的核心統計結果，先前只存在於 table 2 的 caption（已逾 500 字），且第四個家族根本放不進去 |
+| `table5_metrics` | 七個決策規則 × 六個指標欄 | **可選。** 描述性的對照（官方指標選 M5、hF 選 M6），D 可依頁面預算取捨 |
+
+新增 table 4 之後 **table 2 的 caption 大幅縮短**——三段統計敘述移入 table 4，caption 只留下表格本身的說明與一句指向。這對 8 頁預算是淨減少。
 
 檔名在契約凍結時固定，D 的 `\input{}` 與 `\includegraphics{}` 因此不會因 C 改名而斷。
 
@@ -390,6 +401,32 @@ tables/manifest.json
 重建圖需要一套含 `latexmk` 的 TeX 環境。**沒有 TeX 的機器不受影響**：`python -m analysis` 會偵測並跳過圖，照常重算全部表格。這是安全的，因為圖的數字來自 `paper/labels.py` 而非該次執行的結果，跳過不可能讓已進版控的 PDF 與同批表格對不上。
 
 版面上，圖的自然尺寸是 15.4 × 7.0 cm（6.1 × 2.8 in），設計成用 `figure*` 跨雙欄、以原尺寸放置：此時圖上的字是 8pt，對比內文 9pt。放大到 `width=\textwidth` 會讓圖上的字大於內文；而這張圖承載四件事，縮到單欄不可能維持可讀，原本規格欄寫的「可縮至單欄不失真」應理解為向量圖的性質，不是建議的排版方式。
+
+### 怎麼看渲染後的表
+
+`.tex` 只含 `tabular`，單獨不可編譯，所以在 8/22 之前沒有人能直接看到渲染後的樣子。現在有：
+
+```bash
+python -m analysis.preview          # → tables/preview.pdf
+```
+
+它把五張表連同各自的 caption、以及 Figure 1 包成一份 PDF。**這是便利工具，不是交付物**：不計算任何數字，論文不引用它。
+
+`tables/preview.pdf` **有進版控**，所以沒有 TeX 的人也看得到渲染後的表。前提是建置必須可重現：`SOURCE_DATE_EPOCH` 釘住日期、`\pdftrailerid{}` 釘住 PDF 的 `/ID`，兩次建置逐位元相同（`tests/test_analysis_preview.py::test_two_builds_are_byte_identical` 守著）。沒有這兩項它每次都會變，進版控只會製造雜訊。
+
+### 契約 4 的現況（2026-08-22）
+
+三張表、三份 caption、manifest 與圖全部由**真實 artifacts** 產生，不再有任何合成數字。
+
+| 項目 | 狀態 |
+|---|---|
+| 欄數 | table 1–3 **完全未變**，仍與 `contracts/examples/tables/` 的 placeholder 相同。table 4／5 是新增的，沒有 placeholder，D 需自行決定放法 |
+| Table 1 | 新增兩列：`duplicated across splits`（1／1）與 `shared across splits`（49／49）。**列數變動不影響欄寬**，且這兩列是 Table 3 存在的理由，契約 §5 的「內容歸 C」涵蓋它 |
+| Table 2 | 表身不變；caption 擴為**三個 Holm 家族**的 Δ 與 95% CI，並逐一載明各家族是事先指定還是事後採用 |
+| Table 3 | 完全不變 |
+| 重現性 | 從乾淨 clone 執行 `python -m analysis`，六個 `.tex`／caption 與版控版本**逐位元相同**，JSON 除時戳外相同 |
+
+⚠️ **caption 變長了。** 三個家族各一句，加上一句定位句。契約 §5 把排版判給 D：若 8 頁裝不下，D 可以把統計句移進正文，**但不得刪改任何數字或家族來歷的敘述**。
 
 ### `tables/manifest.json`
 
@@ -424,6 +461,40 @@ tables/manifest.json
 | `table3_regimes.tex` | 兩種 protocol 的全部 42 個 `predictions/*.csv.gz` |
 
 **空的 `input_files` 必須報錯，不得寫出。** 一份空 manifest 與一份完整 manifest 長得一樣，卻什麼都沒有擔保；只有 `predictions/` 而無 `results/` 的目錄是 W3 的常態，不能讓它靜默產出無效稽核紀錄。
+
+### 補充材料：`tables/case_analysis.json`
+
+**不是契約 4 的凍結交付物**——§5 凍結的是三張 `tabular`、其 caption 與 `manifest.json`。這一份放在同一個目錄，因為 D 由它撰寫 Discussion。
+
+它回答 Table 2 表面上的矛盾：結構化解碼把 invalid rate 從 12.7% 降到 0，卻幾乎不動 weighted macro-F1。兩組計數解釋了原因：
+
+| 欄位 | 內容 |
+|---|---|
+| `totals.by_rule` | M0 違反的是哪一條階層規則。四個 head 各自獨立預測，沒有機制阻止子欄填寫一個父欄已經關閉的分支 |
+| `totals.fields_repaired` / `fields_destroyed` / `fields_wrong_either_way` | 投影覆寫子欄時的得失。父欄判斷正確時修好一格，父欄判斷錯誤時弄壞一格；只報淨值會蓋掉「兩者都在發生」這個事實 |
+
+`fields_wrong_either_way` 單獨計列的理由：一格可能從一個錯的標籤被改成另一個錯的標籤，預測變了而分數沒變。併入任一欄都會高估規則的效果。
+
+由 `analysis/cases.py` 產生，`python -m analysis` 一併輸出。
+
+### 補充材料：`tables/findings.md`
+
+**不是契約 4 的凍結交付物。** 它回答 D 唯一無法自行判斷的問題：**這些數字准許寫成什麼句子。**
+
+C 是唯一看過重抽過程的人。把表格交出去、讓撰稿者自行斟酌措辭，正是「未偵測到差異」在試算表與投稿之間變成「沒有差異」的途徑。兩者不可互換——前者是寬區間支持的敘述，後者是關於世界的主張，49 個 PDF cluster 撐不起來。
+
+因此分類是區間的函數而非口頭約定：
+
+| 段落 | 內容 |
+|---|---|
+| Primary metric | 官方 weighted macro-F1 的五組對比，Holm 校正後排除 0 者含方向（更好／更差） |
+| Secondary metric | path-constrained weighted macro-F1（官方指標加祖先檢查，**事後採用**）；與主要家族結論不一致之處單獨列出 |
+| Also reported | tuple accuracy（計畫 §10 事先指定），完整報告，含對本研究不利的結果 |
+| Claims the primary metric cannot resolve | 區間跨越 0 者，一律寫成 *no detectable difference* |
+| Prohibitions | `Misleading` 不得有任何顯著性宣稱；`±` 是 seed spread 不是 CI；Table 3 的 Δ 是兩個估計目標的差距不是偏誤；path-constrained 家族非事先指定，引用時須明說 |
+| Material for the Discussion | 由 `case_analysis.json` 導出的失效模式數字 |
+
+由 `analysis/findings.py` 產生，`python -m analysis` 一併輸出。**文中數字仍以表格與 caption 為準**，本檔案不得被轉抄。
 
 ### D 的替代輸入
 
@@ -488,15 +559,22 @@ C 消費契約 3（`predictions/`、`results/`），產出契約 4（`tables/`�
 |---|---|---|
 | `analysis/audit.py` | ✅ | 資料／support／duplicate 稽核，Table 1 的全部數字；`Misleading=2` 落在哪兩份 PDF 由它認定 |
 | `analysis/load.py` | ✅ | 把 42 個 predictions 檔對齊到同一組 canonical row order，錯位在此攔截而非在統計階段 |
-| `analysis/metrics.py` | ✅ | subset-aware weighted macro-F1，向量化以支撐 bootstrap，並釘住 `paper/score.py`（測試斷言兩者同分） |
+| `analysis/metrics.py` | ✅ | subset-aware weighted macro-F1，向量化以支撐 bootstrap，並釘住 `paper/score.py`（測試斷言兩者同分）；另含 `tuple_accuracy` 與 path-constrained 變體 `consistent_weighted_macro_f1` |
 | `analysis/bootstrap.py` | ✅ | 10,000 次 paired PDF-cluster bootstrap 與 Holm 校正；以 PDF 為重抽單位，同一抽樣上計兩法差值 |
-| `analysis/aggregate.py` | ✅ | 跨 seed 聚合、§3.4 預先指定的對比、sensitivity |
+| `analysis/aggregate.py` | ✅ | 跨 seed 聚合、§3.4 預先指定的對比、三個各自校正的 Holm 家族、conditional field F1、Misleading-free sensitivity |
+| `analysis/cases.py` | ✅ | 失效模式：違規規則分布、投影得失的逐類別帳、decoder 到達的未觀察狀態、`Misleading` 的逐例記錄 |
+| `analysis/findings.py` | ✅ | 由區間推出「這些數字准許寫什麼」，並強制未解析者的措辭 |
 | `analysis/tables.py` | ✅ | 契約 4 的三張 `tabular`、caption 純文字檔與 provenance manifest |
 | `analysis/figure1.py` | ✅ | Figure 1 的數字（由 `paper/labels.py` 推導）與 latexmk 建置 |
 | `analysis/__main__.py` | ✅ | 一鍵重算：`python -m analysis`，凍結後只能重算不能改動的那道指令 |
 | `tables/table{1,2,3}*.tex`、`*_caption.txt`、`manifest.json` | ✅ | 契約 4 交付物 |
+| `tables/findings.md` | ✅ | 補充材料，見 §5；三個家族、conditional F1、sensitivity、逐例記錄與禁止事項 |
+| `tables/case_analysis.json`、`tables/audit.json` | ✅ | 補充材料；Discussion 的失效模式數字來源 |
+| `docs/study_report.md` | ✅ | 給 D 的完整交接：故事、證據、來歷、措辭紅線 |
+| `docs/related_work_citations.md` | ✅ | path-constrained 指標的三層出處、BibTeX 與逐字引文 |
 | `figures/figure1_hierarchy.pdf` | ✅ | 契約 4 交付物；`.tex` 與 `_defs.tex` 為其來源，見 §5 |
-| `tests/test_analysis_*.py` | ✅ 6 檔 | audit、metrics、bootstrap、aggregate、tables、figure1 各一 |
+| `tests/test_analysis_*.py` | ✅ 8 檔 | audit、metrics、bootstrap、aggregate、tables、figure1、cases、findings 各一 |
+| `tests/test_study_report.py` | ✅ | 守門測試：`docs/study_report.md` 引用的每個區間都必須存在於 `tables/`，反之亦然 |
 
 ### 實作歷程
 
@@ -512,11 +590,21 @@ C 消費契約 3（`predictions/`、`results/`），產出契約 4（`tables/`�
 | `bb5685a` | Figure 1 初版（繪圖程式庫產生） |
 | `4e003bc` | 一鍵重算全部表與圖 |
 | `7d44b86` | Figure 1 改以 standalone TikZ 繪製，數字仍由 script 生成（見 §5） |
+| `b25e85a` | 失效模式分析：M0 違反哪條規則、投影修好與破壞了什麼 |
+| `d04b376` | findings brief：由區間決定哪些句子被准許 |
+| `52453eb` | tuple accuracy 成為自己的 Holm 家族 |
+| `a7d03e4` | 逐類別的修復帳與 decoder 到達的未觀察狀態 |
+| `d4dec4c` | 官方指標的 path-constrained 變體（先寫回歸測試證明官方數字不動） |
+| `5b8ead5`／`824734b` | 三個家族並列，各自載明來歷 |
+| `dfb128e` | conditional field F1；Table 1 印出切分重疊與跨切分重複 |
+| `e6deb5c` | `Misleading` 的逐例記錄與其 sensitivity |
 
 SHA 對應 `c-analysis` 這條線；若日後以 squash 方式合併，改用 `git log --grep='feat(analysis)'` 追溯。
 
 ### 這條線一貫遵守的兩件事
 
 **沒有任何分數被轉抄。** `analysis/metrics.py` 是 `paper/score.py` 的向量化重述（為了跑得動 10,000 次重抽），測試斷言兩者對同一輸入給出相同分數；表與圖的每個數字都來自 script，`tables/manifest.json` 記下每個輸入的 sha256，因此文中任一數字都能回溯到產生它的程式與輸入。Figure 1 的三個計數同樣如此——它們從 `paper/labels.py` 推導後寫進 `figures/figure1_defs.tex`，繪圖原始碼只能引用巨集，測試會在有人把數字打進圖裡時失敗。
+
+**事先指定的分析不因結果撤掉。** `tuple accuracy` 在計畫 §10 已被指定為要報告的次要指標，而它的 `M4-M1` 對本研究不利。後來採用的 path-constrained 指標在論證上更好，但**取代它**會等於看過方向之後才決定要不要報告一個計畫內的分析。因此三個家族並列，各自 Holm 校正，caption 逐一標明哪個是事先指定、哪個是事後採用。
 
 **合成輸入永遠說得出自己是合成的。** `python -m analysis --predictions-root contracts/examples` 跑完會在最後印出警告，說明每個分數都是捏造的、只有形狀有意義。這道防線存在的理由是：合成資料的表格與真實表格在結構上完全一樣，肉眼分辨不出來。

@@ -1,0 +1,1354 @@
+{
+ "generated_at": "2026-08-22T06:38:32.634996+00:00",
+ "git_sha": "cba98953fbe5d650321e64883acecea80f2ebd8e",
+ "totals": {
+  "n_rows": 12000,
+  "n_invalid": 1527,
+  "by_rule": {
+   "promise_no_children_set": 699,
+   "promise_yes_children_absent": 47,
+   "evidence_no_quality_set": 755,
+   "evidence_yes_quality_missing": 26
+  },
+  "fields_repaired": 822,
+  "fields_destroyed": 637,
+  "fields_wrong_either_way": 595,
+  "parent_overrides": {
+   "n_rows": 12000,
+   "n_changed": 339,
+   "to_correct": 225,
+   "to_wrong": 114,
+   "wrong_to_wrong": 0,
+   "tuple_correct_before": 114,
+   "tuple_correct_after": 47
+  },
+  "na": {
+   "repaired": 796,
+   "destroyed": 37,
+   "net": 759
+  },
+  "substantive": {
+   "repaired": 26,
+   "destroyed": 600,
+   "net": -574
+  },
+  "by_class": {
+   "evidence_quality.Clear": {
+    "repaired": 9,
+    "destroyed": 206,
+    "net": -197
+   },
+   "evidence_quality.Not Clear": {
+    "repaired": 0,
+    "destroyed": 172,
+    "net": -172
+   },
+   "verification_timeline.already": {
+    "repaired": 0,
+    "destroyed": 61,
+    "net": -61
+   },
+   "evidence_status.Yes": {
+    "repaired": 15,
+    "destroyed": 68,
+    "net": -53
+   },
+   "evidence_status.No": {
+    "repaired": 2,
+    "destroyed": 47,
+    "net": -45
+   },
+   "verification_timeline.between_2_and_5_years": {
+    "repaired": 0,
+    "destroyed": 30,
+    "net": -30
+   },
+   "verification_timeline.more_than_5_years": {
+    "repaired": 0,
+    "destroyed": 12,
+    "net": -12
+   },
+   "verification_timeline.within_2_years": {
+    "repaired": 0,
+    "destroyed": 4,
+    "net": -4
+   },
+   "evidence_quality.Misleading": {
+    "repaired": 0,
+    "destroyed": 0,
+    "net": 0
+   },
+   "evidence_status.N/A": {
+    "repaired": 124,
+    "destroyed": 18,
+    "net": 106
+   },
+   "verification_timeline.N/A": {
+    "repaired": 252,
+    "destroyed": 2,
+    "net": 250
+   },
+   "evidence_quality.N/A": {
+    "repaired": 420,
+    "destroyed": 17,
+    "net": 403
+   }
+  },
+  "net_fields": 185,
+  "invalid_rate": 0.12725
+ },
+ "runs": [
+  {
+   "protocol": "pdf_group",
+   "seed": 42,
+   "baseline": "M0",
+   "projected": "M1",
+   "independent": {
+    "n_rows": 2000,
+    "n_invalid": 245,
+    "invalid_rate": 0.1225,
+    "by_rule": {
+     "promise_no_children_set": 100,
+     "promise_yes_children_absent": 9,
+     "evidence_no_quality_set": 133,
+     "evidence_yes_quality_missing": 3
+    }
+   },
+   "after_projection": {
+    "n_rows": 2000,
+    "n_invalid": 0,
+    "invalid_rate": 0.0,
+    "by_rule": {
+     "promise_no_children_set": 0,
+     "promise_yes_children_absent": 0,
+     "evidence_no_quality_set": 0,
+     "evidence_yes_quality_missing": 0
+    }
+   },
+   "projection": {
+    "rows_touched": 245,
+    "fields_repaired": 135,
+    "fields_destroyed": 91,
+    "fields_wrong_either_way": 96,
+    "net_fields": 44
+   },
+   "by_class": {
+    "by_class": {
+     "evidence_quality.N/A": {
+      "repaired": 71,
+      "destroyed": 1
+     },
+     "evidence_quality.Not Clear": {
+      "repaired": 0,
+      "destroyed": 29
+     },
+     "verification_timeline.already": {
+      "repaired": 0,
+      "destroyed": 9
+     },
+     "evidence_status.Yes": {
+      "repaired": 3,
+      "destroyed": 9
+     },
+     "evidence_quality.Clear": {
+      "repaired": 2,
+      "destroyed": 26
+     },
+     "verification_timeline.between_2_and_5_years": {
+      "repaired": 0,
+      "destroyed": 5
+     },
+     "evidence_status.No": {
+      "repaired": 0,
+      "destroyed": 9
+     },
+     "verification_timeline.N/A": {
+      "repaired": 38,
+      "destroyed": 0
+     },
+     "evidence_status.N/A": {
+      "repaired": 21,
+      "destroyed": 3
+     },
+     "verification_timeline.more_than_5_years": {
+      "repaired": 0,
+      "destroyed": 0
+     }
+    },
+    "na": {
+     "repaired": 130,
+     "destroyed": 4,
+     "net": 126
+    },
+    "substantive": {
+     "repaired": 5,
+     "destroyed": 87,
+     "net": -82
+    },
+    "net": 44
+   },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 50,
+    "to_correct": 30,
+    "to_wrong": 20,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 20,
+    "tuple_correct_after": 5
+   },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "N/A",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
+   "unobserved": {
+    "M4": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    },
+    "M5": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 1,
+     "emitted_unobserved": [
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ]
+    },
+    "M6": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 1,
+     "emitted_unobserved": [
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "protocol": "pdf_group",
+   "seed": 123,
+   "baseline": "M0",
+   "projected": "M1",
+   "independent": {
+    "n_rows": 2000,
+    "n_invalid": 264,
+    "invalid_rate": 0.132,
+    "by_rule": {
+     "promise_no_children_set": 122,
+     "promise_yes_children_absent": 6,
+     "evidence_no_quality_set": 131,
+     "evidence_yes_quality_missing": 5
+    }
+   },
+   "after_projection": {
+    "n_rows": 2000,
+    "n_invalid": 0,
+    "invalid_rate": 0.0,
+    "by_rule": {
+     "promise_no_children_set": 0,
+     "promise_yes_children_absent": 0,
+     "evidence_no_quality_set": 0,
+     "evidence_yes_quality_missing": 0
+    }
+   },
+   "projection": {
+    "rows_touched": 264,
+    "fields_repaired": 153,
+    "fields_destroyed": 112,
+    "fields_wrong_either_way": 94,
+    "net_fields": 41
+   },
+   "by_class": {
+    "by_class": {
+     "evidence_quality.Not Clear": {
+      "repaired": 0,
+      "destroyed": 28
+     },
+     "verification_timeline.already": {
+      "repaired": 0,
+      "destroyed": 13
+     },
+     "evidence_status.Yes": {
+      "repaired": 2,
+      "destroyed": 13
+     },
+     "evidence_quality.Clear": {
+      "repaired": 3,
+      "destroyed": 38
+     },
+     "verification_timeline.between_2_and_5_years": {
+      "repaired": 0,
+      "destroyed": 6
+     },
+     "evidence_status.No": {
+      "repaired": 0,
+      "destroyed": 6
+     },
+     "verification_timeline.N/A": {
+      "repaired": 45,
+      "destroyed": 0
+     },
+     "evidence_status.N/A": {
+      "repaired": 22,
+      "destroyed": 2
+     },
+     "evidence_quality.N/A": {
+      "repaired": 81,
+      "destroyed": 1
+     },
+     "verification_timeline.more_than_5_years": {
+      "repaired": 0,
+      "destroyed": 4
+     },
+     "verification_timeline.within_2_years": {
+      "repaired": 0,
+      "destroyed": 1
+     }
+    },
+    "na": {
+     "repaired": 148,
+     "destroyed": 3,
+     "net": 145
+    },
+    "substantive": {
+     "repaired": 5,
+     "destroyed": 109,
+     "net": -104
+    },
+    "net": 41
+   },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 58,
+    "to_correct": 38,
+    "to_wrong": 20,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 20,
+    "tuple_correct_after": 10
+   },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "N/A",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
+   "unobserved": {
+    "M4": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    },
+    "M5": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    },
+    "M6": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    }
+   }
+  },
+  {
+   "protocol": "pdf_group",
+   "seed": 456,
+   "baseline": "M0",
+   "projected": "M1",
+   "independent": {
+    "n_rows": 2000,
+    "n_invalid": 244,
+    "invalid_rate": 0.122,
+    "by_rule": {
+     "promise_no_children_set": 119,
+     "promise_yes_children_absent": 11,
+     "evidence_no_quality_set": 110,
+     "evidence_yes_quality_missing": 4
+    }
+   },
+   "after_projection": {
+    "n_rows": 2000,
+    "n_invalid": 0,
+    "invalid_rate": 0.0,
+    "by_rule": {
+     "promise_no_children_set": 0,
+     "promise_yes_children_absent": 0,
+     "evidence_no_quality_set": 0,
+     "evidence_yes_quality_missing": 0
+    }
+   },
+   "projection": {
+    "rows_touched": 244,
+    "fields_repaired": 140,
+    "fields_destroyed": 94,
+    "fields_wrong_either_way": 100,
+    "net_fields": 46
+   },
+   "by_class": {
+    "by_class": {
+     "verification_timeline.between_2_and_5_years": {
+      "repaired": 0,
+      "destroyed": 4
+     },
+     "verification_timeline.more_than_5_years": {
+      "repaired": 0,
+      "destroyed": 2
+     },
+     "evidence_status.No": {
+      "repaired": 1,
+      "destroyed": 9
+     },
+     "evidence_status.Yes": {
+      "repaired": 3,
+      "destroyed": 8
+     },
+     "verification_timeline.already": {
+      "repaired": 0,
+      "destroyed": 4
+     },
+     "evidence_quality.Clear": {
+      "repaired": 2,
+      "destroyed": 35
+     },
+     "verification_timeline.N/A": {
+      "repaired": 43,
+      "destroyed": 1
+     },
+     "evidence_quality.N/A": {
+      "repaired": 70,
+      "destroyed": 4
+     },
+     "evidence_quality.Not Clear": {
+      "repaired": 0,
+      "destroyed": 22
+     },
+     "evidence_status.N/A": {
+      "repaired": 21,
+      "destroyed": 5
+     }
+    },
+    "na": {
+     "repaired": 134,
+     "destroyed": 10,
+     "net": 124
+    },
+    "substantive": {
+     "repaired": 6,
+     "destroyed": 84,
+     "net": -78
+    },
+    "net": 46
+   },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 52,
+    "to_correct": 36,
+    "to_wrong": 16,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 16,
+    "tuple_correct_after": 5
+   },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "N/A",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
+   "unobserved": {
+    "M4": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    },
+    "M5": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    },
+    "M6": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    }
+   }
+  },
+  {
+   "protocol": "row_strat",
+   "seed": 42,
+   "baseline": "M0",
+   "projected": "M1",
+   "independent": {
+    "n_rows": 2000,
+    "n_invalid": 253,
+    "invalid_rate": 0.1265,
+    "by_rule": {
+     "promise_no_children_set": 104,
+     "promise_yes_children_absent": 6,
+     "evidence_no_quality_set": 140,
+     "evidence_yes_quality_missing": 3
+    }
+   },
+   "after_projection": {
+    "n_rows": 2000,
+    "n_invalid": 0,
+    "invalid_rate": 0.0,
+    "by_rule": {
+     "promise_no_children_set": 0,
+     "promise_yes_children_absent": 0,
+     "evidence_no_quality_set": 0,
+     "evidence_yes_quality_missing": 0
+    }
+   },
+   "projection": {
+    "rows_touched": 253,
+    "fields_repaired": 124,
+    "fields_destroyed": 108,
+    "fields_wrong_either_way": 97,
+    "net_fields": 16
+   },
+   "by_class": {
+    "by_class": {
+     "evidence_quality.Not Clear": {
+      "repaired": 0,
+      "destroyed": 34
+     },
+     "evidence_quality.Clear": {
+      "repaired": 0,
+      "destroyed": 34
+     },
+     "verification_timeline.between_2_and_5_years": {
+      "repaired": 0,
+      "destroyed": 5
+     },
+     "evidence_quality.Misleading": {
+      "repaired": 0,
+      "destroyed": 0
+     },
+     "evidence_quality.N/A": {
+      "repaired": 70,
+      "destroyed": 2
+     },
+     "verification_timeline.N/A": {
+      "repaired": 35,
+      "destroyed": 0
+     },
+     "evidence_status.N/A": {
+      "repaired": 18,
+      "destroyed": 2
+     },
+     "verification_timeline.already": {
+      "repaired": 0,
+      "destroyed": 10
+     },
+     "evidence_status.Yes": {
+      "repaired": 0,
+      "destroyed": 14
+     },
+     "evidence_status.No": {
+      "repaired": 1,
+      "destroyed": 5
+     },
+     "verification_timeline.more_than_5_years": {
+      "repaired": 0,
+      "destroyed": 1
+     },
+     "verification_timeline.within_2_years": {
+      "repaired": 0,
+      "destroyed": 1
+     }
+    },
+    "na": {
+     "repaired": 123,
+     "destroyed": 4,
+     "net": 119
+    },
+    "substantive": {
+     "repaired": 1,
+     "destroyed": 104,
+     "net": -103
+    },
+    "net": 16
+   },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 50,
+    "to_correct": 33,
+    "to_wrong": 17,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 17,
+    "tuple_correct_after": 6
+   },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Not Clear",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
+   "unobserved": {
+    "M4": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    },
+    "M5": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    },
+    "M6": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    }
+   }
+  },
+  {
+   "protocol": "row_strat",
+   "seed": 123,
+   "baseline": "M0",
+   "projected": "M1",
+   "independent": {
+    "n_rows": 2000,
+    "n_invalid": 285,
+    "invalid_rate": 0.1425,
+    "by_rule": {
+     "promise_no_children_set": 144,
+     "promise_yes_children_absent": 6,
+     "evidence_no_quality_set": 129,
+     "evidence_yes_quality_missing": 6
+    }
+   },
+   "after_projection": {
+    "n_rows": 2000,
+    "n_invalid": 0,
+    "invalid_rate": 0.0,
+    "by_rule": {
+     "promise_no_children_set": 0,
+     "promise_yes_children_absent": 0,
+     "evidence_no_quality_set": 0,
+     "evidence_yes_quality_missing": 0
+    }
+   },
+   "projection": {
+    "rows_touched": 285,
+    "fields_repaired": 160,
+    "fields_destroyed": 118,
+    "fields_wrong_either_way": 127,
+    "net_fields": 42
+   },
+   "by_class": {
+    "by_class": {
+     "evidence_quality.Clear": {
+      "repaired": 2,
+      "destroyed": 37
+     },
+     "evidence_quality.Misleading": {
+      "repaired": 0,
+      "destroyed": 0
+     },
+     "verification_timeline.already": {
+      "repaired": 0,
+      "destroyed": 13
+     },
+     "evidence_quality.N/A": {
+      "repaired": 78,
+      "destroyed": 4
+     },
+     "evidence_quality.Not Clear": {
+      "repaired": 0,
+      "destroyed": 26
+     },
+     "verification_timeline.more_than_5_years": {
+      "repaired": 0,
+      "destroyed": 2
+     },
+     "verification_timeline.N/A": {
+      "repaired": 52,
+      "destroyed": 0
+     },
+     "verification_timeline.between_2_and_5_years": {
+      "repaired": 0,
+      "destroyed": 6
+     },
+     "evidence_status.Yes": {
+      "repaired": 3,
+      "destroyed": 18
+     },
+     "evidence_status.No": {
+      "repaired": 0,
+      "destroyed": 9
+     },
+     "evidence_status.N/A": {
+      "repaired": 25,
+      "destroyed": 2
+     },
+     "verification_timeline.within_2_years": {
+      "repaired": 0,
+      "destroyed": 1
+     }
+    },
+    "na": {
+     "repaired": 155,
+     "destroyed": 6,
+     "net": 149
+    },
+    "substantive": {
+     "repaired": 5,
+     "destroyed": 112,
+     "net": -107
+    },
+    "net": 42
+   },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 80,
+    "to_correct": 53,
+    "to_wrong": 27,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 27,
+    "tuple_correct_after": 11
+   },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Not Clear",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
+   "unobserved": {
+    "M4": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    },
+    "M5": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 1,
+     "emitted_unobserved": [
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ]
+    },
+    "M6": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 2,
+     "emitted_unobserved": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "protocol": "row_strat",
+   "seed": 456,
+   "baseline": "M0",
+   "projected": "M1",
+   "independent": {
+    "n_rows": 2000,
+    "n_invalid": 236,
+    "invalid_rate": 0.118,
+    "by_rule": {
+     "promise_no_children_set": 110,
+     "promise_yes_children_absent": 9,
+     "evidence_no_quality_set": 112,
+     "evidence_yes_quality_missing": 5
+    }
+   },
+   "after_projection": {
+    "n_rows": 2000,
+    "n_invalid": 0,
+    "invalid_rate": 0.0,
+    "by_rule": {
+     "promise_no_children_set": 0,
+     "promise_yes_children_absent": 0,
+     "evidence_no_quality_set": 0,
+     "evidence_yes_quality_missing": 0
+    }
+   },
+   "projection": {
+    "rows_touched": 236,
+    "fields_repaired": 110,
+    "fields_destroyed": 114,
+    "fields_wrong_either_way": 81,
+    "net_fields": -4
+   },
+   "by_class": {
+    "by_class": {
+     "evidence_quality.Clear": {
+      "repaired": 0,
+      "destroyed": 36
+     },
+     "evidence_quality.N/A": {
+      "repaired": 50,
+      "destroyed": 5
+     },
+     "verification_timeline.N/A": {
+      "repaired": 39,
+      "destroyed": 1
+     },
+     "evidence_status.N/A": {
+      "repaired": 17,
+      "destroyed": 4
+     },
+     "evidence_quality.Not Clear": {
+      "repaired": 0,
+      "destroyed": 33
+     },
+     "verification_timeline.already": {
+      "repaired": 0,
+      "destroyed": 12
+     },
+     "verification_timeline.between_2_and_5_years": {
+      "repaired": 0,
+      "destroyed": 4
+     },
+     "evidence_status.No": {
+      "repaired": 0,
+      "destroyed": 9
+     },
+     "evidence_status.Yes": {
+      "repaired": 4,
+      "destroyed": 6
+     },
+     "verification_timeline.more_than_5_years": {
+      "repaired": 0,
+      "destroyed": 3
+     },
+     "verification_timeline.within_2_years": {
+      "repaired": 0,
+      "destroyed": 1
+     }
+    },
+    "na": {
+     "repaired": 106,
+     "destroyed": 10,
+     "net": 96
+    },
+    "substantive": {
+     "repaired": 4,
+     "destroyed": 104,
+     "net": -100
+    },
+    "net": -4
+   },
+   "parent_overrides": {
+    "field": "promise_status",
+    "n_rows": 2000,
+    "n_changed": 49,
+    "to_correct": 35,
+    "to_wrong": 14,
+    "wrong_to_wrong": 0,
+    "tuple_correct_before": 14,
+    "tuple_correct_after": 10
+   },
+   "misleading_cases": [
+    {
+     "id": "10017",
+     "pdf_url": "https://esg.sp88.tw/upload/pj/202508071622071323.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "between_2_and_5_years",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "N/A",
+      "M1": "N/A",
+      "M2": "N/A",
+      "M3": "N/A",
+      "M4": "N/A",
+      "M5": "N/A",
+      "M6": "N/A"
+     }
+    },
+    {
+     "id": "11836",
+     "pdf_url": "https://www.aseglobal.com/ch/pdf/aseh-2024-csr-ch-final.pdf",
+     "gold": {
+      "promise_status": "Yes",
+      "verification_timeline": "already",
+      "evidence_status": "Yes",
+      "evidence_quality": "Misleading"
+     },
+     "predicted": {
+      "M0": "Clear",
+      "M1": "Clear",
+      "M2": "Clear",
+      "M3": "Clear",
+      "M4": "Clear",
+      "M5": "Clear",
+      "M6": "Clear"
+     }
+    }
+   ],
+   "unobserved": {
+    "M4": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    },
+    "M5": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    },
+    "M6": {
+     "n_unobserved_in_gold": 2,
+     "unobserved_in_gold": [
+      [
+       "Yes",
+       "within_2_years",
+       "Yes",
+       "Misleading"
+      ],
+      [
+       "Yes",
+       "more_than_5_years",
+       "Yes",
+       "Misleading"
+      ]
+     ],
+     "n_emitted_unobserved": 0,
+     "emitted_unobserved": []
+    }
+   }
+  }
+ ]
+}

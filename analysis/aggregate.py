@@ -14,7 +14,15 @@ import numpy as np
 
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT, holm, paired_delta
 from analysis.load import METHODS, load_all
-from analysis.metrics import field_macro_f1, weighted_macro_f1
+from analysis.metrics import (
+    conditional_field_macro_f1,
+    consistent_weighted_macro_f1,
+    field_macro_f1,
+    hierarchical_f1,
+    hierarchical_prf,
+    tuple_accuracy,
+    weighted_macro_f1,
+)
 from paper.data import load_dev
 from paper.labels import EVAL_FIELDS, FIELDS, INVALID_STATE_ID, tuple_to_state_id
 from paper.train_config import SEEDS
@@ -73,10 +81,16 @@ def method_summary(sets_by_seed, idx=None, no_misleading_idx=None) -> dict:
     scores = [weighted_macro_f1(g, p, idx) for g, p in sets_by_seed]
     mean, std = mean_std(scores)
 
-    per_field = {}
+    per_field, conditional = {}, {}
     for field in FIELDS:
         values = [field_macro_f1(g, p, idx)[field] for g, p in sets_by_seed]
         per_field[field] = mean_std(values)[0]
+        # Plan section 4.5: the same field scored only on the rows its gold
+        # parent admits. Reported beside the unconditioned score rather than
+        # instead of it -- the competition ranks on the unconditioned one.
+        values = [conditional_field_macro_f1(g, p, idx)[field]
+                  for g, p in sets_by_seed]
+        conditional[field] = mean_std(values)[0]
 
     tuple_acc, invalid = [], []
     for gold, pred in sets_by_seed:
@@ -85,11 +99,28 @@ def method_summary(sets_by_seed, idx=None, no_misleading_idx=None) -> dict:
         tuple_acc.append(float((gold_ids[sel] == pred_ids[sel]).mean()))
         invalid.append(float((pred_ids[sel] == INVALID_STATE_ID).mean()))
 
+    # The secondary metric, per method. It has no column of its own in Table 2
+    # -- the column count is D's page budget -- so this is where the caption
+    # gets the one number that locates it: how far the unconstrained arm falls
+    # when its ancestor-unsupported fields stop earning partial credit.
+    constrained = [consistent_weighted_macro_f1(g, p, idx) for g, p in sets_by_seed]
+
+    # The set-based hierarchical measure. Reported per method because it ranks
+    # the methods differently from the official metric -- which is the study's
+    # subject, not an inconvenience.
+    hierarchical = [hierarchical_prf(g, p, idx) for g, p in sets_by_seed]
+
     out = {
         "weighted_macro_f1_per_seed": scores,
         "weighted_macro_f1_mean": mean,
         "weighted_macro_f1_std": std,
+        "consistent_weighted_macro_f1_mean": float(np.mean(constrained)),
+        "hierarchical_mean": {
+            key: float(np.mean([h[key] for h in hierarchical]))
+            for key in ("hP", "hR", "hF")
+        },
         "per_field_mean": per_field,
+        "conditional_per_field_mean": conditional,
         "tuple_exact_match_mean": float(np.mean(tuple_acc)),
         "invalid_tuple_rate_mean": float(np.mean(invalid)),
     }
@@ -114,21 +145,45 @@ def protocol_summary(protocol, order, root, clusters, n_boot=N_BOOT,
         for method in METHODS
     }
 
-    raw = {}
-    for a, b, description in CONTRASTS:
-        raw[f"{a}-{b}"] = {
-            **paired_delta(
-                [by_seed[s][a] for s in seeds], [by_seed[s][b] for s in seeds],
-                clusters, n_boot=n_boot, seed=bootstrap_seed,
-            ),
-            "description": description,
-        }
-    adjusted = holm({key: row["p_value"] for key, row in raw.items()})
-    for key, row in raw.items():
-        row["p_holm"] = adjusted[key]
+    def family(score):
+        """One Holm family: the same pre-specified contrasts, one metric.
 
-    return {"protocol": protocol, "seeds": list(seeds),
-            "methods": methods, "contrasts": raw}
+        The two metrics answer different questions -- weighted macro-F1 is the
+        competition's ranking rule, its path-constrained variant asks the same
+        question of predictions the hierarchy actually supports -- so they are
+        corrected separately. Pooling them into a family of ten would treat them
+        as ten attempts at one question and inflate the correction against
+        contrasts that were specified once, not twice.
+
+        The secondary metric was chosen to differ from the primary one in
+        exactly one respect, so a contrast the two families resolve differently
+        is evidence about consistency and not about the shape of the metric.
+        """
+        rows = {}
+        for a, b, description in CONTRASTS:
+            rows[f"{a}-{b}"] = {
+                **paired_delta(
+                    [by_seed[s][a] for s in seeds], [by_seed[s][b] for s in seeds],
+                    clusters, n_boot=n_boot, seed=bootstrap_seed, score=score,
+                ),
+                "description": description,
+            }
+        adjusted = holm({key: row["p_value"] for key, row in rows.items()})
+        for key, row in rows.items():
+            row["p_holm"] = adjusted[key]
+        return rows
+
+    # Three metrics, one pre-specified set of contrasts. ``tuple_contrasts``
+    # keeps its family even though the path-constrained metric now carries the
+    # argument: the analysis plan named tuple accuracy in advance, and one of
+    # its contrasts (M4-M1) runs against the methods. Retiring a planned family
+    # after seeing which way it pointed is selective reporting, whichever way
+    # it points.
+    return {"protocol": protocol, "seeds": list(seeds), "methods": methods,
+            "contrasts": family(weighted_macro_f1),
+            "consistent_contrasts": family(consistent_weighted_macro_f1),
+            "tuple_contrasts": family(tuple_accuracy),
+            "hierarchical_contrasts": family(hierarchical_f1)}
 
 
 def regime_comparison(summaries, order, root, clusters, n_boot=N_BOOT,

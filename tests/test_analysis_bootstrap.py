@@ -110,3 +110,54 @@ def test_holm_is_monotone_and_capped_at_one():
     adjusted = holm({"a": 0.4, "b": 0.5, "c": 0.9})
     assert all(v <= 1.0 for v in adjusted.values())
     assert adjusted["a"] <= adjusted["b"] <= adjusted["c"]
+
+
+# ---------------------------------------------- secondary metric contrasts
+# The five pre-specified contrasts are bootstrapped on the official weighted
+# macro-F1. Tuple accuracy is also pre-specified for reporting (plan §10) but
+# was never given an interval, so "no detectable effect" was being inferred
+# from one metric and stated about the methods.
+
+
+def test_tuple_accuracy_matches_the_state_id_definition():
+    """aggregate.py compares state ids; metrics compares fields. A row is an
+    exact match under one exactly when it is under the other, and two drifting
+    definitions of the same number is precisely what the manifest cannot catch."""
+    import numpy as np
+    from analysis.metrics import tuple_accuracy
+
+    gold = np.array([[0, 4, 2, 3], [1, 0, 0, 0], [1, 1, 1, 1]])
+    pred = np.array([[0, 4, 2, 3], [1, 0, 0, 1], [0, 1, 1, 1]])
+    assert tuple_accuracy(gold, pred) == 1 / 3
+    assert tuple_accuracy(gold, gold) == 1.0
+    assert tuple_accuracy(gold, pred, idx=np.array([0])) == 1.0
+
+
+def test_paired_delta_defaults_to_the_official_metric():
+    """Adding the score parameter must not move a single published interval."""
+    import inspect
+
+    from analysis.bootstrap import paired_delta
+    from analysis.metrics import weighted_macro_f1
+
+    assert inspect.signature(paired_delta).parameters["score"].default is weighted_macro_f1
+
+
+def test_paired_delta_accepts_another_metric():
+    import numpy as np
+
+    from analysis.bootstrap import paired_delta
+    from analysis.metrics import tuple_accuracy
+
+    gold = np.tile(np.array([[0, 4, 2, 3]]), (20, 1))
+    better = gold.copy()
+    worse = gold.copy()
+    # 每個 cluster 內都錯一半，這樣任何一次重抽的差值都是 0.5，
+    # 區間不會因為抽到「整個 cluster 全對」而塌到 0。
+    worse[::2, 0] = 1
+    clusters = [np.arange(0, 10), np.arange(10, 20)]
+
+    out = paired_delta([(gold, better)], [(gold, worse)], clusters,
+                       n_boot=200, score=tuple_accuracy)
+    assert out["delta"] == 0.5
+    assert out["ci_low"] > 0 and out["ci_high"] >= out["ci_low"]
