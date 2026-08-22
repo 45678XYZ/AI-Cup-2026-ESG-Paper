@@ -37,6 +37,7 @@ from paper.train_config import (
     MODEL_REVISION,
     SEEDS,
 )
+from paper.structure_loss import LAMBDA_UNSET
 from paper.train_fold import predict_probs, train_rotation
 from paper.validate import UNPINNED_REVISIONS
 
@@ -97,7 +98,7 @@ def resolve_pinned_snapshot(revision=MODEL_REVISION):
 
 
 def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=False,
-                 model_source=None):
+                 model_source=None, structure_lambda=LAMBDA_UNSET):
     by_id = index_by_id(rows)
     rot = next(r for r in split["rotations"] if r["k"] == rotation)
 
@@ -120,7 +121,7 @@ def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=Fal
     t0 = time.time()
     model, avg_state = train_rotation(
         train_data, tokenizer, split["seed"], model_name=model_source,
-        local_files_only=True,
+        local_files_only=True, structure_lambda=structure_lambda,
     )
     probs = {name: predict_probs(model, data, tokenizer) for name, data in partitions.items()}
     elapsed = time.time() - t0
@@ -135,6 +136,10 @@ def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=Fal
             "checkpoint_rule": CHECKPOINT_RULE,
             "checkpoint_last_k": CHECKPOINT_LAST_K,
             "epochs": EPOCHS,
+            # Which arm this bundle belongs to. 0.0 is the frozen study; any
+            # other value is the pre-registered structural arm, and mixing the
+            # two inside one run would put two recipes into one score.
+            "structure_lambda": structure_lambda,
             "hardware": _hardware(),
             "started_at": started,
             "finished_at": now_iso(),
@@ -163,6 +168,11 @@ def main():
                     help="skip rotations whose bundle already has a meta.json")
     ap.add_argument("--allow-unpinned-revision", action="store_true",
                     help="smoke tests only: run without a pinned MODEL_REVISION")
+    ap.add_argument("--structure-lambda", type=float, default=LAMBDA_UNSET,
+                    help="weight of the training-time legality penalty "
+                         "(paper/structure_loss.py). 0 reproduces the frozen "
+                         "study; the structural arm is pre-registered in "
+                         "docs/pre_registration_structural_training.md")
     args = ap.parse_args()
 
     # An unpinned revision means the run cannot be reproduced against a known
@@ -213,7 +223,7 @@ def main():
             continue
         run_rotation(
             split, k, rows, tokenizer, args.out_dir, args.save_checkpoint,
-            model_source=model_source,
+            model_source=model_source, structure_lambda=args.structure_lambda,
         )
 
     print(f"\nbundles written to {args.out_dir}/{args.protocol}_seed{args.seed}_r*")
