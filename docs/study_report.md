@@ -1058,6 +1058,26 @@ hF = 0.40
 
 **這條也改變了工作流程**：改完 `analysis/` 之後要先 commit 程式、再重新產生表格、再 commit 表格。git log 裡那些 `data(tables): regenerate …` 的獨立 commit 就是這個慣例，現在它對 `analysis/` 也成立了。
 
+### 24.5 可重現性：兩個進了版控的 PDF 每次建置都不一樣
+
+報告 §25 一直宣稱「`.tex`、caption、figure 逐位元一致」。**前兩項是真的，第三項不是。**
+
+pdfTeX 在每份輸出裡寫三樣會變的東西：
+
+| 變動來源 | 後果 | 解法 |
+|---|---|---|
+| `/CreationDate`、`/ModDate` | 每次建置都不同 | `SOURCE_DATE_EPOCH` + `FORCE_SOURCE_DATE`（釘在 2026-08-23 results freeze） |
+| trailer `/ID` | 由時間**與輸出路徑**推導 | `\pdftrailerid{}` |
+| `/PTEX.FileName` | `\includegraphics` 會嵌入被引入檔案的**絕對路徑** | `\pdfsuppressptexinfo=-1` |
+
+第三項最嚴重：`preview.pdf` 引入了 `figure1_hierarchy.pdf`，所以在 clone 裡建置出來的 preview 與版控版本差了 **376,401 bytes**，而兩者是同一份文件。
+
+還有第四個來源不在 pdfTeX 裡：**latexmk 留在 `figures/` 的 `.fdb_latexmk` 快取**。它決定下一次要重做什麼，於是一個由「舊設定」寫下的快取會讓新設定靜默失效——實測中 committed 的圖帶著牆鐘時戳，而同一個 commit 的乾淨 clone 產生的是釘死的時戳，**兩者看起來都正常**。`analysis/figure1.py` 現在在每次建置前刪掉這些殘留檔。
+
+⚠️ **為什麼值得記**：這四項沒有一項會讓建置失敗。它們只會讓「可重現」這個宣稱悄悄變成假的，而報告已經先寫了那句話。`tests/test_analysis_figure1.py` 與 `tests/test_analysis_preview.py` 現在各有兩個測試守著（跨目錄逐位元相同、不得嵌入絕對路徑）。
+
+**這也是 `tables/preview.pdf` 得以進版控的前提**：一個每次重建都變的二進位檔會讓每個人的工作區永遠是髒的。
+
 ## 25. 執行狀態
 
 ### Gate
@@ -1070,10 +1090,12 @@ hF = 0.40
 
 ### 可重現性
 
-- `python -m analysis` 重算全部交付物；`.tex`、caption、figure 逐位元一致，僅時戳欄位改變
+- `python -m analysis` 重算全部交付物；`.tex`、caption、Figure 1 與 preview PDF **全部逐位元一致**，只有三個 JSON 的 `generated_at` 欄位改變
 - `python -m paper.validate --all`：**72 artifacts clean**
 - 全套測試 **353 passed**（本機無 TeX 時 351 passed、2 skipped）
-- **乾淨 clone 重現驗證已完成**：`git clone` 到全新目錄後執行 `python -m analysis`，三張 `.tex` 與三份 caption 與版控版本**逐位元相同**，JSON 除時戳外相同，manifest 的 `git_sha` 無 `-dirty` 後綴。**論文可以寫「the analysis pipeline reproduces every table from a clean checkout」**
+- **乾淨 clone 重現驗證已完成（8/22 重做）**：`git clone` 到全新目錄後執行 `python -m analysis` 與 `python -m analysis.preview`，**13 / 13 個檔案與版控版本逐位元相同**——10 個表格 `.tex`／caption、`figure1_defs.tex`、`figure1_hierarchy.pdf`、`preview.pdf`。JSON 除 `generated_at` 外相同，manifest 的 `git_sha` 無 `-dirty` 後綴。
+
+  ⚠️ **這句話在 8/22 之前是不成立的**：兩個 PDF 都不可重現（見 §24.5），舊版報告卻已經這樣寫了。現在的版本經過驗證。**論文可以寫「the analysis pipeline reproduces every table and figure from a clean checkout, byte for byte」**
 - 資料 checksum：`sha256:e420b03d…`，記在 `tables/audit.json`
 - `tables/manifest.json` 為每張表分別記錄來源 script 與輸入 sha256
 
