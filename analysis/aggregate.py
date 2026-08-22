@@ -15,6 +15,7 @@ import numpy as np
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT, holm, paired_delta
 from analysis.load import METHODS, load_all
 from analysis.metrics import (
+    conditional_field_macro_f1,
     consistent_weighted_macro_f1,
     field_macro_f1,
     tuple_accuracy,
@@ -78,10 +79,16 @@ def method_summary(sets_by_seed, idx=None, no_misleading_idx=None) -> dict:
     scores = [weighted_macro_f1(g, p, idx) for g, p in sets_by_seed]
     mean, std = mean_std(scores)
 
-    per_field = {}
+    per_field, conditional = {}, {}
     for field in FIELDS:
         values = [field_macro_f1(g, p, idx)[field] for g, p in sets_by_seed]
         per_field[field] = mean_std(values)[0]
+        # Plan section 4.5: the same field scored only on the rows its gold
+        # parent admits. Reported beside the unconditioned score rather than
+        # instead of it -- the competition ranks on the unconditioned one.
+        values = [conditional_field_macro_f1(g, p, idx)[field]
+                  for g, p in sets_by_seed]
+        conditional[field] = mean_std(values)[0]
 
     tuple_acc, invalid = [], []
     for gold, pred in sets_by_seed:
@@ -102,6 +109,7 @@ def method_summary(sets_by_seed, idx=None, no_misleading_idx=None) -> dict:
         "weighted_macro_f1_std": std,
         "consistent_weighted_macro_f1_mean": float(np.mean(constrained)),
         "per_field_mean": per_field,
+        "conditional_per_field_mean": conditional,
         "tuple_exact_match_mean": float(np.mean(tuple_acc)),
         "invalid_tuple_rate_mean": float(np.mean(invalid)),
     }

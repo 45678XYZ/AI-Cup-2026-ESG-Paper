@@ -83,7 +83,8 @@ def main() -> None:
                            summaries["pdf_group"]["contrasts"], regimes,
                            cases=json.loads(cases.read_text(encoding="utf-8")),
                            consistent_contrasts=summaries["pdf_group"]["consistent_contrasts"],
-                           tuple_contrasts=summaries["pdf_group"]["tuple_contrasts"])
+                           tuple_contrasts=summaries["pdf_group"]["tuple_contrasts"],
+                           methods=summaries["pdf_group"]["methods"])
     print(f"brief   -> {brief}")
 
     inputs = table_inputs(args.predictions_root, seeds=SEEDS)

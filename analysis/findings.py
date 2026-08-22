@@ -44,7 +44,8 @@ def _fmt(row):
 
 
 def build_findings(audit, contrasts, regimes, cases=None,
-                   consistent_contrasts=None, tuple_contrasts=None) -> str:
+                   consistent_contrasts=None, tuple_contrasts=None,
+                   methods=None) -> str:
     verdict = classify_contrasts(contrasts)
     dev = audit["development"]
     absent = audit["splits"]["calibration_without_misleading"]
@@ -128,6 +129,30 @@ def build_findings(audit, contrasts, regimes, cases=None,
         for k in third["undetermined"]:
             out.append(f"- **{k}**: no detectable difference — "
                        f"{_fmt(tuple_contrasts[k])}")
+        out.append("")
+
+    if methods:
+        out += ["## Conditional field F1 (plan §4.5)", "",
+                "Each child field scored only on the rows its **gold** parent "
+                "admits: `verification_timeline` and `evidence_status` on gold "
+                "`promise_status = Yes`, `evidence_quality` on gold "
+                "`evidence_status = Yes`. The conditioned rows are the same for "
+                "every method, so the columns stay comparable. `promise_status` "
+                "has no parent and is unchanged by construction.", "",
+                "Reported because the unconditioned score mixes two questions — "
+                "choosing the right child label, and repeating the `N/A` the "
+                "hierarchy already fixes — and the second is easy for every "
+                "method. **The competition still ranks on the unconditioned "
+                "score**; this one is diagnostic.", ""]
+        fields = [f for f in next(iter(methods.values()))["per_field_mean"]]
+        out.append("| Method | " + " | ".join(
+            f"{f} (all / conditioned)" for f in fields) + " |")
+        out.append("|---|" + "---|" * len(fields))
+        for method, row in methods.items():
+            cells = " | ".join(
+                f"{row['per_field_mean'][f]:.3f} / "
+                f"{row['conditional_per_field_mean'][f]:.3f}" for f in fields)
+            out.append(f"| {method} | {cells} |")
         out.append("")
 
     if regimes:
@@ -216,13 +241,14 @@ def build_findings(audit, contrasts, regimes, cases=None,
 
 
 def write_findings(out_dir, audit, contrasts, regimes, cases=None,
-                   consistent_contrasts=None, tuple_contrasts=None) -> Path:
+                   consistent_contrasts=None, tuple_contrasts=None,
+                   methods=None) -> Path:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "findings.md"
     header = (f"<!-- generated {now_iso()} from {git_sha()} -->\n\n")
     path.write_text(header + build_findings(audit, contrasts, regimes, cases,
                                            consistent_contrasts,
-                                           tuple_contrasts),
+                                           tuple_contrasts, methods),
                     encoding="utf-8")
     return path

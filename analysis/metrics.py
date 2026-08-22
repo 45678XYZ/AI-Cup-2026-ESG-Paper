@@ -14,7 +14,14 @@ minutes; the bincount formulation below runs it in about a second.
 
 import numpy as np
 
-from paper.labels import EVAL_FIELDS, FIELD_ALIAS, FIELD_WEIGHTS, FIELDS, LABEL2ID
+from paper.labels import (
+    CONDITIONING_SUBSET,
+    EVAL_FIELDS,
+    FIELD_ALIAS,
+    FIELD_WEIGHTS,
+    FIELDS,
+    LABEL2ID,
+)
 
 N_CLASSES = tuple(len(EVAL_FIELDS[field]) for field in FIELDS)
 WEIGHTS = tuple(FIELD_WEIGHTS[field] for field in FIELDS)
@@ -89,6 +96,35 @@ def field_macro_f1(gold, pred, idx=None) -> dict:
         field: _macro_f1(gold[:, j], pred[:, j], N_CLASSES[j])
         for j, field in enumerate(FIELDS)
     }
+
+
+def conditional_field_macro_f1(gold, pred, idx=None) -> dict:
+    """Per-field macro-F1 on the rows each field's parent admits (plan §4.5).
+
+    ``verification_timeline`` and ``evidence_status`` are scored on gold
+    ``promise_status = Yes``; ``evidence_quality`` on gold
+    ``evidence_status = Yes``; ``promise_status`` has no parent and is scored on
+    everything. The subsets come from ``paper.labels.CONDITIONING_SUBSET``, the
+    same table the conditional calibration uses, so the two cannot drift apart.
+
+    The point of reporting it beside the unconditioned score: a child field's
+    unconditioned macro-F1 mixes two very different questions -- can the model
+    choose the right timeline, and can it repeat the ``N/A`` the hierarchy
+    already fixes -- and the second is easy for every method. Conditioning
+    removes it. **The subset is chosen by the gold parent, never the predicted
+    one**, so the rows scored are identical for all seven methods and the
+    numbers stay comparable.
+    """
+    if idx is not None:
+        gold, pred = gold[idx], pred[idx]
+    out = {}
+    for j, field in enumerate(FIELDS):
+        keep = slice(None)
+        if field in CONDITIONING_SUBSET:
+            parent, value = CONDITIONING_SUBSET[field]
+            keep = gold[:, FIELDS.index(parent)] == LABEL2ID[parent][value]
+        out[field] = _macro_f1(gold[keep, j], pred[keep, j], N_CLASSES[j])
+    return out
 
 
 def weighted_macro_f1(gold, pred, idx=None) -> float:

@@ -1,4 +1,4 @@
-<!-- generated 2026-08-22T00:09:52.487293+00:00 from 824734be557dd0cf5f8ea78baf94cebfe15f0f92 -->
+<!-- generated 2026-08-22T00:41:48.068196+00:00 from 7868a1b76cdf9851d7a65d2ea0b613f4de0487fb -->
 
 # Findings brief
 
@@ -34,6 +34,22 @@ Pre-specified in the analysis plan as the secondary reporting metric, and report
 - **M3-M2**: no detectable difference — +0.002 [-0.003, 0.007] — conditional vs global calibration, under projection
 - **M6-M3**: no detectable difference — -0.005 [-0.014, 0.004] — adding the decoder under conditional calibration
 - **M6-M5**: no detectable difference — -0.004 [-0.012, 0.004] — conditional vs global calibration, under decoding
+
+## Conditional field F1 (plan §4.5)
+
+Each child field scored only on the rows its **gold** parent admits: `verification_timeline` and `evidence_status` on gold `promise_status = Yes`, `evidence_quality` on gold `evidence_status = Yes`. The conditioned rows are the same for every method, so the columns stay comparable. `promise_status` has no parent and is unchanged by construction.
+
+Reported because the unconditioned score mixes two questions — choosing the right child label, and repeating the `N/A` the hierarchy already fixes — and the second is easy for every method. **The competition still ranks on the unconditioned score**; this one is diagnostic.
+
+| Method | promise_status (all / conditioned) | verification_timeline (all / conditioned) | evidence_status (all / conditioned) | evidence_quality (all / conditioned) |
+|---|---|---|---|---|
+| M0 | 0.796 / 0.796 | 0.464 / 0.432 | 0.650 / 0.673 | 0.424 / 0.397 |
+| M1 | 0.796 / 0.796 | 0.467 / 0.429 | 0.651 / 0.667 | 0.418 / 0.365 |
+| M2 | 0.796 / 0.796 | 0.493 / 0.465 | 0.650 / 0.668 | 0.418 / 0.373 |
+| M3 | 0.796 / 0.796 | 0.501 / 0.475 | 0.651 / 0.669 | 0.412 / 0.365 |
+| M4 | 0.799 / 0.799 | 0.468 / 0.431 | 0.648 / 0.665 | 0.420 / 0.380 |
+| M5 | 0.796 / 0.796 | 0.493 / 0.468 | 0.649 / 0.670 | 0.423 / 0.387 |
+| M6 | 0.784 / 0.784 | 0.494 / 0.479 | 0.636 / 0.667 | 0.414 / 0.390 |
 
 ## Evaluation regime
 

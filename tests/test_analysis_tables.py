@@ -335,3 +335,30 @@ def test_table2_caption_computes_the_gap_between_the_two_metrics():
                          methods=methods)["table2_main"]
     assert f"{methods['M0']['consistent_weighted_macro_f1_mean']:.3f}" in cap
     assert "M1--M6" in cap
+
+
+def test_table1_flags_that_every_report_is_shared_with_the_test_split():
+    """C's remit names this explicitly: the 100% dev/test PDF overlap must be
+    prominent, not buried in another table's caption. It is the reason Table 3
+    exists at all."""
+    tex = render_table1(AUDIT)
+    shared = [l for l in tex.splitlines() if "shared" in l.lower()]
+    assert len(shared) == 1, "no row states the overlap"
+    n = AUDIT["pdf_overlap"]["n_shared"]
+    assert shared[0].count(str(n)) == 2       # both columns, not a footnote
+    assert "n/a" not in shared[0]             # this one IS known for test
+
+
+def test_table1_discloses_the_known_cross_split_duplicate():
+    """Plan section 4.1 requires the duplicate to be disclosed. It is audited
+    already; before this it never reached a deliverable."""
+    tex = render_table1(AUDIT)
+    dup = [l for l in tex.splitlines() if "uplicat" in l]
+    assert len(dup) == 1
+    assert str(len(AUDIT["duplicates"]["dev_test"])) in dup[0]
+
+
+def test_table1_caption_states_the_overlap_and_the_duplicate():
+    cap = build_captions(AUDIT)["table1_dataset"]
+    assert str(AUDIT["pdf_overlap"]["n_shared"]) in cap
+    assert "duplicate" in cap.lower()

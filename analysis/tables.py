@@ -173,8 +173,11 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             f"by analysis/audit.py. Misleading occurs {_times(len(misleading))} in the "
             f"whole development set, in {_word(n_reports)} different reports, and is "
             f"absent from the Calibration partition of {absent['n_without']} of the "
-            f"{absent['n_rotations']} rotations. The competition test split ships "
-            "no labels, so its label-derived cells are marked n/a."
+            f"{absent['n_rotations']} rotations. All {audit['pdf_overlap']['n_shared']} "
+            "development reports also appear in the test split, and "
+            f"{_word(len(audit['duplicates']['dev_test']))} paragraph text is "
+            "duplicated across the two; the competition test split ships no "
+            "labels, so its label-derived cells are marked n/a."
         ),
         "table2_main": (
             "Controlled comparison of decision rules on identical base "
@@ -241,9 +244,17 @@ def render_table1(audit) -> str:
 
     eq = dev["class_support"]["evidence_quality"]
     vt = dev["class_support"]["verification_timeline"]
+    # The overlap is the reason Table 3 exists: development and test are drawn
+    # from the same reports, so the competition's own split measures
+    # seen-report generalisation. Printing it as a row rather than leaving it
+    # to prose is what C's remit asks for.
+    shared = audit["pdf_overlap"]["n_shared"]
+    duplicated = len(audit["duplicates"]["dev_test"])
     body = [
         row("Paragraphs", dev["paragraphs"], test["paragraphs"]),
+        row("\\quad duplicated across splits", duplicated, duplicated),
         row("Source reports (PDFs)", dev["pdfs"], test["pdfs"]),
+        row("\\quad shared across splits", shared, shared),
         row("Companies", dev["companies"], test["companies"]),
         row("Legal states observed", f"{dev['legal_states_observed']} / 17", NA),
         "\\midrule",

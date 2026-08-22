@@ -147,3 +147,18 @@ def test_summary_carries_the_path_constrained_score_per_method():
             assert constrained < official
         else:
             assert constrained == pytest.approx(official, abs=1e-12), method
+
+
+def test_summary_carries_the_conditional_field_scores():
+    """Plan section 4.5 lists conditional F1 among the secondary metrics: each
+    child field scored only on the rows its gold parent admits."""
+    out = protocol_summary("pdf_group", ORDER, EXAMPLES_ROOT, CLUSTERS,
+                           n_boot=120, dev=DEV)
+    for method, row in out["methods"].items():
+        cond = row["conditional_per_field_mean"]
+        assert set(cond) == set(row["per_field_mean"]), method
+        # the root field has no parent, so conditioning cannot move it
+        assert cond["promise_status"] == pytest.approx(
+            row["per_field_mean"]["promise_status"], abs=1e-12), method
+        assert cond["evidence_quality"] != pytest.approx(
+            row["per_field_mean"]["evidence_quality"], abs=1e-6), method

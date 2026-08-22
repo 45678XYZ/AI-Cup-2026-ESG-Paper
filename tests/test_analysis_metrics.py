@@ -11,6 +11,7 @@ import pytest
 
 from analysis.load import EXAMPLES_ROOT, METHODS, load_aligned, pdf_clusters
 from analysis.metrics import (
+    conditional_field_macro_f1,
     consistent_weighted_macro_f1,
     encode,
     enforce_ancestors,
@@ -19,8 +20,15 @@ from analysis.metrics import (
 )
 from paper.artifacts import read_predictions
 from paper.data import canonical_row_order, load_dev
-from paper.labels import EVAL_FIELDS, FIELD_ALIAS, FIELDS, LABEL2ID, STATES
-from paper.score import compute_per_field_f1, compute_weighted_macro_f1
+from paper.labels import (
+    CONDITIONING_SUBSET,
+    EVAL_FIELDS,
+    FIELD_ALIAS,
+    FIELDS,
+    LABEL2ID,
+    STATES,
+)
+from paper.score import compute_per_field_f1, compute_weighted_macro_f1, macro_f1
 
 DEV = load_dev()
 ORDER = canonical_row_order(DEV)
@@ -216,3 +224,52 @@ def test_consistent_metric_honours_the_subset_index():
     assert consistent_weighted_macro_f1(gold, pred, idx) == pytest.approx(
         consistent_weighted_macro_f1(gold[idx], pred[idx]), abs=1e-12
     )
+
+
+# --- conditional field F1 (plan section 4.5) --------------------------------
+#
+# A child field is only meaningful on the rows its parent admits: scoring
+# verification_timeline over rows whose gold promise_status is No measures how
+# well the model reproduces a label the hierarchy fixes to N/A, which flatters
+# every method equally. The plan asks for the conditioned version alongside the
+# unconditioned one; the conditioning is on gold, never on the prediction.
+
+
+def test_conditional_f1_matches_the_official_scorer_on_the_conditioned_rows():
+    gold, pred = encode(RECORDS)
+    mine = conditional_field_macro_f1(gold, pred)
+    g, p = _reference(RECORDS)
+    for field in FIELDS:
+        if field in CONDITIONING_SUBSET:
+            parent, value = CONDITIONING_SUBSET[field]
+            keep = [i for i, row in enumerate(g) if row[parent] == value]
+        else:
+            keep = list(range(len(g)))
+        expected = macro_f1([g[i][field] for i in keep],
+                            [p[i][field] for i in keep],
+                            EVAL_FIELDS[field])
+        assert mine[field] == pytest.approx(expected, abs=1e-12), field
+
+
+def test_conditional_f1_leaves_the_root_field_unconditioned():
+    gold, pred = encode(RECORDS)
+    assert (conditional_field_macro_f1(gold, pred)["promise_status"]
+            == pytest.approx(field_macro_f1(gold, pred)["promise_status"], abs=1e-12))
+
+
+def test_conditional_f1_actually_changes_the_child_fields():
+    # If conditioning were a no-op the metric would be reporting nothing new.
+    gold, pred = encode(RECORDS)
+    conditioned = conditional_field_macro_f1(gold, pred)
+    plain = field_macro_f1(gold, pred)
+    for field in CONDITIONING_SUBSET:
+        assert conditioned[field] != pytest.approx(plain[field], abs=1e-6), field
+
+
+def test_conditional_f1_honours_the_subset_index():
+    gold, pred = encode(RECORDS)
+    idx = np.arange(0, len(RECORDS), 3)
+    a = conditional_field_macro_f1(gold, pred, idx)
+    b = conditional_field_macro_f1(gold[idx], pred[idx])
+    for field in FIELDS:
+        assert a[field] == pytest.approx(b[field], abs=1e-12), field

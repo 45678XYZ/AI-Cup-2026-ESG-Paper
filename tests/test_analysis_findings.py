@@ -115,3 +115,17 @@ def test_brief_localises_the_disagreement_to_a_single_factor():
                           consistent_contrasts=secondary)
     section = text.split("### Where the two metrics disagree")[1]
     assert "exactly one" in section.lower()
+
+
+def test_brief_reports_the_conditional_field_scores():
+    """The conditioned numbers have no column in Table 2, so the brief is where
+    they reach D. Without them the plan's secondary-metric list is incomplete."""
+    methods = {
+        "M0": {"per_field_mean": {"promise_status": 0.8, "evidence_quality": 0.42},
+               "conditional_per_field_mean": {"promise_status": 0.8,
+                                              "evidence_quality": 0.31}},
+    }
+    text = build_findings(AUDIT_STUB, {}, regimes={}, cases=None, methods=methods)
+    assert "conditional" in text.lower()
+    assert "0.31" in text
+    assert "evidence_quality" in text
