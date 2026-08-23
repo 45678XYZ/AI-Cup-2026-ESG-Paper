@@ -1,6 +1,6 @@
 # 預先登記：Chinese ELECTRA-large × training-time structural loss exploratory screen
 
-**登記日期：2026-08-23（Asia/Taipei）**　**狀態：已登記，尚未執行**
+**登記日期：2026-08-23（Asia/Taipei）**　**狀態：已完成（含 gate 後擴充）**
 
 ## 1. 問題
 
@@ -57,11 +57,14 @@ Primary checks 是 M0 independent-argmax invalid tuple rate 與 M1 weighted macr
 才建議擴充 seeds 123/456。單一 seed 不宣稱跨 seed 穩定性，也不納入 frozen main study
 的 Holm family；未過 gate 仍完整保留並報告。
 
-## 6. 執行紀錄（隨執行填寫）
+## 6. 執行紀錄
 
-- [ ] 預訓練 commit：
-- [ ] 10 fits 執行日期：
-- [ ] 兩 arm validator：
-- [ ] M0 invalid tuple rate：
-- [ ] M1 weighted macro-F1：
-- [ ] 擴充 gate：
+- [x] 預訓練 commit：`8abd8ee24a68a5b5d12606f7979934658b6d85e6`
+- [x] 初始 10 fits 與 gate 後 20 fits：2026-08-23，共 30 fits
+- [x] 兩 arm validator：各 15 probability bundles clean；各 21 predictions clean
+- [x] M0 invalid tuple rate（三 seed mean）：10.200% → 3.683%
+- [x] M1 weighted macro-F1（三 seed mean）：0.556177 → 0.558882（+0.002706）
+- [x] 擴充 gate：seed42 同時降低 M0 invalid 並提高 M1，已依規則擴充 123/456
+
+完整結果、bootstrap 與限制見 `docs/electra_screen_results.md`；machine-readable
+comparison 見 `architecture_screen/electra_180g_large/comparison.json`。
