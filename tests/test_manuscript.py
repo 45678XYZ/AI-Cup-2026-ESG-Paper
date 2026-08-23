@@ -198,3 +198,36 @@ def test_asset_check_rejects_malformed_consistency_shapes(tmp_path):
         (tmp_path / "run_manifest.json").write_text(json.dumps(payload), encoding="utf-8")
         errors = asset_errors(tmp_path)
         assert any("consistency" in error for error in errors)
+
+
+def test_asset_check_rejects_malformed_input_file_shapes(tmp_path):
+    tables = tmp_path / "tables"
+    tables.mkdir()
+    names = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
+             "table4_contrasts.tex", "table5_metrics.tex")
+    for name in names:
+        (tables / name).write_text(name, encoding="utf-8")
+    (tmp_path / "run_manifest.json").write_text(
+        json.dumps({"consistency": [{"status": "pass"}]}), encoding="utf-8"
+    )
+    malformed_inputs = (
+        "input.json",
+        [[]],
+        [{}],
+        [0],
+        [None],
+        [True],
+        [False],
+    )
+    for inputs in malformed_inputs:
+        manifest = {"tables": {
+            name: {
+                "source_script": "script.py",
+                "input_files": inputs,
+                "input_sha256": {},
+            }
+            for name in names
+        }}
+        (tables / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        errors = asset_errors(tmp_path)
+        assert any("input_files" in error for error in errors), (inputs, errors)

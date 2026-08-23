@@ -138,6 +138,9 @@ def asset_errors(repo_root: Path) -> list[str]:
         if not isinstance(inputs, list):
             errors.append(f"input_files must be a list: {name}")
             continue
+        if not all(isinstance(relative, str) for relative in inputs):
+            errors.append(f"input_files entries must be strings: {name}")
+            continue
         if set(inputs) != set(hashes):
             errors.append(f"generated asset provenance input list mismatch: {name}")
         for relative, recorded in hashes.items():
