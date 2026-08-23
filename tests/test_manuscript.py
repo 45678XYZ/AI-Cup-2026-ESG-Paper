@@ -3,6 +3,7 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
 from pypdf import PdfReader, PdfWriter
 from paper.data import REPO_ROOT
 
@@ -18,10 +19,56 @@ from manuscript.check import (
 )
 
 
+CANONICAL_TABLE_NAMES = (
+    "table1_dataset.tex",
+    "table2_main.tex",
+    "table3_regimes.tex",
+    "table4_contrasts.tex",
+    "table5_metrics.tex",
+)
+
+
 def write_minimal(root: Path, body: str, metadata: str = "") -> None:
     root.mkdir()
     (root / "main.tex").write_text(body, encoding="utf-8")
     (root / "metadata.tex").write_text(metadata, encoding="utf-8")
+
+
+def make_valid_asset_repo(root: Path) -> Path:
+    """Create a committed main branch that satisfies every asset policy."""
+    from paper.data import file_sha256
+
+    tables = root / "tables"
+    figures = root / "figures"
+    analysis = root / "analysis"
+    tables.mkdir(parents=True)
+    figures.mkdir()
+    analysis.mkdir()
+    source = root / "input.json"
+    source.write_text("original input\n", encoding="utf-8")
+    (analysis / "generate.py").write_text("# fixture generator\n", encoding="utf-8")
+    for name in CANONICAL_TABLE_NAMES:
+        (tables / name).write_text(f"{name}\n", encoding="utf-8")
+    (figures / "figure1_hierarchy.pdf").write_bytes(b"fixture pdf")
+    table_entry = {
+        "source_script": "analysis/generate.py",
+        "input_files": ["input.json"],
+        "input_sha256": {"input.json": file_sha256(source)},
+    }
+    (tables / "manifest.json").write_text(
+        json.dumps({"tables": {name: table_entry for name in CANONICAL_TABLE_NAMES}}),
+        encoding="utf-8",
+    )
+    (root / "run_manifest.json").write_text(
+        json.dumps({"consistency": [{"status": "pass"}]}),
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "init", "-qb", "main"], cwd=root, check=True)
+    subprocess.run(["git", "config", "user.email", "fixture@example.org"], cwd=root, check=True)
+    subprocess.run(["git", "config", "user.name", "Fixture"], cwd=root, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True)
+    subprocess.run(["git", "commit", "-qm", "fixture"], cwd=root, check=True)
+    return root
 
 
 def test_draft_rejects_prohibited_hardware_and_unqualified_null_claim(tmp_path):
@@ -77,6 +124,37 @@ def test_real_author_and_email_metadata_are_accepted_in_final_mode(tmp_path):
         root,
         "\\input{tables/table4_contrasts.tex}",
         "\\author{Ada Example}\n\\email{ada@example.org}",
+    )
+    (root / "tables").mkdir()
+    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
+
+    assert source_errors(root, final=True) == []
+    assert source_warnings(root) == []
+
+
+def test_commented_author_and_email_do_not_satisfy_final_metadata(tmp_path):
+    root = tmp_path / "m"
+    write_minimal(
+        root,
+        "\\input{tables/table4_contrasts.tex}",
+        "% \\author{Commented Example}\n% \\email{commented@example.org}",
+    )
+    (root / "tables").mkdir()
+    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
+
+    assert any("author metadata" in error for error in source_errors(root, final=True))
+    assert any("author metadata" in warning for warning in source_warnings(root))
+
+
+def test_commented_layout_placeholders_do_not_block_active_real_metadata(tmp_path):
+    root = tmp_path / "m"
+    commented_placeholders = "\n".join(
+        f"% \\author{{Student Author {number}}}" for number in range(1, 5)
+    )
+    write_minimal(
+        root,
+        "\\input{tables/table4_contrasts.tex}",
+        f"{commented_placeholders}\n\\author{{Ada Example}}\n\\email{{ada@example.org}}",
     )
     (root / "tables").mkdir()
     (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
@@ -141,21 +219,92 @@ def test_table4_comment_spoof_is_not_an_inclusion(tmp_path):
     assert any("table4_contrasts.tex" in error for error in source_errors(tmp_path / "m"))
 
 
-def test_asset_check_detects_tampered_manifested_table(tmp_path):
-    tables = tmp_path / "tables"
-    figures = tmp_path / "figures"
-    tables.mkdir()
-    figures.mkdir()
-    names = ["table1_dataset.tex", "table2_main.tex", "table3_regimes.tex", "table4_contrasts.tex"]
-    for name in names:
-        (tables / name).write_text(name, encoding="utf-8")
-    (figures / "figure1_hierarchy.pdf").write_bytes(b"pdf")
+def test_cli_rejects_external_table4_decoy(tmp_path, monkeypatch, capsys):
+    repo = make_valid_asset_repo(tmp_path)
+    manuscript = repo / "manuscript"
+    external = repo.parent / f"{repo.name}-external" / "table4_contrasts.tex"
+    external.parent.mkdir()
+    external.write_text("decoy\n", encoding="utf-8")
+    write_minimal(manuscript, f"\\input{{../../{external.parent.name}/table4_contrasts.tex}}")
+    monkeypatch.setattr(
+        "sys.argv",
+        ["check", "--root", str(manuscript), "--repo-root", str(repo)],
+    )
+
+    assert main() == 1
+    assert "Table 4 inclusion must resolve to canonical generated asset" in capsys.readouterr().out
+
+
+def test_asset_check_rejects_noncontained_manifest_inputs(tmp_path):
     from paper.data import file_sha256
-    outputs = {name: file_sha256(tables / name) for name in names}
-    (tables / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
-    (tmp_path / "run_manifest.json").write_text(json.dumps({"outputs": {"tables": outputs}}), encoding="utf-8")
-    (tables / "table4_contrasts.tex").write_text("tampered", encoding="utf-8")
-    assert any("manifest" in error or "provenance" in error for error in asset_errors(tmp_path))
+
+    cases = ("absolute", "traversal", "external symlink")
+    for case in cases:
+        repo = make_valid_asset_repo(tmp_path / case.replace(" ", "-"))
+        external = repo.parent / f"{repo.name}-external.json"
+        external.write_text("original input\n", encoding="utf-8")
+        if case == "absolute":
+            manifest_input = str(external)
+            expected = "must be repository-relative"
+        elif case == "traversal":
+            manifest_input = f"../{external.name}"
+            expected = "must not traverse parent directories"
+        else:
+            link = repo / "linked-input.json"
+            link.symlink_to(external)
+            manifest_input = link.name
+            expected = "resolves outside repository"
+        manifest_path = repo / "tables" / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        entry = manifest["tables"]["table1_dataset.tex"]
+        entry["input_files"] = [manifest_input]
+        entry["input_sha256"] = {manifest_input: file_sha256(external)}
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+        subprocess.run(["git", "commit", "-qm", case], cwd=repo, check=True)
+
+        errors = asset_errors(repo)
+        assert any(expected in error for error in errors), (case, errors)
+
+
+@pytest.mark.parametrize("staged", [False, True], ids=["unstaged", "staged"])
+def test_asset_check_detects_tampered_canonical_table(tmp_path, staged):
+    repo = make_valid_asset_repo(tmp_path)
+    assert asset_errors(repo) == []
+
+    (repo / "tables" / "table4_contrasts.tex").write_text("tampered\n", encoding="utf-8")
+    if staged:
+        subprocess.run(
+            ["git", "add", "tables/table4_contrasts.tex"], cwd=repo, check=True
+        )
+
+    assert "canonical generated asset is not clean relative to main: " \
+           "tables/table4_contrasts.tex" in asset_errors(repo)
+
+
+def test_asset_check_detects_tampered_table_manifest(tmp_path):
+    repo = make_valid_asset_repo(tmp_path)
+    assert asset_errors(repo) == []
+
+    manifest = repo / "tables" / "manifest.json"
+    manifest.write_text(manifest.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+
+    assert "canonical generated asset is not clean relative to main: " \
+           "tables/manifest.json" in asset_errors(repo)
+
+
+def test_asset_check_rejects_untracked_canonical_table(tmp_path):
+    repo = make_valid_asset_repo(tmp_path)
+    assert asset_errors(repo) == []
+    subprocess.run(
+        ["git", "rm", "--cached", "tables/table3_regimes.tex"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+
+    assert "canonical generated asset is not tracked: tables/table3_regimes.tex" \
+           in asset_errors(repo)
 
 
 def test_font_checker_accepts_pdf_without_font_resources(tmp_path):

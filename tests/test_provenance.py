@@ -31,7 +31,8 @@ def repo(tmp_path):
     for rel in ("paper/labels.py", "analysis/findings.py",
                 "contracts/make_examples.py",
                 "contracts/examples/results/x.json", "docs/plan.md",
-                "tests/test_x.py", "splits/s.json", "environment.yml"):
+                "tests/test_x.py", "manuscript/check.py", "splits/s.json",
+                "environment.yml"):
         p = tmp_path / rel
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text("original\n", encoding="utf-8")
@@ -63,6 +64,7 @@ def test_editing_code_marks_the_stamp_dirty(repo, path):
     "contracts/examples/results/x.json",   # the generator's own output
     "docs/plan.md",                        # cannot change an artifact
     "tests/test_x.py",
+    "manuscript/check.py",                 # validates prose; cannot move results
     "splits/s.json",                       # covered by split_fingerprint instead
 ])
 def test_editing_generated_or_inert_files_does_not(repo, path):
@@ -91,7 +93,7 @@ def test_outside_a_repository_the_stamp_is_none_rather_than_invented(tmp_path):
 
 # Directories that hold .py files but cannot change an artifact, so a stamp
 # must not fire on them. Anything else with Python in it is watched.
-INERT_CODE_DIRS = {"tests"}
+INERT_CODE_DIRS = {"manuscript", "tests"}
 
 
 def test_the_pathspec_covers_every_directory_holding_study_code():

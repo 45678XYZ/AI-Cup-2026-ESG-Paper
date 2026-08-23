@@ -21,6 +21,7 @@ REQUIRED_ASSETS = (
     "tables/table5_metrics.tex",
     "figures/figure1_hierarchy.pdf",
 )
+CANONICAL_FROZEN_ASSETS = REQUIRED_ASSETS + ("tables/manifest.json",)
 LAYOUT_PLACEHOLDER_AUTHORS = frozenset(
     f"Student Author {number}" for number in range(1, 5)
 )
@@ -52,14 +53,14 @@ def _metadata(root: Path) -> str:
 
 
 def _has_layout_author_placeholders(metadata: str) -> bool:
-    authors = re.findall(r"\\author\{([^}]*)\}", metadata)
+    authors = re.findall(r"\\author\{([^}]*)\}", _active_source(metadata))
     return (
         any(author.strip() in LAYOUT_PLACEHOLDER_AUTHORS for author in authors)
         or any(marker in metadata for marker in LAYOUT_PLACEHOLDER_TODO_MARKERS)
     )
 
 
-def source_errors(root: Path, final: bool = False) -> list[str]:
+def source_errors(root: Path, final: bool = False, repo_root: Path | None = None) -> list[str]:
     text = source_text(root)
     active = _active_source(text)
     lowered = active.lower()
@@ -75,17 +76,23 @@ def source_errors(root: Path, final: bool = False) -> list[str]:
     if not table4:
         errors.append("the full generated table4_contrasts.tex is not included")
     else:
+        canonical_table4 = ((repo_root or root) / "tables" / "table4_contrasts.tex").resolve()
         for target in table4:
             resolved = (root / target).resolve()
-            if not resolved.is_file():
+            if resolved != canonical_table4:
+                errors.append(
+                    f"Table 4 inclusion must resolve to canonical generated asset: {target}"
+                )
+            elif not resolved.is_file():
                 errors.append(f"included generated asset is missing: {target}")
     metrics_present = ("path-constrained" in lowered or "hierarchical f1" in lowered
                        or re.search(r"\bc-wf1\b|\bhf\b", lowered) is not None)
     if metrics_present and "post hoc" not in lowered:
         errors.append("path-constrained wF1 and hierarchical F1 require a post hoc disclosure")
     metadata = _metadata(root)
-    has_author = bool(re.search(r"\\author\{[^}]+\}", metadata))
-    has_email = bool(re.search(r"\\email\{[^}]+@[^}]+\}", metadata))
+    active_metadata = _active_source(metadata)
+    has_author = bool(re.search(r"\\author\{[^}]+\}", active_metadata))
+    has_email = bool(re.search(r"\\email\{[^}]+@[^}]+\}", active_metadata))
     if final and _has_layout_author_placeholders(metadata):
         errors.append("layout-only author placeholders must be replaced before final submission")
     elif final and not (has_author and has_email):
@@ -97,26 +104,50 @@ def source_warnings(root: Path) -> list[str]:
     metadata = _metadata(root)
     if _has_layout_author_placeholders(metadata):
         return ["layout-only author placeholders remain in this draft"]
-    if re.search(r"\\author\{[^}]+\}", metadata):
+    if re.search(r"\\author\{[^}]+\}", _active_source(metadata)):
         return []
     return ["author metadata is intentionally absent from this draft"]
+
+
+def _manifest_input_path(repo_root: Path, relative: str) -> tuple[Path | None, str | None]:
+    candidate = Path(relative)
+    if candidate.is_absolute():
+        return None, f"generated asset provenance input path must be repository-relative: {relative}"
+    if ".." in candidate.parts:
+        return None, (
+            "generated asset provenance input path must not traverse parent directories: "
+            f"{relative}"
+        )
+    resolved_root = repo_root.resolve()
+    resolved = (resolved_root / candidate).resolve()
+    try:
+        resolved.relative_to(resolved_root)
+    except ValueError:
+        return None, f"generated asset provenance input path resolves outside repository: {relative}"
+    return resolved, None
 
 
 def asset_errors(repo_root: Path) -> list[str]:
     errors = [f"required generated asset is missing: {path}" for path in REQUIRED_ASSETS
               if not (repo_root / path).is_file()]
-    figure = repo_root / "figures" / "figure1_hierarchy.pdf"
-    if figure.is_file():
+    for relative in CANONICAL_FROZEN_ASSETS:
+        if not (repo_root / relative).is_file():
+            continue
         try:
-            relative_figure = str(figure.relative_to(repo_root))
-            tracked = subprocess.run(["git", "ls-files", "--error-unmatch", relative_figure],
-                                     cwd=repo_root, capture_output=True, check=True)
-            clean = subprocess.run(["git", "diff", "--quiet", "main", "--", relative_figure],
-                                   cwd=repo_root, capture_output=True, check=False).returncode == 0
-        except (OSError, ValueError, subprocess.CalledProcessError):
-            tracked, clean = None, False
-        if tracked is None or not clean:
-            errors.append("figure/figure1_hierarchy.pdf is not a clean tracked artifact")
+            tracked = subprocess.run(
+                ["git", "ls-files", "--error-unmatch", relative],
+                cwd=repo_root, capture_output=True, check=False,
+            ).returncode == 0
+            clean = subprocess.run(
+                ["git", "diff", "--quiet", "main", "--", relative],
+                cwd=repo_root, capture_output=True, check=False,
+            ).returncode == 0
+        except OSError:
+            tracked, clean = False, False
+        if not tracked:
+            errors.append(f"canonical generated asset is not tracked: {relative}")
+        elif not clean:
+            errors.append(f"canonical generated asset is not clean relative to main: {relative}")
     tables_manifest = repo_root / "tables" / "manifest.json"
     run_manifest = repo_root / "run_manifest.json"
     if not tables_manifest.is_file() or not run_manifest.is_file():
@@ -161,7 +192,11 @@ def asset_errors(repo_root: Path) -> list[str]:
         if set(inputs) != set(hashes):
             errors.append(f"generated asset provenance input list mismatch: {name}")
         for relative, recorded in hashes.items():
-            path = repo_root / relative
+            path, path_error = _manifest_input_path(repo_root, relative)
+            if path_error:
+                errors.append(path_error)
+                continue
+            assert path is not None
             if not path.is_file() or file_sha256(path) != recorded:
                 errors.append(f"generated asset provenance input mismatch: {relative}")
     consistency = run_data.get("consistency")
@@ -247,7 +282,7 @@ def main() -> int:
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).parents[1])
     parser.add_argument("--final", action="store_true")
     args = parser.parse_args()
-    errors = source_errors(args.root, final=args.final)
+    errors = source_errors(args.root, final=args.final, repo_root=args.repo_root)
     errors.extend(asset_errors(args.repo_root))
     if args.pdf:
         errors.extend(pdf_errors(args.pdf))
