@@ -109,8 +109,17 @@ def asset_errors(repo_root: Path) -> list[str]:
         run_data = json.loads(run_manifest.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError):
         return errors + ["generated asset provenance manifest is unreadable"]
+    if not isinstance(table_data, dict):
+        errors.append("table manifest top level must be an object")
+        table_data = {}
+    if not isinstance(run_data, dict):
+        errors.append("run manifest top level must be an object")
+        run_data = {}
     required_tables = [Path(path).name for path in REQUIRED_ASSETS if path.startswith("tables/")]
     manifest_tables = table_data.get("tables", {})
+    if not isinstance(manifest_tables, dict):
+        errors.append("tables section must be an object")
+        manifest_tables = {}
     for name in required_tables:
         entry = manifest_tables.get(name)
         if not isinstance(entry, dict):
@@ -118,8 +127,17 @@ def asset_errors(repo_root: Path) -> list[str]:
         elif not entry.get("source_script") or not entry.get("input_files"):
             errors.append(f"required table manifest entry is incomplete: {name}")
     for name, entry in manifest_tables.items():
+        if not isinstance(entry, dict):
+            errors.append(f"table manifest entry must be an object: {name}")
+            continue
         inputs = entry.get("input_files", [])
         hashes = entry.get("input_sha256", {})
+        if not isinstance(hashes, dict):
+            errors.append(f"input_sha256 must be an object: {name}")
+            continue
+        if not isinstance(inputs, list):
+            errors.append(f"input_files must be a list: {name}")
+            continue
         if set(inputs) != set(hashes):
             errors.append(f"generated asset provenance input list mismatch: {name}")
         for relative, recorded in hashes.items():
@@ -129,8 +147,12 @@ def asset_errors(repo_root: Path) -> list[str]:
     consistency = run_data.get("consistency")
     if not isinstance(consistency, list) or not consistency:
         errors.append("run manifest consistency gates are missing")
-    elif any(check.get("status") != "pass" for check in consistency if isinstance(check, dict)):
-        errors.append("run manifest consistency gates are not all passing")
+    else:
+        invalid = [index for index, check in enumerate(consistency) if not isinstance(check, dict)]
+        if invalid:
+            errors.append(f"run manifest consistency entry must be an object: {invalid[0]}")
+        elif any(check.get("status") != "pass" for check in consistency):
+            errors.append("run manifest consistency gates are not all passing")
     return errors
 
 

@@ -170,3 +170,31 @@ def test_untracked_figure_is_rejected(tmp_path):
     (tmp_path / "tables").mkdir(); (tmp_path / "figures").mkdir()
     (tmp_path / "figures" / "figure1_hierarchy.pdf").write_bytes(b"pdf")
     assert any("figure" in error for error in asset_errors(tmp_path))
+
+
+def test_asset_check_rejects_malformed_but_valid_manifest_shapes(tmp_path):
+    tables = tmp_path / "tables"
+    tables.mkdir()
+    (tmp_path / "run_manifest.json").write_text(json.dumps({"consistency": []}), encoding="utf-8")
+    cases = [
+        ([], "manifest top level"),
+        ({"tables": []}, "tables section"),
+        ({"tables": {"table1_dataset.tex": []}}, "table manifest entry"),
+        ({"tables": {"table1_dataset.tex": {"input_sha256": []}}}, "input_sha256"),
+    ]
+    for index, (payload, label) in enumerate(cases):
+        path = tables / f"manifest-{index}.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        path.rename(tables / "manifest.json")
+        errors = asset_errors(tmp_path)
+        assert any(label in error for error in errors), (label, errors)
+
+
+def test_asset_check_rejects_malformed_consistency_shapes(tmp_path):
+    tables = tmp_path / "tables"
+    tables.mkdir()
+    (tables / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
+    for payload in ({"consistency": {}}, {"consistency": [{}]}, {"consistency": ["bad"]}):
+        (tmp_path / "run_manifest.json").write_text(json.dumps(payload), encoding="utf-8")
+        errors = asset_errors(tmp_path)
+        assert any("consistency" in error for error in errors)
