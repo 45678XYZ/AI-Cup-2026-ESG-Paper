@@ -14,10 +14,7 @@ import numpy as np
 
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT, paired_delta
 from analysis.load import METHODS, load_aligned, pdf_clusters, predictions_path
-from analysis.structural_arm import (
-    NAMED_SAFETY_CLASSES,
-    _protocol_comparison,
-)
+from analysis.structural_arm import NAMED_SAFETY_CLASSES, _protocol_comparison
 from paper.data import REPO_ROOT, canonical_row_order, file_sha256, load_dev
 from paper.train_config import SEEDS
 
@@ -167,20 +164,21 @@ def main() -> None:
     ap.add_argument("--baseline-probs-dir", type=Path, required=True)
     ap.add_argument("--structural-probs-dir", type=Path, required=True)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--seeds", nargs="+", type=int, default=list(SEEDS))
     ap.add_argument("--n-boot", type=int, default=N_BOOT)
     ap.add_argument("--bootstrap-seed", type=int, default=BOOTSTRAP_SEED)
     args = ap.parse_args()
 
     report = compare_architecture(
         args.baseline_root, args.structural_root, args.anchor_root,
-        n_boot=args.n_boot, bootstrap_seed=args.bootstrap_seed,
+        n_boot=args.n_boot, bootstrap_seed=args.bootstrap_seed, seeds=args.seeds,
     )
     report["runtime"] = {
         "baseline": _bundle_meta(args.baseline_probs_dir, 0.0),
         "structural": _bundle_meta(args.structural_probs_dir, 0.3),
     }
     report["input_sha256"] = _input_hashes(
-        args.baseline_root, args.structural_root, args.anchor_root, SEEDS,
+        args.baseline_root, args.structural_root, args.anchor_root, args.seeds,
     )
 
     args.out.parent.mkdir(parents=True, exist_ok=True)

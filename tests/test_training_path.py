@@ -27,8 +27,8 @@ from transformers import (  # noqa: E402
     BertConfig,
     BertModel,
     BertTokenizer,
-    DebertaV2Config,
-    DebertaV2Model,
+    ElectraConfig,
+    ElectraModel,
 )
 
 from paper.artifacts import _check_distribution  # noqa: E402
@@ -70,18 +70,19 @@ def model(tiny_model_dir):
 
 
 @pytest.fixture(scope="module")
-def tiny_deberta_dir(tmp_path_factory):
-    """A tiny local DeBERTa-v2 checkpoint for architecture compatibility."""
-    d = tmp_path_factory.mktemp("tiny-deberta-v2")
-    config = DebertaV2Config(
+def tiny_electra_dir(tmp_path_factory):
+    """A tiny local ELECTRA checkpoint for architecture compatibility."""
+    d = tmp_path_factory.mktemp("tiny-electra")
+    config = ElectraConfig(
         vocab_size=305,
+        embedding_size=32,
         hidden_size=32,
         num_hidden_layers=2,
         num_attention_heads=2,
         intermediate_size=64,
         max_position_embeddings=64,
     )
-    DebertaV2Model(config).save_pretrained(d)
+    ElectraModel(config).save_pretrained(d)
     return d
 
 
@@ -127,12 +128,12 @@ def test_layerwise_decay_produces_a_ladder(model):
     assert min(lrs) < BACKBONE_LR
 
 
-def test_deberta_v2_forward_and_optimizer_groups(tiny_deberta_dir):
-    """The exploratory backbone exposes the layers and outputs our generic
-    encoder path needs, with every trainable parameter assigned exactly once."""
+def test_electra_forward_and_optimizer_groups(tiny_electra_dir):
+    """The second screen's backbone satisfies the generic encoder contract,
+    with every trainable parameter assigned to exactly one optimiser group."""
     from paper.model import MultiTaskEncoder
 
-    model = MultiTaskEncoder(str(tiny_deberta_dir), NUM_LABELS)
+    model = MultiTaskEncoder(str(tiny_electra_dir), NUM_LABELS)
     groups = model.get_optimizer_groups(BACKBONE_LR, HEAD_LR)
     grouped = [id(p) for group in groups for p in group["params"]]
 

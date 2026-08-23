@@ -45,3 +45,12 @@ def test_all_methods_and_named_safety_classes_are_retained(self_comparison):
         "evidence_quality:Not Clear",
     }
     assert all(row["delta"] == pytest.approx(0.0) for row in named.values())
+
+
+def test_single_seed_screen_is_supported_for_failed_gate_reporting():
+    report = compare_architecture(
+        EXAMPLES_ROOT, EXAMPLES_ROOT, EXAMPLES_ROOT,
+        n_boot=20, bootstrap_seed=7, seeds=[42],
+    )
+    assert report["design"]["seeds"] == [42]
+    assert report["seed42_expansion_gate"]["evaluated_on_seed"] == 42
