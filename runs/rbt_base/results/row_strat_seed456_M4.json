@@ -1,0 +1,141 @@
+{
+ "contract_version": "1.0",
+ "protocol": "row_strat",
+ "seed": 456,
+ "method": "M4",
+ "predictions_file": "predictions/row_strat_seed456_M4.csv.gz",
+ "predictions_sha256": "sha256:a2c7933e79981a73a6d444b1b618ef16c5089dcceb6ef39485770e52a1c735a3",
+ "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+ "git_sha": "c395e320df231693962b72dd9b8415fc226c148d",
+ "created_at": "2026-08-23T14:22:05.531998+00:00",
+ "n_rows": 2000,
+ "weighted_macro_f1": 0.5875816544474859,
+ "per_field_macro_f1": {
+  "promise_status": 0.7948736130227398,
+  "verification_timeline": 0.47286440143488473,
+  "evidence_status": 0.6735991118936996,
+  "evidence_quality": 0.4445643944559867
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.9258468111077205,
+   "No": 0.6639004149377593
+  },
+  "verification_timeline": {
+   "already": 0.46845289541918755,
+   "within_2_years": 0.10734463276836158,
+   "between_2_and_5_years": 0.5236139630390144,
+   "more_than_5_years": 0.601010101010101,
+   "N/A": 0.6639004149377593
+  },
+  "evidence_status": {
+   "Yes": 0.8325066768409004,
+   "No": 0.524390243902439,
+   "N/A": 0.6639004149377593
+  },
+  "evidence_quality": {
+   "Clear": 0.7626310772163966,
+   "Not Clear": 0.33397312859884837,
+   "Misleading": 0.0,
+   "N/A": 0.6816533720087019
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 1627,
+   "No": 373
+  },
+  "verification_timeline": {
+   "already": 718,
+   "within_2_years": 34,
+   "between_2_and_5_years": 498,
+   "more_than_5_years": 377,
+   "N/A": 373
+  },
+  "evidence_status": {
+   "Yes": 1345,
+   "No": 282,
+   "N/A": 373
+  },
+  "evidence_quality": {
+   "Clear": 1118,
+   "Not Clear": 225,
+   "Misleading": 2,
+   "N/A": 655
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.4409607756931382,
+  "evidence_status_given_ps_yes": 0.7116421946976577,
+  "evidence_quality_given_es_yes": 0.39725961758114897
+ },
+ "tuple_exact_match": 0.4065,
+ "invalid_tuple_rate": 0.0,
+ "decision_params": {
+  "0": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "1": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "2": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "3": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "4": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  }
+ }
+}
