@@ -23,7 +23,13 @@ import pytest
 torch = pytest.importorskip("torch")
 transformers = pytest.importorskip("transformers")
 
-from transformers import BertConfig, BertModel, BertTokenizer  # noqa: E402
+from transformers import (  # noqa: E402
+    BertConfig,
+    BertModel,
+    BertTokenizer,
+    DebertaV2Config,
+    DebertaV2Model,
+)
 
 from paper.artifacts import _check_distribution  # noqa: E402
 from paper.data import load_dev  # noqa: E402
@@ -61,6 +67,22 @@ def model(tiny_model_dir):
     from paper.model import MultiTaskEncoder
 
     return MultiTaskEncoder(str(tiny_model_dir), NUM_LABELS)
+
+
+@pytest.fixture(scope="module")
+def tiny_deberta_dir(tmp_path_factory):
+    """A tiny local DeBERTa-v2 checkpoint for architecture compatibility."""
+    d = tmp_path_factory.mktemp("tiny-deberta-v2")
+    config = DebertaV2Config(
+        vocab_size=305,
+        hidden_size=32,
+        num_hidden_layers=2,
+        num_attention_heads=2,
+        intermediate_size=64,
+        max_position_embeddings=64,
+    )
+    DebertaV2Model(config).save_pretrained(d)
+    return d
 
 
 # --- the optimiser groups -------------------------------------------------
@@ -103,6 +125,27 @@ def test_layerwise_decay_produces_a_ladder(model):
     assert round(BACKBONE_LR, 12) in lrs, "the top encoder layer trains at the base rate"
     assert round(BACKBONE_LR * LLRD_DECAY ** N_LAYERS, 12) in lrs, "embeddings decay furthest"
     assert min(lrs) < BACKBONE_LR
+
+
+def test_deberta_v2_forward_and_optimizer_groups(tiny_deberta_dir):
+    """The exploratory backbone exposes the layers and outputs our generic
+    encoder path needs, with every trainable parameter assigned exactly once."""
+    from paper.model import MultiTaskEncoder
+
+    model = MultiTaskEncoder(str(tiny_deberta_dir), NUM_LABELS)
+    groups = model.get_optimizer_groups(BACKBONE_LR, HEAD_LR)
+    grouped = [id(p) for group in groups for p in group["params"]]
+
+    assert len(grouped) == len(set(grouped))
+    assert set(grouped) == {id(p) for p in model.parameters()}
+
+    output = model(
+        input_ids=torch.arange(16).reshape(2, 8),
+        attention_mask=torch.ones((2, 8), dtype=torch.long),
+    )
+    assert {field: tuple(logits.shape) for field, logits in output.items()} == {
+        field: (2, n_labels) for field, n_labels in NUM_LABELS.items()
+    }
 
 
 # --- the loop and its output ----------------------------------------------

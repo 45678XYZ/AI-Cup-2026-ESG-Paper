@@ -13,6 +13,9 @@
 # probs_structural/
 #              COMMITTED  — the 30 bundles from the selected-lambda arm. Kept
 #                           separately so the frozen lambda=0 bundles stay intact
+# probs_architecture/
+#              COMMITTED  — paired exploratory backbone screens, namespaced by
+#                           architecture and structural-loss arm
 # tables/      COMMITTED  — the contract-4 deliverables D includes, plus the
 #                           manifest that ties each printed number back to the
 #                           artifacts it was computed from
@@ -36,6 +39,7 @@
 !/probs/**/*.npy
 !/probs_lambda_sweep/**/*.npy
 !/probs_structural/**/*.npy
+!/probs_architecture/**/*.npy
 /checkpoints/
 /checkpoints_*/
 
