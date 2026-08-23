@@ -31,6 +31,16 @@ CONTRACT_VERSION = "1.0"
 TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
                "table4_contrasts.tex", "table5_metrics.tex")
 
+# Tables written by their own analysis module rather than by ``write_tables``,
+# because their inputs are not the cross-seed summaries this file consumes.
+# Their provenance lives in their own JSON: ``legality_cost.json`` records a
+# sha256 per prediction file per arm, which is finer than the manifest's
+# per-table list. Listed here so anything that enumerates delivered tables --
+# the preview, and D counting floats -- sees all of them from one place.
+EXTERNAL_TABLE_FILES = ("table6_legality_cost.tex",)
+
+ALL_TABLE_FILES = TABLE_FILES + EXTERNAL_TABLE_FILES
+
 # How each Holm family is named in table 4. Held here rather than imported
 # from the brief so the tabular's wording cannot drift with prose edits.
 FAMILY_LABELS = (

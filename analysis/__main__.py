@@ -20,6 +20,7 @@ from analysis.findings import write_findings
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT
 from analysis.figure1 import build as build_figure1, tex_available
 from analysis.load import EXAMPLES_ROOT, REAL_ROOT, pdf_clusters
+from analysis.legality_cost import write_legality_cost
 from analysis.tables import table_inputs, write_tables
 from paper.data import REPO_ROOT, canonical_row_order, load_dev
 from paper.train_config import PROTOCOLS, SEEDS
@@ -92,6 +93,17 @@ def main() -> None:
     inputs = table_inputs(args.predictions_root, seeds=SEEDS)
     write_tables(args.out_dir, audit, summaries, regimes, inputs, seeds=SEEDS)
     print(f"tables  -> {args.out_dir}")
+
+    # Table 6 spans the seven (backbone, lambda) arms, so its inputs are not
+    # the cross-seed summaries above and it writes itself. It is skipped rather
+    # than failed when an arm's predictions are absent: a checkout that carries
+    # only the frozen anchor -- which is what contract section 4 promises -- can
+    # still rebuild every other deliverable.
+    try:
+        legality = write_legality_cost(args.out_dir, root=args.predictions_root)
+        print(f"legality-> {legality}")
+    except FileNotFoundError as missing:
+        print(f"legality-> skipped, an arm is absent from this checkout: {missing}")
 
     # The figure is TikZ, so rebuilding it needs TeX. Its counts come from
     # paper.labels rather than from this run, so skipping it cannot put the

@@ -67,3 +67,66 @@ def test_the_report_records_what_it_read():
     assert len(report["arms"]) == len(ARMS)
     for entry in report["arms"]:
         assert entry["input_sha256"], entry["label"]
+
+
+# --- rendering -------------------------------------------------------------
+
+from analysis.legality_cost import build_caption, render_table  # noqa: E402
+
+STUB = {
+    "protocol": "pdf_group", "n_boot": 10000, "bootstrap_seed": 20260814,
+    "contrast": "M1 - M0",
+    "arms": [
+        {"label": "RoBERTa-large (lambda=0)", "backbone": "RoBERTa-large",
+         "structure_lambda": 0.0, "seeds": [42, 123, 456],
+         "invalid_rate": {"M0": 0.1255, "M1": 0.0},
+         "official_weighted_macro_f1": {"delta": -0.0011, "ci_low": -0.0059,
+                                        "ci_high": 0.0035, "p_value": 0.626},
+         "tuple_accuracy": {"delta": 0.0350, "ci_low": 0.028, "ci_high": 0.043,
+                            "p_value": 0.0002}},
+        {"label": "DeBERTa-v2-320M (lambda=0)", "backbone": "DeBERTa-v2-320M",
+         "structure_lambda": 0.0, "seeds": [42, 123, 456],
+         "invalid_rate": {"M0": 0.1975, "M1": 0.0},
+         "official_weighted_macro_f1": {"delta": -0.0080, "ci_low": -0.0158,
+                                        "ci_high": -0.0007, "p_value": 0.031},
+         "tuple_accuracy": {"delta": 0.0502, "ci_low": 0.041, "ci_high": 0.060,
+                            "p_value": 0.0001}},
+    ],
+}
+
+
+def test_the_table_has_one_row_per_arm():
+    body = render_table(STUB)
+    rows = [l for l in body.splitlines() if "&" in l and "Backbone" not in l]
+    assert len(rows) == len(STUB["arms"])
+
+
+def test_a_cost_whose_interval_excludes_zero_is_marked():
+    """The visual argument is the point of the table: the reader should see
+    which arms pay for legality without reading every interval. DeBERTa's
+    official cost excludes zero; RoBERTa-large's does not."""
+    body = render_table(STUB)
+    deberta = [l for l in body.splitlines() if "DeBERTa" in l][0]
+    roberta = [l for l in body.splitlines() if "RoBERTa" in l][0]
+    assert r"\textbf{-0.008}" in deberta
+    assert r"\textbf{" not in roberta.split("&")[3]
+
+
+def test_the_caption_states_what_the_all_zero_column_would_have_said():
+    """M1's invalid rate is zero in every arm, so it is a caption sentence
+    rather than a column of zeros -- but it must not simply vanish."""
+    caption = build_caption(STUB)
+    assert "zero in every arm" in caption or "0 in every arm" in caption
+    assert "construction" in caption
+
+
+def test_the_caption_marks_the_family_as_exploratory():
+    """`docs/inference_families.md` classifies this contrast as exploratory.
+    A table that omits that invites the reader to count it as confirmatory."""
+    caption = build_caption(STUB)
+    assert "exploratory" in caption.lower()
+
+
+def test_the_preview_renders_the_new_table():
+    from analysis.tables import ALL_TABLE_FILES
+    assert "table6_legality_cost.tex" in ALL_TABLE_FILES

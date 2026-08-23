@@ -177,6 +177,125 @@ def build_report(root=REPO_ROOT, arms=ARMS, *, protocol=PROTOCOL, seeds=SEEDS,
     }
 
 
+# --- rendering -------------------------------------------------------------
+
+TABLE_NAME = "table6_legality_cost"
+
+
+def _excludes_zero(row) -> bool:
+    return row["ci_low"] > 0 or row["ci_high"] < 0
+
+
+def _cell(row) -> str:
+    """Delta with its interval; the delta is bold when the interval clears 0.
+
+    Bolding the point estimate rather than the whole cell keeps the intervals
+    legible, and it is the interval that decides -- a reader should be able to
+    check the mark against the numbers beside it.
+    """
+    delta = f"{row['delta']:+.3f}"
+    if _excludes_zero(row):
+        delta = f"\\textbf{{{delta}}}"
+    return f"{delta} [{row['ci_low']:+.3f}, {row['ci_high']:+.3f}]"
+
+
+def render_table(report) -> str:
+    """One row per arm, the lambda=0 arms first.
+
+    Grouping by lambda is what makes the table argue: the cost on the official
+    metric sits in the upper block and vanishes in the lower one, while the
+    tuple column is positive throughout. A reader who checks nothing else can
+    still see that shape.
+    """
+    header = ("Backbone & $\\lambda$ & M0 invalid & "
+              "$\\Delta$ official wF1 [95\\% CI] & "
+              "$\\Delta$ tuple acc. [95\\% CI]")
+
+    def line(arm) -> str:
+        return " & ".join((
+            arm["backbone"],
+            f"{arm['structure_lambda']:g}",
+            f"{arm['invalid_rate']['M0'] * 100:.2f}\\%",
+            _cell(arm["official_weighted_macro_f1"]),
+            _cell(arm["tuple_accuracy"]),
+        )) + " \\\\"
+
+    plain = [a for a in report["arms"] if a["structure_lambda"] == 0]
+    trained = [a for a in report["arms"] if a["structure_lambda"] != 0]
+    body = [line(a) for a in plain]
+    if trained:
+        body += ["\\midrule"] + [line(a) for a in trained]
+
+    rows = "\n".join(body)
+    return (
+        "\\begin{tabular}{llrrr}\n\\toprule\n"
+        f"{header} \\\\\n\\midrule\n{rows}\n"
+        "\\bottomrule\n\\end{tabular}\n"
+    )
+
+
+def build_caption(report) -> str:
+    """What the table's all-zero column would have said, and what it is not.
+
+    Two things a reader cannot recover from the tabular: that M1's invalid rate
+    is zero everywhere -- omitted as a column because a column of zeros wastes
+    the width -- and that these seven contrasts are exploratory. The second
+    matters more: the table looks exactly like a confirmatory one.
+    """
+    arms = report["arms"]
+    n_seeds = len(arms[0]["seeds"])
+    plain = [a for a in arms if a["structure_lambda"] == 0]
+    trained = [a for a in arms if a["structure_lambda"] != 0]
+    worst = min(a["invalid_rate"]["M0"] for a in arms)
+    most = max(a["invalid_rate"]["M0"] for a in arms)
+
+    parts = [
+        f"What enforcing legality costs. Each row contrasts M1 with M0 on the "
+        f"{report['protocol']} protocol: the same probabilities decoded by "
+        f"unconstrained per-field argmax, and projected onto the 17 legal "
+        f"states. Means over {n_seeds} seeds; intervals from the study's paired "
+        f"PDF-cluster bootstrap ({report['n_boot']:,} resamples, seed "
+        f"{report['bootstrap_seed']}), with one resample shared by both methods.",
+        f"M1's invalid-tuple rate is 0 in every arm by construction -- its "
+        f"output space is the legal set -- so it is stated here rather than "
+        f"printed as a column of zeros. M0's ranges from "
+        f"{worst * 100:.2f}\\% to {most * 100:.2f}\\%.",
+    ]
+    if plain and trained:
+        parts.append(
+            f"The cost on the official metric is negative in all "
+            f"{len(plain)} untrained arms and within $\\pm$0.001 in all "
+            f"{len(trained)} arms trained with the structural objective, while "
+            f"the tuple-accuracy gain is positive in all {len(arms)}."
+        )
+    parts.append(
+        "\\textbf{These seven contrasts are exploratory.} They were named "
+        "after the primary analysis, are not a Holm family, and support no "
+        "claim on their own; bold marks an interval excluding zero, not a "
+        "corrected verdict. See docs/inference\\_families.md."
+    )
+    return " ".join(parts)
+
+
+def write_legality_cost(out_dir, root=REPO_ROOT, *, n_boot=N_BOOT) -> Path:
+    """Compute the report and write its three files. Raises if an arm is absent."""
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for arm in ARMS:
+        path = predictions_path(PROTOCOL, SEEDS[0], BASELINE, arm_root(arm, root))
+        if not path.exists():
+            raise FileNotFoundError(path)
+
+    report = build_report(root, n_boot=n_boot)
+    out = out_dir / "legality_cost.json"
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=1)
+    (out_dir / f"{TABLE_NAME}.tex").write_text(render_table(report), encoding="utf-8")
+    (out_dir / f"{TABLE_NAME}_caption.txt").write_text(
+        build_caption(report) + "\n", encoding="utf-8")
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--root", type=Path, default=REPO_ROOT)
@@ -189,7 +308,12 @@ def main() -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=1)
-    print(f"legality cost -> {out}")
+
+    tables = out.parent
+    (tables / f"{TABLE_NAME}.tex").write_text(render_table(report), encoding="utf-8")
+    (tables / f"{TABLE_NAME}_caption.txt").write_text(
+        build_caption(report) + "\n", encoding="utf-8")
+    print(f"legality cost -> {out} (+ {TABLE_NAME}.tex, caption)")
 
 
 if __name__ == "__main__":
