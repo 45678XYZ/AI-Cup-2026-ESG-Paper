@@ -1,6 +1,6 @@
 # 預先登記：DeBERTa-v2 × training-time structural loss exploratory screen
 
-**登記日期：2026-08-22（Asia/Taipei）**　**狀態：已登記，尚未執行**
+**登記日期：2026-08-22（Asia/Taipei）**　**狀態：已完成（含 gate 後擴充）**
 
 ## 1. 問題
 
@@ -69,11 +69,14 @@ architecture_screen/deberta_v2_320m/lambda_0.3/{predictions,results}/
 才建議將 DeBERTa screen 擴成 seeds 123/456。未過 gate 也保留並報告，不改選其他 method
 作為「成功」判準。
 
-## 7. 執行紀錄（隨執行填寫）
+## 7. 執行紀錄
 
-- [ ] 預訓練 commit：
-- [ ] 10 fits 執行日期：
-- [ ] 兩 arm validator：
-- [ ] M0 invalid tuple rate：
-- [ ] M1 weighted macro-F1：
-- [ ] 擴充 gate：
+- [x] 預訓練 commit：`2f4c25f7d2ffbde3e8a9eb1c828048a27a00f416`
+- [x] 初始 10 fits 與 gate 後 20 fits：2026-08-23，共 30 fits
+- [x] 兩 arm validator：各 15 probability bundles clean；各 21 predictions clean
+- [x] M0 invalid tuple rate（三 seed mean）：19.750% → 6.533%
+- [x] M1 weighted macro-F1（三 seed mean）：0.532050 → 0.545133（+0.013083）
+- [x] 擴充 gate：seed42 同時降低 M0 invalid 並提高 M1，已依規則擴充 123/456
+
+完整結果、bootstrap 與限制見 `docs/deberta_screen_results.md`；machine-readable
+comparison 見 `architecture_screen/deberta_v2_320m/comparison.json`。

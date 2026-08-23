@@ -1,0 +1,101 @@
+{
+ "contract_version": "1.0",
+ "protocol": "pdf_group",
+ "seed": 123,
+ "method": "M0",
+ "predictions_file": "predictions/pdf_group_seed123_M0.csv.gz",
+ "predictions_sha256": "sha256:6503130d037fb62ebf8371904cc2a869a136acad6b850f3fcb511db5de3f4dc5",
+ "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+ "git_sha": "2f4c25f7d2ffbde3e8a9eb1c828048a27a00f416",
+ "created_at": "2026-08-22T21:51:29.851027+00:00",
+ "n_rows": 2000,
+ "weighted_macro_f1": 0.5327533573856948,
+ "per_field_macro_f1": {
+  "promise_status": 0.7298398526077097,
+  "verification_timeline": 0.4172081357520271,
+  "evidence_status": 0.6038403051175435,
+  "evidence_quality": 0.4087202141888166
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.8832908163265306,
+   "No": 0.5763888888888888
+  },
+  "verification_timeline": {
+   "already": 0.4293015332197615,
+   "within_2_years": 0.07459207459207459,
+   "between_2_and_5_years": 0.4558659217877095,
+   "more_than_5_years": 0.5368956743002544,
+   "N/A": 0.5893854748603352
+  },
+  "evidence_status": {
+   "Yes": 0.7778662420382165,
+   "No": 0.4497878359264498,
+   "N/A": 0.5838668373879642
+  },
+  "evidence_quality": {
+   "Clear": 0.7586206896551724,
+   "Not Clear": 0.27787307032590053,
+   "Misleading": 0.0,
+   "N/A": 0.5983870967741935
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 1627,
+   "No": 373
+  },
+  "verification_timeline": {
+   "already": 718,
+   "within_2_years": 34,
+   "between_2_and_5_years": 498,
+   "more_than_5_years": 377,
+   "N/A": 373
+  },
+  "evidence_status": {
+   "Yes": 1345,
+   "No": 282,
+   "N/A": 373
+  },
+  "evidence_quality": {
+   "Clear": 1118,
+   "Not Clear": 225,
+   "Misleading": 2,
+   "N/A": 655
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.3885062357919269,
+  "evidence_status_given_ps_yes": 0.6462292399914608,
+  "evidence_quality_given_es_yes": 0.39109340387200714
+ },
+ "tuple_exact_match": 0.3025,
+ "invalid_tuple_rate": 0.1935,
+ "decision_params": {
+  "0": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "1": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "2": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "3": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "4": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  }
+ }
+}
