@@ -1,7 +1,53 @@
-\section{Experiments}
+\section{Experimental Design}
 
-The primary estimand uses document-disjoint evaluation and reports all tested
-decision rules from the frozen controlled study.
+\subsection{Cross-Fitted Evaluation Targets}
+We use five-way rotating three-way cross-fitting. For rotation $k$, Test is
+fold $k$, Calibration is fold $(k+1)\bmod 5$, and Train comprises the other
+three folds; the three partitions are mutually exclusive. After five
+rotations, every development paragraph has served as Test exactly once. We
+concatenate the 2,000 out-of-fold predictions and compute each metric once,
+rather than average fold-level F1 values whose present gold-label sets may
+differ. The three seeds 42, 123, and 456 each determine both a fold assignment
+and training randomness, so seed variation represents the complete pipeline.
+
+The primary, document-disjoint protocol assigns each source report to one fold.
+It estimates unseen-report generalization and, given the corpus audit, is also
+company-disjoint.
+
+The same-document protocol instead forms folds from individual paragraphs.
+Every report represented in Calibration or Test must also occur in Train
+through a different paragraph. This estimates seen-report, unseen-paragraph
+generalization. The protocols are distinct estimands, not biased and unbiased
+versions of one quantity.
+
+Within each protocol and seed, M0--M6 consume the same Test rows and base
+probabilities.
+
+\subsection{Metrics and Inference}
+The primary metric is the official weighted macro-F1,
+\begin{equation}
+  \mathrm{wF1}=0.20F_{\mathrm{PS}}+0.15F_{\mathrm{VT}}
+  +0.30F_{\mathrm{ES}}+0.35F_{\mathrm{EQ}},
+  \label{eq:official-metric}
+\end{equation}
+where each $F_t$ is field-level macro-F1 over classes present in the gold
+labels being scored. Whole-tuple accuracy, which requires all four fields to
+match, was pre-specified. Path-constrained weighted macro-F1 (C-wF1) and
+hierarchical F1 (hF) were adopted post hoc. C-wF1 retains the official field
+weights but counts a substantive child prediction as wrong when its predicted
+ancestors do not support it; hF is a micro-averaged F1 over the non-N/A label
+nodes. The latter changes both consistency treatment and macro-versus-micro
+averaging, so the two supplementary metrics answer different questions.
+
+For paired method contrasts, we perform a paired PDF-cluster bootstrap over 49
+source-report clusters. Each of 10,000 replicates samples 49 reports with
+replacement using seed 20260814, applies the same sampled rows to both methods
+and all three seeds, computes the within-seed differences, and averages those
+differences. The five pre-specified contrasts are M1--M0, M3--M2, M4--M1,
+M6--M3, and M6--M5. They form a separate Holm family of five for each metric,
+rather than one family of 20. Bracketed 95\% intervals are uncorrected
+bootstrap percentile intervals; inferential decisions use
+$p_{\mathrm{Holm}}<.05$, not whether an interval excludes zero.
 
 \begin{table*}[t]
   \centering
