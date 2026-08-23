@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from pypdf import PdfWriter
+from paper.data import REPO_ROOT
 
 from manuscript.check import (
     asset_errors,
@@ -107,7 +108,7 @@ def test_asset_check_detects_tampered_manifested_table(tmp_path):
     (tables / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
     (tmp_path / "run_manifest.json").write_text(json.dumps({"outputs": {"tables": outputs}}), encoding="utf-8")
     (tables / "table4_contrasts.tex").write_text("tampered", encoding="utf-8")
-    assert any("provenance" in error for error in asset_errors(tmp_path))
+    assert any("manifest" in error or "provenance" in error for error in asset_errors(tmp_path))
 
 
 def test_font_checker_accepts_pdf_without_font_resources(tmp_path):
@@ -124,3 +125,48 @@ def test_cli_returns_nonzero_for_policy_error(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr("sys.argv", ["check", "--root", str(tmp_path / "m"), "--repo-root", str(tmp_path)])
     assert main() == 1
     assert "ERROR:" in capsys.readouterr().out
+
+
+def test_canonical_repository_assets_have_clean_provenance():
+    assert asset_errors(REPO_ROOT) == []
+
+
+def test_missing_required_table_manifest_entry_is_rejected(tmp_path):
+    tables = tmp_path / "tables"
+    figures = tmp_path / "figures"
+    tables.mkdir(); figures.mkdir()
+    for name in ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
+                 "table4_contrasts.tex", "table5_metrics.tex"):
+        (tables / name).write_text(name, encoding="utf-8")
+    (figures / "figure1_hierarchy.pdf").write_bytes(b"pdf")
+    (tables / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
+    (tmp_path / "run_manifest.json").write_text(json.dumps({"consistency": []}), encoding="utf-8")
+    errors = asset_errors(tmp_path)
+    assert any("manifest entry" in error for error in errors)
+
+
+def test_tampered_table_input_is_rejected(tmp_path):
+    tables = tmp_path / "tables"; tables.mkdir()
+    source = tmp_path / "input.json"; source.write_text("original", encoding="utf-8")
+    (tables / "manifest.json").write_text(json.dumps({"tables": {
+        name: {"source_script": "script.py", "input_files": ["input.json"],
+               "input_sha256": {"input.json": "sha256:bad"}}
+        for name in ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
+                     "table4_contrasts.tex", "table5_metrics.tex")
+    }}), encoding="utf-8")
+    (tmp_path / "run_manifest.json").write_text(json.dumps({"consistency": []}), encoding="utf-8")
+    errors = asset_errors(tmp_path)
+    assert any("input mismatch" in error for error in errors)
+
+
+def test_missing_or_failed_run_manifest_consistency_is_rejected(tmp_path):
+    (tmp_path / "tables").mkdir()
+    (tmp_path / "tables" / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
+    (tmp_path / "run_manifest.json").write_text(json.dumps({"consistency": [{"status": "fail"}]}), encoding="utf-8")
+    assert any("consistency" in error for error in asset_errors(tmp_path))
+
+
+def test_untracked_figure_is_rejected(tmp_path):
+    (tmp_path / "tables").mkdir(); (tmp_path / "figures").mkdir()
+    (tmp_path / "figures" / "figure1_hierarchy.pdf").write_bytes(b"pdf")
+    assert any("figure" in error for error in asset_errors(tmp_path))

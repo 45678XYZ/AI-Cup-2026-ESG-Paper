@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 from pathlib import Path
 
 from pypdf import PdfReader
@@ -17,6 +18,7 @@ REQUIRED_ASSETS = (
     "tables/table2_main.tex",
     "tables/table3_regimes.tex",
     "tables/table4_contrasts.tex",
+    "tables/table5_metrics.tex",
     "figures/figure1_hierarchy.pdf",
 )
 
@@ -85,7 +87,19 @@ def source_warnings(root: Path) -> list[str]:
 
 def asset_errors(repo_root: Path) -> list[str]:
     errors = [f"required generated asset is missing: {path}" for path in REQUIRED_ASSETS
-            if not (repo_root / path).is_file()]
+              if not (repo_root / path).is_file()]
+    figure = repo_root / "figures" / "figure1_hierarchy.pdf"
+    if figure.is_file():
+        try:
+            relative_figure = str(figure.relative_to(repo_root))
+            tracked = subprocess.run(["git", "ls-files", "--error-unmatch", relative_figure],
+                                     cwd=repo_root, capture_output=True, check=True)
+            clean = subprocess.run(["git", "diff", "--quiet", "main", "--", relative_figure],
+                                   cwd=repo_root, capture_output=True, check=False).returncode == 0
+        except (OSError, ValueError, subprocess.CalledProcessError):
+            tracked, clean = None, False
+        if tracked is None or not clean:
+            errors.append("figure/figure1_hierarchy.pdf is not a clean tracked artifact")
     tables_manifest = repo_root / "tables" / "manifest.json"
     run_manifest = repo_root / "run_manifest.json"
     if not tables_manifest.is_file() or not run_manifest.is_file():
@@ -95,26 +109,28 @@ def asset_errors(repo_root: Path) -> list[str]:
         run_data = json.loads(run_manifest.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError):
         return errors + ["generated asset provenance manifest is unreadable"]
-    recorded_outputs = run_data.get("outputs", {}).get("tables", {})
-    for relative in REQUIRED_ASSETS:
-        if not relative.startswith("tables/"):
-            continue
-        name = Path(relative).name
-        path = repo_root / relative
-        recorded = recorded_outputs.get(name)
-        if path.is_file() and recorded is None:
-            errors.append(f"generated asset provenance is missing: {relative}")
-        elif path.is_file() and recorded != file_sha256(path):
-            errors.append(f"generated asset provenance checksum mismatch: {relative}")
-    figure = repo_root / "figures" / "figure1_hierarchy.pdf"
-    figure_recorded = run_data.get("outputs", {}).get("figures", {}).get(figure.name)
-    if figure.is_file() and figure_recorded is not None and figure_recorded != file_sha256(figure):
-        errors.append("generated asset provenance checksum mismatch: figures/figure1_hierarchy.pdf")
-    for name, entry in table_data.get("tables", {}).items():
-        for relative, recorded in entry.get("input_sha256", {}).items():
+    required_tables = [Path(path).name for path in REQUIRED_ASSETS if path.startswith("tables/")]
+    manifest_tables = table_data.get("tables", {})
+    for name in required_tables:
+        entry = manifest_tables.get(name)
+        if not isinstance(entry, dict):
+            errors.append(f"required table manifest entry is missing: {name}")
+        elif not entry.get("source_script") or not entry.get("input_files"):
+            errors.append(f"required table manifest entry is incomplete: {name}")
+    for name, entry in manifest_tables.items():
+        inputs = entry.get("input_files", [])
+        hashes = entry.get("input_sha256", {})
+        if set(inputs) != set(hashes):
+            errors.append(f"generated asset provenance input list mismatch: {name}")
+        for relative, recorded in hashes.items():
             path = repo_root / relative
             if not path.is_file() or file_sha256(path) != recorded:
                 errors.append(f"generated asset provenance input mismatch: {relative}")
+    consistency = run_data.get("consistency")
+    if not isinstance(consistency, list) or not consistency:
+        errors.append("run manifest consistency gates are missing")
+    elif any(check.get("status") != "pass" for check in consistency if isinstance(check, dict)):
+        errors.append("run manifest consistency gates are not all passing")
     return errors
 
 
