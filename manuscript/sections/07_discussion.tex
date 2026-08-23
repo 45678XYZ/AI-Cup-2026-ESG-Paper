@@ -1,4 +1,42 @@
-\section{Discussion and Conclusion}
+\section{Discussion}
 
-This single-dataset, single-backbone study limits its conclusions to the
-tested decision rules and motivates further evaluation of hierarchical tasks.
+Within this controlled design, official wF1 and C-wF1 differ only in whether
+an ancestor-unsupported child prediction can receive partial credit. Their
+different M1--M0 decisions therefore localize the mismatch to that scoring
+choice for this task; they do not establish a universal defect of field-wise
+metrics. Projection makes a qualitative trade-off: it gains correct labels
+when the hierarchy forces \emph{N/A}, but can replace otherwise correct
+substantive child labels when an ancestor is wrong. Field-wise macro averaging
+and whole-row scoring value that exchange differently.
+
+Metric choice also changes the point-estimate ranking. Official wF1 ranks M5
+first, whereas hF ranks M6 first, so ``best'' is meaningful only together with
+the evaluation metric. Nor does a larger structured search guarantee a better
+tuple. A 17-state decoder can improve a parent decision without repairing the
+remaining children; conversely, changing a correct parent to an incorrect one
+necessarily destroys whole-row correctness. This asymmetry explains how a
+parent can improve while tuple accuracy declines, without implying that either
+validity-preserving rule is universally superior.
+
+\subsection{Limitations}
+The report-cluster bootstrap has an effective sample size of 49, limiting its
+resolution. Evidence comes from one dataset, language, ESG-report domain, and
+backbone. A seed jointly controls fold assignment and training randomness, so
+their effects cannot be separated. The \emph{Misleading} class has only
+$n=2$; we make no class-level improvement or significance claim.
+
+We tested decision-time rules, not a structural training loss, direct 17-class
+classifier, classifier chain, LLM, or alternate backbone. The release supports
+neither a temporal nor an industry split. The primary C-wF1 contrast is
+resolved only under document-disjoint evaluation ($p_{\mathrm{Holm}}=.025$),
+not same-document evaluation ($p_{\mathrm{Holm}}=.739$). Both C-wF1 and hF
+were selected post hoc. Training and decision hyperparameters use one frozen
+configuration without sensitivity analysis. Finally, defects in training-time
+gradient accumulation and in the original statistical decision rule were
+corrected before this analysis; all reported artifacts were regenerated after
+the corrections.
+
+\section{Conclusion}
+
+On this ESG dataset and backbone, field-wise scoring can fail to reflect
+validity-preserving decisions.

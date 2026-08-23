@@ -1,18 +1,66 @@
 \section{Results}
 
-The results compare official field-wise scoring with structure-aware analyses;
-the latter are post hoc evaluation measures.
+\paragraph{Controlled decision comparison.}
+Table~\ref{tab:main-results} compares decision rules on identical base
+probabilities and Test rows. Independent argmax (M0) produces invalid tuples
+for 12.6\% of document-disjoint predictions; projection and 17-state decoding
+(M1--M6) reduce this rate to zero by construction. The $\pm$ values are sample
+standard deviations across the three seeds. Because each seed determines both
+fold assignment and training randomness, they describe spread over the whole
+split-and-training pipeline, not a confidence interval.
+
+\paragraph{Metric--constraint mismatch.}
+Table~\ref{tab:contrasts} reports all 20 paired contrasts. For the
+pre-specified official-metric M1--M0 contrast, $\Delta=-0.001$ and the interval
+is $[-0.006,0.003]$. With
+$p_{\mathrm{Holm}}=1.000$, there is no detectable difference. Post-hoc C-wF1
+changes only whether an ancestor-unsupported child prediction receives credit.
+It gives $+0.004$ $[0.001,0.007]$ and survives correction with
+$p_{\mathrm{Holm}}=.025$. Post-hoc hF gives $\Delta=+0.003$ and corroborates
+the direction with $p_{\mathrm{Holm}}=.017$; its interval is
+$[0.001,0.005]$. However, hF also replaces macro with micro aggregation and
+therefore does not isolate consistency.
+Pre-specified tuple accuracy corroborates the direction with $+0.035$
+$[0.028,0.043]$ and $p_{\mathrm{Holm}}=.001$.
+
+The complete family also contains adverse evidence. Compared with projection,
+uncalibrated 17-state decoding (M4--M1) lowers tuple accuracy by $-0.006$
+$[-0.010,-0.002]$, $p_{\mathrm{Holm}}=.028$. Thus validity-preserving
+decoding is not uniformly superior. Searching every legal state need not
+improve whole-row correctness.
+
+\paragraph{Evaluation targets and robustness.}
+Table~\ref{tab:regimes} compares the same-document and document-disjoint
+targets. Its gaps, $0.012$--$0.015$, separate estimands rather than estimate
+bias.
 
 \begin{center}
-  \captionof{table}{Comparison of the two evaluation estimands.}
+  \captionof{table}{Comparison of the two evaluation estimands. Same-document
+  (seen-report, unseen-paragraph) versus document-disjoint (unseen-report)
+  evaluation. The former matches the
+  competition distribution because development and test share the 49 reports.
+  $\Delta$ is a gap between two estimation targets, not a bias estimate;
+  bracketed intervals are 95\% report-bootstrap intervals.}
   \label{tab:regimes}
   \resizebox{\columnwidth}{!}{\tiny\input{../tables/table3_regimes.tex}}
 \end{center}
 
+The C-wF1 result does not transfer between protocols. For same-document
+evaluation, M1--M0 is $+0.002$ $[-0.001,0.005]$ and does not replicate after
+Holm correction ($p_{\mathrm{Holm}}=.739$).
+
 \begin{table*}[t]
   \centering
   \scriptsize
-  \caption{All pre-specified contrasts across four metric families.}
+  \caption{All pre-specified contrasts across four metric families. The five
+  contrasts are evaluated on the document-disjoint protocol. A paired
+  report-cluster bootstrap uses 10,000
+  resamples of source reports, not paragraphs; each metric is a separate Holm
+  family of five. Bracketed
+  95\% percentile intervals are uncorrected and do not determine significance;
+  bold $p_{\mathrm{Holm}}$ marks survival of the correction. The official
+  metric and tuple accuracy were pre-specified; C-wF1 and hF were adopted post
+  hoc.}
   \label{tab:contrasts}
   \begingroup
   % Narrow intercolumn spacing before measuring the generated tabular, then
