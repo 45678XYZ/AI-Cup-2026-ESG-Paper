@@ -21,6 +21,10 @@ REQUIRED_ASSETS = (
     "tables/table5_metrics.tex",
     "figures/figure1_hierarchy.pdf",
 )
+LAYOUT_PLACEHOLDER_AUTHORS = frozenset(
+    f"Student Author {number}" for number in range(1, 5)
+)
+LAYOUT_PLACEHOLDER_TODO_MARKERS = ("TODO(author-metadata)",)
 
 
 def source_text(root: Path) -> str:
@@ -45,6 +49,14 @@ def _metadata(root: Path) -> str:
         return path.read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         return ""
+
+
+def _has_layout_author_placeholders(metadata: str) -> bool:
+    authors = re.findall(r"\\author\{([^}]*)\}", metadata)
+    return (
+        any(author.strip() in LAYOUT_PLACEHOLDER_AUTHORS for author in authors)
+        or any(marker in metadata for marker in LAYOUT_PLACEHOLDER_TODO_MARKERS)
+    )
 
 
 def source_errors(root: Path, final: bool = False) -> list[str]:
@@ -74,13 +86,18 @@ def source_errors(root: Path, final: bool = False) -> list[str]:
     metadata = _metadata(root)
     has_author = bool(re.search(r"\\author\{[^}]+\}", metadata))
     has_email = bool(re.search(r"\\email\{[^}]+@[^}]+\}", metadata))
-    if final and not (has_author and has_email):
+    if final and _has_layout_author_placeholders(metadata):
+        errors.append("layout-only author placeholders must be replaced before final submission")
+    elif final and not (has_author and has_email):
         errors.append("author metadata is required for final submission")
     return errors
 
 
 def source_warnings(root: Path) -> list[str]:
-    if re.search(r"\\author\{[^}]+\}", _metadata(root)):
+    metadata = _metadata(root)
+    if _has_layout_author_placeholders(metadata):
+        return ["layout-only author placeholders remain in this draft"]
+    if re.search(r"\\author\{[^}]+\}", metadata):
         return []
     return ["author metadata is intentionally absent from this draft"]
 

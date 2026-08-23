@@ -22,7 +22,11 @@
 - State that the path-constrained M1-M0 finding does not survive Holm correction under same-document evaluation.
 - Make no improvement or significance claim for `Misleading` (n=2).
 - Do not modify frozen probabilities, predictions, results, splits, manifests, or generated table bodies.
-- Author metadata remains empty by user instruction; draft checks allow this and final checks reject it.
+- Four visible `Student Author 1`--`Student Author 4` layout-only slots replace
+  the earlier blank-metadata rule. Draft checks warn while any explicit
+  placeholder (or author-metadata TODO marker) remains; final checks reject it
+  even with an email-like field. Real names, affiliations, and emails remain
+  user-supplied and deferred.
 - The compiled PDF, including references, must contain at most eight pages.
 
 ---
@@ -32,7 +36,8 @@
 ### New manuscript files
 
 - `manuscript/main.tex` — official NTCIR/ACM shell, abstract, section includes, bibliography.
-- `manuscript/metadata.tex` — intentionally empty author block with an explanatory comment.
+- `manuscript/metadata.tex` — four visible layout-only author slots, without
+  invented affiliations, team name, or email metadata.
 - `manuscript/references.bib` — verified primary-source bibliography.
 - `manuscript/Makefile` — `build`, `check`, `check-final`, and `clean` targets.
 - `manuscript/README.md` — build commands, source authority, and deferred metadata rule.
@@ -831,7 +836,8 @@ git commit -m "docs(paper): complete integrated NTCIR-19 draft"
 
 **Interfaces:**
 - Consumes: complete compiled draft and approved design.
-- Produces: reviewed branch with evidence-backed handoff; final metadata remains the only allowed submission blocker.
+- Produces: reviewed branch with evidence-backed handoff; remaining explicit
+  layout placeholders are the only allowed final-submission blocker.
 
 - [ ] **Step 1: Request scientific-claim review**
 
@@ -864,7 +870,8 @@ Expected:
 - all tests pass;
 - no whitespace errors;
 - branch contains only intentional committed changes;
-- `make -C manuscript check-final` fails only because author metadata was intentionally deferred.
+- `make -C manuscript check-final` fails only because the four explicit
+  layout-only author placeholders remain.
 
 - [ ] **Step 5: Commit review corrections**
 
@@ -875,4 +882,4 @@ git commit -m "docs(paper): address manuscript review"
 
 - [ ] **Step 6: Record handoff**
 
-Report the branch, commit hashes, compiled PDF path, page count, test results, and the two external submission actions still required from the team: provide real author metadata and confirm whether the AI CUP Special Session expects the general NTCIR `Team Name`/`Subtasks` blocks.
+Report the branch, commit hashes, compiled PDF path, page count, test results, and the two external submission actions still required from the team: replace all four layout placeholders with real author metadata and confirm whether the AI CUP Special Session expects the general NTCIR `Team Name`/`Subtasks` blocks.

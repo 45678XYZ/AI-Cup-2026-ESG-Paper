@@ -55,6 +55,51 @@ def test_author_metadata_is_draft_warning_but_final_error(tmp_path):
     assert any("author metadata" in error for error in source_errors(tmp_path / "m", final=True))
 
 
+def test_layout_author_placeholders_warn_in_draft_and_block_final_even_with_email(tmp_path):
+    root = tmp_path / "m"
+    metadata = "\n".join(
+        [*(f"\\author{{Student Author {number}}}" for number in range(1, 5)),
+         "\\email{student@example.org}"]
+    )
+    write_minimal(root, "\\input{tables/table4_contrasts.tex}", metadata)
+    (root / "tables").mkdir()
+    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
+
+    assert source_errors(root) == []
+    assert any("layout-only author placeholders" in warning for warning in source_warnings(root))
+    assert any("layout-only author placeholders" in error
+               for error in source_errors(root, final=True))
+
+
+def test_real_author_and_email_metadata_are_accepted_in_final_mode(tmp_path):
+    root = tmp_path / "m"
+    write_minimal(
+        root,
+        "\\input{tables/table4_contrasts.tex}",
+        "\\author{Ada Example}\n\\email{ada@example.org}",
+    )
+    (root / "tables").mkdir()
+    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
+
+    assert source_errors(root, final=True) == []
+    assert source_warnings(root) == []
+
+
+def test_explicit_author_metadata_todo_marker_warns_and_blocks_final_mode(tmp_path):
+    root = tmp_path / "m"
+    write_minimal(
+        root,
+        "\\input{tables/table4_contrasts.tex}",
+        "% TODO(author-metadata)\n\\author{Ada Example}\n\\email{ada@example.org}",
+    )
+    (root / "tables").mkdir()
+    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
+
+    assert any("layout-only author placeholders" in warning for warning in source_warnings(root))
+    assert any("layout-only author placeholders" in error
+               for error in source_errors(root, final=True))
+
+
 def test_pdf_page_limit(tmp_path):
     path = tmp_path / "nine-pages.pdf"
     writer = PdfWriter()
@@ -162,6 +207,8 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     assert "AI CUP 2026 競賽提交格式說明 Sample Submission Format Guide" in " ".join(
         document_text.split()
     )
+    for number in range(1, 5):
+        assert f"Student Author {number}" in document_text
     assert font_errors(pdf) == []
     log = (manuscript / "build" / "main.log").read_text(encoding="utf-8")
     assert "accessing absolute path" not in log

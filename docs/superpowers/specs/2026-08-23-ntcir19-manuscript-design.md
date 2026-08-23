@@ -151,10 +151,14 @@ manuscript/
 committed Figure 1 PDF from `../figures/`. Numerical table bodies will not be
 duplicated in manuscript sources.
 
-`metadata.tex` will intentionally contain no authors until the user provides
-them. The draft build may succeed without submission metadata, but the final
-readiness check will report the missing author block as an error. No fictional
-author, affiliation, team name, or email will be inserted.
+`metadata.tex` will reserve four visible title-block slots as `Student Author
+1` through `Student Author 4`, solely to stabilize layout. The draft build may
+succeed with those explicit placeholders but must warn about them; the final
+readiness check will reject any remaining placeholder, even if an email-like
+field has been added. Real names, affiliations, team name, and emails remain
+deferred to the user and will not be invented. Once all placeholders are
+replaced and valid email metadata is supplied, the existing final metadata
+rule may accept the submission.
 
 The AI CUP Special Session invitation governs submission-specific content. Its
 instructions do not require the standard participant-paper `Team Name` and
@@ -184,12 +188,13 @@ repeatable build and checks. The draft verification path will:
 6. check that C-wF1 and hF are described as post hoc;
 7. check that Table 4 is included in full;
 8. inspect overfull boxes and embedded PDF fonts;
-9. report missing author metadata as an allowed draft deficiency and a final
-   submission blocker.
+9. report the four layout-only author placeholders as an allowed draft warning
+   and a final submission blocker, even if an email-like field is present.
 
 The first draft is complete only when the English manuscript builds, stays
 within eight pages, includes all core results, contains no unresolved citations,
-and passes every check except the explicitly deferred author metadata check.
+and passes every check except the explicit layout-placeholder warning; real
+author metadata remains required for final submission.
 
 ## 7. Bibliography policy
 

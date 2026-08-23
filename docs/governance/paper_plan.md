@@ -37,6 +37,7 @@
 | Draft deadline | **2026-08-31**——當日交給 **AI CUP 負責人**彙整，不是自行投稿 |
 | Camera-ready deadline | **2026-11-01** |
 | 匿名審查 | 不匿名；作者資訊照常填寫 |
+| 作者版面 | 草稿暫以四個可見的 `Student Author 1`--`Student Author 4` 版面預留名稱呈現；真實姓名、機構與 email 仍待提供，定稿前不得保留 placeholder |
 | 標題 | 不須含 task name 或 team name |
 | 資料要求 | 明確使用、分析 ESG 競賽資料集，說明應用方式與研究結果 |
 | 程式碼 | 非格式上的強制項，但應提供可重現版本與固定 commit/tag |

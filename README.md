@@ -2,6 +2,11 @@
 
 Controlled study for the NTCIR-19 AI CUP special session paper.
 
+The manuscript title block currently reserves four visible layout-only slots,
+`Student Author 1` through `Student Author 4`. They are not submission
+metadata: real names, affiliations, and emails remain user-supplied, and the
+final manuscript check rejects the placeholders.
+
 ## What the study compares
 
 Each paragraph carries four dependent labels — promise status (PS), verification
