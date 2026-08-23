@@ -1,0 +1,101 @@
+{
+ "contract_version": "1.0",
+ "protocol": "row_strat",
+ "seed": 42,
+ "method": "M0",
+ "predictions_file": "predictions/row_strat_seed42_M0.csv.gz",
+ "predictions_sha256": "sha256:267e6fc17324c894589cd22540464e2881bd96103ce64a9483f930d05a19c072",
+ "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
+ "git_sha": "aaa9bfc3337c60fcb6f6cdec8206175fdbd625f1",
+ "created_at": "2026-08-22T15:26:38.758329+00:00",
+ "n_rows": 2000,
+ "weighted_macro_f1": 0.5903556361762667,
+ "per_field_macro_f1": {
+  "promise_status": 0.7980155917788803,
+  "verification_timeline": 0.4856577816414534,
+  "evidence_status": 0.6702043285823417,
+  "evidence_quality": 0.448121577141629
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.9313253012048193,
+   "No": 0.6647058823529411
+  },
+  "verification_timeline": {
+   "already": 0.5115907274180655,
+   "within_2_years": 0.11142061281337047,
+   "between_2_and_5_years": 0.53125,
+   "more_than_5_years": 0.609375,
+   "N/A": 0.6646525679758308
+  },
+  "evidence_status": {
+   "Yes": 0.8403237674760854,
+   "No": 0.5016501650165016,
+   "N/A": 0.6686390532544378
+  },
+  "evidence_quality": {
+   "Clear": 0.771996215704825,
+   "Not Clear": 0.352755905511811,
+   "Misleading": 0.0,
+   "N/A": 0.6677341873498799
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 1627,
+   "No": 373
+  },
+  "verification_timeline": {
+   "already": 718,
+   "within_2_years": 34,
+   "between_2_and_5_years": 498,
+   "more_than_5_years": 377,
+   "N/A": 373
+  },
+  "evidence_status": {
+   "Yes": 1345,
+   "No": 282,
+   "N/A": 373
+  },
+  "evidence_quality": {
+   "Clear": 1118,
+   "Not Clear": 225,
+   "Misleading": 2,
+   "N/A": 655
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.45927622313344807,
+  "evidence_status_given_ps_yes": 0.7044191432138955,
+  "evidence_quality_given_es_yes": 0.41709948784710454
+ },
+ "tuple_exact_match": 0.4055,
+ "invalid_tuple_rate": 0.0505,
+ "decision_params": {
+  "0": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "1": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "2": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "3": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "4": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  }
+ }
+}

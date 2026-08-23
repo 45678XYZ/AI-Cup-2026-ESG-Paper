@@ -40,6 +40,7 @@ from paper.data import (
     index_by_id,
     load_dev,
 )
+from paper.structure_loss import LAMBDA_UNSET
 from paper.labels import (
     EVAL_FIELDS,
     FIELD_ALIAS,
@@ -75,8 +76,20 @@ PROVENANCE_META = (
 # does define the fit is hashed into ``train_config_sha256``.
 RECIPE_META = (
     "model_name", "model_revision", "train_config_sha256",
-    "checkpoint_rule", "checkpoint_last_k", "epochs",
+    "checkpoint_rule", "checkpoint_last_k", "epochs", "structure_lambda",
 )
+
+# Keys a bundle may predate. Absent is not "unknown": the 30 bundles of the
+# frozen study were written before the structural arm existed, and reading
+# their silence as a different recipe would report the control arm as a
+# mixture of two. Anything not listed here is compared as-is, so a genuinely
+# missing key still surfaces.
+RECIPE_DEFAULTS = {"structure_lambda": LAMBDA_UNSET}
+
+
+def recipe_value(meta, key):
+    """One bundle's value for ``key``, with the pre-arm default applied."""
+    return meta.get(key, RECIPE_DEFAULTS.get(key))
 
 EXPECTED_ARRAYS = tuple(
     f"{partition}_{field}.npy"
@@ -238,7 +251,7 @@ def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR) -> list[str]:
         return ["no bundles with a meta.json were given"]
 
     for key in ("protocol", "seed", "split_fingerprint", "data_checksum", *RECIPE_META):
-        values = {m.get(key) for _, m in metas}
+        values = {recipe_value(m, key) for _, m in metas}
         if len(values) > 1:
             problems.append(f"bundles disagree on {key}: {sorted(map(str, values))}")
 
@@ -297,7 +310,7 @@ def validate_probs_study(bundle_dirs) -> list[str]:
     for key in RECIPE_META:
         holders: dict[str, list[str]] = {}
         for run, metas in by_run.items():
-            values = {json.dumps(m.get(key)) for m in metas}
+            values = {json.dumps(recipe_value(m, key)) for m in metas}
             if len(values) == 1:
                 holders.setdefault(values.pop(), []).append(run)
         if len(holders) > 1:

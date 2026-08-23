@@ -42,11 +42,23 @@ def _labelled(rows) -> bool:
     return bool(rows) and all(field in rows[0] for field in FIELDS)
 
 
+def company_key(row) -> str:
+    """Canonical company identity.
+
+    The release spells one company two ways -- ``Wistron`` and ``wistron`` --
+    for paragraphs of the *same* report. Counting raw strings therefore reports
+    50 companies against 49 reports and invites the reader to conclude that some
+    report is shared, which no report is. Case and surrounding space are the only
+    normalisation applied; nothing else in the release needs more.
+    """
+    return row["company"].strip().lower()
+
+
 def _partition_audit(rows) -> dict:
     out = {
         "paragraphs": len(rows),
         "pdfs": len({r["pdf_url"] for r in rows}),
-        "companies": len({r["company"] for r in rows}),
+        "companies": len({company_key(r) for r in rows}),
         "labelled": _labelled(rows),
     }
     sizes = sorted(Counter(r["pdf_url"] for r in rows).values())
@@ -100,8 +112,8 @@ def _company_structure(rows) -> dict:
     from collections import defaultdict
     by_pdf, by_company = defaultdict(set), defaultdict(set)
     for row in rows:
-        by_pdf[row["pdf_url"]].add(row["company"])
-        by_company[row["company"]].add(row["pdf_url"])
+        by_pdf[row["pdf_url"]].add(company_key(row))
+        by_company[company_key(row)].add(row["pdf_url"])
     return {
         "companies": len(by_company),
         "tickers": len({row["ticker"] for row in rows}),

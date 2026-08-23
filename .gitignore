@@ -6,6 +6,16 @@
 # probs/       COMMITTED  — 72 KB per rotation, ~2.1 MB for all 30. Small enough
 #                           that committing them removes the B-to-A transfer step
 #                           entirely and makes the study reproducible from a clone.
+# probs_lambda_sweep/
+#              COMMITTED  — the 15 bundles behind the structural arm's lambda
+#                           choice. Kept so the pre-registered selection can be
+#                           audited; indexed by nothing and scored into no table
+# probs_structural/
+#              COMMITTED  — the 30 bundles from the selected-lambda arm. Kept
+#                           separately so the frozen lambda=0 bundles stay intact
+# probs_architecture/
+#              COMMITTED  — paired exploratory backbone screens, namespaced by
+#                           architecture and structural-loss arm
 # tables/      COMMITTED  — the contract-4 deliverables D includes, plus the
 #                           manifest that ties each printed number back to the
 #                           artifacts it was computed from
@@ -27,6 +37,9 @@
 *.pt
 !contracts/examples/**/*.npy
 !/probs/**/*.npy
+!/probs_lambda_sweep/**/*.npy
+!/probs_structural/**/*.npy
+!/probs_architecture/**/*.npy
 /checkpoints/
 /checkpoints_*/
 
@@ -51,3 +64,4 @@ __pycache__/
 
 .DS_Store
 
+!/runs/rbt_base/probs/**/*.npy

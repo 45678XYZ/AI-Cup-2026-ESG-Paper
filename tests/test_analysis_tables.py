@@ -70,8 +70,18 @@ def test_table1_leaves_the_unlabelled_test_column_empty():
 
 
 def test_table1_prints_the_audited_counts():
-    tex = render_table1(AUDIT)
-    assert "2000" in tex and "49" in tex and "50" in tex
+    """Row by row rather than by substring. The previous version asserted that
+    "50" appeared somewhere in the table, which passed for two months while the
+    Companies cell was wrong: the release spells one company two ways, so the
+    raw count read 50 against 49 reports. A substring check cannot tell a right
+    number from a wrong one that happens to be present."""
+    rows = {
+        line.split("&")[0].strip(): [c.strip() for c in line.split("&")[1:]]
+        for line in render_table1(AUDIT).splitlines() if "&" in line
+    }
+    assert rows["Paragraphs"][:2] == ["2000", r"2000 \\"]
+    assert rows["Source reports (PDFs)"][:2] == ["49", r"49 \\"]
+    assert rows["Companies"][:2] == ["49", r"49 \\"]
 
 
 def test_table2_has_one_row_per_method_in_order():

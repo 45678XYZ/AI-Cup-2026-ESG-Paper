@@ -30,6 +30,7 @@ from paper.accumulation import (
 from paper.dataset import ESGDataset, collate_fn
 from paper.labels import EVAL_FIELDS, FIELD_WEIGHTS, LABEL2ID, NUM_LABELS
 from paper.model import MultiTaskEncoder
+from paper.structure_loss import LAMBDA_UNSET, illegal_mass_penalty
 from paper.train_config import (
     BACKBONE_LR,
     BATCH_SIZE,
@@ -89,15 +90,23 @@ def _class_weights(train_data, field):
     return torch.tensor(weights, dtype=torch.float, device=DEVICE)
 
 
-def _loss(criteria, logits, labels):
+def _loss(criteria, logits, labels, structure_lambda=LAMBDA_UNSET):
+    """The frozen per-field objective, optionally plus the structural term.
+
+    At ``LAMBDA_UNSET`` the structural term is not merely zero-weighted but not
+    computed: the 30 committed bundles were produced by this function without
+    it, and the arithmetic must stay identical rather than merely equivalent.
+    """
     total = torch.zeros((), device=DEVICE)
     for field in EVAL_FIELDS:
         total = total + FIELD_WEIGHTS[field] * criteria[field](logits[field], labels[field])
+    if structure_lambda:
+        total = total + structure_lambda * illegal_mass_penalty(logits)
     return total
 
 
 def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None,
-                   local_files_only=False):
+                   local_files_only=False, structure_lambda=LAMBDA_UNSET):
     """Train the anchor on ``train_data`` only.
 
     Returns ``(model, avg_state)``: the model already carries the averaged
@@ -147,7 +156,8 @@ def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None,
             with torch.cuda.amp.autocast():
                 logits = model(input_ids, attention_mask)
                 _, update_due = accumulation_window(step, len(loader))
-                loss = _loss(criteria, logits, labels) * loss_scale(len(input_ids))
+                loss = (_loss(criteria, logits, labels, structure_lambda)
+                        * loss_scale(len(input_ids)))
 
             scaler.scale(loss).backward()
 

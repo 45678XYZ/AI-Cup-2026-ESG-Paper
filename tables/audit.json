@@ -3,7 +3,7 @@
  "development": {
   "paragraphs": 2000,
   "pdfs": 49,
-  "companies": 50,
+  "companies": 49,
   "labelled": true,
   "paragraphs_per_pdf": {
    "min": 4,
@@ -57,7 +57,7 @@
  "test": {
   "paragraphs": 2000,
   "pdfs": 49,
-  "companies": 50,
+  "companies": 49,
   "labelled": false,
   "paragraphs_per_pdf": {
    "min": 4,
@@ -80,10 +80,10 @@
   ]
  },
  "company_structure": {
-  "companies": 50,
+  "companies": 49,
   "tickers": 49,
   "companies_in_multiple_reports": 0,
-  "reports_with_multiple_companies": 1
+  "reports_with_multiple_companies": 0
  },
  "dataset_fields": [
   "company",

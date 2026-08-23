@@ -39,6 +39,8 @@ paper/          study code: label space, data, training, contract artifacts
   methods.py      the M0-M6 table, and scoring in log space
   calibration.py  class biases estimated on the Calibration partition only
   accumulation.py gradient-accumulation windows (torch-free, so CI checks them)
+  structure_loss.py training-time legality objective (off in the frozen study)
+  select_lambda.py  the structural arm's pre-registered selection criterion
   train_fold.py   trains one rotation, emits raw probabilities only
   run_training.py driver: split manifest in, contract bundle out
   run_decisions.py driver: probability bundles in, contract-3 files out
@@ -60,8 +62,11 @@ docs/           paper plan and interface contract
 figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
 splits/         generated split manifests (version controlled)
 probs/          30 probability bundles, one per rotation, from the official fits
+probs_lambda_sweep/  the structural arm's lambda sweep; scored into no table
+probs_structural/  30 selected-lambda probability bundles from the structural arm
 predictions/    42 per-row prediction files (.csv.gz), one per protocol/seed/method
 results/        42 aggregate result manifests, one per predictions file
+structural_arm/ structural predictions/results plus the cross-arm comparison JSON
 tables/         contract-4 deliverables: Table 1-3, their captions, the dataset
                 audit, and the manifest tying each printed number to its inputs
 tests/          pytest suite
@@ -274,6 +279,21 @@ python -m paper.run_decisions --protocol pdf_group --seed 42 \
 Both arguments are required and each invocation covers one (protocol, seed), so
 the full study is the same 6 invocations as the training stage — 42 predictions
 files and 42 results files, a few seconds in total.
+
+The completed training-time structural arm is kept separate from the frozen
+study. Its selected-lambda bundles live in `probs_structural/`; its 42 decision
+files and the pre-registered cross-arm comparison live in `structural_arm/`.
+Rebuild the comparison, including the 10,000-resample H2 bootstrap, with:
+
+```bash
+python -m analysis.structural_arm \
+    --structural-root structural_arm \
+    --probs-dir probs_structural \
+    --out structural_arm/comparison.json
+```
+
+The execution record and interpretation are in
+[`docs/structural_training_results.md`](docs/structural_training_results.md).
 
 One invocation loads the five rotations once and runs every requested method
 over that one loaded set, which is what makes "identical probabilities on
