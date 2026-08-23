@@ -6,8 +6,14 @@ version `1:6.0.1r16-1.1build1` (source package `fonts-android`). The upstream
 project is the Android Open Source Project:
 <https://android.googlesource.com/platform/frameworks/base/>.
 
+Exact upstream files at tag `android-6.0.1_r16`:
+
+- Font: <https://android.googlesource.com/platform/frameworks/base/+/android-6.0.1_r16/data/fonts/DroidSansFallbackFull.ttf>
+- NOTICE: <https://android.googlesource.com/platform/frameworks/base/+/android-6.0.1_r16/data/fonts/NOTICE>
+
 - Upstream copyright: Copyright 2006--2010 Google Corp.
 - License: Apache License 2.0; see `LICENSE-APACHE-2.0.txt`.
+- Applicable upstream NOTICE attribution: see `NOTICE-AOSP.txt`.
 - Upstream SHA-256:
   `acb6440a713d880a13a21b468ba7cd43f5a2b2934972e51be791c880730777b8`.
 - Subset SHA-256:
