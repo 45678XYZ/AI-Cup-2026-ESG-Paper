@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -121,13 +122,33 @@ def test_font_checker_accepts_pdf_without_font_resources(tmp_path):
     assert font_errors(path) == []
 
 
-def test_clean_compiled_manuscript_renders_all_generated_tables():
-    """A floated table must be visible in the PDF, not only included in TeX."""
+def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
+    """The archived source must build without host-installed fonts."""
     manuscript = REPO_ROOT / "manuscript"
+    empty_fonts = tmp_path / "empty-fonts"
+    empty_fonts.mkdir()
+    font_cache = tmp_path / "font-cache"
+    font_config = tmp_path / "fonts.conf"
+    font_config.write_text(
+        "<?xml version='1.0'?>\n"
+        "<!DOCTYPE fontconfig SYSTEM 'urn:fontconfig:fonts.dtd'>\n"
+        "<fontconfig>\n"
+        f"  <dir>{empty_fonts.as_posix()}</dir>\n"
+        f"  <cachedir>{font_cache.as_posix()}</cachedir>\n"
+        "</fontconfig>\n",
+        encoding="utf-8",
+    )
+    env = os.environ.copy()
+    env["FONTCONFIG_FILE"] = str(font_config)
+    env["FONTCONFIG_PATH"] = str(tmp_path)
     subprocess.run(["make", "clean"], cwd=manuscript, check=True, capture_output=True, text=True)
-    subprocess.run(["make", "build"], cwd=manuscript, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["make", "check"], cwd=manuscript, env=env, check=True,
+        capture_output=True, text=True,
+    )
 
-    reader = PdfReader(str(manuscript / "build" / "main.pdf"))
+    pdf = manuscript / "build" / "main.pdf"
+    reader = PdfReader(str(pdf))
     page_text = [page.extract_text().strip() for page in reader.pages]
     document_text = "\n".join(page_text)
     for caption in (
@@ -138,6 +159,14 @@ def test_clean_compiled_manuscript_renders_all_generated_tables():
     ):
         assert caption in document_text
     assert all(page_text), "the compiled manuscript contains a blank page"
+    assert "AI CUP 2026 競賽提交格式說明 Sample Submission Format Guide" in " ".join(
+        document_text.split()
+    )
+    assert font_errors(pdf) == []
+    log = (manuscript / "build" / "main.log").read_text(encoding="utf-8")
+    assert "accessing absolute path" not in log
+    assert "Missing character" not in log
+    assert "could not represent character" not in log
 
 
 def test_cli_returns_nonzero_for_policy_error(tmp_path, monkeypatch, capsys):
