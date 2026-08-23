@@ -27,6 +27,7 @@
 *.pt
 !contracts/examples/**/*.npy
 !/probs/**/*.npy
+!/runs/rbt_base/probs/**/*.npy
 /checkpoints/
 /checkpoints_*/
 
@@ -50,4 +51,3 @@ __pycache__/
 .venv/
 
 .DS_Store
-

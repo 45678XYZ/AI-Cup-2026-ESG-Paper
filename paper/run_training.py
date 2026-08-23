@@ -73,7 +73,7 @@ def _runtime_meta():
     }
 
 
-def resolve_pinned_snapshot(revision=MODEL_REVISION):
+def resolve_pinned_snapshot(model_name=MODEL_NAME, revision=MODEL_REVISION):
     """Fetch-or-reuse the pinned snapshot once, and prove it is the pinned one.
 
     Every rotation then loads from the returned directory rather than by Hub
@@ -87,17 +87,18 @@ def resolve_pinned_snapshot(revision=MODEL_REVISION):
     Hugging Face lays snapshots out as ``snapshots/<commit>``, so the directory
     name *is* the resolved commit and can be compared against the pin.
     """
-    path = Path(snapshot_download(MODEL_NAME, revision=revision))
+    path = Path(snapshot_download(model_name, revision=revision))
     if revision not in UNPINNED_REVISIONS and path.name != revision:
         raise SystemExit(
-            f"{MODEL_NAME} resolved to snapshot {path.name}, not the pinned "
+            f"{model_name} resolved to snapshot {path.name}, not the pinned "
             f"{revision}. Refusing to train against unidentified weights."
         )
     return path
 
 
 def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=False,
-                 model_source=None):
+                 model_source=None, model_name=MODEL_NAME,
+                 model_revision=MODEL_REVISION):
     by_id = index_by_id(rows)
     rot = next(r for r in split["rotations"] if r["k"] == rotation)
 
@@ -129,8 +130,8 @@ def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=Fal
     write_probs_bundle(
         out_dir, split, rotation, probs,
         extra_meta={
-            "model_name": MODEL_NAME,
-            "model_revision": MODEL_REVISION,
+            "model_name": model_name,
+            "model_revision": model_revision,
             "train_config_sha256": file_sha256(TRAIN_CONFIG_PATH),
             "checkpoint_rule": CHECKPOINT_RULE,
             "checkpoint_last_k": CHECKPOINT_LAST_K,
@@ -163,18 +164,21 @@ def main():
                     help="skip rotations whose bundle already has a meta.json")
     ap.add_argument("--allow-unpinned-revision", action="store_true",
                     help="smoke tests only: run without a pinned MODEL_REVISION")
+    ap.add_argument("--model-name", default=MODEL_NAME,
+                    help="Hugging Face model id; defaults to the frozen anchor")
+    ap.add_argument("--model-revision", default=MODEL_REVISION,
+                    help="immutable Hugging Face commit for --model-name")
     args = ap.parse_args()
 
     # An unpinned revision means the run cannot be reproduced against a known
     # set of weights. Failing here rather than after the fits saves the GPU time.
-    if MODEL_REVISION in UNPINNED_REVISIONS and not args.allow_unpinned_revision:
+    if args.model_revision in UNPINNED_REVISIONS and not args.allow_unpinned_revision:
         raise SystemExit(
-            f"MODEL_REVISION is {MODEL_REVISION!r} in paper/train_config.py, "
-            "which does not identify a fixed set of weights.\n"
-            f"Set it to the commit `huggingface-cli scan-cache` reports for "
-            f"{MODEL_NAME}, or what the Hub's Files tab shows for the branch "
-            "you intend, or pass --allow-unpinned-revision for a throwaway "
-            "smoke test."
+            f"model revision is {args.model_revision!r}, which does not identify "
+            "a fixed set of weights.\nSet it to the commit `huggingface-cli "
+            f"scan-cache` reports for {args.model_name}, or what the Hub's Files "
+            "tab shows for the branch you intend, or pass "
+            "--allow-unpinned-revision for a throwaway smoke test."
         )
 
     split_path = (args.splits_dir / f"{args.protocol}_seed{args.seed}.json").resolve()
@@ -195,13 +199,14 @@ def main():
     # huggingface_hub signature must keep its own traceback rather than be
     # relabelled as a fetch problem right before a 30-fit campaign.
     try:
-        model_source = str(resolve_pinned_snapshot())
+        model_source = str(resolve_pinned_snapshot(args.model_name, args.model_revision))
     except OSError as exc:
         raise SystemExit(
-            f"Could not obtain {MODEL_NAME} at revision {MODEL_REVISION}: {exc}\n"
+            f"Could not obtain {args.model_name} at revision "
+            f"{args.model_revision}: {exc}\n"
             "Check network access to huggingface.co, or pre-populate the cache "
-            f"with `huggingface-cli download {MODEL_NAME} "
-            f"--revision {MODEL_REVISION}`."
+            f"with `huggingface-cli download {args.model_name} "
+            f"--revision {args.model_revision}`."
         ) from exc
     # The snapshot is complete by now, so the per-load Hub probes are pure cost.
     tokenizer = AutoTokenizer.from_pretrained(model_source, local_files_only=True)
@@ -214,6 +219,7 @@ def main():
         run_rotation(
             split, k, rows, tokenizer, args.out_dir, args.save_checkpoint,
             model_source=model_source,
+            model_name=args.model_name, model_revision=args.model_revision,
         )
 
     print(f"\nbundles written to {args.out_dir}/{args.protocol}_seed{args.seed}_r*")
