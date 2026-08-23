@@ -52,13 +52,24 @@ def test_projection_drives_the_invalid_rate_to_zero_in_every_arm():
         assert cost["invalid_rate"]["M0"] > 0.0, arm.label
 
 
-def test_the_cost_is_reported_with_an_interval_on_both_metrics():
-    arm = ARMS[0]
+def test_both_contrasts_are_reported_with_intervals_on_both_metrics():
     cost = arm_legality_cost(REPO_ROOT, ORDER, DEV, clusters=CLUSTERS, n_boot=50)
-    for metric in ("official_weighted_macro_f1", "tuple_accuracy"):
-        row = cost[metric]
-        assert row["ci_low"] <= row["delta"] <= row["ci_high"], (arm.label, metric)
-        assert 0.0 <= row["p_value"] <= 1.0
+    for contrast in ("legality_cost", "decoder_vs_projection"):
+        for metric in ("official_weighted_macro_f1", "tuple_accuracy"):
+            row = cost[contrast][metric]
+            assert row["ci_low"] <= row["delta"] <= row["ci_high"], (contrast, metric)
+            assert 0.0 <= row["p_value"] <= 1.0
+
+
+def test_both_constrained_rules_are_legal_in_every_arm():
+    """M1 and M4 differ in which legal tuple they pick, never in whether it is
+    legal. If either ever emitted an invalid tuple the table's whole framing --
+    two equally legal rules that the metrics rank differently -- would be false."""
+    for arm in ARMS:
+        root = REPO_ROOT / arm.root if arm.root else REPO_ROOT
+        cost = arm_legality_cost(root, ORDER, DEV, clusters=CLUSTERS, n_boot=50)
+        assert cost["invalid_rate"]["M1"] == 0.0, arm.label
+        assert cost["invalid_rate"]["M4"] == 0.0, arm.label
 
 
 def test_the_report_records_what_it_read():
@@ -73,58 +84,70 @@ def test_the_report_records_what_it_read():
 
 from analysis.legality_cost import build_caption, render_table  # noqa: E402
 
+
+def _contrast(delta, low, high):
+    return {"delta": delta, "ci_low": low, "ci_high": high, "p_value": 0.1}
+
+
+def _arm(backbone, lam, invalid, cost_off, cost_row, dec_off, dec_row):
+    return {
+        "label": f"{backbone} (lambda={lam:g})", "backbone": backbone,
+        "structure_lambda": lam, "seeds": [42, 123, 456],
+        "invalid_rate": {"M0": invalid, "M1": 0.0, "M4": 0.0},
+        "legality_cost": {"official_weighted_macro_f1": cost_off,
+                          "tuple_accuracy": cost_row},
+        "decoder_vs_projection": {"official_weighted_macro_f1": dec_off,
+                                  "tuple_accuracy": dec_row},
+    }
+
+
 STUB = {
     "protocol": "pdf_group", "n_boot": 10000, "bootstrap_seed": 20260814,
-    "contrast": "M1 - M0",
     "arms": [
-        {"label": "RoBERTa-large (lambda=0)", "backbone": "RoBERTa-large",
-         "structure_lambda": 0.0, "seeds": [42, 123, 456],
-         "invalid_rate": {"M0": 0.1255, "M1": 0.0},
-         "official_weighted_macro_f1": {"delta": -0.0011, "ci_low": -0.0059,
-                                        "ci_high": 0.0035, "p_value": 0.626},
-         "tuple_accuracy": {"delta": 0.0350, "ci_low": 0.028, "ci_high": 0.043,
-                            "p_value": 0.0002}},
-        {"label": "DeBERTa-v2-320M (lambda=0)", "backbone": "DeBERTa-v2-320M",
-         "structure_lambda": 0.0, "seeds": [42, 123, 456],
-         "invalid_rate": {"M0": 0.1975, "M1": 0.0},
-         "official_weighted_macro_f1": {"delta": -0.0080, "ci_low": -0.0158,
-                                        "ci_high": -0.0007, "p_value": 0.031},
-         "tuple_accuracy": {"delta": 0.0502, "ci_low": 0.041, "ci_high": 0.060,
-                            "p_value": 0.0001}},
+        # DeBERTa: every column's interval clears zero except the decoder's
+        # whole-row cell, which is the one cell that must not be bold.
+        _arm("DeBERTa-v2-320M", 0.0, 0.1975,
+             _contrast(-0.0080, -0.0158, -0.0007), _contrast(0.0502, 0.041, 0.060),
+             _contrast(0.0130, 0.003, 0.023), _contrast(-0.0033, -0.010, 0.003)),
+        _arm("RoBERTa-large", 0.3, 0.0518,
+             _contrast(-0.0009, -0.0040, 0.0017), _contrast(0.0138, 0.010, 0.018),
+             _contrast(-0.0008, -0.004, 0.002), _contrast(-0.0013, -0.004, 0.001)),
     ],
 }
 
 
 def test_the_table_has_one_row_per_arm():
-    body = render_table(STUB)
-    rows = [l for l in body.splitlines() if "&" in l and "Backbone" not in l]
+    rows = [l for l in render_table(STUB).splitlines()
+            if "&" in l and "Backbone" not in l and "multicolumn" not in l]
     assert len(rows) == len(STUB["arms"])
 
 
-def test_a_cost_whose_interval_excludes_zero_is_marked():
-    """The visual argument is the point of the table: the reader should see
-    which arms pay for legality without reading every interval. DeBERTa's
-    official cost excludes zero; RoBERTa-large's does not."""
-    body = render_table(STUB)
-    deberta = [l for l in body.splitlines() if "DeBERTa" in l][0]
-    roberta = [l for l in body.splitlines() if "RoBERTa" in l][0]
-    assert r"\textbf{-0.008}" in deberta
-    assert r"\textbf{" not in roberta.split("&")[3]
+def test_both_contrasts_get_their_own_column_pair():
+    header = render_table(STUB)
+    assert "M1$-$M0" in header and "M4$-$M1" in header
+    assert header.count("Official") == 2 and header.count("Whole-row") == 2
 
 
-def test_the_caption_states_what_the_all_zero_column_would_have_said():
-    """M1's invalid rate is zero in every arm, so it is a caption sentence
-    rather than a column of zeros -- but it must not simply vanish."""
+def test_only_cells_whose_interval_clears_zero_are_bold():
+    """The reader is meant to read the table by its bold pattern, so a cell
+    that is bold without clearing zero would mislead more than a missing one."""
+    line = [l for l in render_table(STUB).splitlines() if "DeBERTa" in l][0]
+    cells = [c.strip() for c in line.split("&")]
+    assert cells[3].startswith(r"\textbf")     # legality cost, official
+    assert cells[4].startswith(r"\textbf")     # legality cost, whole-row
+    assert cells[5].startswith(r"\textbf")     # decoder, official
+    assert not cells[6].startswith(r"\textbf")  # decoder, whole-row: crosses 0
+
+
+def test_the_caption_states_that_both_constrained_rules_are_legal():
+    """The invalid column reports M0 only. Without the caption a reader could
+    conclude the table never checked M4's legality."""
     caption = build_caption(STUB)
-    assert "zero in every arm" in caption or "0 in every arm" in caption
-    assert "construction" in caption
+    assert "M1 and M4 both emit an invalid tuple on 0" in caption
 
 
 def test_the_caption_marks_the_family_as_exploratory():
-    """`docs/inference_families.md` classifies this contrast as exploratory.
-    A table that omits that invites the reader to count it as confirmatory."""
-    caption = build_caption(STUB)
-    assert "exploratory" in caption.lower()
+    assert "exploratory" in build_caption(STUB).lower()
 
 
 def test_the_preview_renders_the_new_table():

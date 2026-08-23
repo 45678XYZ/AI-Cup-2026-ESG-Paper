@@ -39,10 +39,13 @@ from paper.labels import EVAL_FIELDS, FIELDS, INVALID_STATE_ID, tuple_to_state_i
 from paper.provenance import environment, git_sha, now_iso
 from paper.train_config import SEEDS
 
-# The contrast is M0 against M1: the unconstrained argmax against the same
-# probabilities projected onto the legal set. Every other method differs from
-# M0 in more than one respect.
-BASELINE, CONSTRAINED = "M0", "M1"
+# Three decision rules over one set of probabilities. M0 is the unconstrained
+# per-field argmax. M1 and M4 both emit only legal tuples and differ solely in
+# which legal tuple they pick: M1 walks the hierarchy top-down and never
+# revisits the parent, M4 scores all 17 states and takes the best sum. That is
+# the comparison the table is for -- two rules that are equally legal, and the
+# two metrics disagree about which one is better.
+BASELINE, CONSTRAINED, DECODER = "M0", "M1", "M4"
 
 # Only pdf_group: the two architecture screens were pre-registered on it alone,
 # and a table whose rows cover different protocols would not be comparable.
@@ -51,6 +54,14 @@ PROTOCOL = "pdf_group"
 METRICS = {
     "official_weighted_macro_f1": weighted_macro_f1,
     "tuple_accuracy": tuple_accuracy,
+}
+
+# What legality costs, and which legal rule each metric prefers. Keeping both
+# in one table is the point: the four resulting columns do not share a sign,
+# and that is the finding.
+CONTRASTS = {
+    "legality_cost": (CONSTRAINED, BASELINE),
+    "decoder_vs_projection": (DECODER, CONSTRAINED),
 }
 
 
@@ -114,21 +125,37 @@ def arm_legality_cost(root, order, dev=None, *, protocol=PROTOCOL, seeds=SEEDS,
     baseline = [load_aligned(protocol, s, BASELINE, order, root) for s in seeds]
     constrained = [load_aligned(protocol, s, CONSTRAINED, order, root) for s in seeds]
 
+    decoded = [load_aligned(protocol, s, DECODER, order, root) for s in seeds]
+
     out = {
         "protocol": protocol,
         "seeds": list(seeds),
         "invalid_rate": {
             BASELINE: float(np.mean([_invalid_rate(p) for p in baseline])),
             CONSTRAINED: float(np.mean([_invalid_rate(p) for p in constrained])),
+            DECODER: float(np.mean([_invalid_rate(p) for p in decoded])),
+        },
+        # Absolute scores for the three decision rules the table compares. The
+        # deltas below carry the intervals; these carry the comparison a reader
+        # actually makes, which is "which rule does each metric prefer".
+        "methods": {
+            name: {metric: float(np.mean([score(*pair) for pair in sets]))
+                   for metric, score in METRICS.items()}
+            for name, sets in ((BASELINE, baseline), (CONSTRAINED, constrained),
+                               (DECODER, decoded))
         },
     }
-    for name, score in METRICS.items():
-        out[name] = {
-            **paired_delta(constrained, baseline, clusters, n_boot=n_boot,
-                           seed=bootstrap_seed, score=score),
-            "contrast": f"{CONSTRAINED}-{BASELINE}",
-            "baseline_mean": float(np.mean([score(*p) for p in baseline])),
-            "constrained_mean": float(np.mean([score(*p) for p in constrained])),
+    # Two contrasts, both within the arm. The first is what legality costs;
+    # the second is which of two equally legal rules each metric prefers.
+    for key, (after, before) in CONTRASTS.items():
+        sets = {BASELINE: baseline, CONSTRAINED: constrained, DECODER: decoded}
+        out[key] = {
+            name: {
+                **paired_delta(sets[after], sets[before], clusters, n_boot=n_boot,
+                               seed=bootstrap_seed, score=score),
+                "contrast": f"{after}-{before}",
+            }
+            for name, score in METRICS.items()
         }
     return out
 
@@ -137,7 +164,7 @@ def _input_hashes(root, protocol, seeds) -> dict:
     """sha256 of every prediction file the row was computed from."""
     out = {}
     for seed in seeds:
-        for method in (BASELINE, CONSTRAINED):
+        for method in (BASELINE, CONSTRAINED, DECODER):
             path = predictions_path(protocol, seed, method, root)
             out[f"{protocol}_seed{seed}_{method}.csv.gz"] = file_sha256(path)
     return out
@@ -187,38 +214,43 @@ def _excludes_zero(row) -> bool:
 
 
 def _cell(row) -> str:
-    """Delta with its interval; the delta is bold when the interval clears 0.
+    """Delta alone, bold when its interval clears zero.
 
-    Bolding the point estimate rather than the whole cell keeps the intervals
-    legible, and it is the interval that decides -- a reader should be able to
-    check the mark against the numbers beside it.
+    The intervals are in the JSON; printing them here would quadruple the
+    table's width and bury the only thing the reader needs from it, which is
+    the sign of each column.
     """
-    delta = f"{row['delta']:+.3f}"
-    if _excludes_zero(row):
-        delta = f"\\textbf{{{delta}}}"
-    return f"{delta} [{row['ci_low']:+.3f}, {row['ci_high']:+.3f}]"
+    d = f"{row['delta']:+.3f}"
+    return f"\\textbf{{{d}}}" if _excludes_zero(row) else d
 
 
 def render_table(report) -> str:
-    """One row per arm, the lambda=0 arms first.
+    """Two contrasts side by side, one row per arm.
 
-    Grouping by lambda is what makes the table argue: the cost on the official
-    metric sits in the upper block and vanishes in the lower one, while the
-    tuple column is positive throughout. A reader who checks nothing else can
-    still see that shape.
+    Both contrasts are within an arm, so both are exactly paired. Putting them
+    in one table is the argument: enforcing legality costs on the official
+    metric and gains on whole-row accuracy, and swapping the greedy projection
+    for joint decoding reverses both signs -- with the invalid rate at zero
+    either way. Four columns, no two of which agree.
     """
-    header = ("Backbone & $\\lambda$ & M0 invalid & "
-              "$\\Delta$ official wF1 [95\\% CI] & "
-              "$\\Delta$ tuple acc. [95\\% CI]")
+    header = (
+        " & & & \\multicolumn{2}{c}{Enforce legality (M1$-$M0)} & "
+        "\\multicolumn{2}{c}{Joint decoding (M4$-$M1)} \\\\\n"
+        "\\cmidrule(lr){4-5}\\cmidrule(lr){6-7}\n"
+        "Backbone & $\\lambda$ & M0 invalid & Official & Whole-row & "
+        "Official & Whole-row"
+    )
 
     def line(arm) -> str:
-        return " & ".join((
+        cells = [
             arm["backbone"],
             f"{arm['structure_lambda']:g}",
             f"{arm['invalid_rate']['M0'] * 100:.2f}\\%",
-            _cell(arm["official_weighted_macro_f1"]),
-            _cell(arm["tuple_accuracy"]),
-        )) + " \\\\"
+        ]
+        for key in ("legality_cost", "decoder_vs_projection"):
+            cells += [_cell(arm[key]["official_weighted_macro_f1"]),
+                      _cell(arm[key]["tuple_accuracy"])]
+        return " & ".join(cells) + " \\\\"
 
     plain = [a for a in report["arms"] if a["structure_lambda"] == 0]
     trained = [a for a in report["arms"] if a["structure_lambda"] != 0]
@@ -227,53 +259,43 @@ def render_table(report) -> str:
         body += ["\\midrule"] + [line(a) for a in trained]
 
     rows = "\n".join(body)
-    return (
-        "\\begin{tabular}{llrrr}\n\\toprule\n"
-        f"{header} \\\\\n\\midrule\n{rows}\n"
-        "\\bottomrule\n\\end{tabular}\n"
-    )
+    return ("\\begin{tabular}{llrrrrr}\n\\toprule\n"
+            f"{header} \\\\\n\\midrule\n{rows}\n"
+            "\\bottomrule\n\\end{tabular}\n")
 
 
 def build_caption(report) -> str:
-    """What the table's all-zero column would have said, and what it is not.
-
-    Two things a reader cannot recover from the tabular: that M1's invalid rate
-    is zero everywhere -- omitted as a column because a column of zeros wastes
-    the width -- and that these seven contrasts are exploratory. The second
-    matters more: the table looks exactly like a confirmatory one.
-    """
+    """State the three things the tabular cannot: that both constrained rules
+    emit only legal tuples, that bold is an uncorrected interval rather than a
+    verdict, and that these contrasts are exploratory."""
     arms = report["arms"]
-    n_seeds = len(arms[0]["seeds"])
     plain = [a for a in arms if a["structure_lambda"] == 0]
     trained = [a for a in arms if a["structure_lambda"] != 0]
-    worst = min(a["invalid_rate"]["M0"] for a in arms)
-    most = max(a["invalid_rate"]["M0"] for a in arms)
+    lo = min(a["invalid_rate"]["M0"] for a in arms)
+    hi = max(a["invalid_rate"]["M0"] for a in arms)
+    gains = sum(1 for a in arms
+                if a["legality_cost"]["tuple_accuracy"]["delta"] > 0)
 
     parts = [
-        f"What enforcing legality costs. Each row contrasts M1 with M0 on the "
-        f"{report['protocol']} protocol: the same probabilities decoded by "
-        f"unconstrained per-field argmax, and projected onto the 17 legal "
-        f"states. Means over {n_seeds} seeds; intervals from the study's paired "
-        f"PDF-cluster bootstrap ({report['n_boot']:,} resamples, seed "
-        f"{report['bootstrap_seed']}), with one resample shared by both methods.",
-        f"M1's invalid-tuple rate is 0 in every arm by construction -- its "
-        f"output space is the legal set -- so it is stated here rather than "
-        f"printed as a column of zeros. M0's ranges from "
-        f"{worst * 100:.2f}\\% to {most * 100:.2f}\\%.",
+        f"Two decision rules over one set of probabilities, on the "
+        f"{report['protocol']} protocol. M0 takes each field's argmax "
+        f"independently; M1 projects onto the 17 legal states top-down; M4 "
+        f"scores all 17 and takes the best. \\textbf{{M1 and M4 both emit an "
+        f"invalid tuple on 0\\% of rows in every arm}} -- their output space "
+        f"is the legal set -- so the invalid column reports M0 only, where it "
+        f"ranges from {lo * 100:.2f}\\% to {hi * 100:.2f}\\%.",
+        f"Means over {len(arms[0]['seeds'])} seeds; paired PDF-cluster "
+        f"bootstrap, {report['n_boot']:,} resamples, seed "
+        f"{report['bootstrap_seed']}, one resample shared within each contrast.",
+        f"Enforcing legality raises whole-row accuracy in all {gains} arms and "
+        f"lowers the official score in all {len(plain)} arms trained without "
+        f"the structural objective; joint decoding reverses both signs. "
+        f"The {len(trained)} structurally trained arms show neither effect.",
+        "\\textbf{Exploratory.} These contrasts were named after the primary "
+        "analysis and form no Holm family; bold marks an interval excluding "
+        "zero, not a corrected verdict. The claim is the sign pattern across "
+        "arms, not any single cell. See docs/inference\\_families.md.",
     ]
-    if plain and trained:
-        parts.append(
-            f"The cost on the official metric is negative in all "
-            f"{len(plain)} untrained arms and within $\\pm$0.001 in all "
-            f"{len(trained)} arms trained with the structural objective, while "
-            f"the tuple-accuracy gain is positive in all {len(arms)}."
-        )
-    parts.append(
-        "\\textbf{These seven contrasts are exploratory.} They were named "
-        "after the primary analysis, are not a Holm family, and support no "
-        "claim on their own; bold marks an interval excluding zero, not a "
-        "corrected verdict. See docs/inference\\_families.md."
-    )
     return " ".join(parts)
 
 
