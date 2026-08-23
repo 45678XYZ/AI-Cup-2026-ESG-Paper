@@ -26,10 +26,12 @@ the task metric scores them field by field. We conduct a controlled study of
 seven decision rules using identical cross-fitted probabilities. Independent
 argmax produces invalid tuples on 12.6\% of document-disjoint predictions;
 deterministic projection removes them. The official weighted macro-F1 shows no
-detectable projection effect, whereas a path-constrained variant that changes
-only the treatment of ancestor-unsupported predictions yields a positive
-Holm-corrected contrast. Pre-specified tuple accuracy corroborates this result,
-while valid-state decoding is worse than projection on that metric. These
+detectable projection effect ($p_{\mathrm{Holm}}=1.000$), whereas a post-hoc
+path-constrained variant that changes only the treatment of
+ancestor-unsupported predictions yields a positive contrast
+($p_{\mathrm{Holm}}=.025$). Pre-specified tuple accuracy corroborates this
+result ($p_{\mathrm{Holm}}=.001$), while valid-state decoding is worse than
+projection on that metric ($p_{\mathrm{Holm}}=.028$). These
 findings show that, for this dataset and backbone, field-wise scoring can
 understate the utility of validity-preserving decisions.
 \end{abstract}

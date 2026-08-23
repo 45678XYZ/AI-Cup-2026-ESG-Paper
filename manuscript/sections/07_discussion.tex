@@ -1,13 +1,15 @@
 \section{Discussion}
 
 Within this controlled design, official wF1 and C-wF1 differ only in whether
-an ancestor-unsupported child prediction can receive partial credit. Their
-different M1--M0 decisions therefore localize the mismatch to that scoring
-choice for this task; they do not establish a universal defect of field-wise
-metrics. Projection makes a qualitative trade-off: it gains correct labels
-when the hierarchy forces \emph{N/A}, but can replace otherwise correct
-substantive child labels when an ancestor is wrong. Field-wise macro averaging
-and whole-row scoring value that exchange differently.
+an ancestor-unsupported child prediction can receive partial credit. Official
+M1--M0 is unresolved ($p_{\mathrm{Holm}}=1.000$), whereas post-hoc C-wF1
+survives correction ($p_{\mathrm{Holm}}=.025$). This difference therefore
+localizes the mismatch to that scoring choice for this task; it does not
+establish a universal defect of field-wise metrics. Projection makes a
+qualitative trade-off: it gains correct labels when the hierarchy forces
+\emph{N/A}, but can replace otherwise correct substantive child labels when an
+ancestor is wrong. Field-wise macro averaging and whole-row scoring value that
+exchange differently.
 
 Metric choice also changes the point-estimate ranking. Official wF1 ranks M5
 first, whereas hF ranks M6 first, so ``best'' is meaningful only together with
@@ -26,9 +28,10 @@ their effects cannot be separated. The \emph{Misleading} class has only
 $n=2$; we make no class-level improvement or significance claim.
 
 We tested decision-time rules, not a structural training loss, direct 17-class
-classifier, classifier chain, LLM, or alternate backbone. The release supports
-neither a temporal nor an industry split. The primary C-wF1 contrast is
-resolved only under document-disjoint evaluation ($p_{\mathrm{Holm}}=.025$),
+classifier, classifier chain, LLM, or alternate backbone. We did not evaluate
+temporal or industry splits; the released rows contain no explicit report-date
+or industry field. The primary C-wF1 contrast is resolved only under
+document-disjoint evaluation ($p_{\mathrm{Holm}}=.025$),
 not same-document evaluation ($p_{\mathrm{Holm}}=.739$). Both C-wF1 and hF
 were selected post hoc. Training and decision hyperparameters use one frozen
 configuration without sensitivity analysis. Finally, defects in training-time
