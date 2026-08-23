@@ -7,6 +7,7 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{microtype}
+\usepackage{placeins}
 \newfontfamily\cjkfont[Path=fonts/]{DroidSansFallback-ai-cup-subset.ttf}
 
 \begin{document}
@@ -35,8 +36,8 @@ and CI $[0.028,0.043]$; $p_{\mathrm{Holm}}=.001$. Conversely, uncalibrated
 17-state decoding versus uncalibrated projection (M4--M1) gives a tuple
 accuracy effect of $-0.006$ and CI $[-0.010,-0.002]$. Its
 $p_{\mathrm{Holm}}=.028$. All intervals are uncorrected and do not determine
-decisions. These controlled results concern only one dataset and one Chinese
-backbone.
+decisions. On this dataset and Chinese backbone, field-wise scoring can
+understate the utility of validity-preserving decisions.
 \end{abstract}
 
 \keywords{ESG, promise verification, hierarchical classification,
@@ -55,6 +56,11 @@ backbone.
 
 \clearpage
 \bibliographystyle{ACM-Reference-Format}
+\begingroup
+\Urlmuskip=0mu\relax
+% Keep numeric URL leaves with their path while retaining other local breakpoints.
+\def\UrlBreaks{\do\.\do\@\do\\\do\!\do\_\do\|\do\;\do\>\do\]\do\)\do\,\do\?\do\'\do\+\do\=\do\#\do\-}
 \bibliography{references}
+\endgroup
 
 \end{document}

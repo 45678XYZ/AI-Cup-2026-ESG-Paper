@@ -24,7 +24,11 @@ bias.
   $\Delta$ is a gap between two estimation targets, not a bias estimate;
   bracketed intervals are 95\% report-bootstrap intervals.}
   \label{tab:regimes}
-  \resizebox{\columnwidth}{!}{\tiny\input{../tables/table3_regimes.tex}}
+  \begingroup
+  \scriptsize
+  \setlength{\tabcolsep}{1.5pt}
+  \input{../tables/table3_regimes.tex}
+  \endgroup
 \end{minipage}
 
 The C-wF1 result does not replicate under same-document evaluation: M1--M0
@@ -53,7 +57,7 @@ improve whole-row correctness.
 
 \begin{table*}[t]
   \centering
-  \scriptsize
+  \small
   \caption{All pre-specified contrasts across four metric families. The five
   contrasts are evaluated on the document-disjoint protocol. A paired
   report-cluster bootstrap uses 10,000
@@ -64,12 +68,7 @@ improve whole-row correctness.
   metric and tuple accuracy were pre-specified; C-wF1 and hF were adopted post
   hoc.}
   \label{tab:contrasts}
-  \begingroup
-  % Narrow intercolumn spacing before measuring the generated tabular, then
-  % scale it to the full-width float without changing its numeric body.
-  \setlength{\tabcolsep}{1pt}
-  \resizebox{\textwidth}{!}{\tiny\input{../tables/table4_contrasts.tex}}
-  \endgroup
+  \input{../tables/table4_contrasts.tex}
 \end{table*}
 
-\clearpage
+\FloatBarrier
