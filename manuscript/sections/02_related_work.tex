@@ -1,4 +1,35 @@
 \section{Related Work}
 
-The final manuscript will situate the study in primary work on ESG analysis,
-hierarchical classification, constrained decoding, and evaluation metrics.
+The AI CUP data continue PromiseEval's four-part formulation: identify an ESG
+promise, determine whether it has actionable evidence, assess the clarity of
+the promise--evidence pair, and assign a verification horizon
+\cite{chen2025promiseeval}. This joint verification problem differs from
+ClimateBERT-NetZero, which detects corporate and national net-zero or reduction
+targets and supports analysis of their ambition, rather than jointly assessing
+promise status, evidence, evidence quality, and timing
+\cite{schimanski2023climatebert}.
+
+These dependent outputs form a compact instance of hierarchical text
+classification, in which labels occupy a supplied structure and coherent
+predictions respect its ancestor relations \cite{plaud2024revisiting}. The AI
+CUP hierarchy comes from the task's official field logic: we neither discover
+the hierarchy nor propose a new hierarchical architecture. Instead, we compare
+decision rules over the same field-wise probabilities while preserving or
+ignoring that given structure.
+
+Yu et al. introduced path-constrained MicroF1 and MacroF1, under which a
+correct node receives credit only when all its ancestors are also correct
+\cite{yu2022constrained}. Ji et al. later named this family \emph{C-metrics}
+\cite{ji2023hierarchical}. Our C-wF1 adapts Yu et al.'s principle to this
+field-based task and its official field-weighted macro-F1; it is therefore not
+the original C-MacroF1.
+
+Plaud et al. observed from point estimates that constrained F1 variants did not
+globally change method rankings in their experiments
+\cite{plaud2024revisiting}. That observation and our post-hoc paired contrast
+inference answer different questions: ranking a collection of models is not the
+same estimand as a paired difference between decision rules on shared rows and
+probabilities. Moreover, our hF changes both consistency treatment and
+macro-versus-micro aggregation. Of the two post-hoc metrics, only C-wF1
+isolates the treatment of ancestor-inconsistent predictions while retaining
+the official field aggregation.

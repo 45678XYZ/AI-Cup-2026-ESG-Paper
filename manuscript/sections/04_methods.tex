@@ -2,9 +2,10 @@
 
 \subsection{Shared Base Model}
 The fixed encoder is \texttt{hfl/chinese-roberta-wwm-ext-large}. Despite its
-name, this checkpoint has a 24-layer, hidden-size-1024 BERT architecture; it
-was pretrained with a RoBERTa-style recipe comprising whole-word masking,
-additional pretraining text, and omission of next-sentence prediction. We
+name, this checkpoint has a 24-layer, hidden-size-1024 BERT architecture
+\cite{devlin2019bert}. Pretraining follows a RoBERTa-style recipe with Chinese
+whole-word masking. It adds text and omits next-sentence prediction
+\cite{cui2021wwm}. We
 mean-pool its token representations and attach four independent linear heads,
 one per field. The encoder is shared, but neither it nor the heads condition on
 predicted ancestors. The input is paragraph text only; report URL, company,

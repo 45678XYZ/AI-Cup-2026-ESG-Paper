@@ -8,7 +8,7 @@ LOG := $(BUILD_DIR)/main.log
 
 build:
 	mkdir -p $(BUILD_DIR)
-	$(TECTONIC) main.tex --outdir $(BUILD_DIR) --keep-logs --reruns 1 > $(LOG) 2>&1
+	$(TECTONIC) main.tex --outdir $(BUILD_DIR) --keep-logs --reruns 2 > $(LOG) 2>&1
 
 check: build
 	PYTHONPATH=.. $(PYTHON) check.py --root . --repo-root .. --pdf $(PDF) --log $(LOG)
