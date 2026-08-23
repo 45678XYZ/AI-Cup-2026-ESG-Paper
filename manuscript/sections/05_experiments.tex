@@ -10,15 +10,18 @@ rather than average fold-level F1 values whose present gold-label sets may
 differ. The three seeds 42, 123, and 456 each determine both a fold assignment
 and training randomness, so seed variation represents the complete pipeline.
 
-The primary, document-disjoint protocol assigns each source report to one fold.
-It estimates unseen-report generalization and, given the corpus audit, is also
-company-disjoint.
+The primary, document-disjoint protocol balances report row counts with a
+randomized greedy procedure. After a seeded shuffle, it processes reports from
+largest to smallest and randomly places each in one of the two currently
+lightest folds. It estimates unseen-report generalization and, given the corpus
+audit, is also company-disjoint.
 
-The same-document protocol instead forms folds from individual paragraphs.
-Every report represented in Calibration or Test must also occur in Train
-through a different paragraph. This estimates seen-report, unseen-paragraph
-generalization. The protocols are distinct estimands, not biased and unbiased
-versions of one quantity.
+The same-document protocol instead jointly stratifies by gold PS, ES, and VT.
+It shuffles rows within each joint-label bucket and deals them round-robin to
+the five folds. Every report represented in Calibration or Test must also occur
+in Train through a different paragraph. This estimates seen-report,
+unseen-paragraph generalization. The protocols are distinct estimands, not
+biased and unbiased versions of one quantity.
 
 Within each protocol and seed, M0--M6 consume the same Test rows and base
 probabilities.

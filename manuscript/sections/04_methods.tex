@@ -10,13 +10,19 @@ one per field. The encoder is shared, but neither it nor the heads condition on
 predicted ancestors. The input is paragraph text only; report URL, company,
 ticker, and page metadata are excluded.
 
+The encoder and matching tokenizer are loaded from the pinned snapshot revision
+{\footnotesize\texttt{a25cc9e05974bd9687e528edd516f2cfdb3f5db9}}.
+
 All fits use the same frozen fine-tuning recipe: maximum length 384, 12 epochs,
 minibatches of 8 with two-step gradient accumulation (effective size 16), and
 AdamW with backbone and head learning rates $2\times10^{-5}$ and $10^{-4}$.
-The schedule is cosine with 10\% warm-up and layer-wise decay 0.9. Training
-minimizes the weighted sum of class-weighted cross-entropies with label
-smoothing 0.1; hierarchy masking is disabled. We average the last three epoch
-checkpoints and perform no label-driven early stopping.
+The schedule is cosine with 10\% warm-up and layer-wise decay 0.9. The four
+cross-entropy losses use the official PS/VT/ES/EQ weights
+0.20/0.15/0.30/0.35 and label smoothing 0.1. For Train size $n$, $K_t$ classes
+present in field $t$, and class support $n_{t,c}$, the class weight is
+$\min\{10,n/(K_t\,n_{t,c})\}$ when $n_{t,c}\geq5$, and 1 otherwise. Hierarchy
+masking is disabled. We average the last three epoch checkpoints and perform
+no label-driven early stopping.
 
 \subsection{Metric-Aware Decision Calibration}
 For field $t$ and class $c$, decision calibration adds a class bias in log
@@ -28,8 +34,9 @@ probability space:
 This changes decision boundaries and is not a claim of probability
 calibration. Each field's bias vector maximizes that field's macro-F1 on the
 held-out Calibration partition, before either structured output rule is
-applied. The four objectives therefore decouple, and one global fit is shared
-by M2/M5 while one conditional fit is shared by M3/M6.
+applied. The four objectives therefore decouple. Within every rotation, global
+and conditional biases are fitted separately; that rotation's global fit is
+shared by M2/M5 and its conditional fit by M3/M6.
 
 Global biases use every Calibration row. Conditional biases use all rows for
 PS, only gold PS=Yes rows for VT and ES, and only gold ES=Yes rows for EQ. The
