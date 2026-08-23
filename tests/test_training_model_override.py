@@ -1,4 +1,20 @@
-"""The training driver keeps custom backbone identity pinned and auditable."""
+"""The training driver keeps custom backbone identity pinned and auditable.
+
+What is checked here -- that ``snapshot_download`` is asked for the requested
+model and revision, and that a snapshot resolving to a *different* revision is
+refused -- is pure path logic and needs no torch. The import chain does:
+``run_training`` pulls in ``train_fold``, which imports torch at module scope.
+Isolating the two functions would mean restructuring the frozen training path,
+so the module skips instead, exactly as ``tests/test_training_path.py`` does.
+
+The consequence is that these two assertions run only in the conda environment.
+That is where training happens and where an unpinned revision would do damage,
+but it does mean a CPU-only suite is not evidence that they still pass.
+"""
+
+import pytest
+
+pytest.importorskip("torch")
 
 from paper import run_training
 
@@ -32,10 +48,8 @@ def test_snapshot_override_rejects_a_different_resolved_revision(monkeypatch, tm
         lambda model_name, *, revision: str(snapshot),
     )
 
-    try:
+    with pytest.raises(SystemExit) as excinfo:
         run_training.resolve_pinned_snapshot("example/base-model", "expected-revision")
-    except SystemExit as exc:
-        assert "expected-revision" in str(exc)
-        assert "different-revision" in str(exc)
-    else:
-        raise AssertionError("an incorrectly resolved revision was accepted")
+
+    assert "expected-revision" in str(excinfo.value)
+    assert "different-revision" in str(excinfo.value)

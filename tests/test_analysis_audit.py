@@ -5,7 +5,9 @@ Table 1 prints, and a silent change in dataset/ must fail here rather than
 surface as a wrong number in the paper.
 """
 
-from analysis.audit import dataset_audit, full_audit, load_test, split_audit
+from analysis.audit import (
+    company_key, dataset_audit, full_audit, load_test, split_audit,
+)
 from paper.data import load_dev
 
 DEV = load_dev()
@@ -18,7 +20,7 @@ def test_development_counts():
     d = DATA["development"]
     assert d["paragraphs"] == 2000
     assert d["pdfs"] == 49
-    assert d["companies"] == 50
+    assert d["companies"] == 49
     assert d["labelled"] is True
 
 
@@ -26,7 +28,7 @@ def test_test_set_counts_and_absent_labels():
     t = DATA["test"]
     assert t["paragraphs"] == 2000
     assert t["pdfs"] == 49
-    assert t["companies"] == 50
+    assert t["companies"] == 49
     # The competition test split ships no labels, so every label-derived cell
     # of Table 1 must stay empty for it rather than be silently filled with a
     # development number.
@@ -87,7 +89,7 @@ def test_audit_records_whether_a_company_spans_more_than_one_report():
     assert company["tickers"] >= 1
     assert company["companies_in_multiple_reports"] == 0
     # the converse is not guaranteed and must be reported as it is
-    assert company["reports_with_multiple_companies"] >= 0
+    assert company["reports_with_multiple_companies"] == 0
 
 
 def test_audit_lists_the_dataset_fields_so_absent_metadata_is_checkable():
@@ -98,3 +100,33 @@ def test_audit_lists_the_dataset_fields_so_absent_metadata_is_checkable():
     fields = audit["dataset_fields"]
     assert "pdf_url" in fields and "promise_status" in fields
     assert not [f for f in fields if f in ("year", "date", "published_at")]
+
+
+def test_one_company_is_spelled_two_ways_and_is_counted_once():
+    """The release spells one company ``Wistron`` and ``wistron``, for
+    paragraphs of the same report. Counting raw strings gives 50 companies
+    against 49 reports, which reads as though some report were shared -- the
+    opposite of what the corpus supports, and the exact claim Table 1 is used
+    to make. Both spellings appear in all three partitions, so this is a
+    property of the release rather than of one file."""
+    dev, test = load_dev(), load_test()
+    for rows in (dev, test):
+        raw = {r["company"] for r in rows}
+        assert len(raw) == 50
+        assert len({company_key(r) for r in rows}) == 49
+        assert {"Wistron", "wistron"} <= raw
+
+
+def test_normalising_the_company_does_not_create_a_shared_report():
+    """The fix must not buy a correct count at the price of the claim it
+    supports: if the two spellings pointed at different reports, merging them
+    would make one company span two, and document-disjoint would stop implying
+    company-disjoint."""
+    company = dataset_audit()["company_structure"]
+    assert company["companies"] == 49
+    assert company["companies_in_multiple_reports"] == 0
+    # The same bug had a second symptom, and a worse one: keying by the raw
+    # string made the Wistron report look like a report covering two companies.
+    # _company_structure reports that "as found rather than assumed", so the
+    # audit was stating a data quirk that does not exist.
+    assert company["reports_with_multiple_companies"] == 0
