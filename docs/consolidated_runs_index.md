@@ -57,25 +57,41 @@
    由 `validate.py` 的 `RECIPE_DEFAULTS` 補為 0.0。四組的 `train_config_sha256` 全部
    相同（`ebef1c61…`），recipe 未被改動。
 
-## 已知待處理
+## 已修正
 
-1. **`tests/test_training_model_override.py` 會讓整個 suite 在無 torch 的環境中斷。**
-   它在模組層 `from paper import run_training`，而後者 import torch。這不是合併造成的，
-   在 `backbone-generality-check` 上就存在；B 的 `tests/test_training_path.py` 用的是
-   不需要真實 backbone 的做法，可參考。排除該檔後：**379 passed, 10 skipped**。
+1. **`tests/test_training_model_override.py` 不再中斷整個 suite。** 它在模組層
+   `from paper import run_training`，而後者經 `train_fold` 需要 torch。改為
+   `pytest.importorskip`，與 `tests/test_training_path.py` 同一做法。代價寫在該檔
+   docstring 裡：這兩個斷言只在 conda 環境跑，CPU-only 的 suite 不構成它們仍通過的證據。
 
-2. **`tables/table1_dataset.tex` 的 `Companies 50` 是錯的，正確為 49。**
-   `analysis/audit.py` 用 `len({r["company"] …})` 未正規化大小寫，資料裡有
-   `Wistron` 與 `wistron`。PDF 數 49，一報告一公司。
+2. **公司計數修正（`analysis/audit.py`）。** 釋出檔把同一家公司寫成 `Wistron` 與
+   `wistron`，屬於同一份報告。兩個數字因此是錯的：
 
-3. **多重比較的層級尚未定案。** 目前檯面上：官方指標×5 contrast、tuple×5、
-   C-wF1×5、hF×5、三個 screen 的 H2、regime gap。需要團隊決定哪些是確認性、
-   哪些是預先指定的 secondary、哪些是 exploratory，並在論文裡明說。
+   | | 修正前 | 修正後 |
+   |---|---:|---:|
+   | Table 1 `Companies` | 50 | **49** |
+   | `reports_with_multiple_companies` | 1 | **0** |
+
+   第二個比較嚴重 —— `_company_structure` 明說該值是「reported as found rather
+   than assumed」，所以稽核一直在陳述一個不存在的資料異常。
+
+   兩個拼法指向**同一份 PDF**，所以正規化不會把兩份報告併成一家公司：
+   `companies_in_multiple_reports` 仍為 0，document-disjoint 仍蘊含 company-disjoint。
+   測試對此有斷言，因為「修好計數卻毀掉它支撐的主張」會比原本的 bug 更糟。
+
+   **Tables 2–5 完全未被改寫**，沒有任何結果、CI 或 p 值變動。
+
+## 仍待團隊決定
+
+**多重比較的層級尚未定案。** 目前檯面上：官方指標×5 contrast、tuple×5、
+C-wF1×5、hF×5、三個 screen 的 H2、regime gap。需要團隊決定哪些是確認性、
+哪些是預先指定的 secondary、哪些是 exploratory，並在論文裡明說。這是 C 分析前
+需要的輸入，不是他能自己決定的。
 
 ## 驗證指令
 
 ```bash
-python -m pytest -q --ignore=tests/test_training_model_override.py
+python -m pytest -q
 python -m paper.validate --all
 python -m paper.validate probs_structural/*/ runs/rbt_base/probs/*/
 python -m paper.validate probs_architecture/*/*/*/ probs_lambda_sweep/*/*/
