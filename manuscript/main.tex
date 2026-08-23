@@ -1,0 +1,53 @@
+\documentclass[sigconf,article]{acmart}
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagenumbering{gobble}
+
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{microtype}
+
+\begin{document}
+
+\title[Field-Wise Metrics and Hierarchical Consistency]{When Field-Wise Metrics Miss\\
+  Hierarchical Consistency: A Controlled\\
+  Study on the AI CUP ESG Promise\\
+  Verification Dataset}
+
+\input{metadata}
+
+\begin{abstract}
+ESG promise verification requires jointly predicting whether text contains a
+promise, its verification timeline, whether it supplies evidence,
+and the quality of that evidence. These outputs obey hard dependencies, yet
+the task metric scores them field by field. We conduct a controlled study of
+seven decision rules using identical cross-fitted probabilities. Independent
+argmax produces invalid tuples on 12.6\% of document-disjoint predictions;
+deterministic projection removes them. The official weighted macro-F1 shows no
+detectable projection effect, whereas a path-constrained variant that changes
+only the treatment of ancestor-unsupported predictions yields a positive
+Holm-corrected contrast. Pre-specified tuple accuracy corroborates this result,
+while valid-state decoding is worse than projection on that metric. These
+findings show that, for this dataset and backbone, field-wise scoring can
+understate the utility of validity-preserving decisions.
+\end{abstract}
+
+\keywords{ESG, promise verification, hierarchical classification,
+  constrained decoding, evaluation metrics}
+
+\maketitle
+\pagestyle{plain}
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_task_and_data}
+\input{sections/04_methods}
+\input{sections/05_experiments}
+\input{sections/06_results}
+\input{sections/07_discussion}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}

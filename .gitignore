@@ -73,6 +73,7 @@
 *.fdb_latexmk
 *.fls
 *.synctex.gz
+/manuscript/build/
 
 # Python
 __pycache__/
