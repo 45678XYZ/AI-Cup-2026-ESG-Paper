@@ -1,7 +1,8 @@
 import json
+import subprocess
 from pathlib import Path
 
-from pypdf import PdfWriter
+from pypdf import PdfReader, PdfWriter
 from paper.data import REPO_ROOT
 
 from manuscript.check import (
@@ -118,6 +119,25 @@ def test_font_checker_accepts_pdf_without_font_resources(tmp_path):
     with path.open("wb") as stream:
         writer.write(stream)
     assert font_errors(path) == []
+
+
+def test_clean_compiled_manuscript_renders_all_generated_tables():
+    """A floated table must be visible in the PDF, not only included in TeX."""
+    manuscript = REPO_ROOT / "manuscript"
+    subprocess.run(["make", "clean"], cwd=manuscript, check=True, capture_output=True, text=True)
+    subprocess.run(["make", "build"], cwd=manuscript, check=True, capture_output=True, text=True)
+
+    reader = PdfReader(str(manuscript / "build" / "main.pdf"))
+    page_text = [page.extract_text().strip() for page in reader.pages]
+    document_text = "\n".join(page_text)
+    for caption in (
+        "Dataset summary from the frozen study artifact.",
+        "Main document-disjoint results from the frozen study artifact.",
+        "Comparison of the two evaluation estimands.",
+        "All pre-specified contrasts across four metric families.",
+    ):
+        assert caption in document_text
+    assert all(page_text), "the compiled manuscript contains a blank page"
 
 
 def test_cli_returns_nonzero_for_policy_error(tmp_path, monkeypatch, capsys):

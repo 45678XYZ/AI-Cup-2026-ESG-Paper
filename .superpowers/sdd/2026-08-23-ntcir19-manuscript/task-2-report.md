@@ -45,3 +45,31 @@ numeric bodies and avoids broad suppression of TeX overflow diagnostics.
 
 The only deferred submission requirement is real author, affiliation, and
 email metadata, which remains intentionally absent until supplied by the user.
+
+## Fix round 1 — rendered Table 3 regression
+
+### RED
+
+The source included the frozen Table 3 fragment, but the one-column float was
+stranded behind later floats and did not appear in a clean compiled PDF. Added
+`test_clean_compiled_manuscript_renders_all_generated_tables`, which performs
+`make clean` and a real Tectonic build, extracts the resulting PDF text, and
+requires the four visible generated-table captions. It also rejects any blank
+PDF page. At base/head `5368830`, the test failed because the PDF text lacked
+`Comparison of the two evaluation estimands.`; the source include alone was
+therefore insufficient.
+
+### GREEN
+
+Changed only the placement wrapper for Table 3: it is now a non-floating,
+captioned table within the Results section. Its frozen generated tabular body
+remains unchanged and is locally resized to the single-column width. This
+prevents it from being deferred behind Table 4's two-column float.
+
+The regression test now passes after a clean real build. Extracted PDF text
+contains the captions for Tables 1--4, and every rendered page has text. Visual
+inspection confirms that Table 3 is readable on page 1 and that the complete
+Table 4 remains readable on page 3. The rebuilt PDF has 3 pages, no blank
+trailing page, and embedded fonts. Draft check passes; final check fails only
+for intentionally absent author metadata. The log has no unresolved references
+or citations and only a 1.66953pt overfull hbox, below the checker's 2pt limit.
