@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from pypdf import PdfWriter
@@ -9,6 +10,8 @@ from manuscript.check import (
     pdf_errors,
     source_errors,
     source_warnings,
+    source_text,
+    main,
 )
 
 
@@ -69,3 +72,55 @@ def test_asset_check_names_missing_generated_files(tmp_path):
     errors = asset_errors(tmp_path)
     assert any("table4_contrasts.tex" in error for error in errors)
 
+
+def test_source_text_reads_root_sections_and_bib(tmp_path):
+    (tmp_path / "main.tex").write_text("root", encoding="utf-8")
+    (tmp_path / "sections").mkdir()
+    (tmp_path / "sections" / "method.tex").write_text("section", encoding="utf-8")
+    (tmp_path / "refs.bib").write_text("bib", encoding="utf-8")
+    assert source_text(tmp_path) == "root\nbib\nsection"
+
+
+def test_equivalence_language_and_bound_metric_names_require_disclosure(tmp_path):
+    write_minimal(tmp_path / "m", "C-wF1 and hF establish equivalence.")
+    errors = source_errors(tmp_path / "m")
+    assert any("equivalence" in error for error in errors)
+    assert any("post hoc" in error for error in errors)
+
+
+def test_table4_comment_spoof_is_not_an_inclusion(tmp_path):
+    write_minimal(tmp_path / "m", "% \\input{../tables/table4_contrasts.tex}")
+    assert any("table4_contrasts.tex" in error for error in source_errors(tmp_path / "m"))
+
+
+def test_asset_check_detects_tampered_manifested_table(tmp_path):
+    tables = tmp_path / "tables"
+    figures = tmp_path / "figures"
+    tables.mkdir()
+    figures.mkdir()
+    names = ["table1_dataset.tex", "table2_main.tex", "table3_regimes.tex", "table4_contrasts.tex"]
+    for name in names:
+        (tables / name).write_text(name, encoding="utf-8")
+    (figures / "figure1_hierarchy.pdf").write_bytes(b"pdf")
+    from paper.data import file_sha256
+    outputs = {name: file_sha256(tables / name) for name in names}
+    (tables / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
+    (tmp_path / "run_manifest.json").write_text(json.dumps({"outputs": {"tables": outputs}}), encoding="utf-8")
+    (tables / "table4_contrasts.tex").write_text("tampered", encoding="utf-8")
+    assert any("provenance" in error for error in asset_errors(tmp_path))
+
+
+def test_font_checker_accepts_pdf_without_font_resources(tmp_path):
+    path = tmp_path / "blank.pdf"
+    writer = PdfWriter()
+    writer.add_blank_page(width=612, height=792)
+    with path.open("wb") as stream:
+        writer.write(stream)
+    assert font_errors(path) == []
+
+
+def test_cli_returns_nonzero_for_policy_error(tmp_path, monkeypatch, capsys):
+    write_minimal(tmp_path / "m", "no difference")
+    monkeypatch.setattr("sys.argv", ["check", "--root", str(tmp_path / "m"), "--repo-root", str(tmp_path)])
+    assert main() == 1
+    assert "ERROR:" in capsys.readouterr().out

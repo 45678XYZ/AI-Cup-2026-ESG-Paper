@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 from pathlib import Path
 
 from pypdf import PdfReader
+from paper.data import file_sha256
 
 PROHIBITED_HARDWARE = ("L" + "40", "L" + "40S")
 SOURCE_GLOBS = ("*.tex", "sections/*.tex", "*.bib")
@@ -30,6 +32,11 @@ def source_text(root: Path) -> str:
     return "\n".join(chunks)
 
 
+def _active_source(text: str) -> str:
+    """Remove TeX comments while preserving escaped percent signs."""
+    return "\n".join(re.sub(r"(?<!\\)%.*", "", line) for line in text.splitlines())
+
+
 def _metadata(root: Path) -> str:
     path = root / "metadata.tex"
     try:
@@ -40,17 +47,26 @@ def _metadata(root: Path) -> str:
 
 def source_errors(root: Path, final: bool = False) -> list[str]:
     text = source_text(root)
-    lowered = text.lower()
+    active = _active_source(text)
+    lowered = active.lower()
     errors: list[str] = []
     if any(marker.lower() in lowered for marker in PROHIBITED_HARDWARE):
         errors.append("manuscript contains a prohibited hardware reference")
     if re.search(r"\bno difference\b", lowered):
         errors.append("replace 'no difference' with 'no detectable difference'")
-    if re.search(r"\b(?:is|are|were) equivalent\b", lowered):
+    if re.search(r"\bequivalence\b|\bequivalent\b", lowered):
         errors.append("an equivalence claim requires an equivalence design")
-    if "../tables/table4_contrasts.tex" not in text:
+    inclusions = re.findall(r"\\(?:input|include)\s*\{([^}]+)\}", active)
+    table4 = [target for target in inclusions if Path(target).name == "table4_contrasts.tex"]
+    if not table4:
         errors.append("the full generated table4_contrasts.tex is not included")
-    metrics_present = "path-constrained" in lowered or "hierarchical f1" in lowered
+    else:
+        for target in table4:
+            resolved = (root / target).resolve()
+            if not resolved.is_file():
+                errors.append(f"included generated asset is missing: {target}")
+    metrics_present = ("path-constrained" in lowered or "hierarchical f1" in lowered
+                       or re.search(r"\bc-wf1\b|\bhf\b", lowered) is not None)
     if metrics_present and "post hoc" not in lowered:
         errors.append("path-constrained wF1 and hierarchical F1 require a post hoc disclosure")
     metadata = _metadata(root)
@@ -68,8 +84,38 @@ def source_warnings(root: Path) -> list[str]:
 
 
 def asset_errors(repo_root: Path) -> list[str]:
-    return [f"required generated asset is missing: {path}" for path in REQUIRED_ASSETS
+    errors = [f"required generated asset is missing: {path}" for path in REQUIRED_ASSETS
             if not (repo_root / path).is_file()]
+    tables_manifest = repo_root / "tables" / "manifest.json"
+    run_manifest = repo_root / "run_manifest.json"
+    if not tables_manifest.is_file() or not run_manifest.is_file():
+        return errors + ["generated assets lack committed provenance manifests"]
+    try:
+        table_data = json.loads(tables_manifest.read_text(encoding="utf-8"))
+        run_data = json.loads(run_manifest.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return errors + ["generated asset provenance manifest is unreadable"]
+    recorded_outputs = run_data.get("outputs", {}).get("tables", {})
+    for relative in REQUIRED_ASSETS:
+        if not relative.startswith("tables/"):
+            continue
+        name = Path(relative).name
+        path = repo_root / relative
+        recorded = recorded_outputs.get(name)
+        if path.is_file() and recorded is None:
+            errors.append(f"generated asset provenance is missing: {relative}")
+        elif path.is_file() and recorded != file_sha256(path):
+            errors.append(f"generated asset provenance checksum mismatch: {relative}")
+    figure = repo_root / "figures" / "figure1_hierarchy.pdf"
+    figure_recorded = run_data.get("outputs", {}).get("figures", {}).get(figure.name)
+    if figure.is_file() and figure_recorded is not None and figure_recorded != file_sha256(figure):
+        errors.append("generated asset provenance checksum mismatch: figures/figure1_hierarchy.pdf")
+    for name, entry in table_data.get("tables", {}).items():
+        for relative, recorded in entry.get("input_sha256", {}).items():
+            path = repo_root / relative
+            if not path.is_file() or file_sha256(path) != recorded:
+                errors.append(f"generated asset provenance input mismatch: {relative}")
+    return errors
 
 
 def _read_pdf(pdf: Path):
