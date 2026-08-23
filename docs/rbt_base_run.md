@@ -1,5 +1,12 @@
 # 跑一顆比較小的 backbone
 
+**狀態：已完成（2026-08-23，RTX 3090，30/30 fits）**
+
+執行前程式 commit：`c395e320df231693962b72dd9b8415fc226c148d`。結果顯示
+`pdf_group` 的兩個事前條件都不成立；完整數字與限制見
+`docs/rbt_base_results.md`，machine-readable summary 見
+`runs/rbt_base/comparison.json`。
+
 ## 想看什麼
 
 同架構、比較小的模型。它能力比 `chinese-roberta-wwm-ext-large` 差,非法輸出率
@@ -88,3 +95,13 @@ anchor 的每個 fit 在 3090 上是 415–424 秒;base 大約是 12/24 的層�
 
 先看數字,再決定要不要寫進論文。如果 invalid rate 沒有比較高,那整個「小模型
 違規更多所以約束更有用」的前提就不成立,那本身就是結果。
+
+## 執行結果
+
+- [x] 2 protocols × 3 seeds × 5 rotations = 30 fits
+- [x] 30 probability bundles validator clean
+- [x] 42 decision predictions validator clean
+- [x] `pdf_group` M0 invalid：large `12.550%`，base `11.767%`
+- [x] `pdf_group` M1−M0：large `-0.001082`，base `-0.007108`
+- [x] 兩個事前條件：皆未通過
+- [x] 實際 GPU fit time：4,627.3 秒（77.1 分鐘）

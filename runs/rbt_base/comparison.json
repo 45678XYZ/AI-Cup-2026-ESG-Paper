@@ -1,0 +1,183 @@
+{
+ "design": {
+  "question": "does a smaller same-family backbone increase invalid output and M1-M0",
+  "protocols": [
+   "pdf_group",
+   "row_strat"
+  ],
+  "seeds": [
+   42,
+   123,
+   456
+  ],
+  "methods": [
+   "M0",
+   "M1"
+  ],
+  "inference": "descriptive_exploratory"
+ },
+ "protocols": {
+  "pdf_group": {
+   "architecture": {
+    "m0_invalid_per_seed": [
+     0.1125,
+     0.1145,
+     0.126
+    ],
+    "m0_invalid_mean": 0.11766666666666666,
+    "m0_weighted_macro_f1_per_seed": [
+     0.5699429576804679,
+     0.5568640403954077,
+     0.5768091679636205
+    ],
+    "m0_weighted_macro_f1_mean": 0.5678720553464986,
+    "m1_weighted_macro_f1_per_seed": [
+     0.5602006528906589,
+     0.550288188669729,
+     0.5718040342555355
+    ],
+    "m1_weighted_macro_f1_mean": 0.5607642919386411,
+    "m1_minus_m0_per_seed": [
+     -0.009742304789808975,
+     -0.006575851725678761,
+     -0.0050051337080849745
+    ],
+    "m1_minus_m0_mean": -0.00710776340785757
+   },
+   "frozen_large_anchor": {
+    "m0_invalid_per_seed": [
+     0.1225,
+     0.132,
+     0.122
+    ],
+    "m0_invalid_mean": 0.1255,
+    "m0_weighted_macro_f1_per_seed": [
+     0.571948327874561,
+     0.5698012750615473,
+     0.5751413475345651
+    ],
+    "m0_weighted_macro_f1_mean": 0.5722969834902245,
+    "m1_weighted_macro_f1_per_seed": [
+     0.5702932669895099,
+     0.5688723151178611,
+     0.5744792691538441
+    ],
+    "m1_weighted_macro_f1_mean": 0.571214950420405,
+    "m1_minus_m0_per_seed": [
+     -0.001655060885051074,
+     -0.0009289599436862472,
+     -0.0006620783807210762
+    ],
+    "m1_minus_m0_mean": -0.0010820330698194658
+   },
+   "differences": {
+    "m0_invalid_mean": -0.007833333333333345,
+    "m1_minus_m0_mean": -0.006025730338038104,
+    "m1_absolute_mean": -0.010450658481763964
+   },
+   "generality_hypothesis": {
+    "architecture_invalid_higher_than_anchor": false,
+    "architecture_m1_minus_m0_higher_than_anchor": false,
+    "both_conditions_met": false
+   }
+  },
+  "row_strat": {
+   "architecture": {
+    "m0_invalid_per_seed": [
+     0.0985,
+     0.1165,
+     0.1375
+    ],
+    "m0_invalid_mean": 0.11750000000000001,
+    "m0_weighted_macro_f1_per_seed": [
+     0.5785667103462214,
+     0.5746286709929156,
+     0.5845837931461975
+    ],
+    "m0_weighted_macro_f1_mean": 0.5792597248284448,
+    "m1_weighted_macro_f1_per_seed": [
+     0.5782605694116878,
+     0.5730843150884224,
+     0.5769419741737631
+    ],
+    "m1_weighted_macro_f1_mean": 0.5760956195579577,
+    "m1_minus_m0_per_seed": [
+     -0.00030614093453362745,
+     -0.0015443559044931998,
+     -0.007641818972434322
+    ],
+    "m1_minus_m0_mean": -0.00316410527048705
+   },
+   "frozen_large_anchor": {
+    "m0_invalid_per_seed": [
+     0.1265,
+     0.1425,
+     0.118
+    ],
+    "m0_invalid_mean": 0.129,
+    "m0_weighted_macro_f1_per_seed": [
+     0.5824046029139065,
+     0.5836264113029336,
+     0.5879607884859974
+    ],
+    "m0_weighted_macro_f1_mean": 0.5846639342342791,
+    "m1_weighted_macro_f1_per_seed": [
+     0.5791159650878508,
+     0.583021405842075,
+     0.5804415228493462
+    ],
+    "m1_weighted_macro_f1_mean": 0.5808596312597574,
+    "m1_minus_m0_per_seed": [
+     -0.003288637826055707,
+     -0.0006050054608586208,
+     -0.007519265636651173
+    ],
+    "m1_minus_m0_mean": -0.0038043029745218337
+   },
+   "differences": {
+    "m0_invalid_mean": -0.011499999999999996,
+    "m1_minus_m0_mean": 0.0006401977040347839,
+    "m1_absolute_mean": -0.004764011701799631
+   },
+   "generality_hypothesis": {
+    "architecture_invalid_higher_than_anchor": false,
+    "architecture_m1_minus_m0_higher_than_anchor": true,
+    "both_conditions_met": false
+   }
+  }
+ },
+ "runtime": {
+  "bundle_count": 30,
+  "model_name": "hfl/chinese-roberta-wwm-ext",
+  "model_revision": "5c58d0b8ec1d9014354d691c538661bf00bfdb44",
+  "git_sha": "c395e320df231693962b72dd9b8415fc226c148d",
+  "hardware": "NVIDIA GeForce RTX 3090 (cuda:0 of 1)",
+  "total_train_seconds": 4627.3
+ },
+ "input_sha256": {
+  "architecture/pdf_group_seed42_M0.json": "sha256:f8646e5d2d586e703bfba51d941dbe5d2ab9d3e02efe9a93f30dc7b2b8bc0e75",
+  "architecture/pdf_group_seed42_M1.json": "sha256:6769885b545949e459b964e7feb597a3a83dab50271d0d94fcbd19f27c0f187f",
+  "architecture/pdf_group_seed123_M0.json": "sha256:e6a711482463fcc9f3e9362b03c858d9d1a4e2f0c9ade47f759ad35521c11337",
+  "architecture/pdf_group_seed123_M1.json": "sha256:65b8de715513e387a47f5e331517cdf00bcaa8a07a65419b934ec59dc34d958a",
+  "architecture/pdf_group_seed456_M0.json": "sha256:4c41e0747fdd63873a410213fba1a1855f5eec75ecc65bba34b9e255b419eb47",
+  "architecture/pdf_group_seed456_M1.json": "sha256:fc284d7748eaa9f71132171b49e239e4c6806d23175c2d69240c081534b180e1",
+  "architecture/row_strat_seed42_M0.json": "sha256:f7d1906955130c2512d215792f450701b131f82d56c475aeede7a8c00cd1728d",
+  "architecture/row_strat_seed42_M1.json": "sha256:a5457303486e04eaa98fa5e81843ac87bf90fae961646ff6947293c6c121bcd5",
+  "architecture/row_strat_seed123_M0.json": "sha256:5e997f0eef05215e4b62ab09bb43c187bd2a93ecf35a603f365d84311e66399f",
+  "architecture/row_strat_seed123_M1.json": "sha256:1216d68fda31d43b5557684c6ff5bafce09d5bbab1d027c4d500bf99bdc9de6f",
+  "architecture/row_strat_seed456_M0.json": "sha256:5b092fe9f6fa1d21d9c8f7e9bb2230882711343a91d458a132b61b3f29ce2f67",
+  "architecture/row_strat_seed456_M1.json": "sha256:1f5d41de15948dafd81643a0b420a2e584bd34fda13c2d7f2e7d95c20f6c5a02",
+  "anchor/pdf_group_seed42_M0.json": "sha256:9f91f6b860b6e2239891bf66cc16a149d21465de3c6fb93a0f3dcd85b6366631",
+  "anchor/pdf_group_seed42_M1.json": "sha256:47006d481ea1a0f3c50c0791a03df14175980cbbd2e4cb7b99dda8078a8f9e8a",
+  "anchor/pdf_group_seed123_M0.json": "sha256:0c2831073c6fc3978fd5064eb2d0b25a076ecf9bef5f6d70c22cbdf7c80bff8f",
+  "anchor/pdf_group_seed123_M1.json": "sha256:680c32c0a0e4351b59c0f3f2ba13ebb0611755da3d5c4937f1610477e043dc7e",
+  "anchor/pdf_group_seed456_M0.json": "sha256:b7fd27b619b8c5bb92d83d192a9fafbc4f8be537b65eec6e02ab218da692f808",
+  "anchor/pdf_group_seed456_M1.json": "sha256:41dbd0b1abd69f41399542a644966a70daeba6c13b3c5c1fb020fca3df60fe99",
+  "anchor/row_strat_seed42_M0.json": "sha256:cd02889c6a5e7462003439a4ef2209bfe3be925df6eb33842a884f0511545eeb",
+  "anchor/row_strat_seed42_M1.json": "sha256:19eb177e3b20add0892989cb912c2b865be0300749dfa135943046b575357dd1",
+  "anchor/row_strat_seed123_M0.json": "sha256:9d94d7c95a5768dc7f24a49d17d88d6894151a47718b2adc3e8758ec47a4c518",
+  "anchor/row_strat_seed123_M1.json": "sha256:54023e0e223479937166d311a7326393b245b1a9e0beebba1b23955d68a1996b",
+  "anchor/row_strat_seed456_M0.json": "sha256:a2bce5e4f2acaba80ecc8595fcf51b9a027dcc6605173bc1a0d1710dab68ae1d",
+  "anchor/row_strat_seed456_M1.json": "sha256:7a8315d65e8e3be49704e451f7c37a5e9a8cd083b925e496fb44258e30fa5b2b"
+ }
+}
