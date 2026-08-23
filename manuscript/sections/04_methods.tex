@@ -34,11 +34,12 @@ probability space:
   \label{eq:decision-calibration}
 \end{equation}
 This changes decision boundaries and is not a claim of probability
-calibration. Each field's bias vector maximizes that field's macro-F1 on the
-held-out Calibration partition, before either structured output rule is
-applied. The four objectives therefore decouple. Within every rotation, global
-and conditional biases are fitted separately; that rotation's global fit is
-shared by M2/M5 and its conditional fit by M3/M6.
+calibration. Each field's bias vector is fitted by deterministic coordinate
+ascent with that field's macro-F1 on the held-out Calibration partition as the
+objective, before either structured output rule is applied. The four objectives
+therefore decouple. Within every rotation, global and conditional biases are
+fitted separately; that rotation's global fit is shared by M2/M5 and its
+conditional fit by M3/M6.
 
 Global biases use every Calibration row. Conditional biases use all rows for
 PS, only gold PS=Yes rows for VT and ES, and only gold ES=Yes rows for EQ. The

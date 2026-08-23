@@ -23,7 +23,10 @@ The report-cluster bootstrap has an effective sample size of 49, limiting its
 resolution. Evidence comes from one dataset, language, ESG-report domain, and
 backbone. A seed jointly controls fold assignment and training randomness, so
 their effects cannot be separated. The \emph{Misleading} class has only
-$n=2$; we make no class-level improvement or significance claim.
+$n=2$; we make no class-level improvement or significance claim. Biases
+optimize per-field macro-F1 before projection or decoding, so downstream
+legalization can undo a field-level gain. The calibrated arms may therefore
+understate the potential of decoder-specific metric-aware calibration.
 
 We tested decision-time rules, not a structural training loss, direct 17-class
 classifier, classifier chain, LLM, or alternate backbone. We did not evaluate

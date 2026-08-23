@@ -50,8 +50,13 @@ labels being scored. Whole-tuple accuracy, which requires all four fields to
 match, was pre-specified. Path-constrained weighted macro-F1 (C-wF1) and
 hierarchical F1 (hF) were adopted post hoc. C-wF1 retains the official field
 weights but counts a substantive child prediction as wrong when its predicted
-ancestors do not support it; hF is a micro-averaged F1 over the non-N/A label
-nodes. The latter changes both consistency treatment and macro-versus-micro
+ancestors do not support it. Following the hierarchical precision/recall/F1
+set-overlap definition \cite{plaud2024revisiting}, our hF micro-averages over
+emitted non-N/A field--value nodes: hP is total gold--prediction overlap divided
+by predicted nodes, hR divides the same overlap by gold nodes, and hF is their
+harmonic mean. For an inconsistent emitted tuple, we do not add missing
+ancestors before scoring; legal M1--M6 are unaffected because the conventions
+coincide for them. hF changes both consistency treatment and macro-versus-micro
 averaging, so the two supplementary metrics answer different questions.
 
 For paired method contrasts, we perform a paired PDF-cluster bootstrap over 49
