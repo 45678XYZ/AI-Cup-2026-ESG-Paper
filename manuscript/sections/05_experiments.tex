@@ -1,5 +1,17 @@
 \section{Experimental Design}
 
+We first define the shared evaluation protocols and inference. Table~\ref{tab:main-results}
+then summarizes the controlled comparison interpreted in
+Section~\ref{sec:results}.
+
+\begin{table*}[t]
+  \centering
+  \small
+  \caption{Main document-disjoint results from the frozen study artifact.}
+  \label{tab:main-results}
+  \input{../tables/table2_main.tex}
+\end{table*}
+
 \subsection{Cross-Fitted Evaluation Targets}
 We use five-way rotating three-way cross-fitting. For rotation $k$, Test is
 fold $k$, Calibration is fold $(k+1)\bmod 5$, and Train comprises the other
@@ -51,11 +63,3 @@ M6--M3, and M6--M5. They form a separate Holm family of five for each metric,
 rather than one family of 20 \cite{holm1979}. Bracketed 95\% intervals are uncorrected
 bootstrap percentile intervals; inferential decisions use
 $p_{\mathrm{Holm}}<.05$, not whether an interval excludes zero.
-
-\begin{table*}[t]
-  \centering
-  \small
-  \caption{Main document-disjoint results from the frozen study artifact.}
-  \label{tab:main-results}
-  \input{../tables/table2_main.tex}
-\end{table*}

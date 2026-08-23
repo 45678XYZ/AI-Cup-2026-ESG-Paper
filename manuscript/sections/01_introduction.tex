@@ -1,4 +1,44 @@
 \section{Introduction}
 
-This manuscript examines whether field-wise evaluation captures the value of
-validity-preserving predictions for the AI CUP ESG promise-verification task.
+ESG promise verification is not four unrelated classification problems. The
+predicted promise status, verification timeline, evidence status, and evidence
+quality describe one claim, and their parent--child implications determine
+whether the combined output is internally usable. For example, a paragraph
+predicted to contain no promise cannot coherently receive a substantive
+timeline, and a prediction of no evidence cannot coherently receive an evidence
+quality. Individually plausible field labels can therefore form an illegal
+tuple.
+
+The official weighted macro-F1 nevertheless scores each field separately. It
+can award credit to a substantive child whose predicted ancestors do not
+support that child, while a rule that preserves validity must repair or replace
+it. This creates a gap between what the task structure requires and what the
+ranking metric rewards. We ask whether the official field-wise score reflects
+the value of enforcing the supplied hierarchy.
+
+We study that question as a controlled decision comparison, not as a model or
+competition-performance claim. Seven rules consume identical cross-fitted base
+probabilities and test rows. Independent argmax emits 12.6\% illegal tuples in
+the primary unseen-report evaluation, whereas the structured rules are
+legal by construction. Projection versus independent argmax has no detectable
+difference on the official metric ($p_{\mathrm{Holm}}=1.000$). The post-hoc
+C-wF1 contrast, differing by a single scoring change, is positive after Holm
+correction ($p_{\mathrm{Holm}}=.025$); pre-specified tuple accuracy corroborates
+its direction ($p_{\mathrm{Holm}}=.001$). Post-hoc hF also resolves M1--M0
+($p_{\mathrm{Holm}}=.017$), but changes the aggregation. These results are
+limited to this dataset, backbone, and set of decision rules.
+
+Our contributions are:
+\begin{enumerate}
+  \item We formulate AI CUP ESG promise verification as a multi-task problem
+  constrained to 17 legal tuples out of 120 possible field combinations and
+  audit the development data, including its severe class and state imbalance.
+  \item We compare seven decision rules in a controlled design that holds the
+  cross-fitted base probabilities and evaluated rows identical.
+  \item We quantify a task--metric mismatch by comparing official weighted
+  macro-F1 with post-hoc C-wF1. Only the scoring of unsupported children
+  changes.
+  \item We report the adverse tuple result for uncalibrated M4 versus M1 and
+  robustness across the two evaluation estimands. Their 0.012--0.015 gaps are
+  not estimates of bias.
+\end{enumerate}

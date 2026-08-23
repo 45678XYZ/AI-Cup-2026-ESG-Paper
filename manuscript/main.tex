@@ -19,22 +19,24 @@
 \input{metadata}
 
 \begin{abstract}
-ESG promise verification requires jointly predicting whether text contains a
-promise, its verification timeline, whether it supplies evidence,
-and the quality of that evidence. These outputs obey hard dependencies, yet
-the task metric scores them field by field. We conduct a controlled study of
-seven decision rules using identical cross-fitted probabilities. Independent
-argmax produces invalid tuples on 12.6\% of document-disjoint predictions;
-deterministic projection removes them. The official weighted macro-F1 shows no
-detectable projection effect ($p_{\mathrm{Holm}}=1.000$), whereas a post-hoc
-path-constrained variant that changes only the treatment of
-ancestor-unsupported predictions yields a positive contrast
-($p_{\mathrm{Holm}}=.025$). Pre-specified tuple accuracy corroborates this
-result ($p_{\mathrm{Holm}}=.001$), while uncalibrated 17-state decoding (M4)
-is worse than uncalibrated projection (M1) on tuple accuracy
-($p_{\mathrm{Holm}}=.028$). These
-findings show that, for this dataset and backbone, field-wise scoring can
-understate the utility of validity-preserving decisions.
+ESG promise verification jointly predicts promise status, verification
+timeline, evidence status, and evidence quality under hard parent--child
+constraints. We compare seven decision rules on identical cross-fitted base
+probabilities and test rows from the AI CUP VeriPromiseESG development set.
+Independent argmax (M0) emits invalid tuples on 12.6\% of document-disjoint
+predictions, whereas projection and 17-state decoding are legal by
+construction. For projection versus independent argmax (M1--M0), the official
+field-wise weighted macro-F1 shows no detectable difference: effect $-0.001$;
+95\% CI $[-0.006,0.003]$; $p_{\mathrm{Holm}}=1.000$. Post-hoc path-constrained
+weighted macro-F1, changing only credit for children unsupported by predicted
+ancestors, gives effect $+0.004$ and CI $[0.001,0.007]$. Its
+$p_{\mathrm{Holm}}=.025$. Pre-specified tuple accuracy gives effect $+0.035$
+and CI $[0.028,0.043]$; $p_{\mathrm{Holm}}=.001$. Conversely, uncalibrated
+17-state decoding versus uncalibrated projection (M4--M1) gives a tuple
+accuracy effect of $-0.006$ and CI $[-0.010,-0.002]$. Its
+$p_{\mathrm{Holm}}=.028$. All intervals are uncorrected and do not determine
+decisions. These controlled results concern only one dataset and one Chinese
+backbone.
 \end{abstract}
 
 \keywords{ESG, promise verification, hierarchical classification,

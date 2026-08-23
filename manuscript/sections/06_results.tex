@@ -1,4 +1,5 @@
 \section{Results}
+\label{sec:results}
 
 \paragraph{Controlled decision comparison.}
 Table~\ref{tab:main-results} compares decision rules on identical base
@@ -8,6 +9,27 @@ for 12.6\% of document-disjoint predictions; projection and 17-state decoding
 standard deviations across the three seeds. Because each seed determines both
 fold assignment and training randomness, they describe spread over the whole
 split-and-training pipeline, not a confidence interval.
+
+\paragraph{Evaluation targets and robustness.}
+Table~\ref{tab:regimes} compares the same-document and document-disjoint
+targets. Its gaps, $0.012$--$0.015$, separate estimands rather than estimate
+bias.
+
+\noindent\begin{minipage}{\columnwidth}
+  \centering
+  \captionof{table}{Comparison of the two evaluation estimands. Same-document
+  (seen-report, unseen-paragraph) versus document-disjoint (unseen-report)
+  evaluation. The former matches the
+  competition distribution because development and test share the 49 reports.
+  $\Delta$ is a gap between two estimation targets, not a bias estimate;
+  bracketed intervals are 95\% report-bootstrap intervals.}
+  \label{tab:regimes}
+  \resizebox{\columnwidth}{!}{\tiny\input{../tables/table3_regimes.tex}}
+\end{minipage}
+
+The C-wF1 result does not replicate under same-document evaluation: M1--M0
+remains positive at $+0.002$ $[-0.001,0.005]$ but does not survive Holm
+correction ($p_{\mathrm{Holm}}=.739$).
 
 \paragraph{Metric--constraint mismatch.}
 Table~\ref{tab:contrasts} reports all 20 paired contrasts. For the
@@ -29,26 +51,6 @@ $[-0.010,-0.002]$, $p_{\mathrm{Holm}}=.028$. Thus validity-preserving
 decoding is not uniformly superior. Searching every legal state need not
 improve whole-row correctness.
 
-\paragraph{Evaluation targets and robustness.}
-Table~\ref{tab:regimes} compares the same-document and document-disjoint
-targets. Its gaps, $0.012$--$0.015$, separate estimands rather than estimate
-bias.
-
-\begin{center}
-  \captionof{table}{Comparison of the two evaluation estimands. Same-document
-  (seen-report, unseen-paragraph) versus document-disjoint (unseen-report)
-  evaluation. The former matches the
-  competition distribution because development and test share the 49 reports.
-  $\Delta$ is a gap between two estimation targets, not a bias estimate;
-  bracketed intervals are 95\% report-bootstrap intervals.}
-  \label{tab:regimes}
-  \resizebox{\columnwidth}{!}{\tiny\input{../tables/table3_regimes.tex}}
-\end{center}
-
-The C-wF1 result does not replicate under same-document evaluation: M1--M0
-remains positive at $+0.002$ $[-0.001,0.005]$ but does not survive Holm
-correction ($p_{\mathrm{Holm}}=.739$).
-
 \begin{table*}[t]
   \centering
   \scriptsize
@@ -69,3 +71,5 @@ correction ($p_{\mathrm{Holm}}=.739$).
   \resizebox{\textwidth}{!}{\tiny\input{../tables/table4_contrasts.tex}}
   \endgroup
 \end{table*}
+
+\clearpage

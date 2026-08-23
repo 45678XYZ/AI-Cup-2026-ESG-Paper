@@ -1,15 +1,13 @@
 \section{Discussion}
 
-Within this controlled design, official wF1 and C-wF1 differ only in whether
-an ancestor-unsupported child prediction can receive partial credit. Official
-M1--M0 is unresolved ($p_{\mathrm{Holm}}=1.000$), whereas post-hoc C-wF1
-survives correction ($p_{\mathrm{Holm}}=.025$). This difference therefore
-localizes the mismatch to that scoring choice for this task; it does not
-establish a universal defect of field-wise metrics. Projection makes a
-qualitative trade-off: it gains correct labels when the hierarchy forces
-\emph{N/A}, but can replace otherwise correct substantive child labels when an
-ancestor is wrong. Field-wise macro averaging and whole-row scoring value that
-exchange differently.
+Within this controlled design, official wF1 and C-wF1 differ only in credit for
+an ancestor-unsupported child. Official M1--M0 is unresolved
+($p_{\mathrm{Holm}}=1.000$), whereas post-hoc C-wF1 survives correction
+($p_{\mathrm{Holm}}=.025$). This localizes the mismatch to that scoring choice
+for this task, not a universal defect of field-wise metrics. Projection trades
+gains when the hierarchy forces \emph{N/A} against replacing otherwise correct
+substantive children when an ancestor is wrong. Field-wise macro averaging and
+whole-row scoring value that exchange differently.
 
 Metric choice also changes the point-estimate ranking. Official wF1 ranks M5
 first, whereas hF ranks M6 first, so ``best'' is meaningful only together with
