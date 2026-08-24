@@ -70,6 +70,19 @@ decision contrasts，不與其他語言比較模型分數或截斷率。
 384、相同 loss weights、learning rates、LLRD、batch/accumulation。每個模型都跑
 λ=0 與 0.3；λ 不在新語言重新搜尋。
 
+### 3.1 執行可行性修訂（2026-08-25 07:45 +08:00）
+
+這是 fit 開始後的透明修訂，不是原始預登記的一部分。法文 RemBERT 的第一個
+`pdf_group seed42` 呼叫在 r0 寫出後，r1 的 calibration inference 出現 NaN；同時
+執行的 XLM-R 與 mBERT 沒有此問題。失敗發生在任何 RemBERT decision/result 產生
+之前，因此沒有依結果選配方。
+
+RTX 3090 支援 bfloat16；它與 float16 同為 16-bit autocast，但保留 FP32 的指數
+範圍。自此 **只有 RemBERT 使用 bfloat16 AMP**，XLM-R large/base 與 mBERT 維持
+float16 AMP。已寫出的唯一 RemBERT float16 r0 移入本機 quarantine 並從 r0 重跑，
+不得和 bfloat16 rotations 混合。`amp_dtype` 寫入 bundle recipe metadata，validator
+要求同一五折 run 完全一致；舊 bundle 缺此欄位時只可解讀為既有預設 float16。
+
 在任何 fit 前對四個 tokenizer 做的長度 audit（`>384` 列比例）：
 
 | tokenizer | 法文 | 日文 | 韓文 page text |

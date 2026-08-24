@@ -16,6 +16,15 @@ def test_every_multilingual_model_is_immutable_and_unique():
     assert len({model["name"] for model in MODELS}) == 4
     assert all(len(model["revision"]) == 40 for model in MODELS)
     assert all(model["worker"] in {"large", "base"} for model in MODELS)
+    assert {model["amp_dtype"] for model in MODELS} == {"float16", "bfloat16"}
+    assert next(model for model in MODELS if model["name"] == "google/rembert")[
+        "amp_dtype"
+    ] == "bfloat16"
+    assert all(
+        model["amp_dtype"] == "float16"
+        for model in MODELS
+        if model["name"] != "google/rembert"
+    )
 
 
 def test_the_frozen_matrix_is_150_fits_per_language():

@@ -13,24 +13,28 @@ MODELS = (
         "revision": "c23d21b0620b635a76227c604d44e43a9f0ee389",
         "protocols": ("pdf_group", "row_strat"),
         "worker": "large",
+        "amp_dtype": "float16",
     },
     {
         "name": "google/rembert",
         "revision": "65da5133da36e29dfca67d4f0dd9f7f9db21b563",
         "protocols": ("pdf_group",),
         "worker": "large",
+        "amp_dtype": "bfloat16",
     },
     {
         "name": "FacebookAI/xlm-roberta-base",
         "revision": "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089",
         "protocols": ("pdf_group",),
         "worker": "base",
+        "amp_dtype": "float16",
     },
     {
         "name": "google-bert/bert-base-multilingual-cased",
         "revision": "3f076fdb1ab68d5b2880cb87a0886f315b8146f8",
         "protocols": ("pdf_group",),
         "worker": "base",
+        "amp_dtype": "float16",
     },
 )
 

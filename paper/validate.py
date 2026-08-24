@@ -80,6 +80,7 @@ PROVENANCE_META = (
 RECIPE_META = (
     "model_name", "model_revision", "train_config_sha256",
     "checkpoint_rule", "checkpoint_last_k", "epochs", "structure_lambda",
+    "amp_dtype",
 )
 
 # Keys a bundle may predate. Absent is not "unknown": the 30 bundles of the
@@ -87,7 +88,10 @@ RECIPE_META = (
 # their silence as a different recipe would report the control arm as a
 # mixture of two. Anything not listed here is compared as-is, so a genuinely
 # missing key still surfaces.
-RECIPE_DEFAULTS = {"structure_lambda": LAMBDA_UNSET}
+RECIPE_DEFAULTS = {
+    "structure_lambda": LAMBDA_UNSET,
+    "amp_dtype": "float16",
+}
 
 
 def recipe_value(meta, key):

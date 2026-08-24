@@ -140,7 +140,8 @@ def resolve_pinned_snapshot(model_name=MODEL_NAME, revision=MODEL_REVISION):
 
 def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=False,
                  model_source=None, structure_lambda=LAMBDA_UNSET,
-                 model_name=MODEL_NAME, model_revision=MODEL_REVISION):
+                 model_name=MODEL_NAME, model_revision=MODEL_REVISION,
+                 amp_dtype="float16"):
     by_id = index_by_id(rows)
     rot = next(r for r in split["rotations"] if r["k"] == rotation)
 
@@ -164,6 +165,7 @@ def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=Fal
     model, avg_state = train_rotation(
         train_data, tokenizer, split["seed"], model_name=model_source,
         local_files_only=True, structure_lambda=structure_lambda,
+        amp_dtype=amp_dtype,
     )
     probs = {name: predict_probs(model, data, tokenizer) for name, data in partitions.items()}
     elapsed = time.time() - t0
@@ -182,6 +184,7 @@ def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=Fal
             # other value is the pre-registered structural arm, and mixing the
             # two inside one run would put two recipes into one score.
             "structure_lambda": structure_lambda,
+            "amp_dtype": amp_dtype,
             "hardware": _hardware(),
             "started_at": started,
             "finished_at": now_iso(),
@@ -222,6 +225,9 @@ def main():
                     help="Hugging Face model id; defaults to the frozen anchor")
     ap.add_argument("--model-revision", default=MODEL_REVISION,
                     help="immutable Hugging Face commit for --model-name")
+    ap.add_argument("--amp-dtype", default="float16",
+                    choices=["float16", "bfloat16", "float32"],
+                    help="training autocast dtype; float32 disables AMP")
     args = ap.parse_args()
 
     if args.splits_dir is None:
@@ -291,6 +297,7 @@ def main():
             split, k, rows, tokenizer, args.out_dir, args.save_checkpoint,
             model_source=model_source, structure_lambda=args.structure_lambda,
             model_name=args.model_name, model_revision=args.model_revision,
+            amp_dtype=args.amp_dtype,
         )
 
     print(f"\nbundles written to {args.out_dir}/{args.protocol}_seed{args.seed}_r*")

@@ -56,6 +56,7 @@ def main() -> None:
                                 "--seed", str(seed),
                                 "--model-name", model["name"],
                                 "--model-revision", model["revision"],
+                                "--amp-dtype", model["amp_dtype"],
                                 "--structure-lambda", str(structure_lambda),
                                 "--skip-existing",
                             ], env)
