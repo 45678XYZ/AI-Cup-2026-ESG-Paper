@@ -435,15 +435,28 @@ def _validate_paths(paths, rows, splits_dir=SPLITS_DIR) -> list[str]:
 
     for p in bundles:
         problems += validate_probs_bundle(p, splits_dir=splits_dir)
-    by_run: dict[str, list[Path]] = {}
+
+    # A corpus may contain several arms whose bundle basenames intentionally
+    # repeat.  The English replication, for example, has one ``probs/``
+    # directory per (backbone, lambda), and every one contains
+    # ``pdf_group_seed42_r0``.  Grouping only by basename merges those arms,
+    # then falsely reports duplicate rotations and mixed model revisions.
+    # The containing probs directory is the arm boundary used by both the run
+    # and study-level checks.
+    by_arm: dict[Path, list[Path]] = {}
     for p in bundles:
-        by_run.setdefault(p.name.rsplit("_r", 1)[0], []).append(p)
-    for run, dirs in sorted(by_run.items()):
-        if len(dirs) > 1:
-            problems += [f"{run}: {m}"
-                         for m in validate_probs_run(dirs, splits_dir=splits_dir)]
-    if len(by_run) > 1:
-        problems += validate_probs_study(bundles)
+        by_arm.setdefault(p.parent.resolve(), []).append(p)
+    for arm, arm_bundles in sorted(by_arm.items(), key=lambda item: str(item[0])):
+        by_run: dict[str, list[Path]] = {}
+        for p in arm_bundles:
+            by_run.setdefault(_run_of(p.name), []).append(p)
+        for run, dirs in sorted(by_run.items()):
+            if len(dirs) > 1:
+                label = f"{arm.parent.name}/{arm.name}/{run}" if len(by_arm) > 1 else run
+                problems += [f"{label}: {m}"
+                             for m in validate_probs_run(dirs, splits_dir=splits_dir)]
+        if len(by_run) > 1:
+            problems += validate_probs_study(arm_bundles)
 
     for p in predictions:
         problems += validate_predictions(p, rows=rows, method=_method_of(p),
