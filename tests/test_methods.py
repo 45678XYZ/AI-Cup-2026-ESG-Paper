@@ -115,6 +115,32 @@ def test_loading_a_run_validates_every_bundle(run):
     assert [meta["rotation"] for meta, _ in run] == [0, 1, 2, 3, 4]
 
 
+def test_loading_a_run_forwards_the_selected_splits_directory(monkeypatch, tmp_path):
+    """The English driver must not validate 400 test ids against Chinese folds."""
+    from paper import run_decisions
+
+    for k in range(5):
+        bundle = tmp_path / f"pdf_group_seed42_r{k}"
+        bundle.mkdir()
+        (bundle / "meta.json").write_text("{}", encoding="utf-8")
+
+    seen = {}
+
+    def validate_run(dirs, *, splits_dir):
+        seen["splits_dir"] = splits_dir
+        return []
+
+    monkeypatch.setattr(run_decisions, "validate_probs_run", validate_run)
+    monkeypatch.setattr(run_decisions, "validate_probs_bundle", lambda *args: [])
+    monkeypatch.setattr(run_decisions, "load_bundle", lambda path: ({}, {}))
+
+    selected = tmp_path / "splits_en"
+    loaded = load_run(tmp_path, "pdf_group", 42, {}, splits_dir=selected)
+
+    assert len(loaded) == 5
+    assert seen["splits_dir"] == selected
+
+
 def test_a_run_covers_every_row_exactly_once(run):
     records, _ = run_method("M1", run, ROWS, SPLIT)
     _check_complete(records, ROWS, "M1")
