@@ -68,7 +68,7 @@ def paired_delta(sets_a, sets_b, clusters, n_boot=N_BOOT, seed=BOOTSTRAP_SEED,
         "p_value": _two_sided_p(draws),
         "n_boot": n_boot,
         "per_seed_delta": [
-            weighted_macro_f1(gold_a, pred_a) - weighted_macro_f1(gold_b, pred_b)
+            score(gold_a, pred_a) - score(gold_b, pred_b)
             for (gold_a, pred_a), (gold_b, pred_b) in zip(sets_a, sets_b)
         ],
     }
