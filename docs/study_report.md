@@ -1136,7 +1136,7 @@ pdfTeX 在每份輸出裡寫三樣會變的東西：
 |---|---|
 | `tables/table1_dataset.tex` + `_caption.txt` | 資料與切分統計 |
 | `tables/table2_main.tex` + `_caption.txt` | 主表；caption 帶**三個家族**的 Δ 與 95% CI，並載明各家族來歷 |
-| `tables/table3_regimes.tex` + `_caption.txt` | 兩種評估目標對照 |
+| `tables/table6_regimes.tex` + `_caption.txt` | 兩種評估目標對照 |
 | `figures/figure1_hierarchy.pdf` | 階層與替代決策路徑 |
 | `tables/findings.md` | **判定、四個家族、禁令（衝突時以此為準）** |
 | `tables/case_analysis.json` | 失效模式、逐類別帳、parent override、未觀察狀態 |

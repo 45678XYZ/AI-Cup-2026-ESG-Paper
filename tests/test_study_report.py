@@ -33,7 +33,7 @@ INTERVAL = re.compile(r"\[[-+]?\d+\.\d+,\s*[-+]?\d+\.\d+\]")
 P_HOLM = re.compile(r"p_?Holm[=\s]*([01]\.\d{3})", re.IGNORECASE)
 
 
-PAPER_SOURCES = ("table2_main_caption.txt", "table3_regimes.tex",
+PAPER_SOURCES = ("table2_main_caption.txt", "table6_regimes.tex",
                  "table4_contrasts.tex", "table4_contrasts_caption.txt")
 
 

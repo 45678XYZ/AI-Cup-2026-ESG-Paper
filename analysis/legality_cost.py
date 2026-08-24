@@ -206,7 +206,7 @@ def build_report(root=REPO_ROOT, arms=ARMS, *, protocol=PROTOCOL, seeds=SEEDS,
 
 # --- rendering -------------------------------------------------------------
 
-TABLE_NAME = "table6_legality_cost"
+TABLE_NAME = "table3_legality_cost"
 
 
 def _excludes_zero(row) -> bool:

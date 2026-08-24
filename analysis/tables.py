@@ -35,8 +35,9 @@ CONTRACT_VERSION = "1.0"
 # official block sorted by effect size with the derivation done; that is also a
 # sentence, now in table 4's caption. A table that a caption can replace is a
 # table the reader has to hold in their head for nothing.
-TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
-               "table4_contrasts.tex", "table8_headroom.tex")
+TABLE_FILES = ("table1_dataset.tex", "table2_main.tex",
+               "table4_contrasts.tex", "table5_headroom.tex",
+               "table6_regimes.tex")
 
 # Tables written by their own analysis module rather than by ``write_tables``,
 # because their inputs are not the cross-seed summaries this file consumes.
@@ -44,9 +45,13 @@ TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
 # sha256 per prediction file per arm, which is finer than the manifest's
 # per-table list. Listed here so anything that enumerates delivered tables --
 # the preview, and D counting floats -- sees all of them from one place.
-EXTERNAL_TABLE_FILES = ("table6_legality_cost.tex",)
+EXTERNAL_TABLE_FILES = ("table3_legality_cost.tex",)
 
-ALL_TABLE_FILES = TABLE_FILES + EXTERNAL_TABLE_FILES
+# Sorted by number so anything that enumerates the deliverables -- the
+# preview, and D reading the directory -- sees them in the order the paper
+# presents them. Without the sort the external table lands last whatever its
+# number says, which is how a table ends up numbered 3 and printed sixth.
+ALL_TABLE_FILES = tuple(sorted(TABLE_FILES + EXTERNAL_TABLE_FILES))
 
 # How each Holm family is named in table 4. Held here rather than imported
 # from the brief so the tabular's wording cannot drift with prose edits.
@@ -66,9 +71,9 @@ FAMILY_LABELS = (
 SOURCE_SCRIPTS = {
     "table1_dataset.tex": "analysis/audit.py",
     "table2_main.tex": "analysis/aggregate.py",
-    "table3_regimes.tex": "analysis/aggregate.py",
+    "table6_regimes.tex": "analysis/aggregate.py",
     "table4_contrasts.tex": "analysis/aggregate.py",
-    "table8_headroom.tex": "analysis/aggregate.py",
+    "table5_headroom.tex": "analysis/aggregate.py",
 }
 
 # The competition test split ships no labels, so its label-derived cells cannot
@@ -132,9 +137,9 @@ def table_inputs(predictions_root, protocols=PROTOCOLS, seeds=SEEDS,
         # same-document protocol reaches the paper through table 3.
         "table1_dataset.tex": audited,
         "table2_main.tex": scored["pdf_group"],
-        "table3_regimes.tex": [p for protocol in protocols for p in scored[protocol]],
+        "table6_regimes.tex": [p for protocol in protocols for p in scored[protocol]],
         "table4_contrasts.tex": scored["pdf_group"],
-        "table8_headroom.tex": scored["pdf_group"],
+        "table5_headroom.tex": scored["pdf_group"],
     }
 
 
@@ -248,7 +253,7 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             + (_consistency_clause(methods) + _ranking_sentence(methods)
                if methods else "")
         ),
-        "table8_headroom": (
+        "table5_headroom": (
             f"Where the official score falls short under {HEADROOM_METHOD}, and "
             "what closing each part is worth. Shortfall is the field's weight "
             "times its distance from a perfect macro-F1; share is its portion "
@@ -286,7 +291,7 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             "hierarchical F1 were adopted after the primary analysis and are "
             "not pre-specified."
         ),
-        "table3_regimes": (
+        "table6_regimes": (
             "Same-document versus document-disjoint evaluation. The left column "
             "measures seen-report, unseen-paragraph generalisation and matches "
             "the competition distribution, since test and development draw on "
@@ -453,7 +458,7 @@ def render_table4(summary) -> str:
 
 
 
-def render_table3(regimes) -> str:
+def render_table6_regimes(regimes) -> str:
     body = []
     for label, row in regimes.items():
         ci = f"[{_f(row['ci_low'])}, {_f(row['ci_high'])}]"
@@ -469,7 +474,7 @@ def render_table3(regimes) -> str:
 HEADROOM_METHOD = "M1"
 
 
-def render_table8(summary) -> str:
+def render_table5_headroom(summary) -> str:
     """Where the official score's shortfall sits, and what closing it is worth.
 
     Two columns that rank the fields differently. Shortfall is what a
@@ -529,9 +534,9 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
         # The main table reports the document-disjoint protocol; the
         # same-document protocol reaches the paper through Table 3.
         "table2_main.tex": render_table2(summaries["pdf_group"]),
-        "table3_regimes.tex": render_table3(regimes),
+        "table6_regimes.tex": render_table6_regimes(regimes),
         "table4_contrasts.tex": render_table4(summaries["pdf_group"]),
-        "table8_headroom.tex": render_table8(summaries["pdf_group"]),
+        "table5_headroom.tex": render_table5_headroom(summaries["pdf_group"]),
     }
     for name, content in rendered.items():
         (out_dir / name).write_text(content, encoding="utf-8")

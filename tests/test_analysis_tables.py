@@ -18,7 +18,7 @@ from analysis.tables import (
     build_captions,
     render_table1,
     render_table2,
-    render_table3,
+    render_table6_regimes,
     table_inputs,
     write_tables,
 )
@@ -45,7 +45,7 @@ def _column_count(tex):
 
 def test_tables_carry_only_a_tabular_environment():
     rendered = (render_table1(AUDIT), render_table2(SUMMARIES["pdf_group"]),
-                render_table3(REGIMES))
+                render_table6_regimes(REGIMES))
     for tex in rendered:
         assert tex.lstrip().startswith(r"\begin{tabular}")
         # Layout is D's call under the 8-page budget (contract section 5).
@@ -57,7 +57,7 @@ def test_column_counts_match_the_placeholders():
     for name, rendered in (
         ("table1_dataset.tex", render_table1(AUDIT)),
         ("table2_main.tex", render_table2(SUMMARIES["pdf_group"])),
-        ("table3_regimes.tex", render_table3(REGIMES)),
+        ("table6_regimes.tex", render_table6_regimes(REGIMES)),
     ):
         placeholder = (PLACEHOLDERS / name).read_text(encoding="utf-8")
         assert _column_count(rendered) == _column_count(placeholder), name
@@ -114,13 +114,13 @@ def test_written_manifest_records_every_input_checksum(tmp_path):
 
 def test_captions_are_written_beside_the_tables(tmp_path):
     write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, INPUTS)
-    for stem in ("table1_dataset", "table2_main", "table3_regimes"):
+    for stem in ("table1_dataset", "table2_main", "table6_regimes"):
         caption = (tmp_path / f"{stem}_caption.txt").read_text(encoding="utf-8")
         assert caption.strip()
     # The two disclosures the plan requires captions to carry.
     assert "Misleading" in (tmp_path / "table1_dataset_caption.txt").read_text(
         encoding="utf-8")
-    assert "not a bias" in (tmp_path / "table3_regimes_caption.txt").read_text(
+    assert "not a bias" in (tmp_path / "table6_regimes_caption.txt").read_text(
         encoding="utf-8")
 
 
@@ -223,8 +223,8 @@ def test_table2_and_3_captions_follow_the_audit_too():
     assert "2,000" not in captions["table2_main"]
     assert "two seeds" in captions["table2_main"]
     assert "three seeds" not in captions["table2_main"]
-    assert "same 7 reports" in captions["table3_regimes"]
-    assert "49" not in captions["table3_regimes"]
+    assert "same 7 reports" in captions["table6_regimes"]
+    assert "49" not in captions["table6_regimes"]
 
 
 # ------------------------------------------------------- table 2 contrasts
@@ -475,7 +475,7 @@ def test_table8_caption_names_the_class_that_is_structurally_unreachable():
     reader given the shortfall without that fact will over-estimate what is
     available."""
     caption = build_captions(AUDIT, methods=SUMMARIES["pdf_group"]["methods"],
-                             )["table8_headroom"]
+                             )["table5_headroom"]
     assert "Misleading" in caption
 
 

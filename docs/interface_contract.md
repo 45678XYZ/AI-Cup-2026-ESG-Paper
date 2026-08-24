@@ -361,7 +361,7 @@ A 提供 `contracts/examples/predictions/` 與 `results/` 的合成檔（分數�
 ```
 tables/table1_dataset.tex      figures/figure1_hierarchy.pdf   ← 交付物，D 引入這個
 tables/table2_main.tex         figures/figure1_hierarchy.tex   ← 圖的原始碼（standalone TikZ）
-tables/table3_regimes.tex      figures/figure1_defs.tex        ← 圖印出的數字，由 script 生成
+tables/table6_regimes.tex      figures/figure1_defs.tex        ← 圖印出的數字，由 script 生成
 tables/table4_contrasts.tex
 tables/table5_metrics.tex
 tables/manifest.json
@@ -458,7 +458,7 @@ python -m analysis.preview          # → tables/preview.pdf
 |---|---|
 | `table1_dataset.tex` | `dataset/` 三檔 + `splits/*.json`（`analysis/audit.py` 讀的東西） |
 | `table2_main.tex` | `pdf_group` 的 21 個 `predictions/*.csv.gz` |
-| `table3_regimes.tex` | 兩種 protocol 的全部 42 個 `predictions/*.csv.gz` |
+| `table6_regimes.tex` | 兩種 protocol 的全部 42 個 `predictions/*.csv.gz` |
 
 **空的 `input_files` 必須報錯，不得寫出。** 一份空 manifest 與一份完整 manifest 長得一樣，卻什麼都沒有擔保；只有 `predictions/` 而無 `results/` 的目錄是 W3 的常態，不能讓它靜默產出無效稽核紀錄。
 

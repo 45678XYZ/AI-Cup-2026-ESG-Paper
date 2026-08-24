@@ -152,4 +152,4 @@ def test_the_caption_marks_the_family_as_exploratory():
 
 def test_the_preview_renders_the_new_table():
     from analysis.tables import ALL_TABLE_FILES
-    assert "table6_legality_cost.tex" in ALL_TABLE_FILES
+    assert "table3_legality_cost.tex" in ALL_TABLE_FILES
