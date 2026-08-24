@@ -28,7 +28,7 @@ from transformers import AutoTokenizer
 
 from paper.artifacts import write_probs_bundle
 from paper.corpus import DEFAULT as DEFAULT_CORPUS
-from paper.corpus import CORPORA, load_rows
+from paper.corpus import CORPORA, arm_dir, load_rows
 from paper.data import REPO_ROOT, data_checksum, file_sha256, index_by_id
 from paper.provenance import environment, now_iso
 from paper.train_config import (
@@ -188,7 +188,14 @@ def main():
     if args.splits_dir is None:
         args.splits_dir = REPO_ROOT / CORPORA[args.corpus]["splits_dir"]
     if args.out_dir is None:
-        args.out_dir = REPO_ROOT / CORPORA[args.corpus]["probs_dir"]
+        # One directory per (backbone, lambda). Seven English arms write
+        # bundles under identical names, so a shared default would have each
+        # arm overwrite the last with nothing to show it happened.
+        arm = arm_dir(args.corpus, args.model_name, args.structure_lambda)
+        args.out_dir = (REPO_ROOT / CORPORA[args.corpus]["probs_dir"]
+                        if args.corpus == DEFAULT_CORPUS
+                        else REPO_ROOT / arm / "probs")
+        print(f"writing bundles to {args.out_dir.relative_to(REPO_ROOT)}")
 
     # An unpinned revision means the run cannot be reproduced against a known
     # set of weights. Failing here rather than after the fits saves the GPU time.

@@ -32,7 +32,7 @@ from pathlib import Path
 import numpy as np
 
 from paper.artifacts import PREDICTION_COLUMNS, read_predictions
-from paper.corpus import CORPORA
+from paper.corpus import CORPORA, probs_globs, splits_dir as corpus_splits_dir
 from paper.corpus import DEFAULT as DEFAULT_CORPUS
 from paper.corpus import load_rows
 from paper.data import (
@@ -465,20 +465,18 @@ def main() -> None:
                     help="which corpus these artifacts belong to")
     args = ap.parse_args()
 
-    probs_root = REPO_ROOT / CORPORA[args.corpus]["probs_dir"]
-    splits_dir = REPO_ROOT / CORPORA[args.corpus]["splits_dir"]
-    predictions_root = (REPO_ROOT / CORPORA[args.corpus]["decisions_root"]
-                        / "predictions")
+    splits_dir = REPO_ROOT / corpus_splits_dir(args.corpus)
+    bundle_glob, predictions_glob = probs_globs(args.corpus)
 
     paths = list(args.paths)
     if args.all:
-        paths += sorted(p for p in probs_root.glob("*") if p.is_dir())
-        paths += sorted(predictions_root.glob("*.csv.gz"))
+        paths += sorted(p for p in REPO_ROOT.glob(bundle_glob) if p.is_dir())
+        paths += sorted(REPO_ROOT.glob(predictions_glob))
         if not paths:
             # The normal state of a fresh clone: B has not delivered yet.
             # Nothing to check is not a usage error.
-            rel = predictions_root.relative_to(REPO_ROOT)
-            print(f"nothing to validate: {probs_root.name}/ and {rel}/ are empty")
+            print(f"nothing to validate: {bundle_glob} and "
+                  f"{predictions_glob} match nothing")
             return
     if not paths:
         ap.error("give at least one path, or --all")

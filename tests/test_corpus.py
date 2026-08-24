@@ -34,9 +34,19 @@ def test_english_artifacts_land_somewhere_else():
     """Contract section 4 names ``splits/`` and ``probs/``. Writing English
     folds or bundles into them would be silent and unrecoverable from the tree."""
     assert corpus.splits_dir("mlpromise_en") == "splits_en"
-    assert corpus.probs_dir("mlpromise_en") == "probs_en"
     assert corpus.splits_dir("mlpromise_en") != corpus.splits_dir("aicup_zh")
-    assert corpus.probs_dir("mlpromise_en") != corpus.probs_dir("aicup_zh")
+    assert corpus.decisions_root("mlpromise_en") == "runs_en"
+
+
+def test_english_has_arms_rather_than_one_probs_directory():
+    """Seven (backbone, lambda) arms over one set of rows.
+
+    Every arm writes bundles named ``{protocol}_seed{seed}_r{k}`` -- the same
+    names the other six use -- so they cannot share a directory. The frozen
+    corpus has one, because contract section 4 names it.
+    """
+    assert corpus.probs_dir("aicup_zh") == "probs"
+    assert corpus.probs_dir("mlpromise_en") is None
 
 
 def test_an_unknown_corpus_is_refused():
@@ -157,15 +167,59 @@ def test_the_english_decisions_root_is_not_the_repository_root():
     assert corpus.decisions_root("mlpromise_en") == "runs_en"
 
 
+def _dirs(name):
+    return {d for d in (corpus.splits_dir(name), corpus.probs_dir(name),
+                        corpus.decisions_root(name)) if d}
+
+
 @pytest.mark.parametrize("name", sorted(corpus.CORPORA))
 def test_every_output_directory_of_a_corpus_is_its_own(name):
     """No corpus writes anywhere another one does."""
-    mine = {corpus.splits_dir(name), corpus.probs_dir(name),
-            corpus.decisions_root(name)}
-    others = {d for other in corpus.CORPORA if other != name
-              for d in (corpus.splits_dir(other), corpus.probs_dir(other),
-                        corpus.decisions_root(other))}
+    mine = _dirs(name)
+    others = {d for other in corpus.CORPORA if other != name for d in _dirs(other)}
     assert not mine & others, sorted(mine & others)
+
+
+PLANNED_ENGLISH_ARMS = (
+    ("roberta-large", 0.0), ("roberta-large", 0.3),
+    ("microsoft/deberta-v3-large", 0.0), ("microsoft/deberta-v3-large", 0.3),
+    ("google/electra-large-discriminator", 0.0),
+    ("google/electra-large-discriminator", 0.3),
+    ("roberta-base", 0.0),
+)
+
+
+def test_every_planned_arm_gets_its_own_directory():
+    """Seven arms, seven paths, no collisions.
+
+    A collision has no error and no symptom: the second arm's bundles simply
+    replace the first's under identical names, and afterwards nothing in the
+    tree says which fits produced them.
+    """
+    paths = [corpus.arm_dir("mlpromise_en", m, lam)
+             for m, lam in PLANNED_ENGLISH_ARMS]
+    assert len(set(paths)) == len(PLANNED_ENGLISH_ARMS), sorted(paths)
+    assert all(p.startswith("runs_en/") for p in paths), paths
+
+
+def test_the_arm_directory_spells_lambda_the_way_the_chinese_screens_do():
+    """``lambda_0.0``, not ``lambda_0``: one spelling per arm, and it matches
+    runs/deberta_v2_320m/lambda_0.0 so the two languages read alike."""
+    assert corpus.arm_dir("mlpromise_en", "roberta-large", 0) \
+        == "runs_en/roberta_large/lambda_0.0"
+    assert corpus.arm_dir("mlpromise_en", "roberta-large", 0.3) \
+        == "runs_en/roberta_large/lambda_0.3"
+
+
+def test_the_frozen_corpus_has_no_arm_structure():
+    """Its paths are named by contract section 4 and do not move."""
+    assert corpus.arm_dir("aicup_zh", "hfl/chinese-roberta-wwm-ext-large", 0.0) == "."
+
+
+def test_the_model_slug_drops_the_owner_and_is_path_safe():
+    assert corpus.model_slug("microsoft/deberta-v3-large") == "deberta_v3_large"
+    assert corpus.model_slug("roberta-large") == "roberta_large"
+    assert "/" not in corpus.model_slug("google/electra-large-discriminator")
 
 
 @pytest.mark.parametrize("name", sorted(corpus.CORPORA))
@@ -182,12 +236,15 @@ def test_a_new_probability_array_would_be_committed_not_silently_ignored(name):
 
     from paper.data import REPO_ROOT
 
-    array = f"{corpus.probs_dir(name)}/pdf_group_seed42_r0/test_promise_status.npy"
+    probs = corpus.probs_dir(name)
+    array = (f"{probs}/pdf_group_seed42_r0/test_promise_status.npy" if probs
+             else f"{corpus.arm_dir(name, 'roberta-large', 0.0)}/probs/"
+                  "pdf_group_seed42_r0/test_promise_status.npy")
     ignored = subprocess.run(
         ["git", "check-ignore", "-q", array], cwd=REPO_ROOT, check=False,
     ).returncode == 0
     assert not ignored, (
         f"{array} is gitignored, so a run of --corpus {name} would commit a "
-        "bundle carrying meta.json and no probabilities. Add "
-        f"'!/{corpus.probs_dir(name)}/**/*.npy' to .gitignore."
+        "bundle carrying meta.json and no probabilities. Add a negation for "
+        "this tree to .gitignore."
     )

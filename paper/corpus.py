@@ -43,7 +43,9 @@ CORPORA = {
     "mlpromise_en": {
         "load": _load_english,
         "splits_dir": "splits_en",
-        "probs_dir": "probs_en",
+        # No single probs directory: the English replication runs seven
+        # (backbone, lambda) arms, each with its own probs/ under arm_dir().
+        "probs_dir": None,
         "decisions_root": "runs_en",
         "description": "ML-Promise English, 400 rows, 9 reports (external replication)",
     },
@@ -67,10 +69,57 @@ def splits_dir(name: str = DEFAULT) -> str:
     return _entry(name)["splits_dir"]
 
 
-def probs_dir(name: str = DEFAULT) -> str:
+def probs_dir(name: str = DEFAULT) -> str | None:
+    """The corpus's single probs directory, or None if it has arms instead."""
     return _entry(name)["probs_dir"]
+
+
+def probs_globs(name: str = DEFAULT) -> tuple[str, str]:
+    """Glob patterns for every bundle and every predictions file of a corpus.
+
+    One pattern pair rather than a fixed directory, because a corpus with arms
+    keeps its bundles two levels deeper. ``paper.validate --all`` uses these so
+    an arm that exists on disk cannot be silently outside what --all checks.
+    """
+    if probs_dir(name) is not None:
+        return f"{probs_dir(name)}/*", f"{decisions_root(name)}/predictions/*.csv.gz"
+    root = decisions_root(name)
+    return f"{root}/*/*/probs/*", f"{root}/*/*/predictions/*.csv.gz"
 
 
 def decisions_root(name: str = DEFAULT) -> str:
     """Directory holding ``predictions/`` and ``results/`` for this corpus."""
     return _entry(name)["decisions_root"]
+
+
+def model_slug(model_name: str) -> str:
+    """A Hugging Face id as one directory component.
+
+    ``microsoft/deberta-v3-large`` -> ``deberta_v3_large``. The owner is
+    dropped: it is not part of what distinguishes one arm of this study from
+    another, and keeping it would put a slash in a path component.
+    """
+    return model_name.rsplit("/", 1)[-1].replace("-", "_").replace(".", "_")
+
+
+def arm_dir(name: str, model_name: str, structure_lambda: float) -> str:
+    """Where one (backbone, lambda) arm of a corpus keeps its artifacts.
+
+    ``runs_en/roberta_large/lambda_0.0``, holding ``probs/``, ``predictions/``
+    and ``results/`` -- the shape the Chinese backbone screens already use.
+
+    Derived rather than passed because the English replication runs seven arms
+    over one set of rows, and every one of them writes
+    ``{protocol}_seed{seed}_r{k}`` under names the other six also use. A
+    mistyped ``--out-dir`` would overwrite a completed arm with no error and no
+    way to tell afterwards which fits the bundle came from.
+
+    The frozen corpus has no arm structure: its paths are named by contract
+    section 4 and this returns its root unchanged.
+    """
+    root = decisions_root(name)
+    if name == DEFAULT:
+        return root
+    # One decimal, matching runs/deberta_v2_320m/lambda_0.0 rather than
+    # producing a second spelling of the same arm.
+    return f"{root}/{model_slug(model_name)}/lambda_{float(structure_lambda):.1f}"

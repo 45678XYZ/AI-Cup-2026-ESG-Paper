@@ -153,7 +153,13 @@ CI 寬度大約是主研究的 2.5–3 倍。
 **H-EN1（描述）**：M0 的非法 tuple 率 > 0。僅報數字，不做檢定。
 **H-EN2（描述）**：M1 與 M4 的非法 tuple 率皆為 0。這是實作正確性的檢查，不是結果。
 **H-EN3（推論）**：tuple accuracy 的 M1−M0 > 0。paired 報告層 bootstrap，
-9 個 cluster，10,000 次重抽，`BOOTSTRAP_SEED = 20260814`。**這是本臂唯一的預登記檢定。**
+9 個 cluster，10,000 次重抽，`BOOTSTRAP_SEED = 20260814`。
+在**主臂 `roberta-large`** 上做，**這是本臂唯一的預登記檢定。**
+
+**H-EN4（描述）**：四個 backbone 的**符號模式**。中文的證據是
+「4/4 的 λ=0 官方指標為負、7/7 的 tuple accuracy 為正」，英文要能與之並排，
+就必須有四個點而不是一個。逐臂只報數字與區間，**不做跨臂的檢定，也不做 Holm** ——
+與中文的 backbone screen 同樣列為探索性。
 
 ### 3.3 逐欄分數怎麼加總：兩個都報，加權為主
 
@@ -205,16 +211,68 @@ M6-M5    -0.0088 [-0.0168,-0.0014] p=.027      -0.0079 [-0.0157,-0.0004] p=.038
 
 ## 4. 執行計畫
 
-### 4.1 模型
+### 4.1 模型：四個家族，1:1 對應中文
 
-英文 backbone，與中文的 `hfl/chinese-roberta-wwm-ext-large` 對應：
+⚠️ **不可以只跑一個 backbone。** 中文的四個 backbone 顯示
+**M1−M0 在官方指標上的代價本身就是 model-dependent 的**：
 
-- **主臂**：`roberta-large`（λ = 0）
-- **結構訓練臂**（若時間允許）：同一 backbone，λ = 0.3
+| backbone | M1−M0 | 偵測到？ |
+|---|---:|---|
+| **RoBERTa-large** | **−0.0011** | **❌ 四個裡唯一沒偵測到的** |
+| DeBERTa | −0.0080 | ✅ |
+| ELECTRA | −0.0048 | ✅ |
+| RBT-base | −0.0071 | ✅ |
+
+若英文只跑 `roberta-large` 而結果是「沒有代價」，那句話**無法解讀** ——
+是英文標註的性質，還是 RoBERTa 家族的性質？兩個解釋在觀察上不可分。
+單一 backbone 會把語言與模型混淆在一起，而這正是本臂要排除的那種混淆。
+
+非法率同理：中文四個 backbone 是 10.20%–19.75%，跨度近兩倍；
+單一英文數字沒有任何 spread 可言。
+
+**因此英文跑同樣四個架構家族**，與中文一一對應：
+
+| 中文 | 英文 |
+|---|---|
+| `hfl/chinese-roberta-wwm-ext-large` | `roberta-large` |
+| `IDEA-CCNL/Erlangshen-DeBERTa-v2-320M-Chinese` | `microsoft/deberta-v3-large` |
+| `hfl/chinese-electra-180g-large-discriminator` | `google/electra-large-discriminator` |
+| `hfl/chinese-roberta-wwm-ext`（base） | `roberta-base` |
+
+分層沿用中文的做法：主臂跑兩個 protocol，其餘三個只跑 `pdf_group`。
+
+| 臂 | protocol | fits | 估計時間 |
+|---|---|---:|---:|
+| `roberta-large`，λ = 0 與 0.3 | 兩個 | 60 | ~2 h |
+| 其餘三個 × λ = 0 與 0.3 | 僅 `pdf_group` | 90 | ~3 h |
+| **合計** | | **150** | **~5 h** |
+
+估時依據：中文 30 fits = 12,670 秒（422 s/fit，2,000 列）。英文 400 列，
+而 `padding="max_length"` 讓每筆計算量與文字長度無關，所以按列數線性縮放，
+約 85 s/fit 加上固定開銷，取 2 min/fit 保守估計。
+
+**若 GPU 時間不足，砍掉 λ = 0.3 那半**（剩 75 fits、約 2.5 h）：
+四個 backbone 的符號模式仍然完整，只是少了「結構訓練讓代價消失」在英文的重現。
+**不要用減少 backbone 的方式省時間** —— 那會讓整個臂失去意義。
 
 λ **不重新搜尋**，直接沿用中文臂在 calibration 上選出的 0.3。
 理由：重新搜尋會在 9 個 cluster 上做選擇，選擇本身的雜訊會大於效果；
 沿用是預先指定的決定，不是事後挑的。**若改為重新搜尋，必須先修改本文件。**
+
+### 4.1.1 每個臂各自的目錄
+
+七個臂寫出的 bundle 名稱完全相同（`{protocol}_seed{seed}_r{k}`），
+共用一個目錄會讓後跑的無聲覆蓋先跑的，事後也無從分辨。
+所以路徑由 `paper.corpus.arm_dir()` 推導，形狀與中文的 backbone screen 相同：
+
+```
+runs_en/roberta_large/lambda_0.0/{probs,predictions,results}/
+runs_en/deberta_v3_large/lambda_0.3/{probs,predictions,results}/
+...
+```
+
+`run_training` 的 `--out-dir` 由 `--model-name` 與 `--structure-lambda` 推導並印出；
+`run_decisions` 的 `--out-dir` 預設為 `--probs-dir` 的上層。有測試斷言七個臂互不碰撞。
 
 ### 4.2 協定與切分
 
@@ -274,18 +332,18 @@ python -c "import json; from paper.data_en import audit; print(json.dumps(audit(
 # 切分（已提交於 splits_en/，此指令重現它們）
 python -m paper.splits --corpus mlpromise_en
 
-# 訓練（B 執行）— 每個 protocol × seed 一次，共 6 次
+# 訓練（B 執行）。--out-dir 由 --model-name 與 --structure-lambda 推導並印出。
+# 主臂：兩個 protocol × 三個 seed；其餘三個 backbone 只跑 pdf_group。
 python -m paper.run_training --corpus mlpromise_en \
   --protocol pdf_group --seed 42 \
-  --model-name roberta-large --model-revision <pinned-commit>
+  --model-name roberta-large --model-revision <pinned-commit> \
+  --structure-lambda 0
 
-# 驗證 bundle
-python -m paper.validate --corpus mlpromise_en probs_en/*
+# 決策階段。--out-dir 預設為 --probs-dir 的上層。
+python -m paper.run_decisions --corpus mlpromise_en --protocol pdf_group --seed 42 \
+  --probs-dir runs_en/roberta_large/lambda_0.0/probs
 
-# 決策階段 — 每個 protocol × seed 一次，共 6 次
-python -m paper.run_decisions --corpus mlpromise_en --protocol pdf_group --seed 42
-
-# 驗證全部
+# 驗證（--all 會走遍所有臂）
 python -m paper.validate --all --corpus mlpromise_en
 ```
 
@@ -294,8 +352,8 @@ python -m paper.validate --all --corpus mlpromise_en
 | | `aicup_zh`（凍結） | `mlpromise_en` |
 |---|---|---|
 | splits | `splits/` | `splits_en/` |
-| probs | `probs/` | `probs_en/` |
-| predictions / results | 專案根目錄 | `runs_en/` |
+| probs | `probs/` | `runs_en/{backbone}/lambda_{λ}/probs/` |
+| predictions / results | 專案根目錄 | `runs_en/{backbone}/lambda_{λ}/` |
 
 ⚠️ **最後一列是必要的,不只是整潔。** 決策階段寫出的檔名是
 `{protocol}_seed{seed}_{method}.csv.gz`，兩個 corpus **完全相同**；
@@ -315,8 +373,10 @@ EMNLP 2025. https://aclanthology.org/2025.emnlp-main.1028/
 1. **授權。** ML-Promise 是 CC BY-NC-SA 4.0（非商業、相同方式分享）。
    本 repo 目前**沒有 LICENSE 檔**。把資料收錄進來等於再散布，
    share-alike 對 repo 其餘部分的影響需要團隊確認，這不是我能單方面決定的。
-2. **要不要跑 λ = 0.3 臂。** 只跑 λ = 0 就能支撐三條腿；λ = 0.3 才能重現
-   「結構訓練讓代價消失」。多約 1.5 小時 GPU。
-   `--structure-lambda 0.3` 已可用，不需要額外實作。
-3. **`roberta-large` 是否為正確對照。** 中文用的是 wwm-ext-large；
-   英文若改用 `deberta-v3-large` 會與 DeBERTa 那個 screen 對齊，但與主臂不對齊。
+2. **要不要跑 λ = 0.3 那半。** 只跑 λ = 0（75 fits、約 2.5 h）就能支撐四個
+   backbone 的符號模式；λ = 0.3 才能重現「結構訓練讓代價消失」，
+   合計約 5 h。`--structure-lambda 0.3` 已可用，不需要額外實作。
+   ⚠️ **省時間請砍 λ，不要砍 backbone**（理由見 §4.1）。
+3. **四個英文 backbone 的 checkpoint 選擇。** §4.1 的對應表是按架構家族配的；
+   若團隊偏好其他 checkpoint（例如 `deberta-v3-base` 而非 `large`），
+   在跑之前改本文件。

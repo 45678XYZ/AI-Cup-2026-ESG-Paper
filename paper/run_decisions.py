@@ -154,11 +154,15 @@ def main() -> None:
     if args.splits_dir is None:
         args.splits_dir = REPO_ROOT / CORPORA[args.corpus]["splits_dir"]
     if args.out_dir is None:
-        # Not REPO_ROOT for every corpus: a decision run names its output
-        # {protocol}_seed{seed}_{method}.csv.gz whatever it was fit on, so an
-        # English run defaulted to the root would overwrite the frozen
-        # predictions file by file rather than merely sit beside it.
-        args.out_dir = REPO_ROOT / CORPORA[args.corpus]["decisions_root"]
+        # Beside the bundles it scored, not at a fixed root. A decision run
+        # names its output {protocol}_seed{seed}_{method}.csv.gz whatever it
+        # was fit on, so seven arms sharing one output directory would each
+        # overwrite the last, and an English run defaulted to the repository
+        # root would overwrite the frozen study's predictions file by file.
+        args.out_dir = (REPO_ROOT / CORPORA[args.corpus]["decisions_root"]
+                        if args.corpus == DEFAULT_CORPUS
+                        else args.probs_dir.parent)
+        print(f"writing decisions to {args.out_dir}")
 
     rows = load_rows(args.corpus)
     checksum = data_checksum(rows)
