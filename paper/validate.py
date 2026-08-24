@@ -435,15 +435,25 @@ def _validate_paths(paths, rows, splits_dir=SPLITS_DIR) -> list[str]:
 
     for p in bundles:
         problems += validate_probs_bundle(p, splits_dir=splits_dir)
-    by_run: dict[str, list[Path]] = {}
+    # External replications have one ``probs/`` directory per
+    # (backbone, lambda) arm. Bundle basenames repeat across arms, so grouping
+    # only by ``pdf_group_seed42`` would merge five rotations from each arm
+    # into a fictitious ten-/forty-rotation run. Recipe consistency is required
+    # within an arm, not across deliberately different model/lambda arms.
+    by_run: dict[tuple[Path, str], list[Path]] = {}
     for p in bundles:
-        by_run.setdefault(p.name.rsplit("_r", 1)[0], []).append(p)
-    for run, dirs in sorted(by_run.items()):
+        by_run.setdefault((p.parent, p.name.rsplit("_r", 1)[0]), []).append(p)
+    for (arm, run), dirs in sorted(by_run.items(), key=lambda item: str(item[0])):
         if len(dirs) > 1:
             problems += [f"{run}: {m}"
                          for m in validate_probs_run(dirs, splits_dir=splits_dir)]
-    if len(by_run) > 1:
-        problems += validate_probs_study(bundles)
+    by_arm: dict[Path, list[Path]] = {}
+    for p in bundles:
+        by_arm.setdefault(p.parent, []).append(p)
+    for arm, dirs in sorted(by_arm.items(), key=lambda item: str(item[0])):
+        runs = {p.name.rsplit("_r", 1)[0] for p in dirs}
+        if len(runs) > 1:
+            problems += [f"{arm}: {m}" for m in validate_probs_study(dirs)]
 
     for p in predictions:
         problems += validate_predictions(p, rows=rows, method=_method_of(p),

@@ -31,6 +31,13 @@ arm and licensed **CC BY-NC-SA 4.0**. It is byte-identical to the release; all
 normalisation happens at load time. Attribution, source and licence terms are
 in [`dataset/mlpromise_english.NOTICE`](dataset/mlpromise_english.NOTICE).
 
+The `multilingual-replication` branch additionally vendors the byte-identical
+French, Japanese and Korean training releases. Their source file IDs, hashes,
+licence and load-time normalisation are recorded in the corresponding
+`dataset/mlpromise_{french,japanese,korean}.{NOTICE,json}` provenance files.
+The Korean release contains no text field; report-page text is reconstructed
+locally by `scripts/prepare_korean_pages.py` and is deliberately not committed.
+
 Everything else in this repository is the study's own work. The AI CUP data
 under `dataset/vpesg4k_*.json` is covered by the competition's own terms.
 
@@ -72,6 +79,7 @@ contracts/      interface schemas and example files
 docs/           paper plan and interface contract
 figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
 splits/         generated split manifests (version controlled)
+splits_{en,fr,ja,ko}/  isolated ML-Promise manifests by language
 probs/          30 probability bundles, one per rotation, from the official fits
 probs_lambda_sweep/  the structural arm's lambda sweep; scored into no table
 probs_structural/  30 selected-lambda probability bundles from the structural arm

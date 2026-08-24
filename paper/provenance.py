@@ -36,6 +36,7 @@ CODE_PATHSPEC = (
     "paper",
     "analysis",
     "contracts",
+    "scripts",
     "environment.yml",
     "pyproject.toml",
     ":(exclude)contracts/examples",
