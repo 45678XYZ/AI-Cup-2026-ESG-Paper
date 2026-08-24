@@ -366,19 +366,22 @@ def render_table1(audit) -> str:
     shared = audit["pdf_overlap"]["n_shared"]
     duplicated = len(audit["duplicates"]["dev_test"])
     spanning = audit["company_structure"]["companies_in_multiple_reports"]
+    # Three rows moved to the caption: the duplicate paragraph, the companies
+    # spanning more than one report, and the gold's zero hierarchy violations.
+    # Each is a single fact rather than a development-versus-test statistic --
+    # two had one column marked n/a and the third repeated a number the caption
+    # already gave -- and the caption stated all three in prose already, so the
+    # tabular was restating them in a form that reads worse. The overlap row
+    # below is different: plan section 7 requires it to be prominent.
     body = [
         row("Paragraphs", dev["paragraphs"], test["paragraphs"]),
-        row("\\quad duplicated across splits", duplicated, duplicated),
         row("Source reports (PDFs)", dev["pdfs"], test["pdfs"]),
+        # Stays in the tabular by remit, not by taste: plan section 7 requires
+        # the 100% dev/test overlap to be prominent rather than left to a
+        # caption, because it is the reason Table 3 exists at all.
         row("\\quad shared across splits", shared, shared),
         row("Companies", dev["companies"], test["companies"]),
-        row("\\quad spanning $>$1 report", spanning, NA),
         row("Legal states observed", f"{dev['legal_states_observed']} / 17", NA),
-        # The paper's framing rests on this row: the hierarchy is the release's
-        # own annotation rule, so a metric that credits an illegal tuple is
-        # crediting a combination the labels call impossible. Left to prose it
-        # would stop being checked against the data.
-        row("Gold rows violating the hierarchy", dev["invalid_rows"], NA),
         "\\midrule",
         "\\multicolumn{3}{l}{\\emph{Rarest classes}} \\\\",
         row("\\quad within\\_2\\_years", vt["within_2_years"], NA),

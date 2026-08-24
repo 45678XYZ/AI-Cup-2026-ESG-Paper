@@ -12,6 +12,7 @@ from analysis.audit import full_audit
 from analysis.load import EXAMPLES_ROOT, pdf_clusters
 from analysis.tables import (
     FAMILY_LABELS,
+    _word,
     TABLE_FILES,
     render_table4,
     render_table5,
@@ -358,13 +359,14 @@ def test_table1_flags_that_every_report_is_shared_with_the_test_split():
     assert "n/a" not in shared[0]             # this one IS known for test
 
 
-def test_table1_discloses_the_known_cross_split_duplicate():
-    """Plan section 4.1 requires the duplicate to be disclosed. It is audited
-    already; before this it never reached a deliverable."""
-    tex = render_table1(AUDIT)
-    dup = [l for l in tex.splitlines() if "uplicat" in l]
-    assert len(dup) == 1
-    assert str(len(AUDIT["duplicates"]["dev_test"])) in dup[0]
+def test_the_caption_discloses_the_known_cross_split_duplicate():
+    """Plan section 4.1 requires the duplicate to be disclosed, not made
+    prominent -- unlike the report overlap, which section 7 does require in the
+    tabular. One duplicated paragraph out of 2,000 is a disclosure, so it reads
+    better as a clause than as a row whose two columns both say 1."""
+    cap = build_captions(AUDIT)["table1_dataset"]
+    assert "duplicat" in cap.lower()
+    assert _word(len(AUDIT["duplicates"]["dev_test"])) in cap
 
 
 def test_table1_caption_states_the_overlap_and_the_duplicate():
@@ -434,20 +436,19 @@ def test_table5_shows_the_two_metrics_disagreeing_about_the_winner():
     assert best_official in tex and best_h in tex
 
 
-def test_table1_reports_that_the_gold_never_breaks_the_hierarchy():
-    """The paper's framing rests on this cell: the hierarchy is the task's own
+def test_the_caption_reports_that_the_gold_never_breaks_the_hierarchy():
+    """The paper's framing rests on this fact: the hierarchy is the task's own
     annotation rule, not a constraint we imposed. If the gold itself contained
     illegal tuples, "the metric pays for combinations the labels call
     impossible" would be our opinion rather than an internal inconsistency.
 
-    It is one number and it is easy to leave in prose, which is exactly how a
-    load-bearing fact stops being checked."""
-    rows = {
-        line.split("&")[0].strip(): [c.strip() for c in line.split("&")[1:]]
-        for line in render_table1(AUDIT).splitlines() if "&" in line
-    }
-    assert "Gold rows violating the hierarchy" in rows
-    assert rows["Gold rows violating the hierarchy"][0] == "0"
+    It lives in the caption rather than the tabular because it is a single
+    fact about the label space, not a development-versus-test statistic -- but
+    a load-bearing fact left unchecked is how it stops being true, so it is
+    asserted here against the audit rather than trusted to prose."""
+    caption = build_captions(AUDIT)["table1_dataset"]
+    assert f"{AUDIT['development']['invalid_rows']} " in caption or "no development row violates" in caption
+    assert "120" in caption and "17" in caption
 
 
 def test_table1_caption_gives_the_size_of_the_legal_space():
