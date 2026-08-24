@@ -86,7 +86,38 @@ validator 與分析,風險遠大於收益。
 
 ⚠️ **跨語言只能比較非法「率」，不能比較非法狀態的數量。**
 
-### 2.4 已知的資料瑕疵
+### 2.4 序列長度：一個必須在開跑前量的東西
+
+`MAX_LEN = 384` 凍結在 `paper/train_config.py`，**不能改** —— 那個檔案的 sha256
+是 165 個 bundle 的來源證明。所以英文臂沿用 384，截斷率是資料的性質而非選擇。
+
+英文段落比中文長得多（字元中位數 717 對 188，p90 是 1638 對 349），但 BPE 對
+英文的壓縮率也高得多，兩者大致抵銷。以每 token 3.5–4.5 字元估算：
+
+```
+corpus   每 token 字元   字元預算    被截斷的列
+zh          ~1.0          382          7.0%
+en          ~3.5         1337         16.0%
+en          ~4.0         1528         11.8%
+en          ~4.5         1719          8.0%
+```
+
+**估計值落在 8–16%，中文是 7%。** 同一個量級，不是設計缺陷。
+
+⚠️ **B 開跑前請用真的 tokenizer 量一次**（30 秒），把確切數字回報：
+
+```python
+from transformers import AutoTokenizer
+from paper.data_en import load_english
+tok = AutoTokenizer.from_pretrained("roberta-large")
+n = [len(tok(r["data"])["input_ids"]) for r in load_english()]
+print(sum(x > 384 for x in n) / len(n))
+```
+
+若確切值明顯高於 20%，先回報再決定要不要跑 —— 截斷率兩臂差太多會變成一個
+無法歸因的混淆變數，而不是可以照報的限制。
+
+### 2.5 已知的資料瑕疵
 
 - **一列 `verification_timeline` 為 `"2 to 5 years "`**（結尾多一空格）。不處理會多出第六個類別，
   在 macro-F1 下對所有方法一律扣同一塊分數，看起來像任務的性質。
