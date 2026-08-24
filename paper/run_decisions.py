@@ -23,6 +23,8 @@ import numpy as np
 
 from paper.artifacts import prediction_row, write_predictions
 from paper.calibration import as_json, fit_biases
+from paper.corpus import DEFAULT as DEFAULT_CORPUS
+from paper.corpus import CORPORA, load_rows
 from paper.data import REPO_ROOT, data_checksum, index_by_id, load_dev
 from paper.evaluate import build_results, write_results
 from paper.labels import FIELDS
@@ -139,16 +141,33 @@ def main() -> None:
     ap.add_argument("--protocol", required=True, choices=["pdf_group", "row_strat"])
     ap.add_argument("--seed", required=True, type=int, choices=list(SEEDS))
     ap.add_argument("--methods", nargs="+", default=METHOD_IDS, choices=METHOD_IDS)
-    ap.add_argument("--probs-dir", type=Path, default=REPO_ROOT / "probs")
-    ap.add_argument("--splits-dir", type=Path, default=REPO_ROOT / "splits")
-    ap.add_argument("--out-dir", type=Path, default=REPO_ROOT)
+    ap.add_argument("--corpus", default=DEFAULT_CORPUS, choices=sorted(CORPORA),
+                    help="which labelled rows the bundles were fit on; supplies "
+                         "the defaults for --probs-dir and --splits-dir")
+    ap.add_argument("--probs-dir", type=Path, default=None)
+    ap.add_argument("--splits-dir", type=Path, default=None)
+    ap.add_argument("--out-dir", type=Path, default=None)
     args = ap.parse_args()
 
-    rows = load_dev()
+    if args.probs_dir is None:
+        args.probs_dir = REPO_ROOT / CORPORA[args.corpus]["probs_dir"]
+    if args.splits_dir is None:
+        args.splits_dir = REPO_ROOT / CORPORA[args.corpus]["splits_dir"]
+    if args.out_dir is None:
+        # Not REPO_ROOT for every corpus: a decision run names its output
+        # {protocol}_seed{seed}_{method}.csv.gz whatever it was fit on, so an
+        # English run defaulted to the root would overwrite the frozen
+        # predictions file by file rather than merely sit beside it.
+        args.out_dir = REPO_ROOT / CORPORA[args.corpus]["decisions_root"]
+
+    rows = load_rows(args.corpus)
     checksum = data_checksum(rows)
     split = load_split(args.protocol, args.seed, args.splits_dir)
     if split["data_checksum"] != checksum:
-        raise SystemExit(f"{args.splits_dir} was built against different data; refusing to run.")
+        raise SystemExit(
+            f"{args.splits_dir} was built against different data; refusing to "
+            f"run.\n--corpus is {args.corpus!r}."
+        )
 
     # Loaded once and shared by every method: this is what "identical
     # probabilities on identical rows" means operationally.

@@ -138,3 +138,56 @@ def test_the_english_document_disjoint_folds_are_uneven_and_that_is_the_data():
     sizes = sorted(len(rot["test_ids"]) for rot in split["rotations"])
     assert sum(sizes) == 400
     assert max(sizes) - min(sizes) > 10, sizes
+
+
+# --------------------------------------------------------------------------
+# Keeping the two corpora's artifacts apart on disk
+# --------------------------------------------------------------------------
+
+def test_the_english_decisions_root_is_not_the_repository_root():
+    """The frozen predictions would be overwritten, not merely joined.
+
+    A decision run writes ``{protocol}_seed{seed}_{method}.csv.gz`` whatever
+    corpus it was fit on, so the two corpora produce byte-different files under
+    forty-two identical names. Defaulting the English output to the root would
+    replace the frozen study's predictions file by file.
+    """
+    assert corpus.decisions_root("aicup_zh") == "."
+    assert corpus.decisions_root("mlpromise_en") != "."
+    assert corpus.decisions_root("mlpromise_en") == "runs_en"
+
+
+@pytest.mark.parametrize("name", sorted(corpus.CORPORA))
+def test_every_output_directory_of_a_corpus_is_its_own(name):
+    """No corpus writes anywhere another one does."""
+    mine = {corpus.splits_dir(name), corpus.probs_dir(name),
+            corpus.decisions_root(name)}
+    others = {d for other in corpus.CORPORA if other != name
+              for d in (corpus.splits_dir(other), corpus.probs_dir(other),
+                        corpus.decisions_root(other))}
+    assert not mine & others, sorted(mine & others)
+
+
+@pytest.mark.parametrize("name", sorted(corpus.CORPORA))
+def test_a_new_probability_array_would_be_committed_not_silently_ignored(name):
+    """``*.npy`` in .gitignore swallows a new probs tree unless negated.
+
+    The failure has no symptom until someone clones: the bundle keeps its
+    meta.json, so every validator that reads metadata still passes, and the
+    probabilities are simply absent. Each corpus's probs directory needs its
+    own negation, and this asserts the negation is there before the bundles
+    are.
+    """
+    import subprocess
+
+    from paper.data import REPO_ROOT
+
+    array = f"{corpus.probs_dir(name)}/pdf_group_seed42_r0/test_promise_status.npy"
+    ignored = subprocess.run(
+        ["git", "check-ignore", "-q", array], cwd=REPO_ROOT, check=False,
+    ).returncode == 0
+    assert not ignored, (
+        f"{array} is gitignored, so a run of --corpus {name} would commit a "
+        "bundle carrying meta.json and no probabilities. Add "
+        f"'!/{corpus.probs_dir(name)}/**/*.npy' to .gitignore."
+    )

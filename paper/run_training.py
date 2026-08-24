@@ -29,7 +29,7 @@ from transformers import AutoTokenizer
 from paper.artifacts import write_probs_bundle
 from paper.corpus import DEFAULT as DEFAULT_CORPUS
 from paper.corpus import CORPORA, load_rows
-from paper.data import REPO_ROOT, data_checksum, file_sha256, index_by_id, load_dev
+from paper.data import REPO_ROOT, data_checksum, file_sha256, index_by_id
 from paper.provenance import environment, now_iso
 from paper.train_config import (
     CHECKPOINT_LAST_K,

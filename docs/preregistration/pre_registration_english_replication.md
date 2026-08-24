@@ -247,11 +247,30 @@ python -m paper.splits --corpus mlpromise_en
 python -m paper.run_training --corpus mlpromise_en \
   --protocol pdf_group --seed 42 \
   --model-name roberta-large --model-revision <pinned-commit>
+
+# 驗證 bundle
+python -m paper.validate --corpus mlpromise_en probs_en/*
+
+# 決策階段 — 每個 protocol × seed 一次，共 6 次
+python -m paper.run_decisions --corpus mlpromise_en --protocol pdf_group --seed 42
+
+# 驗證全部
+python -m paper.validate --all --corpus mlpromise_en
 ```
 
-`--corpus` 決定 `--splits-dir` 與 `--out-dir` 的預設值（`splits_en/`、`probs_en/`），
-凍結的 `splits/` 與 `probs/` 不會被寫到。指錯 corpus 會在抓模型之前就因
-`data_checksum` 不符而中止，不會浪費 GPU 時間。
+**`--corpus` 決定所有輸出路徑的預設值**，三個進入點一致：
+
+| | `aicup_zh`（凍結） | `mlpromise_en` |
+|---|---|---|
+| splits | `splits/` | `splits_en/` |
+| probs | `probs/` | `probs_en/` |
+| predictions / results | 專案根目錄 | `runs_en/` |
+
+⚠️ **最後一列是必要的,不只是整潔。** 決策階段寫出的檔名是
+`{protocol}_seed{seed}_{method}.csv.gz`，兩個 corpus **完全相同**；
+英文若寫進根目錄會逐檔覆蓋凍結的 `predictions/`。有測試斷言這件事。
+
+指錯 corpus 會在抓模型之前就因 `data_checksum` 不符而中止，不會浪費 GPU 時間。
 
 ## 7. 引用
 
