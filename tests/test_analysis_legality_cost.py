@@ -72,6 +72,22 @@ def test_both_constrained_rules_are_legal_in_every_arm():
         assert cost["invalid_rate"]["M4"] == 0.0, arm.label
 
 
+def test_every_contrast_averages_to_its_own_per_seed_deltas():
+    """``delta`` is by construction the mean over seeds of the same difference,
+    under whichever metric produced it. This report is where that identity is
+    worth asserting: the two metrics sit side by side under keys that look
+    interchangeable, and a per-seed list built from the wrong one is still
+    three small signed floats filed under the right name.
+    """
+    report = build_report(n_boot=50)
+    for arm in report["arms"]:
+        for contrast in ("legality_cost", "decoder_vs_projection"):
+            for metric, row in arm[contrast].items():
+                mean = sum(row["per_seed_delta"]) / len(row["per_seed_delta"])
+                assert mean == pytest.approx(row["delta"], abs=1e-12), (
+                    arm["label"], contrast, metric)
+
+
 def test_the_report_records_what_it_read():
     """Every number has to trace to a file, as the rest of tables/ does."""
     report = build_report(n_boot=50)

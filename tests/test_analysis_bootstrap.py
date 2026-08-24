@@ -12,7 +12,7 @@ import pytest
 
 from analysis.bootstrap import holm, paired_delta, resample_indices
 from analysis.load import EXAMPLES_ROOT, load_aligned, pdf_clusters
-from analysis.metrics import weighted_macro_f1
+from analysis.metrics import tuple_accuracy, weighted_macro_f1
 from paper.data import canonical_row_order, load_dev
 
 DEV = load_dev()
@@ -68,6 +68,29 @@ def test_point_estimate_is_the_mean_of_the_per_seed_differences():
     ])
     assert out["delta"] == pytest.approx(expected, abs=1e-12)
     assert len(out["per_seed_delta"]) == 3
+
+
+def test_the_per_seed_deltas_use_the_score_the_caller_asked_for():
+    """``delta`` and the bootstrap draws honour ``score``; the per-seed list is
+    the third consumer and the easiest to leave behind, because nothing raises
+    when it does not -- a tuple-accuracy contrast comes back carrying the
+    official metric's per-seed numbers under a tuple-accuracy key, and both
+    lists are plausible three-element arrays of small signed floats.
+    """
+    out = paired_delta(M3, M0, CLUSTERS, n_boot=200, score=tuple_accuracy)
+    expected = [tuple_accuracy(g, pa) - tuple_accuracy(g, pb)
+                for (g, pa), (_, pb) in zip(M3, M0)]
+    assert out["per_seed_delta"] == pytest.approx(expected, abs=1e-12)
+
+
+def test_the_per_seed_deltas_average_to_the_point_estimate():
+    """An identity rather than an approximation: ``delta`` *is* the mean over
+    seeds of the same difference. Because it holds for every score, it is the
+    cheapest way to catch a per-seed list computed with a different one."""
+    for score in (weighted_macro_f1, tuple_accuracy):
+        out = paired_delta(M3, M0, CLUSTERS, n_boot=200, score=score)
+        assert np.mean(out["per_seed_delta"]) == pytest.approx(
+            out["delta"], abs=1e-12), score.__name__
 
 
 def test_interval_brackets_the_point_estimate():
