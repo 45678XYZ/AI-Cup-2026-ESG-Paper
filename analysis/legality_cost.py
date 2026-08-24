@@ -264,6 +264,46 @@ def render_table(report) -> str:
             "\\bottomrule\n\\end{tabular}\n")
 
 
+def _detectable(cell) -> bool:
+    """Bold in the tabular: an uncorrected interval that does not cross zero."""
+    return cell["ci_low"] > 0 or cell["ci_high"] < 0
+
+
+def _tally(arms, contrast, metric) -> dict:
+    """How many arms move which way, and how many intervals clear zero.
+
+    Counted rather than asserted. Every sign statement in the caption is one
+    arm-level contrast away from being false -- the study has seven arms and
+    two metrics that disagree -- so the prose reports tallies and lets the
+    reader see the denominator.
+    """
+    cells = [a[contrast][metric] for a in arms]
+    return {
+        "n": len(cells),
+        "up": sum(1 for c in cells if c["delta"] > 0),
+        "down": sum(1 for c in cells if c["delta"] < 0),
+        "detectable": sum(1 for c in cells if _detectable(c)),
+    }
+
+
+def _shared_direction(arms, contrast, metric) -> str:
+    """A direction for the detectable arms, but only if they agree on one.
+
+    Stated as a clause or not at all. Averaging a split sign into a single
+    word is how "joint decoding reverses both signs" survived four arms that
+    contradicted it.
+    """
+    cells = [a[contrast][metric] for a in arms]
+    shown = [c for c in cells if _detectable(c)]
+    if not shown:
+        return ""
+    if all(c["delta"] > 0 for c in shown):
+        return ", positive in each"
+    if all(c["delta"] < 0 for c in shown):
+        return ", negative in each"
+    return ""
+
+
 def build_caption(report) -> str:
     """State the three things the tabular cannot: that both constrained rules
     emit only legal tuples, that bold is an uncorrected interval rather than a
@@ -273,8 +313,17 @@ def build_caption(report) -> str:
     trained = [a for a in arms if a["structure_lambda"] != 0]
     lo = min(a["invalid_rate"]["M0"] for a in arms)
     hi = max(a["invalid_rate"]["M0"] for a in arms)
-    gains = sum(1 for a in arms
-                if a["legality_cost"]["tuple_accuracy"]["delta"] > 0)
+
+    row = _tally(arms, "legality_cost", "tuple_accuracy")
+    off_plain = _tally(plain, "legality_cost", "official_weighted_macro_f1")
+    off_trained = _tally(trained, "legality_cost", "official_weighted_macro_f1")
+    dec_row = _tally(arms, "decoder_vs_projection", "tuple_accuracy")
+    dec_plain = _tally(plain, "decoder_vs_projection",
+                       "official_weighted_macro_f1")
+    dec_trained = _tally(trained, "decoder_vs_projection",
+                         "official_weighted_macro_f1")
+    dec_dir = _shared_direction(arms, "decoder_vs_projection",
+                                "official_weighted_macro_f1")
 
     parts = [
         f"Two decision rules over one set of probabilities, on the "
@@ -287,10 +336,19 @@ def build_caption(report) -> str:
         f"Means over {len(arms[0]['seeds'])} seeds; paired PDF-cluster "
         f"bootstrap, {report['n_boot']:,} resamples, seed "
         f"{report['bootstrap_seed']}, one resample shared within each contrast.",
-        f"Enforcing legality raises whole-row accuracy in all {gains} arms and "
-        f"lowers the official score in all {len(plain)} arms trained without "
-        f"the structural objective; joint decoding reverses both signs. "
-        f"The {len(trained)} structurally trained arms show neither effect.",
+        f"Enforcing legality raises whole-row accuracy in {row['up']} of "
+        f"{row['n']} arms, {row['detectable']} of those intervals excluding "
+        f"zero. On the official metric it is negative in {off_plain['down']} "
+        f"of the {off_plain['n']} arms trained without the structural "
+        f"objective and detectable in {off_plain['detectable']} of them, "
+        f"against {off_trained['detectable']} of {off_trained['n']} among the "
+        f"structurally trained arms.",
+        f"Joint decoding lowers whole-row accuracy relative to projection in "
+        f"{dec_row['down']} of {dec_row['n']} arms, detectable in "
+        f"{dec_row['detectable']}; on the official metric it is detectable in "
+        f"{dec_plain['detectable']} of the {dec_plain['n']} untrained arms and "
+        f"{dec_trained['detectable']} of the {dec_trained['n']} trained "
+        f"ones{dec_dir}.",
         "\\textbf{Exploratory.} These contrasts were named after the primary "
         "analysis and form no Holm family; bold marks an interval excluding "
         "zero, not a corrected verdict. The claim is the sign pattern across "

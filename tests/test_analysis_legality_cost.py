@@ -150,6 +150,60 @@ def test_the_caption_marks_the_family_as_exploratory():
     assert "exploratory" in build_caption(STUB).lower()
 
 
+# --- the caption must not contradict the cells beside it -------------------
+#
+# The table is read by its bold pattern and the caption tells the reader what
+# the pattern means. A caption sentence that denies an effect the tabular marks
+# as present is worse than no sentence: the reader trusts the prose.
+
+
+def _sentences(caption):
+    return [s.strip() for s in caption.replace("\\%", "%").split(". ") if s.strip()]
+
+
+def _replaced(arm_index, contrast, metric, cell):
+    """STUB with one cell swapped, so a hardcoded count shows up as a count
+    that does not move when the arms do."""
+    import copy
+    stub = copy.deepcopy(STUB)
+    stub["arms"][arm_index][contrast][metric] = cell
+    return stub
+
+
+def test_the_caption_names_a_metric_whenever_it_talks_about_the_trained_arms():
+    """STUB's structurally trained arm gains +0.0138 whole-row with an interval
+    clearing zero, and ``render_table`` prints that cell bold. An unscoped
+    'the trained arms show neither effect' contradicts the cell beside it, so
+    every sentence about that subset has to say which metric it holds for."""
+    said = [s for s in _sentences(build_caption(STUB))
+            if "structurally trained" in s]
+    assert said, "the caption no longer distinguishes the trained arms"
+    for sentence in said:
+        assert "official" in sentence.lower(), sentence
+
+
+def test_the_whole_row_count_follows_the_arms_rather_than_the_prose():
+    """Both stub arms gain whole-row accuracy; flip one and the caption has to
+    say so. A sentence carrying 'all seven arms' as text would not move."""
+    assert "in 2 of 2 arms" in build_caption(STUB)
+    flipped = _replaced(1, "legality_cost", "tuple_accuracy",
+                        _contrast(-0.0138, -0.018, -0.010))
+    assert "in 1 of 2 arms" in build_caption(flipped)
+
+
+def test_the_caption_states_a_direction_only_when_the_detectable_arms_agree():
+    """One stub arm's decoder cell clears zero on the official metric and is
+    positive, which the caption may report. Make the second one clear zero in
+    the opposite direction and there is no shared direction left to state --
+    the caption has to drop the claim, not average it."""
+    assert "positive in each" in build_caption(STUB)
+    split = _replaced(1, "decoder_vs_projection", "official_weighted_macro_f1",
+                      _contrast(-0.0080, -0.013, -0.003))
+    caption = build_caption(split)
+    assert "positive in each" not in caption
+    assert "negative in each" not in caption
+
+
 def test_the_preview_renders_the_new_table():
     from analysis.tables import ALL_TABLE_FILES
     assert "table3_legality_cost.tex" in ALL_TABLE_FILES
