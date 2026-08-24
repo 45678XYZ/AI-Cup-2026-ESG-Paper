@@ -87,15 +87,15 @@ class Arm:
 
 ARMS = (
     Arm("RoBERTa-large", 0.0, "", "paper_plan.md"),
-    Arm("RoBERTa-large", 0.3, "structural_arm",
+    Arm("RoBERTa-large", 0.3, "runs/structural",
         "pre_registration_structural_training.md"),
-    Arm("DeBERTa-v2-320M", 0.0, "architecture_screen/deberta_v2_320m/lambda_0.0",
+    Arm("DeBERTa-v2-320M", 0.0, "runs/deberta_v2_320m/lambda_0.0",
         "pre_registration_deberta_screen.md"),
-    Arm("DeBERTa-v2-320M", 0.3, "architecture_screen/deberta_v2_320m/lambda_0.3",
+    Arm("DeBERTa-v2-320M", 0.3, "runs/deberta_v2_320m/lambda_0.3",
         "pre_registration_deberta_screen.md"),
-    Arm("ELECTRA-large", 0.0, "architecture_screen/electra_180g_large/lambda_0.0",
+    Arm("ELECTRA-large", 0.0, "runs/electra_180g_large/lambda_0.0",
         "pre_registration_electra_screen.md"),
-    Arm("ELECTRA-large", 0.3, "architecture_screen/electra_180g_large/lambda_0.3",
+    Arm("ELECTRA-large", 0.3, "runs/electra_180g_large/lambda_0.3",
         "pre_registration_electra_screen.md"),
     Arm("RoBERTa-base", 0.0, "runs/rbt_base", "rbt_base_run.md"),
 )

@@ -3,7 +3,7 @@
 The claim the paper rests on is that projecting onto the 17 legal states is
 free. That is a statement about a *contrast within an arm* -- M1 against M0 --
 and the study currently has no artifact that reports it: ``structural_arm`` and
-``architecture_screen`` both compare arms to each other on a fixed method, which
+``runs`` both compare arms to each other on a fixed method, which
 is a different question. This module supplies the missing one, for every
 (backbone, lambda) arm that exists, so the claim can be read off a single table
 rather than assembled by hand from four documents.

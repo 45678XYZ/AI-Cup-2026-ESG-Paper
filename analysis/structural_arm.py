@@ -7,9 +7,9 @@ therefore reported without a p-value. Per-class F1 is retained for the safety
 check, including the rare ``within_2_years`` and ``Not Clear`` classes.
 
     python -m analysis.structural_arm \
-        --structural-root structural_arm \
-        --probs-dir probs_structural \
-        --out structural_arm/comparison.json
+        --structural-root runs/structural \
+        --probs-dir runs/structural/probs \
+        --out runs/structural/comparison.json
 """
 
 import argparse
@@ -242,10 +242,10 @@ def _input_hashes(baseline_root, structural_root, seeds) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--baseline-root", type=Path, default=REPO_ROOT)
-    ap.add_argument("--structural-root", type=Path, default=REPO_ROOT / "structural_arm")
-    ap.add_argument("--probs-dir", type=Path, default=REPO_ROOT / "probs_structural")
+    ap.add_argument("--structural-root", type=Path, default=REPO_ROOT / "runs/structural")
+    ap.add_argument("--probs-dir", type=Path, default=REPO_ROOT / "runs/structural/probs")
     ap.add_argument("--out", type=Path,
-                    default=REPO_ROOT / "structural_arm" / "comparison.json")
+                    default=REPO_ROOT / "runs/structural" / "comparison.json")
     ap.add_argument("--n-boot", type=int, default=N_BOOT)
     ap.add_argument("--bootstrap-seed", type=int, default=BOOTSTRAP_SEED)
     args = ap.parse_args()

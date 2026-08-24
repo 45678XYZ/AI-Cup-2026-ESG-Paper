@@ -98,7 +98,7 @@ M1 三 seed mean per-class F1：
 - lambda=0 GPU train time：9,312.2 秒（155.2 分）
 - lambda=0.3 GPU train time：9,348.9 秒（155.8 分）
 - 合計 GPU fit time：約 311.0 分（5.18 小時）
-- Machine-readable report：`architecture_screen/deberta_v2_320m/comparison.json`
+- Machine-readable report：`runs/deberta_v2_320m/comparison.json`
 - 所有 comparison inputs 的 SHA256 都收錄在該 JSON
 
 ## 判讀限制

@@ -62,11 +62,11 @@ docs/           paper plan and interface contract
 figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
 splits/         generated split manifests (version controlled)
 probs/          30 probability bundles, one per rotation, from the official fits
-probs_lambda_sweep/  the structural arm's lambda sweep; scored into no table
-probs_structural/  30 selected-lambda probability bundles from the structural arm
+runs/lambda_sweep/  the structural arm's lambda sweep; scored into no table
+runs/structural/probs/  30 selected-lambda probability bundles from the structural arm
 predictions/    42 per-row prediction files (.csv.gz), one per protocol/seed/method
 results/        42 aggregate result manifests, one per predictions file
-structural_arm/ structural predictions/results plus the cross-arm comparison JSON
+runs/structural/ structural predictions/results plus the cross-arm comparison JSON
 tables/         contract-4 deliverables: Table 1-3, their captions, the dataset
                 audit, and the manifest tying each printed number to its inputs
 tests/          pytest suite
@@ -281,15 +281,15 @@ the full study is the same 6 invocations as the training stage — 42 prediction
 files and 42 results files, a few seconds in total.
 
 The completed training-time structural arm is kept separate from the frozen
-study. Its selected-lambda bundles live in `probs_structural/`; its 42 decision
-files and the pre-registered cross-arm comparison live in `structural_arm/`.
+study. Its selected-lambda bundles live in `runs/structural/probs/`; its 42 decision
+files and the pre-registered cross-arm comparison live in `runs/structural/`.
 Rebuild the comparison, including the 10,000-resample H2 bootstrap, with:
 
 ```bash
 python -m analysis.structural_arm \
-    --structural-root structural_arm \
-    --probs-dir probs_structural \
-    --out structural_arm/comparison.json
+    --structural-root runs/structural \
+    --probs-dir runs/structural/probs \
+    --out runs/structural/comparison.json
 ```
 
 The execution record and interpretation are in

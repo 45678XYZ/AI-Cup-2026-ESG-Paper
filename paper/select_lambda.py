@@ -85,7 +85,7 @@ INDISTINGUISHABLE = 0.002
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--probs-dir", type=Path, default=REPO_ROOT / "probs_lambda_sweep")
+    ap.add_argument("--probs-dir", type=Path, default=REPO_ROOT / "runs/lambda_sweep")
     args = ap.parse_args()
 
     table = sweep_scores(args.probs_dir)

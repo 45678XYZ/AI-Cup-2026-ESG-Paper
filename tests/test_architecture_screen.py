@@ -21,7 +21,7 @@ def test_identical_screen_does_not_pass_seed42_gate(self_comparison):
     assert not gate["passed"]
 
 
-def test_identical_structural_arms_have_zero_paired_effect(self_comparison):
+def test_identical_arms_have_zero_paired_effect(self_comparison):
     effect = self_comparison["structural_effect_m1"]
     assert effect["delta"] == 0.0
     assert effect["ci_low"] == 0.0
