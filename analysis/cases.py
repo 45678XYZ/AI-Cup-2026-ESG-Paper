@@ -25,7 +25,14 @@ import numpy as np
 
 from analysis.load import METHODS, load_aligned
 from paper.data import load_dev
-from paper.labels import EVAL_FIELDS, FIELDS, ID2LABEL, STATES, is_valid_tuple
+from paper.labels import (
+    EVAL_FIELDS,
+    FIELD_WEIGHTS,
+    FIELDS,
+    ID2LABEL,
+    STATES,
+    is_valid_tuple,
+)
 from paper.provenance import git_sha, now_iso
 from paper.train_config import PROTOCOLS, SEEDS
 
@@ -246,6 +253,53 @@ def misleading_cases(order, dev, protocol, seed, root, methods=METHODS) -> list:
     ]
 
 
+def partial_credit_on_invalid(gold, pred) -> float:
+    """Weighted per-field credit an illegal row still collects.
+
+    The metric assigns zero weight to the joint configuration, so a row that
+    contradicts itself is scored field by field like any other. This is how
+    much of the weighted total those rows keep -- the difference between
+    saying the metric *ignores* legality and saying it *pays* for breaking it.
+
+    Returns 0.0 when no row is illegal, which is the honest value: there is
+    nothing being paid for.
+    """
+    invalid = np.array([not is_valid_tuple(*_labels(row)) for row in pred])
+    if not invalid.any():
+        return 0.0
+    return float(sum(
+        FIELD_WEIGHTS[field] * (gold[invalid][:, j] == pred[invalid][:, j]).mean()
+        for j, field in enumerate(FIELDS)
+    ))
+
+
+def hierarchy_information(gold, pred) -> dict:
+    """What the hierarchy decides, against what it leaves open.
+
+    Each child field's prediction is two decisions: whether the field is N/A --
+    the only thing the hierarchy determines -- and, if not, which substantive
+    label it takes, on which the hierarchy is silent. Reporting them separately
+    is what shows the constraint operating where the model needs least help.
+
+    The substantive figure is computed on rows where both gold and prediction
+    are non-N/A, so it measures the choice rather than re-counting the N/A call.
+    """
+    out = {}
+    for j, field in enumerate(FIELDS):
+        labels = EVAL_FIELDS[field]
+        if "N/A" not in labels:             # promise_status has no N/A: it is
+            continue                        # the field the others hang from
+        na = labels.index("N/A")
+        g, p = gold[:, j], pred[:, j]
+        both = (g != na) & (p != na)
+        out[field] = {
+            "na_determination": float(((g == na) == (p == na)).mean()),
+            "substantive_choice": float((g[both] == p[both]).mean()) if both.any() else 0.0,
+            "n_substantive": int((g != na).sum()),
+        }
+    return out
+
+
 def case_analysis(protocol, seed, order, root, dev=None,
                   baseline=BASELINE, projected=PROJECTED,
                   decoders=DECODERS) -> dict:
@@ -266,6 +320,11 @@ def case_analysis(protocol, seed, order, root, dev=None,
         "independent": violation_breakdown(raw),
         "after_projection": violation_breakdown(projected_pred),
         "projection": projection_ledger(gold, raw, projected_pred),
+        # Two figures the paper's structural argument rests on, kept here
+        # rather than in prose because a hand-copied number goes stale
+        # silently: the surrounding sentence still reads perfectly well.
+        "partial_credit_on_invalid": partial_credit_on_invalid(gold, raw),
+        "hierarchy_information": hierarchy_information(gold, raw),
         "by_class": repair_ledger_by_class(gold, raw, projected_pred),
         # M1 against M4: identical probabilities, no calibration on either, so
         # the only difference is greedy projection versus whole-tuple search.
