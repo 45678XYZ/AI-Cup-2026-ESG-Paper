@@ -212,7 +212,9 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             f"by analysis/audit.py. Misleading occurs {_times(len(misleading))} in the "
             f"whole development set, in {_word(n_reports)} different reports, and is "
             f"absent from the Calibration partition of {absent['n_without']} of the "
-            f"{absent['n_rotations']} rotations. All {audit['pdf_overlap']['n_shared']} "
+            f"{absent['n_rotations']} rotations. The four fields admit 120 "
+            "combinations, of which the hierarchy leaves 17 legal, and no "
+            f"development row violates it. All {audit['pdf_overlap']['n_shared']} "
             "development reports also appear in the test split, and "
             f"{_word(len(audit['duplicates']['dev_test']))} paragraph text is "
             "duplicated across the two. No company contributes more than one "
@@ -270,7 +272,11 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             "the competition distribution, since test and development draw on "
             f"the same {dev['pdfs']} reports; the right column measures "
             "generalisation to entirely unseen reports. $\\Delta$ is the gap "
-            "between two estimation targets and is not a bias estimate."
+            "between two estimation targets and is not a bias estimate. All "
+            "seven decision rules are reported rather than a best-scoring "
+            "subset: every $\\Delta$ is positive and every interval excludes "
+            "zero, so the gap is a property of the split and not of any one "
+            "rule."
         ),
     }
 
@@ -319,6 +325,11 @@ def render_table1(audit) -> str:
         row("Companies", dev["companies"], test["companies"]),
         row("\\quad spanning $>$1 report", spanning, NA),
         row("Legal states observed", f"{dev['legal_states_observed']} / 17", NA),
+        # The paper's framing rests on this row: the hierarchy is the release's
+        # own annotation rule, so a metric that credits an illegal tuple is
+        # crediting a combination the labels call impossible. Left to prose it
+        # would stop being checked against the data.
+        row("Gold rows violating the hierarchy", dev["invalid_rows"], NA),
         "\\midrule",
         "\\multicolumn{3}{l}{\\emph{Rarest classes}} \\\\",
         row("\\quad within\\_2\\_years", vt["within_2_years"], NA),

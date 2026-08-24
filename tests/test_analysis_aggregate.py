@@ -8,6 +8,7 @@ from analysis.aggregate import (
     mean_std,
     misleading_free_index,
     protocol_summary,
+    regime_comparison,
 )
 from analysis.load import EXAMPLES_ROOT, METHODS, pdf_clusters
 from paper.data import canonical_row_order, load_dev
@@ -174,3 +175,20 @@ def test_summary_carries_the_hierarchical_metric_per_method():
         h = row["hierarchical_mean"]
         assert set(h) == {"hP", "hR", "hF"}, method
         assert all(0.0 <= v <= 1.0 for v in h.values()), method
+
+
+def test_regime_comparison_reports_every_method_not_the_best_ones():
+    """"Best calibrated projection" and "best valid-state decoder" were chosen
+    by score inside the table they appear in, which is a post-hoc selection
+    however small the table. Reporting all seven costs nothing -- every Delta
+    is positive and every interval excludes zero -- and removes the choice.
+
+    docs/inference_families.md settles this: the regime gap is a pre-specified
+    family of seven, not of three.
+    """
+    from analysis.load import METHODS
+    rows = regime_comparison({"pdf_group": SUMMARY}, ORDER, EXAMPLES_ROOT,
+                             CLUSTERS, n_boot=50, seeds=SEEDS)
+    assert set(rows) == set(METHODS), sorted(rows)
+    for name, row in rows.items():
+        assert row["method"] == name, name

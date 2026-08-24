@@ -1,4 +1,4 @@
-<!-- generated 2026-08-23T21:37:33.756225+00:00 from b635ae4ecb3c6ec13d011870b4c44f2a12b865d2 -->
+<!-- generated 2026-08-24T02:10:56.407149+00:00 from 00b0c75545c6ba8f6092b888c74f21437188bb09-dirty -->
 
 # Findings brief
 
@@ -150,8 +150,12 @@ The cancelled credit is stable across the two protocols; what changes is what pr
 Same-document measures seen-report, unseen-paragraph generalisation and matches the competition's own distribution; document-disjoint measures generalisation to unseen reports. **Δ is the gap between two estimation targets, not a bias.**
 
 - **M0**: same-document 0.585 vs document-disjoint 0.572, Δ 0.012 [0.004, 0.022] (excludes zero)
-- **Best calibrated projection**: same-document 0.587 vs document-disjoint 0.574, Δ 0.012 [0.001, 0.024] (excludes zero)
-- **Best valid-state decoder**: same-document 0.590 vs document-disjoint 0.576, Δ 0.015 [0.004, 0.027] (excludes zero)
+- **M1**: same-document 0.581 vs document-disjoint 0.571, Δ 0.010 [0.001, 0.019] (excludes zero)
+- **M2**: same-document 0.587 vs document-disjoint 0.574, Δ 0.012 [0.001, 0.024] (excludes zero)
+- **M3**: same-document 0.588 vs document-disjoint 0.574, Δ 0.014 [0.003, 0.025] (excludes zero)
+- **M4**: same-document 0.586 vs document-disjoint 0.571, Δ 0.014 [0.005, 0.024] (excludes zero)
+- **M5**: same-document 0.590 vs document-disjoint 0.576, Δ 0.015 [0.004, 0.027] (excludes zero)
+- **M6**: same-document 0.587 vs document-disjoint 0.567, Δ 0.020 [0.011, 0.031] (excludes zero)
 
 ## 6. Conditional field F1 (plan §4.5)
 

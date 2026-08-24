@@ -428,3 +428,26 @@ def test_table5_shows_the_two_metrics_disagreeing_about_the_winner():
     best_h = max(methods, key=lambda m: methods[m]["hierarchical_mean"]["hF"])
     tex = render_table5(SUMMARIES["pdf_group"])
     assert best_official in tex and best_h in tex
+
+
+def test_table1_reports_that_the_gold_never_breaks_the_hierarchy():
+    """The paper's framing rests on this cell: the hierarchy is the task's own
+    annotation rule, not a constraint we imposed. If the gold itself contained
+    illegal tuples, "the metric pays for combinations the labels call
+    impossible" would be our opinion rather than an internal inconsistency.
+
+    It is one number and it is easy to leave in prose, which is exactly how a
+    load-bearing fact stops being checked."""
+    rows = {
+        line.split("&")[0].strip(): [c.strip() for c in line.split("&")[1:]]
+        for line in render_table1(AUDIT).splitlines() if "&" in line
+    }
+    assert "Gold rows violating the hierarchy" in rows
+    assert rows["Gold rows violating the hierarchy"][0] == "0"
+
+
+def test_table1_caption_gives_the_size_of_the_legal_space():
+    """"15 / 17" in the tabular says nothing about how much the hierarchy
+    excludes; 17 of 120 does."""
+    caption = build_captions(AUDIT)["table1_dataset"]
+    assert "17" in caption and "120" in caption

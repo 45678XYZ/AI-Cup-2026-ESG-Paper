@@ -190,29 +190,28 @@ def regime_comparison(summaries, order, root, clusters, n_boot=N_BOOT,
                       seeds=SEEDS, bootstrap_seed=BOOTSTRAP_SEED) -> dict:
     """Table 3: same-document (row_strat) against document-disjoint (pdf_group).
 
-    The three reported rows are M0 plus the best-scoring calibrated projection
-    (M2/M3) and the best-scoring valid-state decoder (M5/M6), selected on the
-    document-disjoint protocol so the choice is made once rather than per
-    column. Delta is the gap between two estimation targets, **not** a bias
-    estimate -- the caption must say so.
-    """
-    disjoint = summaries["pdf_group"]["methods"]
-    best_projection = max(("M2", "M3"),
-                          key=lambda m: disjoint[m]["weighted_macro_f1_mean"])
-    best_decoder = max(("M5", "M6"),
-                       key=lambda m: disjoint[m]["weighted_macro_f1_mean"])
+    All seven methods, not a selected three. An earlier version reported M0
+    plus the best-scoring calibrated projection and the best-scoring valid-state
+    decoder; choosing those two by score inside the table they appear in is a
+    post-hoc selection however small the table, and it costs nothing to remove:
+    every Delta is positive, every interval excludes zero, and all seven survive
+    Holm across seven. ``docs/inference_families.md`` settles this as a
+    pre-specified family of seven.
 
+    Delta is the gap between two estimation targets, **not** a bias estimate --
+    the caption must say so. ``summaries`` is no longer read; it stays in the
+    signature because every caller passes it and the argument documents that
+    this table belongs beside the per-protocol summaries.
+    """
     rows = {}
-    for label, method in (("M0", "M0"),
-                          ("Best calibrated projection", best_projection),
-                          ("Best valid-state decoder", best_decoder)):
+    for method in METHODS:
         same = [load_all("row_strat", s, order, root, methods=(method,))[method]
                 for s in seeds]
         disj = [load_all("pdf_group", s, order, root, methods=(method,))[method]
                 for s in seeds]
         delta = paired_delta(same, disj, clusters, n_boot=n_boot,
                              seed=bootstrap_seed)
-        rows[label] = {
+        rows[method] = {
             "method": method,
             "same_document": float(np.mean([weighted_macro_f1(g, p) for g, p in same])),
             "document_disjoint": float(np.mean([weighted_macro_f1(g, p) for g, p in disj])),
