@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -353,11 +354,24 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     ):
         assert caption in document_text
     assert all(page_text), "the compiled manuscript contains a blank page"
+    sparse_body_pages = [
+        index for index, text in enumerate(page_text[:-1], start=1)
+        if len(text.split()) < 100
+    ]
+    assert not sparse_body_pages, (
+        f"the compiled manuscript contains near-empty body pages: {sparse_body_pages}"
+    )
     assert "AI CUP 2026 競賽提交格式說明 Sample Submission Format Guide" in " ".join(
         document_text.split()
     )
-    for number in range(1, 5):
-        assert f"Student Author {number}" in document_text
+    metadata = (manuscript / "metadata.tex").read_text(encoding="utf-8")
+    authors = re.findall(r"\\author\{([^}]+)\}", metadata)
+    emails = re.findall(r"\\email\{([^}]+)\}", metadata)
+    assert len(authors) == 4
+    assert len(emails) == 4
+    assert not any(author.startswith("Student Author ") for author in authors)
+    assert all(author in document_text for author in authors)
+    assert all(email in document_text for email in emails)
     assert font_errors(pdf) == []
     log = (manuscript / "build" / "main.log").read_text(encoding="utf-8")
     assert "accessing absolute path" not in log
