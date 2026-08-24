@@ -149,3 +149,20 @@ def test_report_invents_no_corrected_p_value():
         "the report quotes corrected p-values that no deliverable contains: "
         f"{unknown}"
     )
+
+
+def test_report_quotes_the_mechanism_rates():
+    """Two figures the structural argument rests on -- what the metric pays for
+    an illegal row, and how well the model already makes the call the hierarchy
+    determines. Both were hand-computed into an earlier draft before any script
+    produced them, which is how a load-bearing number goes stale in silence."""
+    totals = json.loads(
+        (TABLES / "case_analysis.json").read_text(encoding="utf-8"))["totals"]
+    credit = f"{totals['partial_credit_on_invalid'] * 100:.1f}"
+    assert credit in REPORT, f"partial credit {credit}% is absent from the report"
+
+    na = [row["na_determination"]
+          for row in totals["hierarchy_information"].values()]
+    lo, hi = f"{min(na) * 100:.0f}", f"{max(na) * 100:.0f}"
+    assert f"{lo}–{hi}%" in REPORT or f"{lo}-{hi}%" in REPORT, (
+        f"the N/A-determination range {lo}-{hi}% is absent from the report")

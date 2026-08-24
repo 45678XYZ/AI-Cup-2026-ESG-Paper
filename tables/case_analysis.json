@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-08-24T06:24:00.816257+00:00",
- "git_sha": "4f2666b99ec15a64cda222a22f22ddae892a0b71",
+ "generated_at": "2026-08-24T06:31:43.244314+00:00",
+ "git_sha": "c5f47f1f0de8f68851bc2e0b23f115674118d5ef",
  "totals": {
   "n_rows": 12000,
   "n_invalid": 1527,
@@ -92,6 +92,24 @@
     "repaired": 420,
     "destroyed": 17,
     "net": 403
+   }
+  },
+  "partial_credit_on_invalid": 0.443203215601837,
+  "hierarchy_information": {
+   "evidence_quality": {
+    "na_determination": 0.7780833333333333,
+    "substantive_choice": 0.8015221056124888,
+    "n_substantive": 1345
+   },
+   "evidence_status": {
+    "na_determination": 0.8774166666666666,
+    "substantive_choice": 0.8121706428397353,
+    "n_substantive": 1627
+   },
+   "verification_timeline": {
+    "na_determination": 0.8850000000000001,
+    "substantive_choice": 0.5038933665359369,
+    "n_substantive": 1627
    }
   },
   "net_fields": 185,
