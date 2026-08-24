@@ -234,7 +234,8 @@ def _check_bundle_arrays(bundle_dir, meta) -> list[str]:
     return problems
 
 
-def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR) -> list[str]:
+def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR,
+                       split: dict | None = None) -> list[str]:
     """Check that a set of bundles forms one coherent (protocol, seed) run.
 
     Invariant 1b of contract §3 exists for a failure no per-bundle check can
@@ -264,16 +265,18 @@ def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR) -> list[str]:
         return problems
 
     # Every row is Test exactly once, which is what makes the five test
-    # partitions concatenable into one 2,000-row score.
+    # partitions concatenable into one corpus-wide score.
     seen: list[str] = []
     for _, m in metas:
         seen += m.get("test_ids", [])
     protocol, seed = metas[0][1].get("protocol"), metas[0][1].get("seed")
-    try:
-        split = load_split(protocol, seed, splits_dir)
-        expected = split["canonical_row_order"]
-    except (FileNotFoundError, TypeError):
-        expected = canonical_row_order()
+    if split is None:
+        try:
+            split = load_split(protocol, seed, splits_dir)
+        except (FileNotFoundError, TypeError):
+            split = None
+    expected = (split["canonical_row_order"] if split is not None
+                else canonical_row_order())
     if sorted(seen) != sorted(expected):
         problems.append(
             f"concatenated test_ids cover {len(set(seen))} distinct rows "

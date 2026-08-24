@@ -114,6 +114,27 @@ def test_a_complete_run_has_no_problems(run):
     assert validate_probs_run(run) == []
 
 
+def test_a_run_uses_the_supplied_corpus_geometry(tmp_path):
+    """Decision validation must not reload the default 2,000-row manifest."""
+    ids = [f"fr-{i}" for i in range(400)]
+    split = {"canonical_row_order": ids}
+    bundles = []
+    for rotation in range(5):
+        bundle = tmp_path / f"pdf_group_seed42_r{rotation}"
+        bundle.mkdir()
+        meta = {
+            "protocol": "pdf_group",
+            "seed": 42,
+            "rotation": rotation,
+            "test_ids": ids[rotation::5],
+        }
+        with open(bundle / "meta.json", "w", encoding="utf-8") as f:
+            json.dump(meta, f)
+        bundles.append(bundle)
+
+    assert validate_probs_run(bundles, split=split) == []
+
+
 def test_a_missing_rotation_is_caught(run):
     assert any("rotations present" in p for p in validate_probs_run(run[:4]))
 

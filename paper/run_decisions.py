@@ -11,7 +11,7 @@ every method reads the *same* bundles and is scored on the *same* rows, because
 one invocation runs all of them over one loaded set of probabilities.
 
 The five rotations of a (protocol, seed) are concatenated into a single
-2,000-row file before anything is scored — never averaged (plan §4.2 rule 7),
+corpus-wide file before anything is scored — never averaged (plan §4.2 rule 7),
 because folds differ in which rare classes they contain and their F1 values are
 not on a common scale.
 """
@@ -62,7 +62,10 @@ def load_run(probs_dir, protocol, seed, split) -> list[tuple[dict, dict]]:
     if missing:
         raise SystemExit(f"missing probability bundles: {missing}")
 
-    problems = validate_probs_run(dirs)
+    # ``split`` may describe a 400-row or 500-row multilingual corpus. Passing
+    # it through prevents the validator from silently reloading the default
+    # Chinese manifest and expecting the wrong corpus geometry.
+    problems = validate_probs_run(dirs, split=split)
     for d in dirs:
         problems += validate_probs_bundle(d, split)
     if problems:
