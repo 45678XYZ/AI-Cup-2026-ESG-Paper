@@ -178,3 +178,36 @@ def test_no_label_is_empty_or_padded(field):
     values = set(AUDIT["labels_canonical"][field])
     assert "" not in values
     assert all(v == v.strip() for v in values)
+
+
+def test_the_redistributed_data_carries_its_attribution_where_it_can_be_found():
+    """CC BY-NC-SA 4.0 asks a redistributor to state creator, source, licence
+    and modifications. This repository is public, so cloning it delivers the
+    dataset from us rather than from its authors, and the obligation applies.
+
+    Asserted rather than trusted because the notice is the one artifact here
+    that no other test would miss: nothing imports it, nothing computes from
+    it, and a rename or a stale claim would be invisible until someone asked.
+    """
+    from paper.data_en import REPO_ROOT
+
+    notice = REPO_ROOT / "dataset" / "mlpromise_english.NOTICE"
+    assert notice.exists(), "the licence requires an attribution notice"
+    text = notice.read_text(encoding="utf-8")
+
+    prov = provenance()
+    for required in (prov["licence"], prov["source_drive_folder"],
+                     "Seki", "EMNLP 2025", "mlpromise_english.json"):
+        assert required in text, required
+
+    # The notice claims the file is unmodified. That claim is the reason the
+    # recorded sha256 means anything, so it has to match what the loader does.
+    assert "None." in text
+    from paper.data import file_sha256
+
+    assert file_sha256(ENGLISH_PATH) == prov["sha256"]
+
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    assert "mlpromise_english.NOTICE" in readme, (
+        "the notice exists but nothing at the top level points at it, so a "
+        "reader of the repository would not find it")

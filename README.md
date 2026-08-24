@@ -23,6 +23,17 @@ Because every method consumes identical probabilities on identical test rows,
 differences are attributable to the decision stage rather than to the backbone
 or the training data.
 
+## Third-party data
+
+`dataset/mlpromise_english.json` is a redistributed copy of the English portion
+of **ML-Promise** (Seki et al., EMNLP 2025), used for the external replication
+arm and licensed **CC BY-NC-SA 4.0**. It is byte-identical to the release; all
+normalisation happens at load time. Attribution, source and licence terms are
+in [`dataset/mlpromise_english.NOTICE`](dataset/mlpromise_english.NOTICE).
+
+Everything else in this repository is the study's own work. The AI CUP data
+under `dataset/vpesg4k_*.json` is covered by the competition's own terms.
+
 ## Layout
 
 ```

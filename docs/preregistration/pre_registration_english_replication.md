@@ -370,9 +370,20 @@ EMNLP 2025. https://aclanthology.org/2025.emnlp-main.1028/
 
 ## 8. 待團隊決定
 
-1. **授權。** ML-Promise 是 CC BY-NC-SA 4.0（非商業、相同方式分享）。
-   本 repo 目前**沒有 LICENSE 檔**。把資料收錄進來等於再散布，
-   share-alike 對 repo 其餘部分的影響需要團隊確認，這不是我能單方面決定的。
+1. ~~**授權。**~~ **已處理 —— 但只處理了一半。**
+
+   repo 是公開的，所以收錄那個檔案等於再散布：任何人都能從我們這裡下載
+   ML-Promise，不經過原作者。CC BY-NC-SA 4.0 的三個義務裡，只有 **BY** 需要
+   產生可見的東西，已補上 `dataset/mlpromise_english.NOTICE`（作者、出處、
+   授權、未修改），README 有指過去，並有測試斷言它存在且與 provenance 一致。
+
+   **SA 不會傳染到程式碼**：收錄的檔案是逐位元原樣的複本（正規化全在載入時
+   發生），屬於 verbatim copy 而非改作物；衍生產物（`splits_en/`、
+   `predictions/`）只有 id 與標籤，不含原文。**NC** 由用途滿足。
+
+   ⚠️ **仍待團隊決定：repo 自己的程式碼要不要宣告授權。** 目前沒有 LICENSE
+   等於保留所有權利，這跟「公開 repo + 論文附程式」多半不一致。
+   這件事與 ML-Promise 無關，**不擋 B 開跑**。
 2. **要不要跑 λ = 0.3 那半。** 只跑 λ = 0（75 fits、約 2.5 h）就能支撐四個
    backbone 的符號模式；λ = 0.3 才能重現「結構訓練讓代價消失」，
    合計約 5 h。`--structure-lambda 0.3` 已可用，不需要額外實作。

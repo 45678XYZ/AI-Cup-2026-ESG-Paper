@@ -11,5 +11,7 @@
  "paper_url": "https://aclanthology.org/2025.emnlp-main.1028/",
  "arxiv": "https://arxiv.org/abs/2411.04473",
  "licence": "CC BY-NC-SA 4.0",
- "modifications": "none; the file is byte-identical to the release. All normalisation happens at load time in paper/data_en.py."
+ "modifications": "none; the file is byte-identical to the release. All normalisation happens at load time in paper/data_en.py.",
+ "notice": "dataset/mlpromise_english.NOTICE",
+ "licence_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
 }
