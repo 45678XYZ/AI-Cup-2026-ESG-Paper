@@ -2,6 +2,8 @@
 
 **Date:** 2026-08-23
 
+**Metadata updated:** 2026-08-24
+
 **Branch:** `paper/ntcir19-manuscript`
 
 **Submission:** AI CUP Special Session at NTCIR-19
@@ -151,14 +153,11 @@ manuscript/
 committed Figure 1 PDF from `../figures/`. Numerical table bodies will not be
 duplicated in manuscript sources.
 
-`metadata.tex` will reserve four visible title-block slots as `Student Author
-1` through `Student Author 4`, solely to stabilize layout. The draft build may
-succeed with those explicit placeholders but must warn about them; the final
-readiness check will reject any remaining placeholder, even if an email-like
-field has been added. Real names, affiliations, team name, and emails remain
-deferred to the user and will not be invented. Once all placeholders are
-replaced and valid email metadata is supplied, the existing final metadata
-rule may accept the submission.
+`metadata.tex` contains the four student author records supplied by the team on
+2026-08-24, including their affiliation, location, and individual email
+addresses. No author data or team name is invented. The draft build warns if an
+explicit placeholder reappears, and the final readiness check rejects any
+placeholder even if an email-like field has been added.
 
 The AI CUP Special Session invitation governs submission-specific content. Its
 instructions do not require the standard participant-paper `Team Name` and
@@ -188,13 +187,12 @@ repeatable build and checks. The draft verification path will:
 6. check that C-wF1 and hF are described as post hoc;
 7. check that Table 4 is included in full;
 8. inspect overfull boxes and embedded PDF fonts;
-9. report the four layout-only author placeholders as an allowed draft warning
-   and a final submission blocker, even if an email-like field is present.
+9. require four active, non-placeholder author and email records for final
+   submission, while retaining the draft warning for any placeholder.
 
-The first draft is complete only when the English manuscript builds, stays
-within eight pages, includes all core results, contains no unresolved citations,
-and passes every check except the explicit layout-placeholder warning; real
-author metadata remains required for final submission.
+The manuscript is complete only when the English source builds, stays within
+eight pages, includes all core results, contains no unresolved citations, and
+passes every check with the team-supplied author metadata.
 
 ## 7. Bibliography policy
 

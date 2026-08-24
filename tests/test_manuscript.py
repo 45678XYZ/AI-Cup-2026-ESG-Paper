@@ -361,6 +361,16 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     assert not sparse_body_pages, (
         f"the compiled manuscript contains near-empty body pages: {sparse_body_pages}"
     )
+    table4_caption = "All pre-specified contrasts across four metric families."
+    adverse_start = "The complete family also contains adverse evidence."
+    adverse_end = "improve whole-row correctness."
+    discussion_heading = "7 DISCUSSION"
+    assert (
+        document_text.index(table4_caption)
+        < document_text.index(adverse_start)
+        < document_text.index(adverse_end)
+        < document_text.index(discussion_heading)
+    ), "Table 4 must precede the uninterrupted adverse-result paragraph and Discussion"
     assert "AI CUP 2026 競賽提交格式說明 Sample Submission Format Guide" in " ".join(
         document_text.split()
     )
