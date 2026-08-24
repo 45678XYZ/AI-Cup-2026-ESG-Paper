@@ -28,9 +28,15 @@ from paper.train_config import PROTOCOLS, SEEDS
 
 CONTRACT_VERSION = "1.0"
 
+# Five tabulars, down from seven. ``table5_metrics`` reported the same seven
+# rules under six metric columns; once C-wF1 and hF were demoted to prose it
+# carried one fact -- that the metrics disagree about the winner -- which is a
+# sentence in table 2's caption. ``table7_resolution`` re-presented table 4's
+# official block sorted by effect size with the derivation done; that is also a
+# sentence, now in table 4's caption. A table that a caption can replace is a
+# table the reader has to hold in their head for nothing.
 TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
-               "table4_contrasts.tex", "table5_metrics.tex",
-               "table7_resolution.tex", "table8_headroom.tex")
+               "table4_contrasts.tex", "table8_headroom.tex")
 
 # Tables written by their own analysis module rather than by ``write_tables``,
 # because their inputs are not the cross-seed summaries this file consumes.
@@ -62,8 +68,6 @@ SOURCE_SCRIPTS = {
     "table2_main.tex": "analysis/aggregate.py",
     "table3_regimes.tex": "analysis/aggregate.py",
     "table4_contrasts.tex": "analysis/aggregate.py",
-    "table5_metrics.tex": "analysis/aggregate.py",
-    "table7_resolution.tex": "analysis/aggregate.py",
     "table8_headroom.tex": "analysis/aggregate.py",
 }
 
@@ -130,8 +134,6 @@ def table_inputs(predictions_root, protocols=PROTOCOLS, seeds=SEEDS,
         "table2_main.tex": scored["pdf_group"],
         "table3_regimes.tex": [p for protocol in protocols for p in scored[protocol]],
         "table4_contrasts.tex": scored["pdf_group"],
-        "table5_metrics.tex": scored["pdf_group"],
-        "table7_resolution.tex": scored["pdf_group"],
         "table8_headroom.tex": scored["pdf_group"],
     }
 
@@ -243,7 +245,8 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             + (" Paired contrasts between these rows, under each metric and "
                "with their Holm-corrected p-values, are reported in Table 4."
                if contrasts else "")
-            + (_consistency_clause(methods) if methods else "")
+            + (_consistency_clause(methods) + _ranking_sentence(methods)
+               if methods else "")
         ),
         "table8_headroom": (
             f"Where the official score falls short under {HEADROOM_METHOD}, and "
@@ -257,16 +260,6 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             "twice in the development set and is never predicted by any arm, so "
             "a quarter of evidence\\_quality's macro-F1 -- 0.0875 of the "
             "weighted total -- is out of reach by construction."
-        ),
-        "table7_resolution": (
-            "What this benchmark can resolve, on the metric it ranks by. "
-            "Contrasts are ordered by effect size. A percentile interval that "
-            "excludes zero is not a verdict: with five contrasts corrected "
-            "together, the largest effect here clears zero and still does not "
-            "survive. That magnitude bounds what a leaderboard difference on "
-            "this benchmark can mean, and it should be read against the full "
-            "range across the seven decision rules, which is "
-            f"{_method_span(methods):.4f}."
         ),
         "table4_contrasts": (
             "The five pre-specified contrasts of the analysis plan, under the "
@@ -283,6 +276,7 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             "further structure-aware metrics were examined after the primary "
             "analysis and are reported as exploratory in the text, not as Holm "
             "families here."
+            + _resolution_clause(contrasts, methods)
             + _survival_summary({
                 "contrasts": contrasts,
                 "tuple_contrasts": tuple_contrasts,
@@ -291,16 +285,6 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             "analysis plan in advance; the path-constrained variant and the "
             "hierarchical F1 were adopted after the primary analysis and are "
             "not pre-specified."
-        ),
-        "table5_metrics": (
-            "The same seven decision rules scored under each metric. C-wF1 is "
-            "the official metric with ancestor-unsupported fields counted as "
-            "false predictions; hP, hR and hF are the ancestor-based "
-            "hierarchical precision, recall and F1, which are micro-averaged "
-            "over path nodes rather than macro-averaged over classes. C-wF1 "
-            "equals the official score for every rule whose output is legal by "
-            "construction and falls below it only for the unconstrained one."
-            + (_ranking_sentence(methods) if methods else "")
         ),
         "table3_regimes": (
             "Same-document versus document-disjoint evaluation. The left column "
@@ -315,6 +299,30 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             "rule."
         ),
     }
+
+
+def _resolution_clause(contrasts, methods) -> str:
+    """What magnitude this benchmark can actually resolve, in one sentence.
+
+    This used to be a table of its own, which re-presented the official block
+    above sorted by effect size with the arithmetic done. Everything it showed
+    is already in the rows: the sentence names the one contrast whose interval
+    clears zero without surviving, and puts it beside the full spread across
+    the seven rules the study set out to separate.
+    """
+    if not contrasts:
+        return ""
+    shaped = [(abs(r["delta"]), k, r) for k, r in contrasts.items()
+              if (r["ci_low"] > 0 or r["ci_high"] < 0) and r["p_holm"] >= ALPHA]
+    if not shaped:
+        return ""
+    magnitude, key, row = max(shaped)
+    tail = (f" the full range across the seven decision rules is "
+            f"{_method_span(methods):.4f}." if methods else ".")
+    return (f" The largest effect here, {key} at $|\\Delta|$ = {magnitude:.3f}, "
+            f"has an interval excluding zero and still does not survive the "
+            f"correction ($p_{{\\mathrm{{Holm}}}}$ = {row['p_holm']:.3f}); "
+            f"for scale,{tail}")
 
 
 def _method_span(methods) -> float:
@@ -391,6 +399,16 @@ def render_table1(audit) -> str:
 
 
 def render_table2(summary) -> str:
+    """Seven decision rules over one set of probabilities.
+
+    The four per-field columns are descriptive -- no claim rests on them, and
+    table 8 gives that breakdown once with the weights and marginal values that
+    make it mean something. They stay because the shape is declared in
+    ``contracts/examples/tables/table2_main.tex``: D builds against it, and a
+    column count is exactly the kind of thing that is cheap to change here and
+    expensive to discover downstream. Dropping them is a contract change, not
+    a rendering choice.
+    """
     body = []
     for method, calibration, decoding in TABLE2_ROWS:
         row = summary["methods"][method]
@@ -434,26 +452,6 @@ def render_table4(summary) -> str:
     return _tabular("llrrr", header, body)
 
 
-def render_table5(summary) -> str:
-    """The same seven decision rules scored under each metric.
-
-    Optional: the paper's argument rests on table 4. This one carries the
-    descriptive counterpart -- that the metrics do not even agree on which
-    method is best -- and is offered so D can include it or drop it against
-    the page budget.
-    """
-    body = []
-    for method, _, _ in TABLE2_ROWS:
-        row = summary["methods"][method]
-        h = row["hierarchical_mean"]
-        body.append(
-            f"{method} & {_f(row['weighted_macro_f1_mean'])} & "
-            f"{_f(row['consistent_weighted_macro_f1_mean'])} & "
-            f"{_f(h['hP'])} & {_f(h['hR'])} & {_f(h['hF'])} & "
-            f"{_f(row['tuple_exact_match_mean'])} \\\\")
-    header = "ID & Weighted F1 & C-wF1 & hP & hR & hF & Tuple Acc."
-    return _tabular("lrrrrrr", header, body)
-
 
 def render_table3(regimes) -> str:
     body = []
@@ -466,37 +464,6 @@ def render_table3(regimes) -> str:
     header = "Method & Same-document & Document-disjoint & $\\Delta$ & 95\\% CI"
     return _tabular("lrrrr", header, body)
 
-
-def render_table7(summary) -> str:
-    """What difference this benchmark can resolve, on the metric it ranks by.
-
-    Ordered by effect size, so the row where the correction stops clearing
-    contrasts is where the reader's finger lands. The last row is the argument:
-    an interval that excludes zero and a corrected p that does not clear alpha
-    can belong to the same contrast, and on this benchmark they do -- at a
-    magnitude smaller than the full spread across the seven decision rules the
-    study set out to separate.
-
-    Only the official metric appears. Resolution is a property of a
-    measurement, and the measurement the leaderboard makes is this one.
-    """
-    family = summary["contrasts"]
-    ordered = sorted(family.items(), key=lambda kv: abs(kv[1]["delta"]))
-
-    body = []
-    for key, row in ordered:
-        half = (row["ci_high"] - row["ci_low"]) / 2
-        clears = row["ci_low"] > 0 or row["ci_high"] < 0
-        survives = row["p_holm"] < ALPHA
-        p = f"{row['p_holm']:.3f}"
-        body.append(
-            f"{key} & {abs(row['delta']):.3f} & {half:.3f} & "
-            f"{'yes' if clears else 'no'} & {p} & "
-            f"{'yes' if survives else 'no'} \\\\")
-
-    header = ("Contrast & $|\\Delta|$ & CI half-width & Interval excludes 0 & "
-              "$p_{\\mathrm{Holm}}$ & Survives")
-    return _tabular("lrrccc", header, body)
 
 
 HEADROOM_METHOD = "M1"
@@ -564,8 +531,6 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
         "table2_main.tex": render_table2(summaries["pdf_group"]),
         "table3_regimes.tex": render_table3(regimes),
         "table4_contrasts.tex": render_table4(summaries["pdf_group"]),
-        "table5_metrics.tex": render_table5(summaries["pdf_group"]),
-        "table7_resolution.tex": render_table7(summaries["pdf_group"]),
         "table8_headroom.tex": render_table8(summaries["pdf_group"]),
     }
     for name, content in rendered.items():

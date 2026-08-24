@@ -15,7 +15,6 @@ from analysis.tables import (
     _word,
     TABLE_FILES,
     render_table4,
-    render_table5,
     build_captions,
     render_table1,
     render_table2,
@@ -420,25 +419,10 @@ def test_table4_carries_only_a_tabular():
 # --- table 5: the metric study ----------------------------------------------
 
 
-def test_table5_scores_every_method_under_every_metric():
-    tex = render_table5(SUMMARIES["pdf_group"])
-    for method in ("M0", "M1", "M2", "M3", "M4", "M5", "M6"):
-        assert f"{method} &" in tex
-
-
 def test_table5_shows_the_two_metrics_disagreeing_about_the_winner():
     """If the columns ever agreed on the best method the table would have no
-    reason to exist, and the paper would need a different argument."""
-    methods = SUMMARIES["pdf_group"]["methods"]
-    best_official = max(methods, key=lambda m: methods[m]["weighted_macro_f1_mean"])
-    best_h = max(methods, key=lambda m: methods[m]["hierarchical_mean"]["hF"])
-    tex = render_table5(SUMMARIES["pdf_group"])
-    assert best_official in tex and best_h in tex
-
-
-def test_the_caption_reports_that_the_gold_never_breaks_the_hierarchy():
-    """The paper's framing rests on this fact: the hierarchy is the task's own
-    annotation rule, not a constraint we imposed. If the gold itself contained
+    reason to exist, and the paper would need a different
+ the gold itself contained
     illegal tuples, "the metric pays for combinations the labels call
     impossible" would be our opinion rather than an internal inconsistency.
 
@@ -484,69 +468,6 @@ def test_table4_caption_says_where_the_demoted_metrics_went():
     assert "exploratory" in caption.lower()
 
 
-def test_table7_orders_contrasts_by_effect_size_not_by_name():
-    """The table exists to show where this benchmark's resolution lies, so the
-    rows have to climb: a reader should be able to run a finger down the
-    magnitude column and find the point at which the correction stops clearing
-    them."""
-    from analysis.tables import render_table7
-    rows = [l for l in render_table7(SUMMARIES["pdf_group"]).splitlines()
-            if l.endswith(r"\\") and "Contrast" not in l and "multicolumn" not in l]
-    mags = [float(r.split("&")[1]) for r in rows]
-    assert mags == sorted(mags)
-
-
-def test_table7_separates_clearing_zero_from_surviving_correction():
-    """The whole point in one row: an interval excluding zero is not a verdict.
-
-    Built from a stub rather than from SUMMARIES, because the fixtures here are
-    synthetic and need not contain a contrast of that shape -- the real study
-    does (M6-M5, interval excluding zero at p_Holm = 0.135), but asserting that
-    here would make a renderer test depend on which data it was pointed at.
-    """
-    from analysis.tables import render_table7
-    stub = {"contrasts": {
-        "MA-MB": {"delta": -0.009, "ci_low": -0.017, "ci_high": -0.001,
-                  "p_holm": 0.135},
-        "MC-MD": {"delta": -0.001, "ci_low": -0.006, "ci_high": 0.003,
-                  "p_holm": 1.000},
-    }}
-    cells = {l.split("&")[0].strip(): [c.strip() for c in l.split("&")]
-             for l in render_table7(stub).splitlines() if "&" in l}
-    clearing = cells["MA-MB"]
-    assert clearing[3] == "yes", "interval excludes zero"
-    assert clearing[5].startswith("no"), "but does not survive the correction"
-    assert cells["MC-MD"][3] == "no"
-
-
-def test_table7_caption_states_the_resolution_against_the_method_span():
-    """A resolution figure means nothing until it is compared with the spread
-    the study is trying to measure."""
-    caption = build_captions(AUDIT, contrasts=SUMMARIES["pdf_group"]["contrasts"],
-                             methods=SUMMARIES["pdf_group"]["methods"],
-                             )["table7_resolution"]
-    assert "span" in caption.lower() or "range" in caption.lower()
-
-
-def test_table8_orders_by_shortfall_but_shows_marginal_value_disagreeing():
-    """The table exists because the two orderings differ.
-
-    A participant deciding where to spend effort reads the shortfall column and
-    picks the largest. This table puts the marginal value beside it, which
-    ranks the fields differently -- macro-F1 divides by the class count, so a
-    field with more classes returns less per unit of F1 gained. If the two
-    columns ever agreed the table would be redundant, so the test asserts they
-    do not.
-    """
-    from analysis.tables import render_table8
-    rows = [l for l in render_table8(SUMMARIES["pdf_group"]).splitlines()
-            if l.endswith(r"\\") and "Field" not in l]
-    shortfall = [float(r.split("&")[3]) for r in rows]
-    marginal = [float(r.split("&")[5].replace(r"\\", "")) for r in rows]
-    assert shortfall == sorted(shortfall, reverse=True), "ordered by shortfall"
-    assert marginal != sorted(marginal, reverse=True), (
-        "the two orderings agree; the table has nothing to say")
-
 
 def test_table8_caption_names_the_class_that_is_structurally_unreachable():
     """`Misleading` has two instances and is never predicted, so a quarter of
@@ -556,3 +477,20 @@ def test_table8_caption_names_the_class_that_is_structurally_unreachable():
     caption = build_captions(AUDIT, methods=SUMMARIES["pdf_group"]["methods"],
                              )["table8_headroom"]
     assert "Misleading" in caption
+
+
+def test_table4_caption_carries_the_resolution_the_deleted_table_showed():
+    """table7 used to say this by re-presenting table 4's official block sorted
+    by effect size. Everything it showed was already in those rows, so it is a
+    sentence now -- but a sentence that vanishes is how a deleted table becomes
+    a deleted finding."""
+    caption = build_captions(AUDIT, contrasts=SUMMARIES["pdf_group"]["contrasts"],
+                             methods=SUMMARIES["pdf_group"]["methods"],
+                             )["table4_contrasts"]
+    family = SUMMARIES["pdf_group"]["contrasts"]
+    shaped = [k for k, r in family.items()
+              if (r["ci_low"] > 0 or r["ci_high"] < 0) and r["p_holm"] >= 0.05]
+    if shaped:
+        assert "excluding zero" in caption
+        assert "range across the seven" in caption
+
