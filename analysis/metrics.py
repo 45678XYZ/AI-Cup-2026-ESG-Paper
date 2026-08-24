@@ -137,6 +137,29 @@ def weighted_macro_f1(gold, pred, idx=None) -> float:
     ))
 
 
+def unweighted_macro_f1(gold, pred, idx=None) -> float:
+    """The same four per-field macro-F1 scores, averaged equally.
+
+    Exists for the English replication arm. ML-Promise defines no weighting, so
+    the AI CUP's 0.20/0.15/0.30/0.35 are applied there only to make the two
+    arms' contrasts computed the same way; this is the companion column that
+    lets a reader see what that choice bought, and it is why no English number
+    may be captioned "official". See
+    ``docs/preregistration/pre_registration_english_replication.md`` section 3.3.
+
+    On the frozen Chinese data the two agree on every pre-specified contrast --
+    same sign, same verdict, at most 0.0009 apart -- which is the evidence that
+    the study's conclusions do not rest on the weighting. That agreement is
+    asserted in ``tests/test_analysis_metrics.py`` rather than left as a claim.
+    """
+    if idx is not None:
+        gold, pred = gold[idx], pred[idx]
+    return float(np.mean([
+        _macro_f1(gold[:, j], pred[:, j], N_CLASSES[j])
+        for j in range(len(FIELDS))
+    ]))
+
+
 def _node_counts(codes) -> np.ndarray:
     """Per row, the number of hierarchy nodes a label assignment asserts.
 

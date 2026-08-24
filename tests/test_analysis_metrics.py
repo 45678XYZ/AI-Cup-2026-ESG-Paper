@@ -11,6 +11,7 @@ import pytest
 
 from analysis.load import EXAMPLES_ROOT, METHODS, load_aligned, pdf_clusters
 from analysis.metrics import (
+    unweighted_macro_f1,
     conditional_field_macro_f1,
     hierarchical_f1,
     hierarchical_prf,
@@ -21,7 +22,8 @@ from analysis.metrics import (
     weighted_macro_f1,
 )
 from paper.artifacts import read_predictions
-from paper.data import canonical_row_order, load_dev
+from paper.data import REPO_ROOT, canonical_row_order, load_dev
+from paper.train_config import SEEDS
 from paper.labels import (
     CONDITIONING_SUBSET,
     EVAL_FIELDS,
@@ -319,3 +321,47 @@ def test_hierarchical_f1_honours_the_subset_index():
     idx = np.arange(0, len(RECORDS), 3)
     assert hierarchical_f1(gold, pred, idx) == pytest.approx(
         hierarchical_f1(gold[idx], pred[idx]), abs=1e-12)
+
+
+# --------------------------------------------------------------------------
+# The unweighted aggregate the English arm reports beside the weighted one
+# --------------------------------------------------------------------------
+
+def test_unweighted_macro_f1_is_the_equal_average_of_the_same_four_scores():
+    """Only the aggregation differs. If the per-field scores ever stopped being
+    shared, the two columns would be measuring different things and the
+    companion column would prove nothing."""
+    gold, pred = load_aligned("pdf_group", 42, "M1", ORDER, EXAMPLES_ROOT)
+    fields = field_macro_f1(gold, pred)
+    assert unweighted_macro_f1(gold, pred) == pytest.approx(
+        float(np.mean(list(fields.values()))), abs=1e-12)
+
+
+def test_the_two_aggregations_agree_on_every_pre_specified_contrast():
+    """The evidence behind "our conclusions do not rest on the weighting".
+
+    Asserted rather than written into the pre-registration as a number,
+    because it is the sentence the English arm's weighted column depends on.
+    Tolerance is loose on purpose: the claim is that the two agree in sign and
+    verdict and stay within a thousandth, not that they coincide.
+    """
+    from analysis.bootstrap import BOOTSTRAP_SEED, paired_delta
+
+    dev = load_dev()
+    order = canonical_row_order(dev)
+    clusters = pdf_clusters(order, dev)
+    sets = {
+        m: [load_aligned("pdf_group", s, m, order, REPO_ROOT) for s in SEEDS]
+        for m in ("M0", "M1", "M4", "M5", "M6")
+    }
+
+    for after, before in (("M1", "M0"), ("M4", "M1"), ("M6", "M5")):
+        w = paired_delta(sets[after], sets[before], clusters,
+                         n_boot=400, seed=BOOTSTRAP_SEED)
+        u = paired_delta(sets[after], sets[before], clusters, n_boot=400,
+                         seed=BOOTSTRAP_SEED, score=unweighted_macro_f1)
+        label = f"{after}-{before}"
+        assert abs(w["delta"] - u["delta"]) < 0.001, label
+        assert (w["delta"] > 0) == (u["delta"] > 0), label
+        excludes_zero = lambda r: r["ci_low"] > 0 or r["ci_high"] < 0
+        assert excludes_zero(w) == excludes_zero(u), label
