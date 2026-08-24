@@ -11,6 +11,7 @@ from analysis.aggregate import protocol_summary, regime_comparison
 from analysis.audit import full_audit
 from analysis.load import EXAMPLES_ROOT, pdf_clusters
 from analysis.tables import (
+    FAMILY_LABELS,
     TABLE_FILES,
     render_table4,
     render_table5,
@@ -381,11 +382,16 @@ def test_table1_caption_states_the_overlap_and_the_duplicate():
 
 
 def test_table4_lists_every_contrast_of_every_family():
+    """Derived from FAMILY_LABELS rather than a hard-coded list of four.
+
+    The list used to be written out here, which meant demoting two families
+    broke this test for the wrong reason -- it was asserting the old design
+    rather than the property "every contrast of every reported family appears
+    exactly once".
+    """
     summary = SUMMARIES["pdf_group"]
     tex = render_table4(summary)
-    families = [k for k in ("contrasts", "consistent_contrasts",
-                            "hierarchical_contrasts", "tuple_contrasts")
-                if summary.get(k)]
+    families = [k for k, _ in FAMILY_LABELS if summary.get(k)]
     body = [l for l in tex.splitlines() if l.endswith(r"\\") and "midrule" not in l]
     # one header row plus one row per (family, contrast)
     assert len(body) == 1 + sum(len(summary[k]) for k in families)
@@ -397,9 +403,7 @@ def test_table4_marks_what_survived_the_correction():
     """The reader has to be able to see the verdict without recomputing it."""
     summary = SUMMARIES["pdf_group"]
     tex = render_table4(summary)
-    survivors = sum(1 for family in ("contrasts", "consistent_contrasts",
-                                     "hierarchical_contrasts", "tuple_contrasts")
-                    if summary.get(family)
+    survivors = sum(1 for family, _ in FAMILY_LABELS if summary.get(family)
                     for row in summary[family].values() if row["p_holm"] < 0.05)
     assert tex.count(r"\textbf{") >= survivors
 
@@ -451,3 +455,29 @@ def test_table1_caption_gives_the_size_of_the_legal_space():
     excludes; 17 of 120 does."""
     caption = build_captions(AUDIT)["table1_dataset"]
     assert "17" in caption and "120" in caption
+
+
+def test_table4_reports_only_the_two_pre_specified_families():
+    """docs/inference_families.md settles this: the official metric and tuple
+    exact-match are the pre-specified families; path-constrained wF1 and hF
+    were added after the primary analysis and drop to prose.
+
+    Rendering four families side by side presents all four as equally planned,
+    which is the impression the whole document exists to prevent -- and it puts
+    ten exploratory tests on the page for a reader to count.
+    """
+    body = render_table4(SUMMARIES["pdf_group"])
+    assert "Weighted macro-F1 (official)" in body
+    assert "Tuple accuracy" in body
+    assert "Path-constrained" not in body
+    assert "Hierarchical F1" not in body
+
+
+def test_table4_caption_says_where_the_demoted_metrics_went():
+    """Silently dropping two families a previous draft carried is the kind of
+    edit that reads as tidying and lands as selective reporting."""
+    caption = build_captions(AUDIT, contrasts=SUMMARIES["pdf_group"]["contrasts"],
+                             tuple_contrasts=SUMMARIES["pdf_group"]["tuple_contrasts"],
+                             methods=SUMMARIES["pdf_group"]["methods"],
+                             )["table4_contrasts"]
+    assert "exploratory" in caption.lower()

@@ -43,10 +43,15 @@ ALL_TABLE_FILES = TABLE_FILES + EXTERNAL_TABLE_FILES
 
 # How each Holm family is named in table 4. Held here rather than imported
 # from the brief so the tabular's wording cannot drift with prose edits.
+# The two families ``paper_plan.md`` named before any result existed: the
+# competition's own metric (section 4.4) and tuple exact-match (section 4.5).
+# Path-constrained wF1 and hF were adopted after the primary analysis returned
+# its null and are exploratory; ``docs/inference_families.md`` demotes them to
+# prose rather than giving each a Holm family, which removes ten tests from the
+# page and costs nothing -- what they show, tuple exact-match already shows
+# with a pre-specified metric and a ten-times-larger effect.
 FAMILY_LABELS = (
     ("contrasts", "Weighted macro-F1 (official)"),
-    ("consistent_contrasts", "Path-constrained wF1"),
-    ("hierarchical_contrasts", "Hierarchical F1 (hF)"),
     ("tuple_contrasts", "Tuple accuracy"),
 )
 
@@ -236,19 +241,22 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             + (_consistency_clause(methods) if methods else "")
         ),
         "table4_contrasts": (
-            "The five pre-specified contrasts of the analysis plan, each "
-            "evaluated under every metric. Paired PDF-cluster bootstrap over "
-            f"{N_BOOT:,} resamples on the document-disjoint protocol; the "
-            "resampling unit is the source report, not the paragraph. Each "
-            "metric is Holm-corrected as its own family of five rather than "
-            "pooled: the contrasts were specified once, not once per metric. "
+            "The five pre-specified contrasts of the analysis plan, under the "
+            "two metrics the plan named before any result existed: the "
+            "competition's own weighted macro-F1 and tuple exact-match. Paired "
+            f"PDF-cluster bootstrap over {N_BOOT:,} resamples on the "
+            "document-disjoint protocol; the resampling unit is the source "
+            "report, not the paragraph. Each metric is Holm-corrected as its "
+            "own family of five rather than pooled: the contrasts were "
+            "specified once, not once per metric. "
             "\\textbf{Bold $p_{\\mathrm{Holm}}$ marks a contrast that survives "
             "the correction; the bracketed intervals are uncorrected 95\\% "
-            "percentile intervals and decide nothing on their own.}"
+            "percentile intervals and decide nothing on their own.} Two "
+            "further structure-aware metrics were examined after the primary "
+            "analysis and are reported as exploratory in the text, not as Holm "
+            "families here."
             + _survival_summary({
                 "contrasts": contrasts,
-                "consistent_contrasts": consistent_contrasts,
-                "hierarchical_contrasts": hierarchical_contrasts,
                 "tuple_contrasts": tuple_contrasts,
             })
             + " The official metric and tuple accuracy were named in the "
