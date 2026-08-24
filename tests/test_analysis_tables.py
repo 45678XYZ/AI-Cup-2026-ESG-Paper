@@ -12,17 +12,20 @@ from analysis.audit import full_audit
 from analysis.load import EXAMPLES_ROOT, pdf_clusters
 from analysis.tables import (
     FAMILY_LABELS,
+    _resolution_clause,
     _word,
     TABLE_FILES,
     render_table4,
     build_captions,
     render_table1,
     render_table2,
+    render_table5_headroom,
     render_table6_regimes,
     table_inputs,
     write_tables,
 )
 from paper.data import REPO_ROOT, canonical_row_order, file_sha256, load_dev
+from paper.labels import EVAL_FIELDS, FIELD_WEIGHTS
 
 DEV = load_dev()
 ORDER = canonical_row_order(DEV)
@@ -469,6 +472,81 @@ def test_table4_caption_says_where_the_demoted_metrics_went():
 
 
 
+# --- the resolution clause -------------------------------------------------
+#
+# One sentence carrying two claims that are easy to get wrong: which metric it
+# scanned, and what the magnitude it offers as scale is measuring.
+
+
+def _shaped(delta, low, high, p_holm):
+    return {"delta": delta, "ci_low": low, "ci_high": high, "p_holm": p_holm}
+
+
+SHAPED_CONTRAST = {"M6-M5": _shaped(-0.009, -0.017, -0.001, 0.135)}
+
+
+def _scores(**kwargs):
+    return {k: {"weighted_macro_f1_mean": v} for k, v in kwargs.items()}
+
+
+def test_the_resolution_clause_names_the_metric_it_scanned():
+    """It reads the official family only, but the table it captions also prints
+    tuple accuracy, where M1-M0 is +0.035 -- four times the effect the sentence
+    calls the largest. Unscoped, the sentence is false about its own table."""
+    clause = _resolution_clause(
+        SHAPED_CONTRAST, _scores(M0=0.570, M5=0.576, M6=0.567))
+    assert "official" in clause.lower(), clause
+
+
+def test_the_scale_is_not_offered_as_corroboration_when_it_is_the_same_number():
+    """M5 is the highest-scoring rule and M6 the lowest, so 'the full range
+    across the seven rules' *is* |M6-M5|. Printed after 'for scale' it reads as
+    a second, independent measurement; it is the first one restated. Where the
+    contrast spans the extremes the clause says that instead."""
+    clause = _resolution_clause(
+        SHAPED_CONTRAST, _scores(M0=0.570, M5=0.576, M6=0.567))
+    assert "for scale" not in clause.lower(), clause
+    assert "highest- and lowest-scoring" in clause, clause
+
+
+def test_the_scale_is_still_offered_when_it_measures_something_else():
+    """With M0 at the bottom the range is 0.076 and the contrast is 0.009 --
+    two different quantities, and the comparison is the useful one."""
+    clause = _resolution_clause(
+        SHAPED_CONTRAST, _scores(M0=0.500, M5=0.576, M6=0.567))
+    assert "for scale" in clause.lower(), clause
+    assert "0.0760" in clause, clause
+
+
+def test_the_marginal_value_column_names_the_quantity_it_computes():
+    """The column holds weight / |classes| * 0.1 -- what raising *one class's*
+    F1 by 0.1 adds to the weighted total. Read as a gain in the field's
+    macro-F1 it invites weight * 0.1: 0.035 for evidence_quality against the
+    0.0087 printed, a factor of four. The arithmetic is the useful one, and it
+    is the arithmetic the caption's own reasoning depends on -- a field with
+    more classes returns less per class. Only the name was wrong.
+    """
+    table = render_table5_headroom(SUMMARIES["pdf_group"])
+    header = next(l for l in table.splitlines() if "Field &" in l)
+    row = next(l for l in table.splitlines() if "evidence\\_quality" in l)
+    printed = float(row.split("&")[-1].replace("\\\\", "").strip())
+
+    weight = FIELD_WEIGHTS["evidence_quality"]
+    per_class = weight / len(EVAL_FIELDS["evidence_quality"]) * 0.10
+    assert printed == pytest.approx(per_class, abs=5e-5)
+    # The two readings are different numbers, which is why the label decides
+    # whether the column is informative or off by the class count.
+    assert printed != pytest.approx(weight * 0.10, abs=5e-5)
+    assert "class" in header.lower(), header
+
+
+def test_table5_caption_says_the_gain_is_on_one_class_not_on_the_field():
+    caption = build_captions(AUDIT, methods=SUMMARIES["pdf_group"]["methods"],
+                             )["table5_headroom"]
+    assert "single class" in caption
+    assert "that field's macro-F1" not in caption
+
+
 def test_table8_caption_names_the_class_that_is_structurally_unreachable():
     """`Misleading` has two instances and is never predicted, so a quarter of
     the highest-weighted field's macro-F1 is out of reach by construction. A
@@ -492,5 +570,9 @@ def test_table4_caption_carries_the_resolution_the_deleted_table_showed():
               if (r["ci_low"] > 0 or r["ci_high"] < 0) and r["p_holm"] >= 0.05]
     if shaped:
         assert "excluding zero" in caption
-        assert "range across the seven" in caption
+        # Either framing carries the scale; which one fires depends on whether
+        # the contrast happens to span the best- and worst-scoring rules, and
+        # on these synthetic inputs it need not.
+        assert ("range across the seven" in caption
+                or "highest- and lowest-scoring" in caption), caption
 

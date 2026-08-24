@@ -257,10 +257,11 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             f"Where the official score falls short under {HEADROOM_METHOD}, and "
             "what closing each part is worth. Shortfall is the field's weight "
             "times its distance from a perfect macro-F1; share is its portion "
-            "of the total. The last column is what a 0.1 gain in that field's "
-            "macro-F1 adds to the weighted total, which orders the fields "
+            "of the total. The last column is what a 0.1 gain on a single "
+            "class's F1 adds to the weighted total -- the field's weight "
+            "divided by its class count, times 0.1 -- which orders the fields "
             "differently from the shortfall: macro-F1 averages over classes, so "
-            "a field carrying more of them returns less per unit gained. "
+            "a field carrying more of them returns less per class improved. "
             "\\textbf{Not all of the shortfall is reachable.} Misleading occurs "
             "twice in the development set and is never predicted by any arm, so "
             "a quarter of evidence\\_quality's macro-F1 -- 0.0875 of the "
@@ -313,7 +314,15 @@ def _resolution_clause(contrasts, methods) -> str:
     above sorted by effect size with the arithmetic done. Everything it showed
     is already in the rows: the sentence names the one contrast whose interval
     clears zero without surviving, and puts it beside the full spread across
-    the seven rules the study set out to separate.
+    the rules the study set out to separate.
+
+    Two things it has to be careful about. It scans the official family only,
+    while the table beside it also prints tuple accuracy -- where M1-M0 is
+    +0.035, four times what this sentence calls the largest -- so the metric is
+    named. And the spread it offers as scale is sometimes the very contrast it
+    is scaling: when the two rules named are the best- and worst-scoring of the
+    set, ``_method_span`` returns this contrast's own magnitude, and printing
+    it after "for scale" reads as a second, corroborating measurement.
     """
     if not contrasts:
         return ""
@@ -322,20 +331,42 @@ def _resolution_clause(contrasts, methods) -> str:
     if not shaped:
         return ""
     magnitude, key, row = max(shaped)
-    tail = (f" the full range across the seven decision rules is "
-            f"{_method_span(methods):.4f}." if methods else ".")
-    return (f" The largest effect here, {key} at $|\\Delta|$ = {magnitude:.3f}, "
-            f"has an interval excluding zero and still does not survive the "
-            f"correction ($p_{{\\mathrm{{Holm}}}}$ = {row['p_holm']:.3f}); "
-            f"for scale,{tail}")
+    head = (f" The largest effect on the official metric, {key} at "
+            f"$|\\Delta|$ = {magnitude:.3f}, has an interval excluding zero "
+            f"and still does not survive the correction "
+            f"($p_{{\\mathrm{{Holm}}}}$ = {row['p_holm']:.3f})")
+    if not methods:
+        return head + "."
+    if _spans_the_extremes(key, methods):
+        return (f"{head} -- and those two rules are the highest- and "
+                f"lowest-scoring of the {_word(len(methods))}, so that is not "
+                f"one contrast among many but the entire spread the benchmark "
+                f"has to resolve.")
+    return (f"{head}; for scale, the full range across the "
+            f"{_word(len(methods))} decision rules is "
+            f"{_method_span(methods):.4f}.")
+
+
+def _spans_the_extremes(key, methods) -> bool:
+    """Whether the contrast's two rules are the best- and worst-scoring ones.
+
+    When they are, ``_method_span`` is |delta| of this same contrast and the
+    two numbers are one measurement, not two.
+    """
+    named = set(key.split("-"))
+    if len(named) != 2 or not named.issubset(methods):
+        return False
+    scores = {m: v["weighted_macro_f1_mean"] for m, v in methods.items()}
+    return named == {max(scores, key=scores.get), min(scores, key=scores.get)}
 
 
 def _method_span(methods) -> float:
     """Spread of the official metric across every decision rule.
 
-    The resolution table needs something to be read against: a minimum
+    The resolution clause needs something to be read against: a minimum
     detectable difference is a number until it is put beside the difference
-    the study was built to detect.
+    the study was built to detect. Only meaningful as scale when the contrast
+    being scaled is not itself the span -- see ``_spans_the_extremes``.
     """
     if not methods:
         return 0.0
@@ -480,9 +511,15 @@ def render_table5_headroom(summary) -> str:
     Two columns that rank the fields differently. Shortfall is what a
     participant would read to decide where to work; marginal value is what
     that work would actually return, and macro-F1 divides by the class count,
-    so a field carrying more classes returns less per unit of F1. Ordering by
-    shortfall and printing the marginal value beside it is the whole table:
+    so a field carrying more classes returns less per class improved. Ordering
+    by shortfall and printing the marginal value beside it is the whole table:
     the column a reader would sort on is not the column that decides.
+
+    The last column is ``weight / |classes| * 0.1`` -- a gain of 0.1 on *one*
+    class's F1, not on the field's macro-F1, which would be ``weight * 0.1``
+    and would carry no class count at all. Naming it for the field would make
+    the column four times larger for evidence_quality and, worse, would delete
+    the reason the two orderings differ.
 
     Reported for M1, the rule this study recommends. Naming it rather than
     taking the best-scoring arm keeps a score out of the choice.
@@ -505,7 +542,7 @@ def render_table5_headroom(summary) -> str:
         for f, w, mf, sf, share, mv in rows
     ]
     header = ("Field & Weight & macro-F1 & Shortfall & Share & "
-              "Value of $+0.1$ F1")
+              "Value of $+0.1$ per class")
     return _tabular("lrrrrr", header, body)
 
 
