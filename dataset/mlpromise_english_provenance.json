@@ -1,0 +1,15 @@
+{
+ "name": "ML-Promise (English portion)",
+ "file": "dataset/mlpromise_english.json",
+ "sha256": "sha256:e84e47eec51dd85b12de5189d9f0f3372fd855b7b4eb4b6cbbef6c79ac904793",
+ "n_rows": 400,
+ "retrieved": "2026-08-24",
+ "source_file_name": "Trainset_English.json",
+ "source_drive_folder": "https://drive.google.com/drive/folders/1wWwo5DBY2qFj2KSEqjkjinuK5CB5ku5K",
+ "source_drive_file_id": "19AkVe5pxdIWWN-wdk_NIb265e8pUvpkv",
+ "paper": "Seki et al. (2025), ML-Promise: A Multilingual Dataset for Corporate Promise Verification, EMNLP 2025",
+ "paper_url": "https://aclanthology.org/2025.emnlp-main.1028/",
+ "arxiv": "https://arxiv.org/abs/2411.04473",
+ "licence": "CC BY-NC-SA 4.0",
+ "modifications": "none; the file is byte-identical to the release. All normalisation happens at load time in paper/data_en.py."
+}
