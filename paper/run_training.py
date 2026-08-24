@@ -27,6 +27,8 @@ from huggingface_hub import snapshot_download
 from transformers import AutoTokenizer
 
 from paper.artifacts import write_probs_bundle
+from paper.corpus import DEFAULT as DEFAULT_CORPUS
+from paper.corpus import CORPORA, load_rows
 from paper.data import REPO_ROOT, data_checksum, file_sha256, index_by_id, load_dev
 from paper.provenance import environment, now_iso
 from paper.train_config import (
@@ -161,8 +163,11 @@ def main():
     ap.add_argument("--protocol", required=True, choices=["pdf_group", "row_strat"])
     ap.add_argument("--seed", required=True, type=int, choices=list(SEEDS))
     ap.add_argument("--rotations", nargs="+", type=int, default=[0, 1, 2, 3, 4])
-    ap.add_argument("--splits-dir", type=Path, default=REPO_ROOT / "splits")
-    ap.add_argument("--out-dir", type=Path, default=REPO_ROOT / "probs")
+    ap.add_argument("--corpus", default=DEFAULT_CORPUS, choices=sorted(CORPORA),
+                    help="which labelled rows to train on; also supplies the "
+                         "default --splits-dir and --out-dir")
+    ap.add_argument("--splits-dir", type=Path, default=None)
+    ap.add_argument("--out-dir", type=Path, default=None)
     ap.add_argument("--save-checkpoint", action="store_true",
                     help="also write the averaged weights (~1.3GB per rotation)")
     ap.add_argument("--skip-existing", action="store_true",
@@ -179,6 +184,11 @@ def main():
     ap.add_argument("--model-revision", default=MODEL_REVISION,
                     help="immutable Hugging Face commit for --model-name")
     args = ap.parse_args()
+
+    if args.splits_dir is None:
+        args.splits_dir = REPO_ROOT / CORPORA[args.corpus]["splits_dir"]
+    if args.out_dir is None:
+        args.out_dir = REPO_ROOT / CORPORA[args.corpus]["probs_dir"]
 
     # An unpinned revision means the run cannot be reproduced against a known
     # set of weights. Failing here rather than after the fits saves the GPU time.
@@ -199,9 +209,14 @@ def main():
     except ValueError:
         split["_source_path"] = split_path
 
-    rows = load_dev()
+    rows = load_rows(args.corpus)
     if split["data_checksum"] != data_checksum(rows):
-        raise SystemExit(f"{split_path} was built against different data; refusing to run.")
+        raise SystemExit(
+            f"{split_path} was built against different data; refusing to run.\n"
+            f"--corpus is {args.corpus!r}. A manifest and a corpus that "
+            "disagree would train one language against another's folds, so "
+            "this is checked before the model is fetched rather than after."
+        )
 
     # Downloads on a cold machine and reuses the cache on a warm one. Only
     # OSError is caught: LocalEntryNotFoundError, HTTP failures and a full or

@@ -29,6 +29,8 @@ import random
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from paper.corpus import DEFAULT as DEFAULT_CORPUS
+from paper.corpus import CORPORA, load_rows
 from paper.data import REPO_ROOT, canonical_row_order, data_checksum, load_dev
 from paper.labels import EVAL_FIELDS, row_to_state_id
 from paper.provenance import git_sha, now_iso
@@ -300,10 +302,20 @@ def main():
     ap = argparse.ArgumentParser(description="Generate rotating split manifests.")
     ap.add_argument("--protocols", nargs="+", default=["pdf_group", "row_strat"])
     ap.add_argument("--seeds", nargs="+", type=int, default=list(SEEDS))
-    ap.add_argument("--out-dir", type=Path, default=SPLITS_DIR)
+    ap.add_argument("--corpus", default=DEFAULT_CORPUS, choices=sorted(CORPORA),
+                    help="which labelled rows to fold. The English rows arrive "
+                         "already translated into the frozen label vocabulary, "
+                         "so fold assignment is unchanged by the choice.")
+    ap.add_argument("--out-dir", type=Path, default=None)
     args = ap.parse_args()
 
-    rows = load_dev()
+    # Defaulted from the corpus rather than pinned to SPLITS_DIR: writing the
+    # English folds over the frozen manifests would be silent and unrecoverable
+    # from the tree alone.
+    if args.out_dir is None:
+        args.out_dir = REPO_ROOT / CORPORA[args.corpus]["splits_dir"]
+
+    rows = load_rows(args.corpus)
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     for protocol in args.protocols:
