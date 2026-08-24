@@ -294,7 +294,7 @@ def build_caption(report) -> str:
         "\\textbf{Exploratory.} These contrasts were named after the primary "
         "analysis and form no Holm family; bold marks an interval excluding "
         "zero, not a corrected verdict. The claim is the sign pattern across "
-        "arms, not any single cell. See docs/inference\\_families.md.",
+        "arms, not any single cell. See docs/governance/inference\\_families.md.",
     ]
     return " ".join(parts)
 
