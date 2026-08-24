@@ -29,7 +29,8 @@ from paper.train_config import PROTOCOLS, SEEDS
 CONTRACT_VERSION = "1.0"
 
 TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
-               "table4_contrasts.tex", "table5_metrics.tex")
+               "table4_contrasts.tex", "table5_metrics.tex",
+               "table7_resolution.tex")
 
 # Tables written by their own analysis module rather than by ``write_tables``,
 # because their inputs are not the cross-seed summaries this file consumes.
@@ -62,6 +63,7 @@ SOURCE_SCRIPTS = {
     "table3_regimes.tex": "analysis/aggregate.py",
     "table4_contrasts.tex": "analysis/aggregate.py",
     "table5_metrics.tex": "analysis/aggregate.py",
+    "table7_resolution.tex": "analysis/aggregate.py",
 }
 
 # The competition test split ships no labels, so its label-derived cells cannot
@@ -128,6 +130,7 @@ def table_inputs(predictions_root, protocols=PROTOCOLS, seeds=SEEDS,
         "table3_regimes.tex": [p for protocol in protocols for p in scored[protocol]],
         "table4_contrasts.tex": scored["pdf_group"],
         "table5_metrics.tex": scored["pdf_group"],
+        "table7_resolution.tex": scored["pdf_group"],
     }
 
 
@@ -240,6 +243,16 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
                if contrasts else "")
             + (_consistency_clause(methods) if methods else "")
         ),
+        "table7_resolution": (
+            "What this benchmark can resolve, on the metric it ranks by. "
+            "Contrasts are ordered by effect size. A percentile interval that "
+            "excludes zero is not a verdict: with five contrasts corrected "
+            "together, the largest effect here clears zero and still does not "
+            "survive. That magnitude bounds what a leaderboard difference on "
+            "this benchmark can mean, and it should be read against the full "
+            "range across the seven decision rules, which is "
+            f"{_method_span(methods):.4f}."
+        ),
         "table4_contrasts": (
             "The five pre-specified contrasts of the analysis plan, under the "
             "two metrics the plan named before any result existed: the "
@@ -287,6 +300,19 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             "rule."
         ),
     }
+
+
+def _method_span(methods) -> float:
+    """Spread of the official metric across every decision rule.
+
+    The resolution table needs something to be read against: a minimum
+    detectable difference is a number until it is put beside the difference
+    the study was built to detect.
+    """
+    if not methods:
+        return 0.0
+    scores = [m["weighted_macro_f1_mean"] for m in methods.values()]
+    return max(scores) - min(scores)
 
 
 def _f(value, places=3):
@@ -423,6 +449,38 @@ def render_table3(regimes) -> str:
     return _tabular("lrrrr", header, body)
 
 
+def render_table7(summary) -> str:
+    """What difference this benchmark can resolve, on the metric it ranks by.
+
+    Ordered by effect size, so the row where the correction stops clearing
+    contrasts is where the reader's finger lands. The last row is the argument:
+    an interval that excludes zero and a corrected p that does not clear alpha
+    can belong to the same contrast, and on this benchmark they do -- at a
+    magnitude smaller than the full spread across the seven decision rules the
+    study set out to separate.
+
+    Only the official metric appears. Resolution is a property of a
+    measurement, and the measurement the leaderboard makes is this one.
+    """
+    family = summary["contrasts"]
+    ordered = sorted(family.items(), key=lambda kv: abs(kv[1]["delta"]))
+
+    body = []
+    for key, row in ordered:
+        half = (row["ci_high"] - row["ci_low"]) / 2
+        clears = row["ci_low"] > 0 or row["ci_high"] < 0
+        survives = row["p_holm"] < ALPHA
+        p = f"{row['p_holm']:.3f}"
+        body.append(
+            f"{key} & {abs(row['delta']):.3f} & {half:.3f} & "
+            f"{'yes' if clears else 'no'} & {p} & "
+            f"{'yes' if survives else 'no'} \\\\")
+
+    header = ("Contrast & $|\\Delta|$ & CI half-width & Interval excludes 0 & "
+              "$p_{\\mathrm{Holm}}$ & Survives")
+    return _tabular("lrrccc", header, body)
+
+
 def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
                  seeds=SEEDS) -> Path:
     """Write the three tabulars, their captions and the provenance manifest.
@@ -451,6 +509,7 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
         "table3_regimes.tex": render_table3(regimes),
         "table4_contrasts.tex": render_table4(summaries["pdf_group"]),
         "table5_metrics.tex": render_table5(summaries["pdf_group"]),
+        "table7_resolution.tex": render_table7(summaries["pdf_group"]),
     }
     for name, content in rendered.items():
         (out_dir / name).write_text(content, encoding="utf-8")

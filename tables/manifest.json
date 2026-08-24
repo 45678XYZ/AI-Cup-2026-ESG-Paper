@@ -1,7 +1,7 @@
 {
  "contract_version": "1.0",
- "generated_at": "2026-08-24T02:28:52.949454+00:00",
- "git_sha": "edda9868b3545a7e66abf26d2b7eaa6a404f0d34",
+ "generated_at": "2026-08-24T02:44:55.890883+00:00",
+ "git_sha": "08b3d9e89104512628ce5ef73354b7444fdf0d46-dirty",
  "tables": {
   "table1_dataset.tex": {
    "source_script": "analysis/audit.py",
@@ -218,6 +218,55 @@
    }
   },
   "table5_metrics.tex": {
+   "source_script": "analysis/aggregate.py",
+   "input_files": [
+    "predictions/pdf_group_seed42_M0.csv.gz",
+    "predictions/pdf_group_seed42_M1.csv.gz",
+    "predictions/pdf_group_seed42_M2.csv.gz",
+    "predictions/pdf_group_seed42_M3.csv.gz",
+    "predictions/pdf_group_seed42_M4.csv.gz",
+    "predictions/pdf_group_seed42_M5.csv.gz",
+    "predictions/pdf_group_seed42_M6.csv.gz",
+    "predictions/pdf_group_seed123_M0.csv.gz",
+    "predictions/pdf_group_seed123_M1.csv.gz",
+    "predictions/pdf_group_seed123_M2.csv.gz",
+    "predictions/pdf_group_seed123_M3.csv.gz",
+    "predictions/pdf_group_seed123_M4.csv.gz",
+    "predictions/pdf_group_seed123_M5.csv.gz",
+    "predictions/pdf_group_seed123_M6.csv.gz",
+    "predictions/pdf_group_seed456_M0.csv.gz",
+    "predictions/pdf_group_seed456_M1.csv.gz",
+    "predictions/pdf_group_seed456_M2.csv.gz",
+    "predictions/pdf_group_seed456_M3.csv.gz",
+    "predictions/pdf_group_seed456_M4.csv.gz",
+    "predictions/pdf_group_seed456_M5.csv.gz",
+    "predictions/pdf_group_seed456_M6.csv.gz"
+   ],
+   "input_sha256": {
+    "predictions/pdf_group_seed42_M0.csv.gz": "sha256:7c6094b0c38117ae61bef9fe0047e81d02765d7c43ec41a386e430bf5bc98514",
+    "predictions/pdf_group_seed42_M1.csv.gz": "sha256:734e8f7a61c87faab35e9802804ec5d766c4ac263db8692e29501ae75c77c78d",
+    "predictions/pdf_group_seed42_M2.csv.gz": "sha256:ca87bb2d3c6ca8a5bea983bfc73542c08dc376e9771aff067c72f11679a59fcb",
+    "predictions/pdf_group_seed42_M3.csv.gz": "sha256:2d4ab9f1b884a00bcab48b52d67954d777e9cfdaf597cc44b40fae560df43762",
+    "predictions/pdf_group_seed42_M4.csv.gz": "sha256:1e0bc927e0c8d88b661b780677aed1e85027db4ad4bdaf4d3882c195608ba200",
+    "predictions/pdf_group_seed42_M5.csv.gz": "sha256:5eacb45126199e668236f0d35863f9fb74edfe998fd1afc207576c9b18c2e6c0",
+    "predictions/pdf_group_seed42_M6.csv.gz": "sha256:c8edd2b2026d3c316703dd5d2f499348f00b4039c1c8587624ddc727ca107b43",
+    "predictions/pdf_group_seed123_M0.csv.gz": "sha256:c2e5a5d7365542586997f8c074376edeafb6689ebcae919c0eab0ad9c3d110ba",
+    "predictions/pdf_group_seed123_M1.csv.gz": "sha256:17e5c001f01eaa695fa00addb5a3702626f1fd48f872cc78ac0e176ce32fc988",
+    "predictions/pdf_group_seed123_M2.csv.gz": "sha256:e73c0cdd6b83f8c5865c5a978764e56c2ad2558e5c5c29e259ae7593105f967e",
+    "predictions/pdf_group_seed123_M3.csv.gz": "sha256:9024663d84a049cb12aebc4a2499fa20253719530c19d1eaa6e14a741feb8003",
+    "predictions/pdf_group_seed123_M4.csv.gz": "sha256:2a37ec99679af516dfab7500aaf8bb1e9a00f0b166c9bfb4b25a235a54c32a39",
+    "predictions/pdf_group_seed123_M5.csv.gz": "sha256:6e647a9f5c6896773972c2616692051110340e7be9030c3048f63442f17c4473",
+    "predictions/pdf_group_seed123_M6.csv.gz": "sha256:cf54a24f73a3b39947cf00e965defbad11457ff37ec46db94718ab0dd6ce57f9",
+    "predictions/pdf_group_seed456_M0.csv.gz": "sha256:756be1e3ad9407af132f8ef97e006c0d24e12d1f46a3d1297a06ca4e645a88c7",
+    "predictions/pdf_group_seed456_M1.csv.gz": "sha256:0a3f0180cc464f876e7ae4a4afcb6ab2afe55279e802773e4d59fd9f06b4649f",
+    "predictions/pdf_group_seed456_M2.csv.gz": "sha256:b7b5a29ca4b4f5a57d4f7297d7936428559b9b0715b350ed145ef47e023c0eac",
+    "predictions/pdf_group_seed456_M3.csv.gz": "sha256:63b55489fa8916245e657e044e97009915375f38eb975baeb9ff4a4e90f66cc8",
+    "predictions/pdf_group_seed456_M4.csv.gz": "sha256:c2d70a14f4ca1b2d2b5170e349b99d5181ac829fa8f2fa6206447deb3695b201",
+    "predictions/pdf_group_seed456_M5.csv.gz": "sha256:26f2dc7a94edf474d880dc3b4acbdf862aa93085bac63c3cc7dc866046fd870b",
+    "predictions/pdf_group_seed456_M6.csv.gz": "sha256:28fb436844ec67d26ee3a6d0d3d2c472d66d5184636897849e2b2f88c58b1c48"
+   }
+  },
+  "table7_resolution.tex": {
    "source_script": "analysis/aggregate.py",
    "input_files": [
     "predictions/pdf_group_seed42_M0.csv.gz",

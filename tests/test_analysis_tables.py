@@ -481,3 +481,47 @@ def test_table4_caption_says_where_the_demoted_metrics_went():
                              methods=SUMMARIES["pdf_group"]["methods"],
                              )["table4_contrasts"]
     assert "exploratory" in caption.lower()
+
+
+def test_table7_orders_contrasts_by_effect_size_not_by_name():
+    """The table exists to show where this benchmark's resolution lies, so the
+    rows have to climb: a reader should be able to run a finger down the
+    magnitude column and find the point at which the correction stops clearing
+    them."""
+    from analysis.tables import render_table7
+    rows = [l for l in render_table7(SUMMARIES["pdf_group"]).splitlines()
+            if l.endswith(r"\\") and "Contrast" not in l and "multicolumn" not in l]
+    mags = [float(r.split("&")[1]) for r in rows]
+    assert mags == sorted(mags)
+
+
+def test_table7_separates_clearing_zero_from_surviving_correction():
+    """The whole point in one row: an interval excluding zero is not a verdict.
+
+    Built from a stub rather than from SUMMARIES, because the fixtures here are
+    synthetic and need not contain a contrast of that shape -- the real study
+    does (M6-M5, interval excluding zero at p_Holm = 0.135), but asserting that
+    here would make a renderer test depend on which data it was pointed at.
+    """
+    from analysis.tables import render_table7
+    stub = {"contrasts": {
+        "MA-MB": {"delta": -0.009, "ci_low": -0.017, "ci_high": -0.001,
+                  "p_holm": 0.135},
+        "MC-MD": {"delta": -0.001, "ci_low": -0.006, "ci_high": 0.003,
+                  "p_holm": 1.000},
+    }}
+    cells = {l.split("&")[0].strip(): [c.strip() for c in l.split("&")]
+             for l in render_table7(stub).splitlines() if "&" in l}
+    clearing = cells["MA-MB"]
+    assert clearing[3] == "yes", "interval excludes zero"
+    assert clearing[5].startswith("no"), "but does not survive the correction"
+    assert cells["MC-MD"][3] == "no"
+
+
+def test_table7_caption_states_the_resolution_against_the_method_span():
+    """A resolution figure means nothing until it is compared with the spread
+    the study is trying to measure."""
+    caption = build_captions(AUDIT, contrasts=SUMMARIES["pdf_group"]["contrasts"],
+                             methods=SUMMARIES["pdf_group"]["methods"],
+                             )["table7_resolution"]
+    assert "span" in caption.lower() or "range" in caption.lower()
