@@ -141,6 +141,16 @@ def validate_english_arms() -> None:
                  *map(str, paths)], ENGLISH_ROOT, env)
 
 
+def multilingual_worker_commands() -> list[list[str]]:
+    """Build workers as modules so the project root remains importable."""
+    return [
+        [str(PYTHON), "-u", "-m", "scripts.run_multilingual_experiments",
+         "--worker", "large", "--gpu", "1"],
+        [str(PYTHON), "-u", "-m", "scripts.run_multilingual_experiments",
+         "--worker", "base", "--gpu", "0"],
+    ]
+
+
 def main() -> None:
     write_state("waiting_for_active_english")
     quiet_polls = 0
@@ -180,12 +190,7 @@ def main() -> None:
                 english_predictions=english_predictions,
                 english_results=english_results)
     env = dict(os.environ)
-    commands = [
-        [str(PYTHON), "-u", "scripts/run_multilingual_experiments.py",
-         "--worker", "large", "--gpu", "1"],
-        [str(PYTHON), "-u", "scripts/run_multilingual_experiments.py",
-         "--worker", "base", "--gpu", "0"],
-    ]
+    commands = multilingual_worker_commands()
     processes = [subprocess.Popen(command, cwd=MULTI_ROOT, env=env) for command in commands]
     codes = [process.wait() for process in processes]
     if codes != [0, 0]:
