@@ -1,7 +1,7 @@
 {
  "contract_version": "1.0",
- "generated_at": "2026-08-24T02:44:55.890883+00:00",
- "git_sha": "08b3d9e89104512628ce5ef73354b7444fdf0d46-dirty",
+ "generated_at": "2026-08-24T02:51:10.218309+00:00",
+ "git_sha": "9675da3ae6ac4b7412cb5f49e2b2feeef9a70200",
  "tables": {
   "table1_dataset.tex": {
    "source_script": "analysis/audit.py",
