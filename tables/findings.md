@@ -1,4 +1,4 @@
-<!-- generated 2026-08-24T04:39:32.037695+00:00 from b3abe12ca9cc08044c4afbc4f6a2cd5ed4e47bb1-dirty -->
+<!-- generated 2026-08-24T04:46:21.875414+00:00 from f1c2f51252de739b16891594e66cac4e03417519 -->
 
 # Findings brief
 
