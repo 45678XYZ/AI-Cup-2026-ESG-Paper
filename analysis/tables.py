@@ -22,7 +22,7 @@ from analysis.bootstrap import N_BOOT
 from analysis.findings import ALPHA
 from analysis.load import METHODS, predictions_path
 from paper.data import REPO_ROOT, TEST_PATH, TRAIN_PATH, VAL_PATH, file_sha256
-from paper.labels import FIELDS
+from paper.labels import EVAL_FIELDS, FIELD_WEIGHTS, FIELDS
 from paper.provenance import git_sha, now_iso
 from paper.train_config import PROTOCOLS, SEEDS
 
@@ -30,7 +30,7 @@ CONTRACT_VERSION = "1.0"
 
 TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
                "table4_contrasts.tex", "table5_metrics.tex",
-               "table7_resolution.tex")
+               "table7_resolution.tex", "table8_headroom.tex")
 
 # Tables written by their own analysis module rather than by ``write_tables``,
 # because their inputs are not the cross-seed summaries this file consumes.
@@ -64,6 +64,7 @@ SOURCE_SCRIPTS = {
     "table4_contrasts.tex": "analysis/aggregate.py",
     "table5_metrics.tex": "analysis/aggregate.py",
     "table7_resolution.tex": "analysis/aggregate.py",
+    "table8_headroom.tex": "analysis/aggregate.py",
 }
 
 # The competition test split ships no labels, so its label-derived cells cannot
@@ -131,6 +132,7 @@ def table_inputs(predictions_root, protocols=PROTOCOLS, seeds=SEEDS,
         "table4_contrasts.tex": scored["pdf_group"],
         "table5_metrics.tex": scored["pdf_group"],
         "table7_resolution.tex": scored["pdf_group"],
+        "table8_headroom.tex": scored["pdf_group"],
     }
 
 
@@ -242,6 +244,19 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
                "with their Holm-corrected p-values, are reported in Table 4."
                if contrasts else "")
             + (_consistency_clause(methods) if methods else "")
+        ),
+        "table8_headroom": (
+            f"Where the official score falls short under {HEADROOM_METHOD}, and "
+            "what closing each part is worth. Shortfall is the field's weight "
+            "times its distance from a perfect macro-F1; share is its portion "
+            "of the total. The last column is what a 0.1 gain in that field's "
+            "macro-F1 adds to the weighted total, which orders the fields "
+            "differently from the shortfall: macro-F1 averages over classes, so "
+            "a field carrying more of them returns less per unit gained. "
+            "\\textbf{Not all of the shortfall is reachable.} Misleading occurs "
+            "twice in the development set and is never predicted by any arm, so "
+            "a quarter of evidence\\_quality's macro-F1 -- 0.0875 of the "
+            "weighted total -- is out of reach by construction."
         ),
         "table7_resolution": (
             "What this benchmark can resolve, on the metric it ranks by. "
@@ -481,6 +496,44 @@ def render_table7(summary) -> str:
     return _tabular("lrrccc", header, body)
 
 
+HEADROOM_METHOD = "M1"
+
+
+def render_table8(summary) -> str:
+    """Where the official score's shortfall sits, and what closing it is worth.
+
+    Two columns that rank the fields differently. Shortfall is what a
+    participant would read to decide where to work; marginal value is what
+    that work would actually return, and macro-F1 divides by the class count,
+    so a field carrying more classes returns less per unit of F1. Ordering by
+    shortfall and printing the marginal value beside it is the whole table:
+    the column a reader would sort on is not the column that decides.
+
+    Reported for M1, the rule this study recommends. Naming it rather than
+    taking the best-scoring arm keeps a score out of the choice.
+    """
+    per_field = summary["methods"][HEADROOM_METHOD]["per_field_mean"]
+    total = sum(FIELD_WEIGHTS[f] * (1 - per_field[f]) for f in FIELDS)
+
+    rows = []
+    for field in FIELDS:
+        weight = FIELD_WEIGHTS[field]
+        shortfall = weight * (1 - per_field[field])
+        rows.append((field, weight, per_field[field], shortfall,
+                     shortfall / total if total else 0.0,
+                     weight / len(EVAL_FIELDS[field]) * 0.10))
+    rows.sort(key=lambda r: -r[3])
+
+    body = [
+        f"{f.replace('_', chr(92) + '_')} & {w:.2f} & {mf:.3f} & {sf:.3f} & "
+        f"{share * 100:.1f}\\% & {mv:.4f} \\\\"
+        for f, w, mf, sf, share, mv in rows
+    ]
+    header = ("Field & Weight & macro-F1 & Shortfall & Share & "
+              "Value of $+0.1$ F1")
+    return _tabular("lrrrrr", header, body)
+
+
 def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
                  seeds=SEEDS) -> Path:
     """Write the three tabulars, their captions and the provenance manifest.
@@ -510,6 +563,7 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
         "table4_contrasts.tex": render_table4(summaries["pdf_group"]),
         "table5_metrics.tex": render_table5(summaries["pdf_group"]),
         "table7_resolution.tex": render_table7(summaries["pdf_group"]),
+        "table8_headroom.tex": render_table8(summaries["pdf_group"]),
     }
     for name, content in rendered.items():
         (out_dir / name).write_text(content, encoding="utf-8")

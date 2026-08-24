@@ -525,3 +525,33 @@ def test_table7_caption_states_the_resolution_against_the_method_span():
                              methods=SUMMARIES["pdf_group"]["methods"],
                              )["table7_resolution"]
     assert "span" in caption.lower() or "range" in caption.lower()
+
+
+def test_table8_orders_by_shortfall_but_shows_marginal_value_disagreeing():
+    """The table exists because the two orderings differ.
+
+    A participant deciding where to spend effort reads the shortfall column and
+    picks the largest. This table puts the marginal value beside it, which
+    ranks the fields differently -- macro-F1 divides by the class count, so a
+    field with more classes returns less per unit of F1 gained. If the two
+    columns ever agreed the table would be redundant, so the test asserts they
+    do not.
+    """
+    from analysis.tables import render_table8
+    rows = [l for l in render_table8(SUMMARIES["pdf_group"]).splitlines()
+            if l.endswith(r"\\") and "Field" not in l]
+    shortfall = [float(r.split("&")[3]) for r in rows]
+    marginal = [float(r.split("&")[5].replace(r"\\", "")) for r in rows]
+    assert shortfall == sorted(shortfall, reverse=True), "ordered by shortfall"
+    assert marginal != sorted(marginal, reverse=True), (
+        "the two orderings agree; the table has nothing to say")
+
+
+def test_table8_caption_names_the_class_that_is_structurally_unreachable():
+    """`Misleading` has two instances and is never predicted, so a quarter of
+    the highest-weighted field's macro-F1 is out of reach by construction. A
+    reader given the shortfall without that fact will over-estimate what is
+    available."""
+    caption = build_captions(AUDIT, methods=SUMMARIES["pdf_group"]["methods"],
+                             )["table8_headroom"]
+    assert "Misleading" in caption
