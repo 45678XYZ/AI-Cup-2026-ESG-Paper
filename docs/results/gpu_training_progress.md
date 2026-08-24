@@ -22,7 +22,7 @@ The 12-epoch budget is supported by the 15 standard-loss Chinese RoBERTa
 competition folds. The frozen aggregation rule is the ceiling of their
 arithmetic-mean terminal epoch: `ceil(171 / 15) = ceil(11.4) = 12`. The median
 of 11 is descriptive only. The exact per-fold values and hashes of the three
-source logs are recorded in `docs/competition_epoch_evidence.md`.
+source logs are recorded in `docs/governance/competition_epoch_evidence.md`.
 
 ## Pre-run GPU smoke test
 
@@ -133,6 +133,6 @@ done
 ```
 
 `EPOCHS = 12` was re-confirmed from the original competition logs before the
-campaign. See `docs/competition_epoch_evidence.md` for the per-fold audit and
+campaign. See `docs/governance/competition_epoch_evidence.md` for the per-fold audit and
 the explicit aggregation rule. After the fits, all six decision invocations,
 the study manifest and Table 1-3 were regenerated from the clean source commit.

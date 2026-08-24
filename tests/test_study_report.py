@@ -1,6 +1,6 @@
 """The writing report is hand-written prose quoting generated numbers.
 
-`docs/study_report.md` is 82% background, method and protocol -- text a rerun
+`docs/writing/study_report.md` is 82% background, method and protocol -- text a rerun
 cannot invalidate -- and 18% figures lifted from `tables/`. The two halves fail
 differently. Prose goes stale only when the study design changes, and a reader
 can tell. A quoted interval goes stale the moment anything is recomputed, and
@@ -23,7 +23,7 @@ import re
 
 from paper.data import REPO_ROOT
 
-DOCS = REPO_ROOT / "docs"
+DOCS = REPO_ROOT / "docs" / "writing"
 TABLES = REPO_ROOT / "tables"
 
 REPORT = (DOCS / "study_report.md").read_text(encoding="utf-8")
@@ -67,7 +67,7 @@ def test_report_quotes_every_interval_that_reaches_the_paper():
     missing = sorted(ci for ci in _paper_intervals() if ci not in REPORT)
     assert not missing, (
         f"{len(missing)} interval(s) in tables/ are absent from the report; "
-        f"rerun `python -m analysis`, then update docs/study_report.md: {missing}"
+        f"rerun `python -m analysis`, then update docs/writing/study_report.md: {missing}"
     )
 
 

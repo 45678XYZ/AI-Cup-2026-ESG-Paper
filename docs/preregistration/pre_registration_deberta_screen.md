@@ -78,5 +78,5 @@ runs/deberta_v2_320m/lambda_0.3/{predictions,results}/
 - [x] M1 weighted macro-F1（三 seed mean）：0.532050 → 0.545133（+0.013083）
 - [x] 擴充 gate：seed42 同時降低 M0 invalid 並提高 M1，已依規則擴充 123/456
 
-完整結果、bootstrap 與限制見 `docs/deberta_screen_results.md`；machine-readable
+完整結果、bootstrap 與限制見 `docs/results/deberta_screen_results.md`；machine-readable
 comparison 見 `runs/deberta_v2_320m/comparison.json`。

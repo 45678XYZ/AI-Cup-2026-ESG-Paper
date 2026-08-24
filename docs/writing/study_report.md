@@ -35,7 +35,7 @@
 | 進論文的表與 caption | `tables/table*.tex`、`tables/table*_caption.txt` |
 | 跨 arm 的原始值 | `tables/legality_cost.json` |
 | 失效模式與逐類別帳 | `tables/case_analysis.json` |
-| 哪個檢定屬於哪個家族 | `docs/inference_families.md` |
+| 哪個檢定屬於哪個家族 | `docs/governance/inference_families.md` |
 
 重算：`python -m analysis`　看渲染後的表：`python -m analysis.preview`
 
@@ -207,7 +207,7 @@
 
 ## 11. 預先指定的對比（T4）
 
-依 `docs/inference_families.md`，**只有兩個家族**。
+依 `docs/governance/inference_families.md`，**只有兩個家族**。
 
 ### 家族 1（確認性）：官方 weighted macro-F1
 
@@ -322,13 +322,13 @@ C-wF1 與 hF 是**看過主要結果的 null 之後才加的**，不再各自成
 - **Card et al. (EMNLP 2020)** 的檢定力分析 —— §11.1 是它在階層任務上的實例
 - **Ethayarajh & Jurafsky (EMNLP 2020)** 的「並列報告實務性質」—— 我們補一個新維度
 
-指標出處三層見 `docs/related_work_citations.md`。
+指標出處三層見 `docs/writing/related_work_citations.md`。
 
 ### Method
 
 七個決策規則**共用同一組機率**，差異只可能來自決策規則 —— 這是受控裝置，不是貢獻。
 
-⚠️ **Experimental Setup 必須有一段主動宣告推論家族分層**（`docs/inference_families.md` 有建議措辭）。**讓讀者自己數檢定的論文才會被讀成撈魚。**
+⚠️ **Experimental Setup 必須有一段主動宣告推論家族分層**（`docs/governance/inference_families.md` 有建議措辭）。**讓讀者自己數檢定的論文才會被讀成撈魚。**
 
 ### Results
 
@@ -449,7 +449,7 @@ M2／M3／M5／M6 是在 M1／M4 之上加 class-bias calibration（global 或 c
 
 ### 推論家族分層（A 於 8/24 拍板）
 
-依 `docs/inference_families.md`，約 25 個檢定分成家族與探索層，**依「在看到結果之前寫在哪份文件裡」歸類**，不依效果大小：
+依 `docs/governance/inference_families.md`，約 25 個檢定分成家族與探索層，**依「在看到結果之前寫在哪份文件裡」歸類**，不依效果大小：
 
 | 層 | 內容 | 結果 |
 |---|---|---|
@@ -534,8 +534,8 @@ M2／M3／M5／M6 是在 M1／M4 之上加 class-bias calibration（global 或 c
 | `tables/audit.json` | 完整資料稽核 |
 | `tables/manifest.json` | 每張表的來源 script 與輸入 checksum |
 | `figures/figure1_hierarchy.pdf` | 階層與替代決策路徑 |
-| `docs/inference_families.md` | 推論家族分層（A 拍板） |
-| `docs/related_work_citations.md` | 指標的三層出處、BibTeX、逐字引文 |
+| `docs/governance/inference_families.md` | 推論家族分層（A 拍板） |
+| `docs/writing/related_work_citations.md` | 指標的三層出處、BibTeX、逐字引文 |
 | `runs/README.md` | 五個追加 arm 的目錄結構與對應的預先登記文件 |
 
 ## 怎麼看渲染後的表

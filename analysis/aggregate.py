@@ -195,7 +195,7 @@ def regime_comparison(summaries, order, root, clusters, n_boot=N_BOOT,
     decoder; choosing those two by score inside the table they appear in is a
     post-hoc selection however small the table, and it costs nothing to remove:
     every Delta is positive, every interval excludes zero, and all seven survive
-    Holm across seven. ``docs/inference_families.md`` settles this as a
+    Holm across seven. ``docs/governance/inference_families.md`` settles this as a
     pre-specified family of seven.
 
     Delta is the gap between two estimation targets, **not** a bias estimate --

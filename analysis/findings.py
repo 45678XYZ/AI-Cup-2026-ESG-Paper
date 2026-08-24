@@ -116,7 +116,7 @@ def _intro(_) -> list:
         "Every number here comes from the same run that produced `tables/`.", "",
         "**What this file is for.** The tabulars and their captions are the "
         "deliverables; this file says what they license. Where a sentence in "
-        "`docs/study_report.md` disagrees with this file, **this file wins** — "
+        "`docs/writing/study_report.md` disagrees with this file, **this file wins** — "
         "it is regenerated, the report is hand-written.", "",
         "**Do not transcribe these figures into the paper.** Take paper numbers "
         "from `tables/*.tex` and `tables/*_caption.txt`, which carry provenance "

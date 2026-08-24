@@ -135,13 +135,13 @@ sweep 產生的 15 個 bundle **不進入任何結果表**，但會保留並提�
   不做檢定。
 - [x] H2 結果：`pdf_group` M1 的 structural − baseline weighted macro-F1
   = +0.00250，95% paired PDF-cluster bootstrap CI [−0.00384, +0.00860]，
-  p = 0.4272；**不支持 H2**。完整紀錄見 `docs/structural_training_results.md`
+  p = 0.4272；**不支持 H2**。完整紀錄見 `docs/results/structural_training_results.md`
   與 `runs/structural/comparison.json`。
 
 ## 9. 本 arm **不會**改動的東西
 
 - `paper/train_config.py`（配方憑證）
-- `docs/paper_plan.md`（預先指定性的論證只有在計畫可查證未被編輯時才成立）
+- `docs/governance/paper_plan.md`（預先指定性的論證只有在計畫可查證未被編輯時才成立）
 - `analysis/aggregate.py::CONTRASTS` 的五組預先指定對比
 - 既有的 30 個 bundle、42 個 predictions、42 個 results
 

@@ -1,6 +1,6 @@
 # 介面契約 v1.0
 
-> 對應文件：[`docs/paper_plan.md`](paper_plan.md)
+> 對應文件：[`docs/governance/paper_plan.md`](paper_plan.md)
 
 ---
 
@@ -570,11 +570,11 @@ C 消費契約 3（`predictions/`、`results/`），產出契約 4（`tables/`�
 | `tables/table{1,2,3}*.tex`、`*_caption.txt`、`manifest.json` | ✅ | 契約 4 交付物 |
 | `tables/findings.md` | ✅ | 補充材料，見 §5；三個家族、conditional F1、sensitivity、逐例記錄與禁止事項 |
 | `tables/case_analysis.json`、`tables/audit.json` | ✅ | 補充材料；Discussion 的失效模式數字來源 |
-| `docs/study_report.md` | ✅ | 給 D 的完整交接：故事、證據、來歷、措辭紅線 |
-| `docs/related_work_citations.md` | ✅ | path-constrained 指標的三層出處、BibTeX 與逐字引文 |
+| `docs/writing/study_report.md` | ✅ | 給 D 的完整交接：故事、證據、來歷、措辭紅線 |
+| `docs/writing/related_work_citations.md` | ✅ | path-constrained 指標的三層出處、BibTeX 與逐字引文 |
 | `figures/figure1_hierarchy.pdf` | ✅ | 契約 4 交付物；`.tex` 與 `_defs.tex` 為其來源，見 §5 |
 | `tests/test_analysis_*.py` | ✅ 8 檔 | audit、metrics、bootstrap、aggregate、tables、figure1、cases、findings 各一 |
-| `tests/test_study_report.py` | ✅ | 守門測試：`docs/study_report.md` 引用的每個區間都必須存在於 `tables/`，反之亦然 |
+| `tests/test_study_report.py` | ✅ | 守門測試：`docs/writing/study_report.md` 引用的每個區間都必須存在於 `tables/`，反之亦然 |
 
 ### 實作歷程
 

@@ -16,7 +16,7 @@
  "protocol": "pdf_group",
  "n_boot": 10000,
  "bootstrap_seed": 20260814,
- "inference_family": "exploratory (docs/inference_families.md)",
+ "inference_family": "exploratory (docs/governance/inference_families.md)",
  "arms": [
   {
    "label": "RoBERTa-large (lambda=0)",

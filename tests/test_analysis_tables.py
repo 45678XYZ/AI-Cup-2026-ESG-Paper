@@ -443,7 +443,7 @@ def test_table1_caption_gives_the_size_of_the_legal_space():
 
 
 def test_table4_reports_only_the_two_pre_specified_families():
-    """docs/inference_families.md settles this: the official metric and tuple
+    """docs/governance/inference_families.md settles this: the official metric and tuple
     exact-match are the pre-specified families; path-constrained wF1 and hF
     were added after the primary analysis and drop to prose.
 

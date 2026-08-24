@@ -58,7 +58,7 @@ ALL_TABLE_FILES = tuple(sorted(TABLE_FILES + EXTERNAL_TABLE_FILES))
 # The two families ``paper_plan.md`` named before any result existed: the
 # competition's own metric (section 4.4) and tuple exact-match (section 4.5).
 # Path-constrained wF1 and hF were adopted after the primary analysis returned
-# its null and are exploratory; ``docs/inference_families.md`` demotes them to
+# its null and are exploratory; ``docs/governance/inference_families.md`` demotes them to
 # prose rather than giving each a Holm family, which removes ten tests from the
 # page and costs nothing -- what they show, tuple exact-match already shows
 # with a pre-specified metric and a ten-times-larger effect.

@@ -17,7 +17,7 @@ Two things are worth stating about what the table can and cannot say. M1's
 invalid rate is zero by construction in every arm -- its output space *is* the
 legal set -- so that column is a check that the pipeline did what it claims,
 not a result. And the seven rows are not a Holm family: the contrast was named
-after the primary analysis, so `docs/inference_families.md` classifies it as
+after the primary analysis, so `docs/governance/inference_families.md` classifies it as
 exploratory, and the claim rests on the sign pattern across arms rather than on
 any single cell's p-value.
 
@@ -199,7 +199,7 @@ def build_report(root=REPO_ROOT, arms=ARMS, *, protocol=PROTOCOL, seeds=SEEDS,
         "protocol": protocol,
         "n_boot": n_boot,
         "bootstrap_seed": bootstrap_seed,
-        "inference_family": "exploratory (docs/inference_families.md)",
+        "inference_family": "exploratory (docs/governance/inference_families.md)",
         "arms": rows,
     }
 

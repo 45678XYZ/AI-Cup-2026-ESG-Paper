@@ -183,7 +183,7 @@ def test_regime_comparison_reports_every_method_not_the_best_ones():
     however small the table. Reporting all seven costs nothing -- every Delta
     is positive and every interval excludes zero -- and removes the choice.
 
-    docs/inference_families.md settles this: the regime gap is a pre-specified
+    docs/governance/inference_families.md settles this: the regime gap is a pre-specified
     family of seven, not of three.
     """
     from analysis.load import METHODS

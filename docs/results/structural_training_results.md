@@ -5,7 +5,7 @@
 **GPU：NVIDIA GeForce RTX 3090**　
 **Conda 環境：`aicup-esg`**
 
-這份紀錄是 `docs/pre_registration_structural_training.md` 的執行結果。主要數字由
+這份紀錄是 `docs/preregistration/pre_registration_structural_training.md` 的執行結果。主要數字由
 `python -m analysis.structural_arm` 直接讀取兩個 arm 的逐列 predictions 產生，完整物件、
 bootstrap 設定與 84 個輸入檔的 SHA-256 在 `runs/structural/comparison.json`。
 

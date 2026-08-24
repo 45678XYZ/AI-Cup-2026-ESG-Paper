@@ -4,7 +4,7 @@
 
 執行前程式 commit：`c395e320df231693962b72dd9b8415fc226c148d`。結果顯示
 `pdf_group` 的兩個事前條件都不成立；完整數字與限制見
-`docs/rbt_base_results.md`，machine-readable summary 見
+`docs/results/rbt_base_results.md`，machine-readable summary 見
 `runs/rbt_base/comparison.json`。
 
 ## 想看什麼
