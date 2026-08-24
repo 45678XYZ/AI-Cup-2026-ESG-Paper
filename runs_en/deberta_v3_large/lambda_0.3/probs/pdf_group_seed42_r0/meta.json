@@ -1,0 +1,230 @@
+{
+ "contract_version": "1.0",
+ "protocol": "pdf_group",
+ "seed": 42,
+ "rotation": 0,
+ "split_file": "splits_en/pdf_group_seed42.json",
+ "data_checksum": "sha256:573cd09d524a66b71fb845eb43a3f418e3d21931c05c1ea6a0f7be2337d4d44f",
+ "split_fingerprint": "sha256:6a5a4d973441819e3e07f99dd942c6ccf5d1257207f9a0b57dd6ea0c87d19167",
+ "calibration_ids": [
+  "en0bcf4a399f05",
+  "en9f984f6de461",
+  "enbff8c823bc81",
+  "en0d02480bb944",
+  "enab8ce3366bf8",
+  "en8355316c7e90",
+  "end1ff0eda0fbb",
+  "en5c2e3473a560",
+  "encdde27dd5ea1",
+  "en33297c97cb53",
+  "en6fb5022e0fcd",
+  "en41e56c1851d6",
+  "en57d6a1ad14c9",
+  "en297526b7814a",
+  "enfae829a88e88",
+  "enc22e003ab3f0",
+  "ened7a10d3a2c1",
+  "enc3871ffa75b7",
+  "en82394baea50f",
+  "endc2a66855e88",
+  "en1b02d39741cb",
+  "en4efcd8d9dcbe",
+  "en7c2685b75b73",
+  "enc1dc37fc2e8f",
+  "encf1de7021340",
+  "ene7db8f2f27e6",
+  "en759ee50e6b8f",
+  "end271b80cf45f",
+  "enfa5bde1bcd6f",
+  "enf6037539dc58",
+  "en65a979405f64",
+  "en689e38ac09cb",
+  "en71815fe089d1",
+  "ena8ddc1744adc",
+  "enbe51a8bbde6d",
+  "en1013b0f2ea0b",
+  "enbd36511b4e26",
+  "ene9ae26807673",
+  "enda74efc2db7e",
+  "ende82c067cce3",
+  "en6297882b638e",
+  "en4af208b18bc7",
+  "en69345c74eae2",
+  "enb431d73864ae",
+  "en4e1530c2bb21",
+  "en6f5d48c08ae4",
+  "en71b2472181c5",
+  "enb8c06ff9da7a",
+  "encceac1e1edbe",
+  "en143cfcb9e1a0",
+  "en6ebf8710f1c4",
+  "en8830104d4ee0",
+  "enca3698a64768",
+  "enf9514033c028",
+  "encc0efd0e4e07",
+  "enb7844a49586a",
+  "en34c1ec85ddf5",
+  "enbb8b73e7e808"
+ ],
+ "test_ids": [
+  "enbe49a22ab251",
+  "end006ec9f1f55",
+  "en653b8e133ee2",
+  "enf50f9aea5fc3",
+  "en20351c09f4c4",
+  "en6d6ba3c77abc",
+  "en5791a13b08cb",
+  "ena34394298146",
+  "en53e2cbe8ef60",
+  "en1c8a637c1407",
+  "en0fb370814026",
+  "en035c11a205dc",
+  "en174ef4cba023",
+  "ene6b3f5686641",
+  "en3d2f45cdad06",
+  "en6458636e9814",
+  "en6b7a751be434",
+  "enaa3dbdba6548",
+  "en93c18f2d3370",
+  "en093cdf34b4a6",
+  "end3c1ae712b84",
+  "en1fa9a1a8b9b8",
+  "en4073462a76fa",
+  "en6508858686c2",
+  "encc42f44523e3",
+  "end8c8db48b5c0",
+  "en9c6bad8c27fb",
+  "enceee8a7fe543",
+  "enb7fdc23a8bb7",
+  "en0915e22f1f02",
+  "en63fcc8d9ec6d",
+  "en675bce473a68",
+  "en13c6dbad8b79",
+  "enfc9b0694533c",
+  "en2b6666b0fee4",
+  "enb43226fc094e",
+  "endbdb3e1f0e7d",
+  "en68b7428ebfed",
+  "en32a2d85a361f",
+  "encbb1d4fc99ed",
+  "en403d45665513",
+  "en5f71ff9a2902",
+  "endd3b0295813e",
+  "enabcd558fc8ed",
+  "en0f8ccfbc1419",
+  "enf077dcfe890e",
+  "enc53502218ed5",
+  "en649672f452a0",
+  "en5bde64efc163",
+  "enada7e35264e3",
+  "endeb329511c4e",
+  "en17f15ce77e45",
+  "encefc30372340",
+  "en7c837b82d42e",
+  "ene3f026e18e1c",
+  "enac88b6a53e00",
+  "en75deeb4891d8",
+  "en38f49ffbb40a",
+  "enb16eac5e9a62",
+  "enf26a35882e58",
+  "encdabff496d74",
+  "enf870a22fd49e",
+  "en76b11fcffb5d",
+  "en440e2245dc4e",
+  "ene09d802c364b",
+  "en9f72a3c886e0",
+  "en3c8388ce8150",
+  "enbd9554aa2ca4",
+  "en2b5fccf67f86",
+  "en1be79ee7d91a",
+  "en1adac240446d",
+  "end9511c1ba3c3"
+ ],
+ "git_sha": "af60a9500191dc2f6024d2fae838bc205617f3f4",
+ "created_at": "2026-08-24T20:08:39.676001+00:00",
+ "artifacts": {
+  "calibration_promise_status.npy": {
+   "sha256": "sha256:7b8b692d06e377c34f5ee1286a8a897cbdcbc8556cff24e5b153fad215151d4e",
+   "shape": [
+    58,
+    2
+   ]
+  },
+  "calibration_verification_timeline.npy": {
+   "sha256": "sha256:62821bfb603592207f1e53a209187d514f216b82c5192db1558da0fda139c00c",
+   "shape": [
+    58,
+    5
+   ]
+  },
+  "calibration_evidence_status.npy": {
+   "sha256": "sha256:a5ef8d8573b2b5f9b77f20abc2ad107efcf9f5bb95a3b0a5e8c4b94ba46791d7",
+   "shape": [
+    58,
+    3
+   ]
+  },
+  "calibration_evidence_quality.npy": {
+   "sha256": "sha256:13fc0ce4d4b3fa91cbf94337bcaa1990b68edf24288ad25bc2e02f5b5d34828d",
+   "shape": [
+    58,
+    4
+   ]
+  },
+  "test_promise_status.npy": {
+   "sha256": "sha256:df5afe93319615f95b1df048667de7049459f64072532ff7043630bfde94a0e4",
+   "shape": [
+    72,
+    2
+   ]
+  },
+  "test_verification_timeline.npy": {
+   "sha256": "sha256:848f4b0ca5c5d3369c04c37c3262e6856fae0c465b3e24c8ac132ebec06f28aa",
+   "shape": [
+    72,
+    5
+   ]
+  },
+  "test_evidence_status.npy": {
+   "sha256": "sha256:90e6afc63fa56dd05da72292852f6390b45a148a0b1a548abdd1f1f0caab0600",
+   "shape": [
+    72,
+    3
+   ]
+  },
+  "test_evidence_quality.npy": {
+   "sha256": "sha256:529ddf831eaeab457f5fa79e5c83b1737925d7203b5674bbf15f88ff7ad9b002",
+   "shape": [
+    72,
+    4
+   ]
+  }
+ },
+ "model_name": "microsoft/deberta-v3-large",
+ "model_revision": "64a8c8eab3e352a784c658aef62be1662607476f",
+ "train_config_sha256": "sha256:ebef1c618747e263762c86bddc14f6a6ff5faef1b9f4d6fd10a1b3c926929b4c",
+ "checkpoint_rule": "avg_last_k",
+ "checkpoint_last_k": 3,
+ "epochs": 12,
+ "structure_lambda": 0.3,
+ "hardware": "NVIDIA GeForce RTX 3090 (cuda:0 of 2)",
+ "started_at": "2026-08-24T20:06:01.083791+00:00",
+ "finished_at": "2026-08-24T20:08:39.640663+00:00",
+ "train_seconds": 158.6,
+ "n_train_rows": 270,
+ "command": "/home/tom1030507/miniconda3/envs/aicup-esg/bin/python -u -m paper.run_training --corpus mlpromise_en --protocol pdf_group --seed 42 --model-name microsoft/deberta-v3-large --model-revision 64a8c8eab3e352a784c658aef62be1662607476f --structure-lambda 0.3 --skip-existing",
+ "environment": {
+  "python": "3.10.20",
+  "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+  "packages": {
+   "numpy": "1.26.4",
+   "scikit-learn": "1.7.2",
+   "pandas": "2.3.3",
+   "torch": "2.2.2+cu121",
+   "transformers": "4.40.2"
+  }
+ },
+ "torch_cuda_version": "12.1",
+ "cuda_device_order": null,
+ "cuda_visible_devices": null
+}
