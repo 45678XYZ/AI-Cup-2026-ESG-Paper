@@ -391,6 +391,20 @@ def write_case_analysis(out_dir, order, root, dev=None,
         entry["net"] = entry["repaired"] - entry["destroyed"]
     totals["by_class"] = dict(sorted(per_class.items(),
                                      key=lambda kv: kv[1]["net"]))
+    # Means, not sums: these two are rates, and the paper quotes them beside
+    # scores that are also averaged over runs. Summing them would produce a
+    # number with no interpretation that still looked like the others.
+    totals["partial_credit_on_invalid"] = float(np.mean(
+        [r["partial_credit_on_invalid"] for r in runs]))
+    fields = {f for r in runs for f in r["hierarchy_information"]}
+    totals["hierarchy_information"] = {
+        field: {
+            key: float(np.mean([r["hierarchy_information"][field][key] for r in runs]))
+            for key in ("na_determination", "substantive_choice")
+        } | {"n_substantive": runs[0]["hierarchy_information"][field]["n_substantive"]}
+        for field in sorted(fields)
+    }
+
     totals["net_fields"] = totals["fields_repaired"] - totals["fields_destroyed"]
     totals["invalid_rate"] = (totals["n_invalid"] / totals["n_rows"]
                               if totals["n_rows"] else 0.0)

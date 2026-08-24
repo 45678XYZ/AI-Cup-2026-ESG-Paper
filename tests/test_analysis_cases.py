@@ -281,3 +281,20 @@ def test_case_analysis_separates_what_the_hierarchy_decides_from_what_it_leaves_
     for field, row in info.items():
         assert 0.0 <= row["na_determination"] <= 1.0, field
         assert 0.0 <= row["substantive_choice"] <= 1.0, field
+
+
+def test_the_two_rates_are_averaged_across_runs_not_summed():
+    """Both are rates. Summing them across runs would give a number with no
+    interpretation that still sits in the same table as the counts, which is
+    exactly how a wrong figure survives review."""
+    import json
+    from analysis.cases import write_case_analysis
+
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        path = write_case_analysis(tmp, ORDER, EXAMPLES_ROOT, dev=DEV,
+                                   protocols=("pdf_group",), seeds=(42, 123))
+        totals = json.loads(path.read_text(encoding="utf-8"))["totals"]
+    assert 0.0 < totals["partial_credit_on_invalid"] < 1.0
+    for row in totals["hierarchy_information"].values():
+        assert 0.0 <= row["na_determination"] <= 1.0
