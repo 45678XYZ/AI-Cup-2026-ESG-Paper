@@ -13,6 +13,8 @@ Editing these has consequences beyond the file.
 | `inference_families.md` | Which test belongs to which family, and what each layer may claim. Settled 2026-08-24. |
 | `competition_epoch_evidence.md` | Where `EPOCHS = 12` came from. Cited by `paper/train_config.py` as the justification for a frozen constant. |
 
+`paper/train_config.py` cites this file at its pre-move path, `docs/competition_epoch_evidence.md`, and that stale path is deliberate. The whole file is pinned by `train_config_sha256`, which 166 versioned artifacts record; a comment is hashed exactly like a constant, so correcting the path would invalidate every completed official fit. `tests/test_train_config_frozen.py` fails if anyone tries.
+
 ## `preregistration/` — written before the run
 
 Each was committed before its arm executed; the commit timestamp is the evidence.

@@ -41,7 +41,7 @@ GRAD_ACCUM_STEPS = 2          # effective batch = 16
 # up" as the ceiling of the arithmetic mean across all 15 folds:
 # ceil(171 / 15) = ceil(11.4) = 12. The median is 11, but is descriptive only;
 # it is not the frozen aggregation rule. The per-fold audit and hashes of the
-# three source logs are recorded in docs/governance/competition_epoch_evidence.md.
+# three source logs are recorded in docs/competition_epoch_evidence.md.
 #
 # Why it matters in both directions, and why nobody downstream can catch a bad
 # value:
