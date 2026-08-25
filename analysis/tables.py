@@ -45,7 +45,8 @@ TABLE_FILES = ("table1_dataset.tex", "table2_main.tex",
 # sha256 per prediction file per arm, which is finer than the manifest's
 # per-table list. Listed here so anything that enumerates delivered tables --
 # the preview, and D counting floats -- sees all of them from one place.
-EXTERNAL_TABLE_FILES = ("table3_legality_cost.tex",)
+EXTERNAL_TABLE_FILES = ("table3_legality_cost.tex",
+                        "table7_multilingual_mechanism.tex")
 
 # Sorted by number so anything that enumerates the deliverables -- the
 # preview, and D reading the directory -- sees them in the order the paper
