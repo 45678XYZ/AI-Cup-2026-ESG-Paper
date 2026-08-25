@@ -4,40 +4,40 @@
  "seed": 456,
  "method": "M5",
  "predictions_file": "predictions/pdf_group_seed456_M5.csv.gz",
- "predictions_sha256": "sha256:4efe53c270d91eaf4bda0a7c8133ed619fa006462ba4be2acc8422f4970575e9",
+ "predictions_sha256": "sha256:3327bc56ea28c71e82314faed816b46664fa822d28745eac996dec5273470307",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "aaa9bfc3337c60fcb6f6cdec8206175fdbd625f1",
- "created_at": "2026-08-22T15:26:35.349481+00:00",
+ "git_sha": "a383f3410b1dd3cd167a7436112c4860477adae6",
+ "created_at": "2026-08-25T17:44:57.097900+00:00",
  "n_rows": 2000,
- "weighted_macro_f1": 0.5821905946074576,
+ "weighted_macro_f1": 0.5817915990272314,
  "per_field_macro_f1": {
-  "promise_status": 0.7933359604185822,
-  "verification_timeline": 0.5047304774115353,
-  "evidence_status": 0.6571305339449584,
-  "evidence_quality": 0.4304990592243525
+  "promise_status": 0.7926979832662664,
+  "verification_timeline": 0.5043431830354657,
+  "evidence_status": 0.6566726667245631,
+  "evidence_quality": 0.43028207114654093
  },
  "per_class_f1": {
   "promise_status": {
-   "Yes": 0.9287009063444108,
-   "No": 0.6579710144927536
+   "Yes": 0.928377153218495,
+   "No": 0.6570188133140377
   },
   "verification_timeline": {
-   "already": 0.5383580080753702,
+   "already": 0.5373737373737374,
    "within_2_years": 0.2028985507246377,
    "between_2_and_5_years": 0.5218274111675127,
    "more_than_5_years": 0.6025974025974026,
-   "N/A": 0.6579710144927536
+   "N/A": 0.6570188133140377
   },
   "evidence_status": {
-   "Yes": 0.841148673209742,
+   "Yes": 0.8407272727272728,
    "No": 0.47227191413237923,
-   "N/A": 0.6579710144927536
+   "N/A": 0.6570188133140377
   },
   "evidence_quality": {
-   "Clear": 0.7910250769907611,
+   "Clear": 0.7906772207563765,
    "Not Clear": 0.28085106382978725,
    "Misleading": 0.0,
-   "N/A": 0.6501200960768615
+   "N/A": 0.6496
   }
  },
  "per_class_support": {
@@ -65,9 +65,9 @@
   }
  },
  "conditional_f1": {
-  "verification_timeline_given_ps_yes": 0.487312104152226,
-  "evidence_status_given_ps_yes": 0.6877099664053752,
-  "evidence_quality_given_es_yes": 0.3972691760067176
+  "verification_timeline_given_ps_yes": 0.4870557217851175,
+  "evidence_status_given_ps_yes": 0.6874969636177102,
+  "evidence_quality_given_es_yes": 0.3971342383107089
  },
  "tuple_exact_match": 0.442,
  "invalid_tuple_rate": 0.0,
@@ -249,7 +249,7 @@
     "evidence_quality": {
      "Clear": 0.9,
      "Not Clear": 0.8,
-     "Misleading": 2.25,
+     "Misleading": 0.0,
      "N/A": -0.3
     }
    },

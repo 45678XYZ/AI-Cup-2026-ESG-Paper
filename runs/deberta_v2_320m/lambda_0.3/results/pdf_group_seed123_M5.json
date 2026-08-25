@@ -4,17 +4,17 @@
  "seed": 123,
  "method": "M5",
  "predictions_file": "predictions/pdf_group_seed123_M5.csv.gz",
- "predictions_sha256": "sha256:d634565d78907c783a9ddc8dc36bf2880a9a3ecf9ea9b8324b10662e310f73f4",
+ "predictions_sha256": "sha256:d351e3f6dfdabedf45dc254c5ca9908072e59ccdf46db3af6015a97d122db686",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "2f4c25f7d2ffbde3e8a9eb1c828048a27a00f416",
- "created_at": "2026-08-22T21:51:31.506684+00:00",
+ "git_sha": "a383f3410b1dd3cd167a7436112c4860477adae6",
+ "created_at": "2026-08-25T17:44:52.875434+00:00",
  "n_rows": 2000,
- "weighted_macro_f1": 0.5395925848157025,
+ "weighted_macro_f1": 0.5400169029777906,
  "per_field_macro_f1": {
   "promise_status": 0.7527921698198452,
   "verification_timeline": 0.4448183435659847,
-  "evidence_status": 0.6013477784209001,
-  "evidence_quality": 0.4054487594016163
+  "evidence_status": 0.601958412568638,
+  "evidence_quality": 0.40613769630952123
  },
  "per_class_f1": {
   "promise_status": {
@@ -29,15 +29,15 @@
    "N/A": 0.5938375350140056
   },
   "evidence_status": {
-   "Yes": 0.8229802513464991,
-   "No": 0.3872255489021956,
+   "Yes": 0.8231488138030194,
+   "No": 0.3888888888888889,
    "N/A": 0.5938375350140056
   },
   "evidence_quality": {
-   "Clear": 0.7751662971175166,
-   "Not Clear": 0.25239005736137665,
+   "Clear": 0.7742222222222223,
+   "Not Clear": 0.25426944971537,
    "Misleading": 0.0,
-   "N/A": 0.594238683127572
+   "N/A": 0.5960591133004927
   }
  },
  "per_class_support": {
@@ -66,10 +66,10 @@
  },
  "conditional_f1": {
   "verification_timeline_given_ps_yes": 0.4281149955627428,
-  "evidence_status_given_ps_yes": 0.6363975941452459,
-  "evidence_quality_given_es_yes": 0.3886355681326048
+  "evidence_status_given_ps_yes": 0.6375860886169391,
+  "evidence_quality_given_es_yes": 0.3887793464258485
  },
- "tuple_exact_match": 0.3905,
+ "tuple_exact_match": 0.39,
  "invalid_tuple_rate": 0.0,
  "decision_params": {
   "0": {
@@ -247,10 +247,10 @@
      "N/A": -0.85
     },
     "evidence_quality": {
-     "Clear": 1.25,
-     "Not Clear": 0.75,
-     "Misleading": 2.75,
-     "N/A": 0.05
+     "Clear": 1.3,
+     "Not Clear": 0.95,
+     "Misleading": 0.0,
+     "N/A": 0.35
     }
    },
    "fallback_applied": {},

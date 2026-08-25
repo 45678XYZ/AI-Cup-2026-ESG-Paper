@@ -4,17 +4,17 @@
  "seed": 123,
  "method": "M2",
  "predictions_file": "predictions/pdf_group_seed123_M2.csv.gz",
- "predictions_sha256": "sha256:6bc9d28c3a1550a023e52c10142801f8ddb0c5c86e9f29a5ae2ef661f58f6b80",
+ "predictions_sha256": "sha256:87e3e952c82c16cf37e98b17c6f081ef909e9f15c948e4d1d06081f873dc62d6",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "2f4c25f7d2ffbde3e8a9eb1c828048a27a00f416",
- "created_at": "2026-08-22T21:51:30.521210+00:00",
+ "git_sha": "a383f3410b1dd3cd167a7436112c4860477adae6",
+ "created_at": "2026-08-25T17:44:51.194169+00:00",
  "n_rows": 2000,
- "weighted_macro_f1": 0.5312510609057037,
+ "weighted_macro_f1": 0.5312352067513868,
  "per_field_macro_f1": {
   "promise_status": 0.7414056330613319,
   "verification_timeline": 0.44562437392848225,
   "evidence_status": 0.6017088345760766,
-  "evidence_quality": 0.3874675080895486
+  "evidence_quality": 0.38742221050578596
  },
  "per_class_f1": {
   "promise_status": {
@@ -34,8 +34,8 @@
    "N/A": 0.576551724137931
   },
   "evidence_quality": {
-   "Clear": 0.7622090369694203,
-   "Not Clear": 0.18947368421052632,
+   "Clear": 0.7624259005927952,
+   "Not Clear": 0.18907563025210083,
    "Misleading": 0.0,
    "N/A": 0.5981873111782477
   }
@@ -67,7 +67,7 @@
  "conditional_f1": {
   "verification_timeline_given_ps_yes": 0.43490626485316275,
   "evidence_status_given_ps_yes": 0.647601304145319,
-  "evidence_quality_given_es_yes": 0.35349159970142385
+  "evidence_quality_given_es_yes": 0.3534707229309781
  },
  "tuple_exact_match": 0.3955,
  "invalid_tuple_rate": 0.0,
@@ -217,7 +217,7 @@
     "evidence_quality": {
      "Clear": 0.7,
      "Not Clear": 0.0,
-     "Misleading": 1.85,
+     "Misleading": 0.0,
      "N/A": 0.1
     }
    },
