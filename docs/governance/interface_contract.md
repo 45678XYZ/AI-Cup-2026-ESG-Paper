@@ -1,6 +1,6 @@
 # 介面契約 v1.0
 
-> 對應文件：[`docs/paper_plan.md`](paper_plan.md)
+> 對應文件：[`docs/governance/paper_plan.md`](paper_plan.md)
 
 ---
 
@@ -361,7 +361,7 @@ A 提供 `contracts/examples/predictions/` 與 `results/` 的合成檔（分數�
 ```
 tables/table1_dataset.tex      figures/figure1_hierarchy.pdf   ← 交付物，D 引入這個
 tables/table2_main.tex         figures/figure1_hierarchy.tex   ← 圖的原始碼（standalone TikZ）
-tables/table3_regimes.tex      figures/figure1_defs.tex        ← 圖印出的數字，由 script 生成
+tables/table6_regimes.tex      figures/figure1_defs.tex        ← 圖印出的數字，由 script 生成
 tables/table4_contrasts.tex
 tables/table5_metrics.tex
 tables/manifest.json
@@ -458,7 +458,7 @@ python -m analysis.preview          # → tables/preview.pdf
 |---|---|
 | `table1_dataset.tex` | `dataset/` 三檔 + `splits/*.json`（`analysis/audit.py` 讀的東西） |
 | `table2_main.tex` | `pdf_group` 的 21 個 `predictions/*.csv.gz` |
-| `table3_regimes.tex` | 兩種 protocol 的全部 42 個 `predictions/*.csv.gz` |
+| `table6_regimes.tex` | 兩種 protocol 的全部 42 個 `predictions/*.csv.gz` |
 
 **空的 `input_files` 必須報錯，不得寫出。** 一份空 manifest 與一份完整 manifest 長得一樣，卻什麼都沒有擔保；只有 `predictions/` 而無 `results/` 的目錄是 W3 的常態，不能讓它靜默產出無效稽核紀錄。
 
@@ -570,11 +570,11 @@ C 消費契約 3（`predictions/`、`results/`），產出契約 4（`tables/`�
 | `tables/table{1,2,3}*.tex`、`*_caption.txt`、`manifest.json` | ✅ | 契約 4 交付物 |
 | `tables/findings.md` | ✅ | 補充材料，見 §5；三個家族、conditional F1、sensitivity、逐例記錄與禁止事項 |
 | `tables/case_analysis.json`、`tables/audit.json` | ✅ | 補充材料；Discussion 的失效模式數字來源 |
-| `docs/study_report.md` | ✅ | 給 D 的完整交接：故事、證據、來歷、措辭紅線 |
-| `docs/related_work_citations.md` | ✅ | path-constrained 指標的三層出處、BibTeX 與逐字引文 |
+| `docs/writing/study_report.md` | ✅ | 給 D 的完整交接：故事、證據、來歷、措辭紅線 |
+| `docs/writing/related_work_citations.md` | ✅ | path-constrained 指標的三層出處、BibTeX 與逐字引文 |
 | `figures/figure1_hierarchy.pdf` | ✅ | 契約 4 交付物；`.tex` 與 `_defs.tex` 為其來源，見 §5 |
 | `tests/test_analysis_*.py` | ✅ 8 檔 | audit、metrics、bootstrap、aggregate、tables、figure1、cases、findings 各一 |
-| `tests/test_study_report.py` | ✅ | 守門測試：`docs/study_report.md` 引用的每個區間都必須存在於 `tables/`，反之亦然 |
+| `tests/test_study_report.py` | ✅ | 守門測試：`docs/writing/study_report.md` 引用的每個區間都必須存在於 `tables/`，反之亦然 |
 
 ### 實作歷程
 

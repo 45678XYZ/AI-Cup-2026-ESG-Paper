@@ -256,3 +256,45 @@ def test_case_analysis_carries_the_override_ledger():
     ledger = out["parent_overrides"]
     assert ledger["n_rows"] == len(order)
     assert 0 <= ledger["n_changed"] <= ledger["n_rows"]
+
+
+def test_case_analysis_records_what_the_metric_pays_for_an_illegal_row():
+    """The report states that a structurally unusable answer still collects a
+    substantial share of the weighted per-field credit. That sentence is the
+    difference between "the metric ignores legality" and "the metric pays for
+    breaking it", so the number behind it cannot live only in prose."""
+    out = case_analysis("pdf_group", 42, ORDER, EXAMPLES_ROOT, dev=DEV)
+    credit = out["partial_credit_on_invalid"]
+    assert 0.0 < credit < 1.0
+    # It is a weighted mean of four per-field accuracies, so it cannot exceed 1.
+
+
+def test_case_analysis_separates_what_the_hierarchy_decides_from_what_it_leaves_open():
+    """The paper's structural argument rests on this split: the hierarchy
+    determines only whether a child field is N/A, and the model already makes
+    that call well, while the substantive choice -- where the headroom is -- is
+    left entirely open. Two numbers per child field, and they must be reported
+    together or the comparison disappears."""
+    out = case_analysis("pdf_group", 42, ORDER, EXAMPLES_ROOT, dev=DEV)
+    info = out["hierarchy_information"]
+    assert set(info) == {"verification_timeline", "evidence_status", "evidence_quality"}
+    for field, row in info.items():
+        assert 0.0 <= row["na_determination"] <= 1.0, field
+        assert 0.0 <= row["substantive_choice"] <= 1.0, field
+
+
+def test_the_two_rates_are_averaged_across_runs_not_summed():
+    """Both are rates. Summing them across runs would give a number with no
+    interpretation that still sits in the same table as the counts, which is
+    exactly how a wrong figure survives review."""
+    import json
+    from analysis.cases import write_case_analysis
+
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        path = write_case_analysis(tmp, ORDER, EXAMPLES_ROOT, dev=DEV,
+                                   protocols=("pdf_group",), seeds=(42, 123))
+        totals = json.loads(path.read_text(encoding="utf-8"))["totals"]
+    assert 0.0 < totals["partial_credit_on_invalid"] < 1.0
+    for row in totals["hierarchy_information"].values():
+        assert 0.0 <= row["na_determination"] <= 1.0

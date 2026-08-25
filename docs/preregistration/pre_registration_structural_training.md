@@ -59,7 +59,7 @@ class weights、checkpoint 規則。`paper/train_config.py` **不會被修改** 
 候選值固定為 `LAMBDA_GRID = (0.1, 0.3, 1.0)`，涵蓋遠低於到略高於 base loss。
 
 1. 只在 **`pdf_group` seed 42** 這一組上，對三個 λ 各跑 5 個 rotation（共 15 fits），
-   **每個 λ 輸出至自己的子目錄** `probs_lambda_sweep/lambda_<λ>/` —— 三者產生的
+   **每個 λ 輸出至自己的子目錄** `runs/lambda_sweep/lambda_<λ>/` —— 三者產生的
    bundle 名稱相同，寫在同一層會互相覆蓋。`select_lambda` 會遞迴尋找。
 
 2. 判準由 `paper/select_lambda.py` **以程式定義**，不由執行者臨場決定：
@@ -75,7 +75,7 @@ class weights、checkpoint 規則。`paper/train_config.py` **不會被修改** 
    斷言此性質。整個選擇程序的正當性建立在這一條上。
 
    ```bash
-   python -m paper.select_lambda --probs-dir probs_lambda_sweep
+   python -m paper.select_lambda --probs-dir runs/lambda_sweep
    ```
 
 3. 選定後 λ 即凍結，並記入本文件的 §8，然後才跑正式的 30 fits。
@@ -85,7 +85,7 @@ class weights、checkpoint 規則。`paper/train_config.py` **不會被修改** 
    並在論文載明 λ 實質上未被解析。此判斷由上述指令直接印出，不由人判讀。
 
 sweep 產生的 15 個 bundle **不進入任何結果表**，但會保留並提交
-（`probs_lambda_sweep/`，`.gitignore` 已載明），以便日後查證選擇過程。
+（`runs/lambda_sweep/`，`.gitignore` 已載明），以便日後查證選擇過程。
 `paper/run_manifest.py` 只索引 `probs/`，因此 sweep 不會污染研究索引。
 
 ## 5. 正式執行
@@ -135,13 +135,13 @@ sweep 產生的 15 個 bundle **不進入任何結果表**，但會保留並提�
   不做檢定。
 - [x] H2 結果：`pdf_group` M1 的 structural − baseline weighted macro-F1
   = +0.00250，95% paired PDF-cluster bootstrap CI [−0.00384, +0.00860]，
-  p = 0.4272；**不支持 H2**。完整紀錄見 `docs/structural_training_results.md`
-  與 `structural_arm/comparison.json`。
+  p = 0.4272；**不支持 H2**。完整紀錄見 `docs/results/structural_training_results.md`
+  與 `runs/structural/comparison.json`。
 
 ## 9. 本 arm **不會**改動的東西
 
 - `paper/train_config.py`（配方憑證）
-- `docs/paper_plan.md`（預先指定性的論證只有在計畫可查證未被編輯時才成立）
+- `docs/governance/paper_plan.md`（預先指定性的論證只有在計畫可查證未被編輯時才成立）
 - `analysis/aggregate.py::CONTRASTS` 的五組預先指定對比
 - 既有的 30 個 bundle、42 個 predictions、42 個 results
 

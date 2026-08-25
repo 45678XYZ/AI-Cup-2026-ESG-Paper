@@ -40,13 +40,13 @@ DeBERTa Test 選 λ；因此它測的是「相同約束強度是否跨 architect
 ## 4. 輸出隔離
 
 ```text
-probs_architecture/deberta_v2_320m/lambda_0.0/
-probs_architecture/deberta_v2_320m/lambda_0.3/
-architecture_screen/deberta_v2_320m/lambda_0.0/{predictions,results}/
-architecture_screen/deberta_v2_320m/lambda_0.3/{predictions,results}/
+runs/deberta_v2_320m/lambda_0.0/
+runs/deberta_v2_320m/lambda_0.3/
+runs/deberta_v2_320m/lambda_0.0/{predictions,results}/
+runs/deberta_v2_320m/lambda_0.3/{predictions,results}/
 ```
 
-不覆寫 `probs/`、`probs_structural/`、`predictions/`、`results/` 或 `structural_arm/`。
+不覆寫 `probs/`、`runs/structural/probs/`、`predictions/`、`results/` 或 `runs/structural/`。
 
 ## 5. 判讀
 
@@ -78,5 +78,5 @@ architecture_screen/deberta_v2_320m/lambda_0.3/{predictions,results}/
 - [x] M1 weighted macro-F1（三 seed mean）：0.532050 → 0.545133（+0.013083）
 - [x] 擴充 gate：seed42 同時降低 M0 invalid 並提高 M1，已依規則擴充 123/456
 
-完整結果、bootstrap 與限制見 `docs/deberta_screen_results.md`；machine-readable
-comparison 見 `architecture_screen/deberta_v2_320m/comparison.json`。
+完整結果、bootstrap 與限制見 `docs/results/deberta_screen_results.md`；machine-readable
+comparison 見 `runs/deberta_v2_320m/comparison.json`。

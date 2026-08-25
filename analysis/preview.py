@@ -20,7 +20,7 @@ import tempfile
 from pathlib import Path
 
 from analysis.figure1 import LATEX_ENV, tex_available
-from analysis.tables import TABLE_FILES
+from analysis.tables import ALL_TABLE_FILES
 from paper.data import REPO_ROOT
 
 # Reproducibility is shared with figure 1, which this preview embeds: see
@@ -83,7 +83,7 @@ def build(tables_dir=None, out_path=None) -> Path:
         )
 
     body = [PREAMBLE]
-    for name in TABLE_FILES:
+    for name in ALL_TABLE_FILES:
         tabular = tables_dir / name
         if not tabular.exists():
             continue

@@ -402,7 +402,7 @@ artifact 的版控規則：`splits/`、`results/` 與 `probs/` 都進 git（`pro
 
 ### 介面契約（A 制定）
 
-**格式規格一律以 [`docs/interface_contract.md`](interface_contract.md) 為準**，本節不重複描述檔案格式——兩處各寫一份必然分岔，而分岔的代價是有人照著過期的規格交件。本節只定義四條交接線是誰對誰、以及上游未到時各自可以先做什麼。
+**格式規格一律以 [`docs/governance/interface_contract.md`](interface_contract.md) 為準**，本節不重複描述檔案格式——兩處各寫一份必然分岔，而分岔的代價是有人照著過期的規格交件。本節只定義四條交接線是誰對誰、以及上游未到時各自可以先做什麼。
 
 | 交接 | 產出者 | 消費者 | 上游未到時的替代輸入 |
 |---|---|---|---|
@@ -562,7 +562,7 @@ W2 的 B 與 C 相對空閒：B 可先把 W4 的封存腳本寫好，C 可先做
 | 論文需要的元件 | 現況 | 待處理 |
 |---|---|---|
 | Rotating split generator（PDF-group 與 row-stratified） | ✅ `paper/splits.py`，六個 manifest 已產出 | — |
-| 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone、精確 model revision、last-3 checkpoint averaging 均已凍結；短 batch 的 loss 縮放已修正（`paper/accumulation.py::loss_scale`），30/30 fits 已於 2026-08-21 重跑並驗證；`EPOCHS = 12` 已按 15 個 competition folds 的平均 terminal epoch 向上取整重新確認，見 `docs/competition_epoch_evidence.md` |
+| 固定的 base model（four-head、standard loss） | ✅ `paper/model.py`、`paper/train_fold.py`、`paper/run_training.py` | backbone、精確 model revision、last-3 checkpoint averaging 均已凍結；短 batch 的 loss 縮放已修正（`paper/accumulation.py::loss_scale`），30/30 fits 已於 2026-08-21 重跑並驗證；`EPOCHS = 12` 已按 15 個 competition folds 的平均 terminal epoch 向上取整重新確認，見 `docs/governance/competition_epoch_evidence.md` |
 | 完整 17-state projection 與 validator | ✅ `paper/projection.py` | 雙向投影，120 種 argmax 結果全數窮舉測試 |
 | 契約檔入境檢查 | ✅ `paper/validate.py` | 值域、bundle↔split 對應、跨 rotation 一致性、checksum、列錯位 |
 | Calibration-only class-bias API | ✅ `paper/calibration.py` | 只接收 calibration labels、拒絕 test labels；biases 與 fallback 逐 rotation 存入 `decision_params`；conditional 的三個結構性 pinned 類別見 §3.2 |

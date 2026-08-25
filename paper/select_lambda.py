@@ -1,6 +1,6 @@
 """The pre-registered lambda-selection criterion, as code rather than prose.
 
-``docs/pre_registration_structural_training.md`` §4 fixes how the structural
+``docs/preregistration/pre_registration_structural_training.md`` §4 fixes how the structural
 arm's lambda is chosen. A criterion that has to be hand-rolled at selection
 time is not pre-registered in any useful sense -- whoever runs it decides what
 it meant. This module is that criterion, so the choice is reproducible and the
@@ -85,7 +85,7 @@ INDISTINGUISHABLE = 0.002
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--probs-dir", type=Path, default=REPO_ROOT / "probs_lambda_sweep")
+    ap.add_argument("--probs-dir", type=Path, default=REPO_ROOT / "runs/lambda_sweep")
     args = ap.parse_args()
 
     table = sweep_scores(args.probs_dir)
@@ -106,7 +106,7 @@ def main() -> None:
               "record in the paper that lambda was not resolved.")
     else:
         print(f"selected lambda = {best}")
-    print("\nRecord the outcome in docs/pre_registration_structural_training.md §8.")
+    print("\nRecord the outcome in docs/preregistration/pre_registration_structural_training.md §8.")
 
 
 if __name__ == "__main__":

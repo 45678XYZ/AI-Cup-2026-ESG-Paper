@@ -67,6 +67,10 @@ def paired_delta(sets_a, sets_b, clusters, n_boot=N_BOOT, seed=BOOTSTRAP_SEED,
         "ci_high": float(high),
         "p_value": _two_sided_p(draws),
         "n_boot": n_boot,
+        # ``score``, not the default: this list is the third consumer of it and
+        # the only one whose being wrong does not raise. A tuple-accuracy
+        # contrast carrying the official metric's per-seed numbers still looks
+        # like three small signed floats under the right key.
         "per_seed_delta": [
             score(gold_a, pred_a) - score(gold_b, pred_b)
             for (gold_a, pred_a), (gold_b, pred_b) in zip(sets_a, sets_b)

@@ -22,21 +22,48 @@ from analysis.bootstrap import N_BOOT
 from analysis.findings import ALPHA
 from analysis.load import METHODS, predictions_path
 from paper.data import REPO_ROOT, TEST_PATH, TRAIN_PATH, VAL_PATH, file_sha256
-from paper.labels import FIELDS
+from paper.labels import EVAL_FIELDS, FIELD_WEIGHTS, FIELDS
 from paper.provenance import git_sha, now_iso
 from paper.train_config import PROTOCOLS, SEEDS
 
 CONTRACT_VERSION = "1.0"
 
-TABLE_FILES = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
-               "table4_contrasts.tex", "table5_metrics.tex")
+# Five tabulars, down from seven. ``table5_metrics`` reported the same seven
+# rules under six metric columns; once C-wF1 and hF were demoted to prose it
+# carried one fact -- that the metrics disagree about the winner -- which is a
+# sentence in table 2's caption. ``table7_resolution`` re-presented table 4's
+# official block sorted by effect size with the derivation done; that is also a
+# sentence, now in table 4's caption. A table that a caption can replace is a
+# table the reader has to hold in their head for nothing.
+TABLE_FILES = ("table1_dataset.tex", "table2_main.tex",
+               "table4_contrasts.tex", "table5_headroom.tex",
+               "table6_regimes.tex")
+
+# Tables written by their own analysis module rather than by ``write_tables``,
+# because their inputs are not the cross-seed summaries this file consumes.
+# Their provenance lives in their own JSON: ``legality_cost.json`` records a
+# sha256 per prediction file per arm, which is finer than the manifest's
+# per-table list. Listed here so anything that enumerates delivered tables --
+# the preview, and D counting floats -- sees all of them from one place.
+EXTERNAL_TABLE_FILES = ("table3_legality_cost.tex",)
+
+# Sorted by number so anything that enumerates the deliverables -- the
+# preview, and D reading the directory -- sees them in the order the paper
+# presents them. Without the sort the external table lands last whatever its
+# number says, which is how a table ends up numbered 3 and printed sixth.
+ALL_TABLE_FILES = tuple(sorted(TABLE_FILES + EXTERNAL_TABLE_FILES))
 
 # How each Holm family is named in table 4. Held here rather than imported
 # from the brief so the tabular's wording cannot drift with prose edits.
+# The two families ``paper_plan.md`` named before any result existed: the
+# competition's own metric (section 4.4) and tuple exact-match (section 4.5).
+# Path-constrained wF1 and hF were adopted after the primary analysis returned
+# its null and are exploratory; ``docs/governance/inference_families.md`` demotes them to
+# prose rather than giving each a Holm family, which removes ten tests from the
+# page and costs nothing -- what they show, tuple exact-match already shows
+# with a pre-specified metric and a ten-times-larger effect.
 FAMILY_LABELS = (
     ("contrasts", "Weighted macro-F1 (official)"),
-    ("consistent_contrasts", "Path-constrained wF1"),
-    ("hierarchical_contrasts", "Hierarchical F1 (hF)"),
     ("tuple_contrasts", "Tuple accuracy"),
 )
 
@@ -44,9 +71,9 @@ FAMILY_LABELS = (
 SOURCE_SCRIPTS = {
     "table1_dataset.tex": "analysis/audit.py",
     "table2_main.tex": "analysis/aggregate.py",
-    "table3_regimes.tex": "analysis/aggregate.py",
+    "table6_regimes.tex": "analysis/aggregate.py",
     "table4_contrasts.tex": "analysis/aggregate.py",
-    "table5_metrics.tex": "analysis/aggregate.py",
+    "table5_headroom.tex": "analysis/aggregate.py",
 }
 
 # The competition test split ships no labels, so its label-derived cells cannot
@@ -110,9 +137,9 @@ def table_inputs(predictions_root, protocols=PROTOCOLS, seeds=SEEDS,
         # same-document protocol reaches the paper through table 3.
         "table1_dataset.tex": audited,
         "table2_main.tex": scored["pdf_group"],
-        "table3_regimes.tex": [p for protocol in protocols for p in scored[protocol]],
+        "table6_regimes.tex": [p for protocol in protocols for p in scored[protocol]],
         "table4_contrasts.tex": scored["pdf_group"],
-        "table5_metrics.tex": scored["pdf_group"],
+        "table5_headroom.tex": scored["pdf_group"],
     }
 
 
@@ -202,7 +229,9 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             f"by analysis/audit.py. Misleading occurs {_times(len(misleading))} in the "
             f"whole development set, in {_word(n_reports)} different reports, and is "
             f"absent from the Calibration partition of {absent['n_without']} of the "
-            f"{absent['n_rotations']} rotations. All {audit['pdf_overlap']['n_shared']} "
+            f"{absent['n_rotations']} rotations. The four fields admit 120 "
+            "combinations, of which the hierarchy leaves 17 legal, and no "
+            f"development row violates it. All {audit['pdf_overlap']['n_shared']} "
             "development reports also appear in the test split, and "
             f"{_word(len(audit['duplicates']['dev_test']))} paragraph text is "
             "duplicated across the two. No company contributes more than one "
@@ -221,22 +250,41 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             + (" Paired contrasts between these rows, under each metric and "
                "with their Holm-corrected p-values, are reported in Table 4."
                if contrasts else "")
-            + (_consistency_clause(methods) if methods else "")
+            + (_consistency_clause(methods) + _ranking_sentence(methods)
+               if methods else "")
+        ),
+        "table5_headroom": (
+            f"Where the official score falls short under {HEADROOM_METHOD}, and "
+            "what closing each part is worth. Shortfall is the field's weight "
+            "times its distance from a perfect macro-F1; share is its portion "
+            "of the total. The last column is what a 0.1 gain on a single "
+            "class's F1 adds to the weighted total -- the field's weight "
+            "divided by its class count, times 0.1 -- which orders the fields "
+            "differently from the shortfall: macro-F1 averages over classes, so "
+            "a field carrying more of them returns less per class improved. "
+            "\\textbf{Not all of the shortfall is reachable.} Misleading occurs "
+            "twice in the development set and is never predicted by any arm, so "
+            "a quarter of evidence\\_quality's macro-F1 -- 0.0875 of the "
+            "weighted total -- is out of reach by construction."
         ),
         "table4_contrasts": (
-            "The five pre-specified contrasts of the analysis plan, each "
-            "evaluated under every metric. Paired PDF-cluster bootstrap over "
-            f"{N_BOOT:,} resamples on the document-disjoint protocol; the "
-            "resampling unit is the source report, not the paragraph. Each "
-            "metric is Holm-corrected as its own family of five rather than "
-            "pooled: the contrasts were specified once, not once per metric. "
+            "The five pre-specified contrasts of the analysis plan, under the "
+            "two metrics the plan named before any result existed: the "
+            "competition's own weighted macro-F1 and tuple exact-match. Paired "
+            f"PDF-cluster bootstrap over {N_BOOT:,} resamples on the "
+            "document-disjoint protocol; the resampling unit is the source "
+            "report, not the paragraph. Each metric is Holm-corrected as its "
+            "own family of five rather than pooled: the contrasts were "
+            "specified once, not once per metric. "
             "\\textbf{Bold $p_{\\mathrm{Holm}}$ marks a contrast that survives "
             "the correction; the bracketed intervals are uncorrected 95\\% "
-            "percentile intervals and decide nothing on their own.}"
+            "percentile intervals and decide nothing on their own.} Two "
+            "further structure-aware metrics were examined after the primary "
+            "analysis and are reported as exploratory in the text, not as Holm "
+            "families here."
+            + _resolution_clause(contrasts, methods)
             + _survival_summary({
                 "contrasts": contrasts,
-                "consistent_contrasts": consistent_contrasts,
-                "hierarchical_contrasts": hierarchical_contrasts,
                 "tuple_contrasts": tuple_contrasts,
             })
             + " The official metric and tuple accuracy were named in the "
@@ -244,25 +292,86 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             "hierarchical F1 were adopted after the primary analysis and are "
             "not pre-specified."
         ),
-        "table5_metrics": (
-            "The same seven decision rules scored under each metric. C-wF1 is "
-            "the official metric with ancestor-unsupported fields counted as "
-            "false predictions; hP, hR and hF are the ancestor-based "
-            "hierarchical precision, recall and F1, which are micro-averaged "
-            "over path nodes rather than macro-averaged over classes. C-wF1 "
-            "equals the official score for every rule whose output is legal by "
-            "construction and falls below it only for the unconstrained one."
-            + (_ranking_sentence(methods) if methods else "")
-        ),
-        "table3_regimes": (
+        "table6_regimes": (
             "Same-document versus document-disjoint evaluation. The left column "
             "measures seen-report, unseen-paragraph generalisation and matches "
             "the competition distribution, since test and development draw on "
             f"the same {dev['pdfs']} reports; the right column measures "
             "generalisation to entirely unseen reports. $\\Delta$ is the gap "
-            "between two estimation targets and is not a bias estimate."
+            "between two estimation targets and is not a bias estimate. All "
+            "seven decision rules are reported rather than a best-scoring "
+            "subset: every $\\Delta$ is positive and every interval excludes "
+            "zero, so the gap is a property of the split and not of any one "
+            "rule."
         ),
     }
+
+
+def _resolution_clause(contrasts, methods) -> str:
+    """What magnitude this benchmark can actually resolve, in one sentence.
+
+    This used to be a table of its own, which re-presented the official block
+    above sorted by effect size with the arithmetic done. Everything it showed
+    is already in the rows: the sentence names the one contrast whose interval
+    clears zero without surviving, and puts it beside the full spread across
+    the rules the study set out to separate.
+
+    Two things it has to be careful about. It scans the official family only,
+    while the table beside it also prints tuple accuracy -- where M1-M0 is
+    +0.035, four times what this sentence calls the largest -- so the metric is
+    named. And the spread it offers as scale is sometimes the very contrast it
+    is scaling: when the two rules named are the best- and worst-scoring of the
+    set, ``_method_span`` returns this contrast's own magnitude, and printing
+    it after "for scale" reads as a second, corroborating measurement.
+    """
+    if not contrasts:
+        return ""
+    shaped = [(abs(r["delta"]), k, r) for k, r in contrasts.items()
+              if (r["ci_low"] > 0 or r["ci_high"] < 0) and r["p_holm"] >= ALPHA]
+    if not shaped:
+        return ""
+    magnitude, key, row = max(shaped)
+    head = (f" The largest effect on the official metric, {key} at "
+            f"$|\\Delta|$ = {magnitude:.3f}, has an interval excluding zero "
+            f"and still does not survive the correction "
+            f"($p_{{\\mathrm{{Holm}}}}$ = {row['p_holm']:.3f})")
+    if not methods:
+        return head + "."
+    if _spans_the_extremes(key, methods):
+        return (f"{head} -- and those two rules are the highest- and "
+                f"lowest-scoring of the {_word(len(methods))}, so that is not "
+                f"one contrast among many but the entire spread the benchmark "
+                f"has to resolve.")
+    return (f"{head}; for scale, the full range across the "
+            f"{_word(len(methods))} decision rules is "
+            f"{_method_span(methods):.4f}.")
+
+
+def _spans_the_extremes(key, methods) -> bool:
+    """Whether the contrast's two rules are the best- and worst-scoring ones.
+
+    When they are, ``_method_span`` is |delta| of this same contrast and the
+    two numbers are one measurement, not two.
+    """
+    named = set(key.split("-"))
+    if len(named) != 2 or not named.issubset(methods):
+        return False
+    scores = {m: v["weighted_macro_f1_mean"] for m, v in methods.items()}
+    return named == {max(scores, key=scores.get), min(scores, key=scores.get)}
+
+
+def _method_span(methods) -> float:
+    """Spread of the official metric across every decision rule.
+
+    The resolution clause needs something to be read against: a minimum
+    detectable difference is a number until it is put beside the difference
+    the study was built to detect. Only meaningful as scale when the contrast
+    being scaled is not itself the span -- see ``_spans_the_extremes``.
+    """
+    if not methods:
+        return 0.0
+    scores = [m["weighted_macro_f1_mean"] for m in methods.values()]
+    return max(scores) - min(scores)
 
 
 def _f(value, places=3):
@@ -301,13 +410,21 @@ def render_table1(audit) -> str:
     shared = audit["pdf_overlap"]["n_shared"]
     duplicated = len(audit["duplicates"]["dev_test"])
     spanning = audit["company_structure"]["companies_in_multiple_reports"]
+    # Three rows moved to the caption: the duplicate paragraph, the companies
+    # spanning more than one report, and the gold's zero hierarchy violations.
+    # Each is a single fact rather than a development-versus-test statistic --
+    # two had one column marked n/a and the third repeated a number the caption
+    # already gave -- and the caption stated all three in prose already, so the
+    # tabular was restating them in a form that reads worse. The overlap row
+    # below is different: plan section 7 requires it to be prominent.
     body = [
         row("Paragraphs", dev["paragraphs"], test["paragraphs"]),
-        row("\\quad duplicated across splits", duplicated, duplicated),
         row("Source reports (PDFs)", dev["pdfs"], test["pdfs"]),
+        # Stays in the tabular by remit, not by taste: plan section 7 requires
+        # the 100% dev/test overlap to be prominent rather than left to a
+        # caption, because it is the reason Table 3 exists at all.
         row("\\quad shared across splits", shared, shared),
         row("Companies", dev["companies"], test["companies"]),
-        row("\\quad spanning $>$1 report", spanning, NA),
         row("Legal states observed", f"{dev['legal_states_observed']} / 17", NA),
         "\\midrule",
         "\\multicolumn{3}{l}{\\emph{Rarest classes}} \\\\",
@@ -318,6 +435,16 @@ def render_table1(audit) -> str:
 
 
 def render_table2(summary) -> str:
+    """Seven decision rules over one set of probabilities.
+
+    The four per-field columns are descriptive -- no claim rests on them, and
+    table 8 gives that breakdown once with the weights and marginal values that
+    make it mean something. They stay because the shape is declared in
+    ``contracts/examples/tables/table2_main.tex``: D builds against it, and a
+    column count is exactly the kind of thing that is cheap to change here and
+    expensive to discover downstream. Dropping them is a contract change, not
+    a rendering choice.
+    """
     body = []
     for method, calibration, decoding in TABLE2_ROWS:
         row = summary["methods"][method]
@@ -361,28 +488,8 @@ def render_table4(summary) -> str:
     return _tabular("llrrr", header, body)
 
 
-def render_table5(summary) -> str:
-    """The same seven decision rules scored under each metric.
 
-    Optional: the paper's argument rests on table 4. This one carries the
-    descriptive counterpart -- that the metrics do not even agree on which
-    method is best -- and is offered so D can include it or drop it against
-    the page budget.
-    """
-    body = []
-    for method, _, _ in TABLE2_ROWS:
-        row = summary["methods"][method]
-        h = row["hierarchical_mean"]
-        body.append(
-            f"{method} & {_f(row['weighted_macro_f1_mean'])} & "
-            f"{_f(row['consistent_weighted_macro_f1_mean'])} & "
-            f"{_f(h['hP'])} & {_f(h['hR'])} & {_f(h['hF'])} & "
-            f"{_f(row['tuple_exact_match_mean'])} \\\\")
-    header = "ID & Weighted F1 & C-wF1 & hP & hR & hF & Tuple Acc."
-    return _tabular("lrrrrrr", header, body)
-
-
-def render_table3(regimes) -> str:
+def render_table6_regimes(regimes) -> str:
     body = []
     for label, row in regimes.items():
         ci = f"[{_f(row['ci_low'])}, {_f(row['ci_high'])}]"
@@ -392,6 +499,51 @@ def render_table3(regimes) -> str:
         )
     header = "Method & Same-document & Document-disjoint & $\\Delta$ & 95\\% CI"
     return _tabular("lrrrr", header, body)
+
+
+
+HEADROOM_METHOD = "M1"
+
+
+def render_table5_headroom(summary) -> str:
+    """Where the official score's shortfall sits, and what closing it is worth.
+
+    Two columns that rank the fields differently. Shortfall is what a
+    participant would read to decide where to work; marginal value is what
+    that work would actually return, and macro-F1 divides by the class count,
+    so a field carrying more classes returns less per class improved. Ordering
+    by shortfall and printing the marginal value beside it is the whole table:
+    the column a reader would sort on is not the column that decides.
+
+    The last column is ``weight / |classes| * 0.1`` -- a gain of 0.1 on *one*
+    class's F1, not on the field's macro-F1, which would be ``weight * 0.1``
+    and would carry no class count at all. Naming it for the field would make
+    the column four times larger for evidence_quality and, worse, would delete
+    the reason the two orderings differ.
+
+    Reported for M1, the rule this study recommends. Naming it rather than
+    taking the best-scoring arm keeps a score out of the choice.
+    """
+    per_field = summary["methods"][HEADROOM_METHOD]["per_field_mean"]
+    total = sum(FIELD_WEIGHTS[f] * (1 - per_field[f]) for f in FIELDS)
+
+    rows = []
+    for field in FIELDS:
+        weight = FIELD_WEIGHTS[field]
+        shortfall = weight * (1 - per_field[field])
+        rows.append((field, weight, per_field[field], shortfall,
+                     shortfall / total if total else 0.0,
+                     weight / len(EVAL_FIELDS[field]) * 0.10))
+    rows.sort(key=lambda r: -r[3])
+
+    body = [
+        f"{f.replace('_', chr(92) + '_')} & {w:.2f} & {mf:.3f} & {sf:.3f} & "
+        f"{share * 100:.1f}\\% & {mv:.4f} \\\\"
+        for f, w, mf, sf, share, mv in rows
+    ]
+    header = ("Field & Weight & macro-F1 & Shortfall & Share & "
+              "Value of $+0.1$ per class")
+    return _tabular("lrrrrr", header, body)
 
 
 def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
@@ -419,9 +571,9 @@ def write_tables(out_dir, audit, summaries, regimes, inputs_by_table,
         # The main table reports the document-disjoint protocol; the
         # same-document protocol reaches the paper through Table 3.
         "table2_main.tex": render_table2(summaries["pdf_group"]),
-        "table3_regimes.tex": render_table3(regimes),
+        "table6_regimes.tex": render_table6_regimes(regimes),
         "table4_contrasts.tex": render_table4(summaries["pdf_group"]),
-        "table5_metrics.tex": render_table5(summaries["pdf_group"]),
+        "table5_headroom.tex": render_table5_headroom(summaries["pdf_group"]),
     }
     for name, content in rendered.items():
         (out_dir / name).write_text(content, encoding="utf-8")

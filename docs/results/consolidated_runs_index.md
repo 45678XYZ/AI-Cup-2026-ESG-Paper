@@ -20,14 +20,14 @@
 | 路徑 | Bundles | 內容 | 預先登記 |
 |---|---:|---|---|
 | `probs/` | 30 | 凍結 anchor，RoBERTa-large λ=0 | `paper_plan.md` |
-| `probs_structural/` | 30 | RoBERTa-large λ=0.3 | `pre_registration_structural_training.md` |
-| `probs_lambda_sweep/` | 15 | λ∈{0.1,0.3,1.0} 選擇用，**不進任何表** | 同上 §7 |
-| `probs_architecture/deberta_v2_320m/` | 30 | DeBERTa-v2-320M，λ∈{0,0.3} | `pre_registration_deberta_screen.md` |
-| `probs_architecture/electra_180g_large/` | 30 | ELECTRA-large，λ∈{0,0.3} | `pre_registration_electra_screen.md` |
+| `runs/structural/probs/` | 30 | RoBERTa-large λ=0.3 | `pre_registration_structural_training.md` |
+| `runs/lambda_sweep/` | 15 | λ∈{0.1,0.3,1.0} 選擇用，**不進任何表** | 同上 §7 |
+| `runs/deberta_v2_320m/` | 30 | DeBERTa-v2-320M，λ∈{0,0.3} | `pre_registration_deberta_screen.md` |
+| `runs/electra_180g_large/` | 30 | ELECTRA-large，λ∈{0,0.3} | `pre_registration_electra_screen.md` |
 | `runs/rbt_base/probs/` | 30 | Chinese RoBERTa-base，**僅 λ=0** | `rbt_base_run.md` |
 
-決策階段產物：`predictions/`+`results/`（凍結 42+42）、`structural_arm/`、
-`architecture_screen/`、`runs/rbt_base/{predictions,results}`。
+決策階段產物：`predictions/`+`results/`（凍結 42+42）、`runs/structural/`、
+`runs/`、`runs/rbt_base/{predictions,results}`。
 
 ## 四個 backbone 的關鍵數字（A 已獨立重算，與各分支文件吻合）
 
@@ -95,6 +95,6 @@
 ```bash
 python -m pytest -q
 python -m paper.validate --all
-python -m paper.validate probs_structural/*/ runs/rbt_base/probs/*/
-python -m paper.validate probs_architecture/*/*/*/ probs_lambda_sweep/*/*/
+python -m paper.validate runs/structural/probs/*/ runs/rbt_base/probs/*/
+python -m paper.validate runs/*/*/*/ runs/lambda_sweep/*/*/
 ```
