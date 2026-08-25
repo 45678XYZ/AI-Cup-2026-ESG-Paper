@@ -442,25 +442,27 @@ def _validate_paths(paths, rows, splits_dir=SPLITS_DIR) -> list[str]:
 
     for p in bundles:
         problems += validate_probs_bundle(p, splits_dir=splits_dir)
-    # External replications have one ``probs/`` directory per
-    # (backbone, lambda) arm. Bundle basenames repeat across arms, so grouping
-    # only by ``pdf_group_seed42`` would merge five rotations from each arm
-    # into a fictitious ten-/forty-rotation run. Recipe consistency is required
-    # within an arm, not across deliberately different model/lambda arms.
-    by_run: dict[tuple[Path, str], list[Path]] = {}
-    for p in bundles:
-        by_run.setdefault((p.parent, p.name.rsplit("_r", 1)[0]), []).append(p)
-    for (arm, run), dirs in sorted(by_run.items(), key=lambda item: str(item[0])):
-        if len(dirs) > 1:
-            problems += [f"{run}: {m}"
-                         for m in validate_probs_run(dirs, splits_dir=splits_dir)]
+    # A corpus may contain several arms whose bundle basenames intentionally
+    # repeat.  The English replication, for example, has one ``probs/``
+    # directory per (backbone, lambda), and every one contains
+    # ``pdf_group_seed42_r0``.  Grouping only by basename merges those arms,
+    # then falsely reports duplicate rotations and mixed model revisions.
+    # The containing probs directory is the arm boundary used by both the run
+    # and study-level checks.
     by_arm: dict[Path, list[Path]] = {}
     for p in bundles:
-        by_arm.setdefault(p.parent, []).append(p)
-    for arm, dirs in sorted(by_arm.items(), key=lambda item: str(item[0])):
-        runs = {p.name.rsplit("_r", 1)[0] for p in dirs}
-        if len(runs) > 1:
-            problems += [f"{arm}: {m}" for m in validate_probs_study(dirs)]
+        by_arm.setdefault(p.parent.resolve(), []).append(p)
+    for arm, arm_bundles in sorted(by_arm.items(), key=lambda item: str(item[0])):
+        by_run: dict[str, list[Path]] = {}
+        for p in arm_bundles:
+            by_run.setdefault(_run_of(p.name), []).append(p)
+        for run, dirs in sorted(by_run.items()):
+            if len(dirs) > 1:
+                label = f"{arm.parent.name}/{arm.name}/{run}" if len(by_arm) > 1 else run
+                problems += [f"{label}: {m}"
+                             for m in validate_probs_run(dirs, splits_dir=splits_dir)]
+        if len(by_run) > 1:
+            problems += [f"{arm}: {m}" for m in validate_probs_study(arm_bundles)]
 
     for p in predictions:
         problems += validate_predictions(p, rows=rows, method=_method_of(p),

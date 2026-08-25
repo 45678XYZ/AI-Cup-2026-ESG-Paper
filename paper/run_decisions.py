@@ -30,7 +30,7 @@ from paper.evaluate import build_results, write_results
 from paper.labels import FIELDS
 from paper.methods import METHOD_IDS, METHODS, decide
 from paper.train_config import N_FOLDS, SEEDS
-from paper.validate import load_split, validate_probs_bundle, validate_probs_run
+from paper.validate import SPLITS_DIR, load_split, validate_probs_bundle, validate_probs_run
 
 
 def load_bundle(bundle_dir) -> tuple[dict, dict]:
@@ -50,7 +50,8 @@ def load_bundle(bundle_dir) -> tuple[dict, dict]:
     return meta, probs
 
 
-def load_run(probs_dir, protocol, seed, split) -> list[tuple[dict, dict]]:
+def load_run(probs_dir, protocol, seed, split,
+             splits_dir=SPLITS_DIR) -> list[tuple[dict, dict]]:
     """Load and check all five rotations of one (protocol, seed).
 
     Validation happens here rather than being left to the operator: these
@@ -62,10 +63,11 @@ def load_run(probs_dir, protocol, seed, split) -> list[tuple[dict, dict]]:
     if missing:
         raise SystemExit(f"missing probability bundles: {missing}")
 
-    # ``split`` may describe a 400-row or 500-row multilingual corpus. Passing
-    # it through prevents the validator from silently reloading the default
-    # Chinese manifest and expecting the wrong corpus geometry.
-    problems = validate_probs_run(dirs, split=split)
+    # Keep the run-level coverage check on the exact split main loaded. This
+    # may describe a 400-row English/French/Japanese corpus, a 500-row Korean
+    # corpus, or the 2,000-row Chinese corpus; falling back to the validator's
+    # default would silently check the wrong geometry.
+    problems = validate_probs_run(dirs, splits_dir=splits_dir, split=split)
     for d in dirs:
         problems += validate_probs_bundle(d, split)
     if problems:
@@ -178,7 +180,8 @@ def main() -> None:
 
     # Loaded once and shared by every method: this is what "identical
     # probabilities on identical rows" means operationally.
-    run = load_run(args.probs_dir, args.protocol, args.seed, split)
+    run = load_run(args.probs_dir, args.protocol, args.seed, split,
+                   splits_dir=args.splits_dir)
     print(f"{args.protocol} seed{args.seed}: {len(run)} rotations validated", flush=True)
 
     bias_cache: dict = {}

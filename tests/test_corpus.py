@@ -274,6 +274,12 @@ def test_a_new_probability_array_would_be_committed_not_silently_ignored(name):
     array = (f"{probs}/pdf_group_seed42_r0/test_promise_status.npy" if probs
              else f"{corpus.arm_dir(name, 'roberta-large', 0.0)}/probs/"
                   "pdf_group_seed42_r0/test_promise_status.npy")
+    # ``git check-ignore`` exits 0 even when the last matching pattern is a
+    # negation (``!/...``) for an untracked path.  In other words, its exit
+    # status says that *a pattern matched*, not that the path remains ignored.
+    # Inspect the verbose pattern so this test distinguishes the global
+    # ``*.npy`` rule from the corpus-specific negation that brings bundles
+    # back into version control.
     check = subprocess.run(
         ["git", "check-ignore", "-v", array], cwd=REPO_ROOT, check=False,
         capture_output=True, text=True,

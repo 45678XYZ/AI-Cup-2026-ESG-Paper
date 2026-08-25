@@ -11,6 +11,9 @@ dependencies:
   - pip
   - pip:
       - transformers==4.40.2
+      # Required when DeBERTa-v3's SentencePiece tokenizer is converted to
+      # the fast tokenizer used by AutoTokenizer.
+      - protobuf==4.25.3
       - scikit-learn>=1.3.0
       - pandas>=2.0.0
       - numpy>=1.24.0,<2.0
