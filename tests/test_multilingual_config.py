@@ -9,6 +9,7 @@ from paper.multilingual_config import (
     expected_bundle_count,
 )
 from scripts import queue_after_english
+from scripts import finalize_multilingual_recovery
 
 
 def test_every_multilingual_model_is_immutable_and_unique():
@@ -57,3 +58,12 @@ def test_queue_launches_multilingual_workers_as_importable_modules():
     assert len(commands) == 2
     for command in commands:
         assert command[1:4] == ["-u", "-m", "scripts.run_multilingual_experiments"]
+
+
+def test_recovery_finalizer_uses_the_frozen_completion_counts():
+    assert finalize_multilingual_recovery.EXPECTED == {
+        "bundles": 150,
+        "predictions": 210,
+        "results": 210,
+    }
+    assert finalize_multilingual_recovery.LANGUAGES == LANGUAGES
