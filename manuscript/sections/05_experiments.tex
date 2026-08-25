@@ -38,8 +38,18 @@ biased and unbiased versions of one quantity.
 Within each protocol and seed, M0--M6 consume the same Test rows and base
 probabilities.
 
+\begingroup\emergencystretch=1em
+External runs use document-disjoint report grouping, three seeds, and five
+rotations. Each language has eight paired arms: four
+backbones under both $\lambda=0$ and 0.3, giving 32 external arms. The
+fixed-arm table uses $\lambda=0$: RoBERTa-large for English and XLM-R-large
+for the other three languages. Arm choice never depends on observed scores.
+The same-document protocol is descriptive and available only for the primary
+large backbone.
+\par\endgroup
+
 \subsection{Metrics and Inference}
-The primary metric is the official weighted macro-F1,
+For Chinese, the primary metric is the official weighted macro-F1,
 \begin{equation}
   \mathrm{wF1}=0.20F_{\mathrm{PS}}+0.15F_{\mathrm{VT}}
   +0.30F_{\mathrm{ES}}+0.35F_{\mathrm{EQ}},
@@ -59,12 +69,25 @@ ancestors before scoring; legal M1--M6 are unaffected because the conventions
 coincide for them. hF changes both consistency treatment and macro-versus-micro
 averaging, so the two supplementary metrics answer different questions.
 
+ML-Promise has no official weighted metric. We therefore label its scores
+``AI CUP weights applied to ML-Promise (not official).'' All external
+comparisons remain paired within corpus, backbone, and $\lambda$.
+
 For paired method contrasts, we perform a paired PDF-cluster bootstrap over 49
 source-report clusters. Each of 10,000 replicates samples 49 reports with
 replacement using seed 20260814, applies the same sampled rows to both methods
 and all three seeds, computes the within-seed differences, and averages those
 differences. The five pre-specified contrasts are M1--M0, M3--M2, M4--M1,
-M6--M3, and M6--M5. They form a separate Holm family of five for each metric,
-rather than one family of 20 \cite{holm1979}. Bracketed 95\% intervals are uncorrected
-bootstrap percentile intervals; inferential decisions use
+M6--M3, and M6--M5. Our only confirmatory family applies Holm correction to
+these five contrasts on Chinese official wF1 \cite{holm1979}. Pre-specified
+Chinese tuple exact-match is a separate secondary family of five. Bracketed
+95\% intervals are uncorrected bootstrap percentile intervals; decisions use
 $p_{\mathrm{Holm}}<.05$, not whether an interval excludes zero.
+
+External replication was pre-registered around within-arm contrast directions;
+we additionally apply a report-cluster bootstrap only to the fixed English
+M1--M0 tuple contrast. We do not pool languages into a post-hoc significance
+test. C-wF1 and hF were added after the Chinese primary result, while
+structural-loss and alternate-backbone screens test robustness; all are
+exploratory and do not support confirmatory claims regardless of their nominal
+$p$-values.

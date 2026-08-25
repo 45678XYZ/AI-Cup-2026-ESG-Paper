@@ -33,7 +33,7 @@ state or three ES=Yes quality states.
 
 \paragraph{Development-set audit.}
 The release contains 2,000 labeled development paragraphs from 49 source
-reports covering 50 companies, and it realizes 15 of the 17 legal states
+reports and 49 companies, and it realizes 15 of the 17 legal states
 (Table~\ref{tab:dataset}). The rarest EQ label,
 \emph{Misleading}, has only two instances; we therefore make no improvement
 or significance claim for that class.
@@ -48,7 +48,19 @@ or significance claim for that class.
 All 49 development reports also occur in the unlabeled competition test data,
 and one paragraph text occurs in both splits. This overlap describes sources
 and text only: because competition test labels are unavailable, we infer no
-label-derived test statistic. No company contributes more than one report;
-one report covers two companies. Consequently, in this corpus a
-document-disjoint split is necessarily company-disjoint, rather than a
-separate company-level experiment.
+label-derived test statistic. Each company contributes one report.
+Consequently, in this corpus a document-disjoint split is also
+company-disjoint, rather than a separate company-level experiment.
+
+\paragraph{External replication corpora.}
+ML-Promise provides labels in the same four fields
+\cite{seki2025mlpromise}. After normalizing its releases to the common
+17-state vocabulary, we retain 400 English paragraphs from 9 reports, 400
+French paragraphs from 9 reports, and 400 Japanese paragraphs from 19 reports.
+The Korean release supplies labels, report URLs, and page numbers but no text;
+we extract the corresponding 500 PDF pages from 32 reports and use the first
+384 tokens of each page. The extracted Korean text is not redistributed.
+Korean has no gold \emph{Misleading} example, and its page-level input is not
+directly comparable to the paragraph inputs. We therefore interpret only
+within-corpus paired decision contrasts, never raw score differences between
+languages.
