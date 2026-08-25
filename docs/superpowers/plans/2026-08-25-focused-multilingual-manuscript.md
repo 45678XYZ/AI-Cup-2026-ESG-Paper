@@ -37,7 +37,7 @@
 - Import unchanged from `multilingual-replication`: `analysis/`, `architecture_screen/`, `dataset/`, `docs/`, `paper/`, `runs_en/`, `runs_fr/`, `runs_ja/`, `runs_ko/`, `scripts/`, `splits_*`, `structural_arm/`, and their committed artifacts
 - Preserve unchanged: `manuscript/**`
 
-- [ ] **Step 1: Confirm the pre-merge identities and clean state**
+- [x] **Step 1: Confirm the pre-merge identities and clean state**
 
 Run:
 
@@ -50,7 +50,7 @@ git merge-base HEAD multilingual-replication
 
 Expected: current branch is `paper/ntcir19-manuscript`, `HEAD` is `8ca29cb...`, the replication tip is `6f4914b...`, and the worktree is clean.
 
-- [ ] **Step 2: Merge with explicit history preservation**
+- [x] **Step 2: Merge with explicit history preservation**
 
 Run:
 
@@ -60,7 +60,7 @@ git merge --no-ff multilingual-replication -m "merge: integrate multilingual rep
 
 Expected: `.gitignore` requires manual resolution; no file under `manuscript/` is deleted or replaced.
 
-- [ ] **Step 3: Resolve only real content conflicts**
+- [x] **Step 3: Resolve only real content conflicts**
 
 For `.gitignore`, retain all replication artifact exclusions and finish with:
 
@@ -71,7 +71,7 @@ For `.gitignore`, retain all replication artifact exclusions and finish with:
 
 For `README.md`, retain both the manuscript build entry and the ML-Promise replication/data notices. Use `apply_patch`; do not take either whole side.
 
-- [ ] **Step 4: Verify merge protection gates**
+- [x] **Step 4: Verify merge protection gates**
 
 Run:
 
@@ -84,7 +84,7 @@ git status --short
 
 Expected: no manuscript diff immediately attributable to the merge, no M7 hit, and only resolved merge changes are staged.
 
-- [ ] **Step 5: Finish the merge commit if Git paused for conflicts**
+- [x] **Step 5: Finish the merge commit if Git paused for conflicts**
 
 Run:
 
@@ -102,12 +102,14 @@ Expected: a two-parent merge commit exists and `git status --short` is empty.
 **Files:**
 - Modify: `tests/test_multilingual_replication.py`
 - Modify: `tests/test_multilingual_config.py`
+- Modify: `scripts/queue_after_english.py`
+- Modify early as a post-merge baseline prerequisite: `manuscript/check.py`, `tests/test_manuscript.py`
 
 **Interfaces:**
 - Add a test-only recursive comparator that keeps strings, keys, integers, and booleans exact while comparing floating leaves at `abs=1e-12`, `rel=1e-12`.
 - Keep the queue-root unit test about non-collision; do not require a second developer’s `/tmp` worktree to exist.
 
-- [ ] **Step 1: Reproduce the two portability failures**
+- [x] **Step 1: Reproduce the two portability failures**
 
 Run:
 
@@ -117,19 +119,19 @@ pytest tests/test_multilingual_replication.py tests/test_multilingual_config.py 
 
 Expected: exact JSON equality fails only at last-bit floating leaves for French/Japanese/Korean, and the queue test fails because a hard-coded external worktree is absent.
 
-- [ ] **Step 2: Add a failing unit test for the recursive comparator**
+- [x] **Step 2: Add a failing unit test for the recursive comparator**
 
 In `tests/test_multilingual_replication.py`, add a comparator fixture test that accepts `0.3` versus `0.30000000000000004` but rejects a changed key, string, list length, or a float difference of `1e-6`.
 
-- [ ] **Step 3: Implement the smallest test-only comparison helper**
+- [x] **Step 3: Implement the smallest test-only comparison helper**
 
 Implement `_assert_json_close(actual, expected)` recursively. Use `pytest.approx` only at floating leaves; compare all non-floating values exactly. Replace `assert report == checked_in` with this helper.
 
-- [ ] **Step 4: Separate queue configuration from machine-local deployment**
+- [x] **Step 4: Separate queue configuration from machine-local deployment**
 
 Replace `test_queue_points_at_two_distinct_existing_worktrees` with a unit test that asserts `MULTI_ROOT != ENGLISH_ROOT` and verifies generated commands are rooted in their configured locations. Do not assert that another user’s `/tmp` directory exists.
 
-- [ ] **Step 5: Run focused and full regression tests**
+- [x] **Step 5: Run focused and full regression tests**
 
 Run:
 
@@ -140,7 +142,7 @@ pytest -q
 
 Expected: focused tests pass; the complete suite has no portability failures.
 
-- [ ] **Step 6: Commit the test portability fix**
+- [x] **Step 6: Commit the test portability fix**
 
 ```bash
 git add tests/test_multilingual_replication.py tests/test_multilingual_config.py
@@ -249,6 +251,11 @@ git commit -m "feat(analysis): generate five-language contrast table"
 - Reject active-source M7 mentions and selected-best `table3_regimes.tex` inclusion.
 - Check canonical generated assets for committed-tree drift against `HEAD`, not against the obsolete local `main` branch.
 - Add focused-paper regression checks without banning legitimate repository result documents.
+
+**Execution note:** The `git diff HEAD` asset-drift portion and its regression
+test were completed during Task 2 because the corrected Table 1 otherwise made
+the first post-merge full-suite verification fail. The remaining Table 6, M7,
+and Table 3 policy work stays in this task.
 
 - [ ] **Step 1: Add failing policy tests**
 

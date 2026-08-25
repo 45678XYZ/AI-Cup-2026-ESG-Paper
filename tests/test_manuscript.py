@@ -279,8 +279,20 @@ def test_asset_check_detects_tampered_canonical_table(tmp_path, staged):
             ["git", "add", "tables/table4_contrasts.tex"], cwd=repo, check=True
         )
 
-    assert "canonical generated asset is not clean relative to main: " \
+    assert "canonical generated asset is not clean relative to HEAD: " \
            "tables/table4_contrasts.tex" in asset_errors(repo)
+
+
+def test_asset_check_accepts_a_committed_table_newer_than_main(tmp_path):
+    repo = make_valid_asset_repo(tmp_path)
+    subprocess.run(["git", "switch", "-qc", "paper"], cwd=repo, check=True)
+    (repo / "tables" / "table1_dataset.tex").write_text(
+        "corrected table\n", encoding="utf-8"
+    )
+    subprocess.run(["git", "add", "tables/table1_dataset.tex"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "correct audit"], cwd=repo, check=True)
+
+    assert asset_errors(repo) == []
 
 
 def test_asset_check_detects_tampered_table_manifest(tmp_path):
@@ -290,7 +302,7 @@ def test_asset_check_detects_tampered_table_manifest(tmp_path):
     manifest = repo / "tables" / "manifest.json"
     manifest.write_text(manifest.read_text(encoding="utf-8") + "\n", encoding="utf-8")
 
-    assert "canonical generated asset is not clean relative to main: " \
+    assert "canonical generated asset is not clean relative to HEAD: " \
            "tables/manifest.json" in asset_errors(repo)
 
 

@@ -139,7 +139,7 @@ def asset_errors(repo_root: Path) -> list[str]:
                 cwd=repo_root, capture_output=True, check=False,
             ).returncode == 0
             clean = subprocess.run(
-                ["git", "diff", "--quiet", "main", "--", relative],
+                ["git", "diff", "--quiet", "HEAD", "--", relative],
                 cwd=repo_root, capture_output=True, check=False,
             ).returncode == 0
         except OSError:
@@ -147,7 +147,7 @@ def asset_errors(repo_root: Path) -> list[str]:
         if not tracked:
             errors.append(f"canonical generated asset is not tracked: {relative}")
         elif not clean:
-            errors.append(f"canonical generated asset is not clean relative to main: {relative}")
+            errors.append(f"canonical generated asset is not clean relative to HEAD: {relative}")
     tables_manifest = repo_root / "tables" / "manifest.json"
     run_manifest = repo_root / "run_manifest.json"
     if not tables_manifest.is_file() or not run_manifest.is_file():

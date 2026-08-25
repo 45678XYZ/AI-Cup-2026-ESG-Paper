@@ -58,7 +58,6 @@ def _mismatches(actual, expected, path=""):
     elif actual != expected:
         yield f"{path}: {actual!r} against {expected!r}"
 
-
 def test_contrasts_are_paired_by_seed():
     def method(values):
         return {"per_seed": [

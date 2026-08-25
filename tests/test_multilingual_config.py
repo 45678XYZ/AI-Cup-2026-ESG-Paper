@@ -46,6 +46,23 @@ def test_all_twenty_four_language_model_lambda_arms_are_disjoint():
     assert len(paths) == 3 * 4 * 2
 
 
+def test_queue_default_english_root_does_not_collide_after_branch_merge(tmp_path):
+    merged_root = tmp_path / "AI-Cup-2026-ESG-Paper"
+    resolved = queue_after_english.resolve_english_root(merged_root)
+
+    assert resolved == tmp_path / "AI-Cup-2026-ESG-Paper-english"
+    assert resolved != merged_root
+
+
+def test_queue_accepts_an_explicit_english_worktree(tmp_path):
+    multi_root = tmp_path / "multilingual"
+    english_root = tmp_path / "english"
+
+    assert queue_after_english.resolve_english_root(
+        multi_root, configured=str(english_root)
+    ) == english_root
+
+
 def test_queue_launches_multilingual_workers_as_importable_modules():
     commands = queue_after_english.multilingual_worker_commands()
     assert len(commands) == 2
