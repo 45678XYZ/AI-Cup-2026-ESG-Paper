@@ -10,6 +10,7 @@ itself, the split manifest, and an invariance property respectively.
 import numpy as np
 import pytest
 
+from paper.artifacts import read_predictions
 from paper.calibration import (
     GRID,
     _macro_f1_grid,
@@ -242,6 +243,21 @@ def test_every_calibrated_method_emits_legal_tuples(run):
                    for r in records), method_id
         assert set(params) == {"0", "1", "2", "3", "4"}
         assert params["1"]["fallback_applied"] == {"evidence_quality": ["Misleading"]}
+
+
+@pytest.mark.parametrize("seed", [123, 456])
+def test_committed_chinese_conditional_outputs_match_current_calibrator(seed):
+    """Frozen M3/M6 predictions must be regenerated when calibration changes."""
+    split = load_split("pdf_group", seed)
+    run = load_run(REPO_ROOT / "probs", "pdf_group", seed, split)
+    cache = {}
+
+    for method_id in ("M3", "M6"):
+        regenerated, _ = run_method(method_id, run, ROWS, split, cache)
+        committed = read_predictions(
+            REPO_ROOT / "predictions" / f"pdf_group_seed{seed}_{method_id}.csv.gz"
+        )
+        assert regenerated == committed, f"{method_id} seed {seed} is stale"
 
 
 def test_the_recorded_biases_are_json_shaped(bundle):

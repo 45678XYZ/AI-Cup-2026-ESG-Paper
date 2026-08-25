@@ -78,8 +78,11 @@ Biases start at zero and are fitted by deterministic coordinate ascent over
 $[-3,3]$ in increments of 0.05. Coordinates follow a fixed field and class
 order; a move requires a strict improvement, ties favor the smaller absolute
 bias (then the more negative value), and search stops after a pass without
-improvement or at 20 passes. Any estimable class absent from a Calibration
-partition retains bias zero.
+improvement or at 20 passes. Eligibility is determined from the corresponding
+Train subset: a class absent there is excluded from coordinate ascent and
+retains bias zero. Among Train-eligible classes, one absent from the matching
+Calibration subset also retains bias zero and is recorded as an absent-class
+fallback.
 
 \subsection{Validity-Preserving Output Rules}
 \paragraph{Complete projection.}
