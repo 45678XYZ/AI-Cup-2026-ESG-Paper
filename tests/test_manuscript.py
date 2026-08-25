@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from pypdf import PdfReader, PdfWriter
+from pypdf._text_extraction import mult
 from paper.data import REPO_ROOT
 
 from manuscript.check import (
@@ -192,6 +193,28 @@ def test_pdf_page_limit(tmp_path):
     with path.open("wb") as stream:
         writer.write(stream)
     assert any("9 pages" in error for error in pdf_errors(path, max_pages=8))
+
+
+def test_tracked_manuscript_has_no_empty_body_column():
+    """A text-heavy body page must not abandon either ACM column."""
+    reader = PdfReader(str(REPO_ROOT / "manuscript" / "build" / "main.pdf"))
+    imbalanced = []
+    for page_number, page in enumerate(reader.pages[:-1], start=1):
+        midpoint = float(page.mediabox.width) / 2
+        words = [0, 0]
+
+        def count_words(text, cm, tm, font_dict, font_size):
+            clean = text.split()
+            if clean:
+                x = mult(tm, cm)[4]
+                words[0 if x < midpoint else 1] += len(clean)
+
+        page.extract_text(visitor_text=count_words)
+        total = sum(words)
+        if total >= 200 and min(words) < total * 0.1:
+            imbalanced.append((page_number, words))
+
+    assert imbalanced == [], f"body pages with an effectively empty column: {imbalanced}"
 
 
 def test_log_rejects_unresolved_references(tmp_path):
