@@ -1,4 +1,4 @@
-<!-- generated 2026-08-23T19:36:00.670799+00:00 from 34ed28197060376a91fce3b7530028f572ab732d -->
+<!-- generated 2026-08-25T14:36:49.615705+00:00 from 6f4914b0a6db764f44cef35283035869319c2644 -->
 
 # Findings brief
 
@@ -49,10 +49,10 @@ The same predictions, scored four ways. The columns disagree about which method 
 | M0 | 0.5723 | 0.5673 | 0.6875 | 0.7029 | 0.6951 | 0.3588 |
 | M1 | 0.5712 | 0.5712 | 0.7069 | 0.6895 | 0.6981 | 0.3938 |
 | M2 | 0.5744 | 0.5744 | 0.7223 | 0.7190 | 0.7206 | 0.4282 |
-| M3 | 0.5737 | 0.5737 | 0.7228 | 0.7222 | 0.7225 | 0.4305 |
+| M3 | 0.5754 | 0.5754 | 0.7234 | 0.7227 | 0.7230 | 0.4318 |
 | M4 | 0.5712 | 0.5712 | 0.7003 | 0.7031 | 0.7017 | 0.3880 |
 | M5 | 0.5756 | 0.5756 | 0.7207 | 0.7296 | 0.7251 | 0.4300 |
-| M6 | 0.5668 | 0.5668 | 0.7129 | 0.7452 | 0.7287 | 0.4260 |
+| M6 | 0.5674 | 0.5674 | 0.7128 | 0.7453 | 0.7287 | 0.4265 |
 
 **The metrics disagree about the winner: M5 on the official metric, M6 on hF — and M6 is the *worst* method on the official one.** Always state a ranking together with the metric that produced it; "the best method" is not well defined here.
 
@@ -71,10 +71,10 @@ The competition's ranking rule. **Pre-specified.**
 Whatever else is reported, this is the metric the task is scored on.
 
 - **M1-M0**: no detectable difference — -0.001 [-0.006, 0.003], p_Holm=1.000 — hierarchy legalisation
-- **M3-M2**: no detectable difference — -0.001 [-0.006, 0.004], p_Holm=1.000 — conditional vs global calibration, under projection
+- **M3-M2**: no detectable difference — +0.001 [-0.004, 0.006], p_Holm=1.000 — conditional vs global calibration, under projection
 - **M4-M1**: no detectable difference — +0.000 [-0.005, 0.005], p_Holm=1.000 — 17-state decoding vs projection
-- **M6-M3**: no detectable difference — -0.007 [-0.017, 0.003], p_Holm=0.643 — adding the decoder under conditional calibration
-- **M6-M5**: no detectable difference — -0.009 [-0.017, -0.001], p_Holm=0.135 — conditional vs global calibration, under decoding
+- **M6-M3**: no detectable difference — -0.008 [-0.018, 0.002], p_Holm=0.416 — adding the decoder under conditional calibration
+- **M6-M5**: no detectable difference — -0.008 [-0.016, -0.001], p_Holm=0.171 — conditional vs global calibration, under decoding
 
 **None of the five survived the correction.**
 
@@ -85,10 +85,10 @@ The official metric with one change and no others: a field whose ancestors were 
 The argument. Because it differs from the official metric in exactly one respect, a disagreement between the two families localises the effect to that respect and nothing else.
 
 - **M1-M0** is better: +0.004 [0.001, 0.007], p_Holm=0.025 — hierarchy legalisation
-- **M3-M2**: no detectable difference — -0.001 [-0.006, 0.004], p_Holm=1.000 — conditional vs global calibration, under projection
+- **M3-M2**: no detectable difference — +0.001 [-0.004, 0.006], p_Holm=1.000 — conditional vs global calibration, under projection
 - **M4-M1**: no detectable difference — +0.000 [-0.005, 0.005], p_Holm=1.000 — 17-state decoding vs projection
-- **M6-M3**: no detectable difference — -0.007 [-0.017, 0.003], p_Holm=0.482 — adding the decoder under conditional calibration
-- **M6-M5**: no detectable difference — -0.009 [-0.017, -0.001], p_Holm=0.108 — conditional vs global calibration, under decoding
+- **M6-M3**: no detectable difference — -0.008 [-0.018, 0.002], p_Holm=0.312 — adding the decoder under conditional calibration
+- **M6-M5**: no detectable difference — -0.008 [-0.016, -0.001], p_Holm=0.137 — conditional vs global calibration, under decoding
 
 ### 3.3 hierarchical F1 (hF)
 
@@ -97,10 +97,10 @@ The ancestor-based set metric of the hierarchical-classification literature. ⚠
 Answers the reviewer question the study invites: what does an established structure-aware metric say? ⚠️ It differs from the official metric in *two* respects — consistency **and** micro versus macro averaging — so it corroborates the argument but cannot carry it.
 
 - **M1-M0** is better: +0.003 [0.001, 0.005], p_Holm=0.017 — hierarchy legalisation
-- **M3-M2**: no detectable difference — +0.002 [-0.001, 0.005], p_Holm=0.302 — conditional vs global calibration, under projection
+- **M3-M2**: no detectable difference — +0.002 [-0.001, 0.006], p_Holm=0.286 — conditional vs global calibration, under projection
 - **M4-M1**: no detectable difference — +0.004 [0.000, 0.007], p_Holm=0.135 — 17-state decoding vs projection
-- **M6-M3**: no detectable difference — +0.006 [0.000, 0.012], p_Holm=0.151 — adding the decoder under conditional calibration
-- **M6-M5**: no detectable difference — +0.004 [-0.001, 0.009], p_Holm=0.302 — conditional vs global calibration, under decoding
+- **M6-M3**: no detectable difference — +0.006 [-0.001, 0.012], p_Holm=0.224 — adding the decoder under conditional calibration
+- **M6-M5**: no detectable difference — +0.004 [-0.001, 0.009], p_Holm=0.286 — conditional vs global calibration, under decoding
 
 ### 3.4 whole-row tuple accuracy
 
@@ -110,9 +110,9 @@ Reported in full because it was planned, including the one contrast that runs ag
 
 - **M1-M0** is better: +0.035 [0.028, 0.043], p_Holm=0.001 — hierarchy legalisation
 - **M4-M1** is *worse*: -0.006 [-0.010, -0.002], p_Holm=0.028 — 17-state decoding vs projection
-- **M3-M2**: no detectable difference — +0.002 [-0.003, 0.007], p_Holm=0.973 — conditional vs global calibration, under projection
-- **M6-M3**: no detectable difference — -0.005 [-0.014, 0.004], p_Holm=0.973 — adding the decoder under conditional calibration
-- **M6-M5**: no detectable difference — -0.004 [-0.012, 0.004], p_Holm=0.973 — conditional vs global calibration, under decoding
+- **M3-M2**: no detectable difference — +0.004 [-0.001, 0.008], p_Holm=0.370 — conditional vs global calibration, under projection
+- **M6-M3**: no detectable difference — -0.005 [-0.015, 0.004], p_Holm=0.505 — adding the decoder under conditional calibration
+- **M6-M5**: no detectable difference — -0.004 [-0.011, 0.004], p_Holm=0.505 — conditional vs global calibration, under decoding
 
 ### Where the two metrics disagree
 
@@ -150,7 +150,7 @@ The cancelled credit is stable across the two protocols; what changes is what pr
 Same-document measures seen-report, unseen-paragraph generalisation and matches the competition's own distribution; document-disjoint measures generalisation to unseen reports. **Δ is the gap between two estimation targets, not a bias.**
 
 - **M0**: same-document 0.585 vs document-disjoint 0.572, Δ 0.012 [0.004, 0.022] (excludes zero)
-- **Best calibrated projection**: same-document 0.587 vs document-disjoint 0.574, Δ 0.012 [0.001, 0.024] (excludes zero)
+- **Best calibrated projection**: same-document 0.588 vs document-disjoint 0.575, Δ 0.012 [0.002, 0.023] (excludes zero)
 - **Best valid-state decoder**: same-document 0.590 vs document-disjoint 0.576, Δ 0.015 [0.004, 0.027] (excludes zero)
 
 ## 6. Conditional field F1 (plan §4.5)
@@ -164,10 +164,10 @@ Reported because the unconditioned score mixes two questions — choosing the ri
 | M0 | 0.796 / 0.796 | 0.464 / 0.432 | 0.650 / 0.673 | 0.424 / 0.397 |
 | M1 | 0.796 / 0.796 | 0.467 / 0.429 | 0.651 / 0.667 | 0.418 / 0.365 |
 | M2 | 0.796 / 0.796 | 0.493 / 0.465 | 0.650 / 0.668 | 0.418 / 0.373 |
-| M3 | 0.796 / 0.796 | 0.501 / 0.475 | 0.651 / 0.669 | 0.412 / 0.365 |
+| M3 | 0.796 / 0.796 | 0.501 / 0.475 | 0.651 / 0.669 | 0.416 / 0.373 |
 | M4 | 0.799 / 0.799 | 0.468 / 0.431 | 0.648 / 0.665 | 0.420 / 0.380 |
 | M5 | 0.796 / 0.796 | 0.493 / 0.468 | 0.649 / 0.670 | 0.423 / 0.387 |
-| M6 | 0.784 / 0.784 | 0.494 / 0.479 | 0.636 / 0.667 | 0.414 / 0.390 |
+| M6 | 0.784 / 0.784 | 0.494 / 0.479 | 0.634 / 0.664 | 0.418 / 0.397 |
 
 ## 7. `Misleading`: the sensitivity it licenses
 
@@ -178,10 +178,10 @@ The official metric recomputed without the two gold `Misleading` paragraphs. It 
 | M0 | 0.5723 | 0.6220 | +0.0497 |
 | M1 | 0.5712 | 0.6202 | +0.0490 |
 | M2 | 0.5744 | 0.6234 | +0.0490 |
-| M3 | 0.5737 | 0.6219 | +0.0482 |
+| M3 | 0.5754 | 0.6241 | +0.0488 |
 | M4 | 0.5712 | 0.6204 | +0.0492 |
 | M5 | 0.5756 | 0.6251 | +0.0495 |
-| M6 | 0.5668 | 0.6153 | +0.0485 |
+| M6 | 0.5674 | 0.6163 | +0.0489 |
 
 ⚠️ The gap is a property of removing an unlearnable class from a macro average, **not** a result about the class. The methods move by nearly the same amount, which is the point: no comparison between them depends on those two rows.
 
@@ -208,10 +208,10 @@ Plan §4.5 allows the per-instance record and nothing aggregated over two rows.
 Not statements that the effect is absent, and several are resolved by the structure-aware families above. Each contrast below failed the Holm correction *on the metric the competition ranks by*:
 
 - **M1-M0**: no detectable difference — -0.001 [-0.006, 0.003], p_Holm=1.000 — hierarchy legalisation
-- **M3-M2**: no detectable difference — -0.001 [-0.006, 0.004], p_Holm=1.000 — conditional vs global calibration, under projection
+- **M3-M2**: no detectable difference — +0.001 [-0.004, 0.006], p_Holm=1.000 — conditional vs global calibration, under projection
 - **M4-M1**: no detectable difference — +0.000 [-0.005, 0.005], p_Holm=1.000 — 17-state decoding vs projection
-- **M6-M3**: no detectable difference — -0.007 [-0.017, 0.003], p_Holm=0.643 — adding the decoder under conditional calibration
-- **M6-M5**: no detectable difference — -0.009 [-0.017, -0.001], p_Holm=0.135 — conditional vs global calibration, under decoding
+- **M6-M3**: no detectable difference — -0.008 [-0.018, 0.002], p_Holm=0.416 — adding the decoder under conditional calibration
+- **M6-M5**: no detectable difference — -0.008 [-0.016, -0.001], p_Holm=0.171 — conditional vs global calibration, under decoding
 
 Write these as *no detectable difference*, never as *no difference* and never as *equivalent*.
 

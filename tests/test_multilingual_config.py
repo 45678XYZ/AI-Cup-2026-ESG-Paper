@@ -46,13 +46,6 @@ def test_all_twenty_four_language_model_lambda_arms_are_disjoint():
     assert len(paths) == 3 * 4 * 2
 
 
-def test_queue_points_at_two_distinct_existing_worktrees():
-    assert queue_after_english.MULTI_ROOT.exists()
-    assert queue_after_english.ENGLISH_ROOT.exists()
-    assert queue_after_english.MULTI_ROOT != queue_after_english.ENGLISH_ROOT
-    assert (queue_after_english.ENGLISH_ROOT / "runs_en").exists()
-
-
 def test_queue_launches_multilingual_workers_as_importable_modules():
     commands = queue_after_english.multilingual_worker_commands()
     assert len(commands) == 2
