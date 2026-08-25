@@ -1,0 +1,220 @@
+{
+ "contract_version": "1.0",
+ "protocol": "pdf_group",
+ "seed": 42,
+ "method": "M2",
+ "predictions_file": "predictions/pdf_group_seed42_M2.csv.gz",
+ "predictions_sha256": "sha256:f2af3948362b2462afdc94adac65195a3dafe1331deddb41d222b456f5e5b04b",
+ "data_checksum": "sha256:b91df62c272023cb0f0f3d43179c0e8bba55d8e15af5eded716cff7056068d79",
+ "git_sha": "62bf2f601d58c003526f0b3f84c673b02f7291a2",
+ "created_at": "2026-08-25T05:22:50.929343+00:00",
+ "n_rows": 400,
+ "weighted_macro_f1": 0.4338520453514161,
+ "per_field_macro_f1": {
+  "promise_status": 0.5501893939393939,
+  "verification_timeline": 0.29924724189430074,
+  "evidence_status": 0.475404497463321,
+  "evidence_quality": 0.3894449458297025
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.8920454545454546,
+   "No": 0.20833333333333334
+  },
+  "verification_timeline": {
+   "already": 0.7567567567567568,
+   "within_2_years": 0.16216216216216217,
+   "between_2_and_5_years": 0.045454545454545456,
+   "more_than_5_years": 0.3235294117647059,
+   "N/A": 0.20833333333333334
+  },
+  "evidence_status": {
+   "Yes": 0.7843137254901961,
+   "No": 0.43356643356643354,
+   "N/A": 0.20833333333333334
+  },
+  "evidence_quality": {
+   "Clear": 0.683291770573566,
+   "Not Clear": 0.2898550724637681,
+   "Misleading": 0.09090909090909091,
+   "N/A": 0.49372384937238495
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 359,
+   "No": 41
+  },
+  "verification_timeline": {
+   "already": 284,
+   "within_2_years": 19,
+   "between_2_and_5_years": 22,
+   "more_than_5_years": 34,
+   "N/A": 41
+  },
+  "evidence_status": {
+   "Yes": 279,
+   "No": 80,
+   "N/A": 41
+  },
+  "evidence_quality": {
+   "Clear": 186,
+   "Not Clear": 82,
+   "Misleading": 11,
+   "N/A": 121
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.3346422721422721,
+  "evidence_status_given_ps_yes": 0.6376246029137912,
+  "evidence_quality_given_es_yes": 0.40262882316830967
+ },
+ "tuple_exact_match": 0.365,
+ "invalid_tuple_rate": 0.0,
+ "decision_params": {
+  "0": {
+   "calibration_biases": {
+    "promise_status": {
+     "Yes": -0.6,
+     "No": 0.0
+    },
+    "verification_timeline": {
+     "already": 0.35,
+     "within_2_years": 0.45,
+     "between_2_and_5_years": 0.65,
+     "more_than_5_years": -0.3,
+     "N/A": 1.8
+    },
+    "evidence_status": {
+     "Yes": -0.45,
+     "No": -0.75,
+     "N/A": 0.1
+    },
+    "evidence_quality": {
+     "Clear": 0.55,
+     "Not Clear": 0.9,
+     "Misleading": 0.35,
+     "N/A": 0.0
+    }
+   },
+   "fallback_applied": {},
+   "decoder": null
+  },
+  "1": {
+   "calibration_biases": {
+    "promise_status": {
+     "Yes": -0.5,
+     "No": 0.0
+    },
+    "verification_timeline": {
+     "already": 0.55,
+     "within_2_years": 0.0,
+     "between_2_and_5_years": -0.2,
+     "more_than_5_years": 0.0,
+     "N/A": 1.15
+    },
+    "evidence_status": {
+     "Yes": -0.3,
+     "No": -0.75,
+     "N/A": 0.0
+    },
+    "evidence_quality": {
+     "Clear": 0.9,
+     "Not Clear": 0.05,
+     "Misleading": -0.9,
+     "N/A": -1.0
+    }
+   },
+   "fallback_applied": {},
+   "decoder": null
+  },
+  "2": {
+   "calibration_biases": {
+    "promise_status": {
+     "Yes": 0.65,
+     "No": 0.0
+    },
+    "verification_timeline": {
+     "already": 0.4,
+     "within_2_years": -0.2,
+     "between_2_and_5_years": 0.0,
+     "more_than_5_years": -0.8,
+     "N/A": 0.15
+    },
+    "evidence_status": {
+     "Yes": 1.1,
+     "No": -0.4,
+     "N/A": 0.0
+    },
+    "evidence_quality": {
+     "Clear": 1.15,
+     "Not Clear": 0.35,
+     "Misleading": -0.7,
+     "N/A": 1.1
+    }
+   },
+   "fallback_applied": {},
+   "decoder": null
+  },
+  "3": {
+   "calibration_biases": {
+    "promise_status": {
+     "Yes": 2.55,
+     "No": 0.0
+    },
+    "verification_timeline": {
+     "already": 1.95,
+     "within_2_years": 1.35,
+     "between_2_and_5_years": 0.5,
+     "more_than_5_years": 0.75,
+     "N/A": -0.35
+    },
+    "evidence_status": {
+     "Yes": 0.9,
+     "No": 1.95,
+     "N/A": 0.0
+    },
+    "evidence_quality": {
+     "Clear": 2.2,
+     "Not Clear": 0.55,
+     "Misleading": 0.3,
+     "N/A": 0.05
+    }
+   },
+   "fallback_applied": {},
+   "decoder": null
+  },
+  "4": {
+   "calibration_biases": {
+    "promise_status": {
+     "Yes": 0.0,
+     "No": 0.0
+    },
+    "verification_timeline": {
+     "already": 1.2,
+     "within_2_years": -0.05,
+     "between_2_and_5_years": -1.5,
+     "more_than_5_years": -0.3,
+     "N/A": 0.0
+    },
+    "evidence_status": {
+     "Yes": -0.4,
+     "No": -1.4,
+     "N/A": 0.0
+    },
+    "evidence_quality": {
+     "Clear": 1.55,
+     "Not Clear": -0.15,
+     "Misleading": 0.0,
+     "N/A": 1.85
+    }
+   },
+   "fallback_applied": {
+    "evidence_quality": [
+     "Misleading"
+    ]
+   },
+   "decoder": null
+  }
+ }
+}

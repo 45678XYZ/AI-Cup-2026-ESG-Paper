@@ -1,0 +1,141 @@
+{
+ "contract_version": "1.0",
+ "protocol": "pdf_group",
+ "seed": 456,
+ "method": "M4",
+ "predictions_file": "predictions/pdf_group_seed456_M4.csv.gz",
+ "predictions_sha256": "sha256:3e4f95a7904117ca0a9d8b4960af2603b3bd031a0adeb1dfbe4877c25b4e86cd",
+ "data_checksum": "sha256:185a49dc4c094e55f1330a892f5806919f0660b9e32a08ebe9fa2dcbea1ec1df",
+ "git_sha": "09038418252e9079f8ad93e90ef0e8579e1172c1",
+ "created_at": "2026-08-24T22:39:42.915933+00:00",
+ "n_rows": 400,
+ "weighted_macro_f1": 0.5125335072624626,
+ "per_field_macro_f1": {
+  "promise_status": 0.7053670966714445,
+  "verification_timeline": 0.34994045809263197,
+  "evidence_status": 0.566088717774111,
+  "evidence_quality": 0.42612115394870154
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.8850931677018633,
+   "No": 0.5256410256410257
+  },
+  "verification_timeline": {
+   "already": 0.46956521739130436,
+   "within_2_years": 0.09090909090909091,
+   "between_2_and_5_years": 0.22608695652173913,
+   "more_than_5_years": 0.4375,
+   "N/A": 0.5256410256410257
+  },
+  "evidence_status": {
+   "Yes": 0.8089887640449438,
+   "No": 0.36363636363636365,
+   "N/A": 0.5256410256410257
+  },
+  "evidence_quality": {
+   "Clear": 0.7333333333333333,
+   "Not Clear": 0.3546099290780142,
+   "Misleading": 0.0,
+   "N/A": 0.6165413533834586
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 319,
+   "No": 81
+  },
+  "verification_timeline": {
+   "already": 223,
+   "within_2_years": 10,
+   "between_2_and_5_years": 54,
+   "more_than_5_years": 32,
+   "N/A": 81
+  },
+  "evidence_status": {
+   "Yes": 271,
+   "No": 48,
+   "N/A": 81
+  },
+  "evidence_quality": {
+   "Clear": 205,
+   "Not Clear": 63,
+   "Misleading": 3,
+   "N/A": 129
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.3250690285966733,
+  "evidence_status_given_ps_yes": 0.6297429742974298,
+  "evidence_quality_given_es_yes": 0.402736131934033
+ },
+ "tuple_exact_match": 0.2975,
+ "invalid_tuple_rate": 0.0,
+ "decision_params": {
+  "0": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "1": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "2": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "3": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "4": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  }
+ }
+}
