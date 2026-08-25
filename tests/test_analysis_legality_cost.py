@@ -212,12 +212,27 @@ def test_the_caption_states_a_direction_only_when_the_detectable_arms_agree():
     positive, which the caption may report. Make the second one clear zero in
     the opposite direction and there is no shared direction left to state --
     the caption has to drop the claim, not average it."""
-    assert "positive in each" in build_caption(STUB)
+    assert "detectable cells is positive" in build_caption(STUB)
     split = _replaced(1, "decoder_vs_projection", "official_weighted_macro_f1",
                       _contrast(-0.0080, -0.013, -0.003))
     caption = build_caption(split)
-    assert "positive in each" not in caption
-    assert "negative in each" not in caption
+    assert "detectable cells is positive" not in caption
+    assert "detectable cells is negative" not in caption
+
+
+def test_the_direction_is_not_attached_to_the_subgroup_counted_last():
+    """The direction describes every detectable cell, which the tally counts
+    across all arms; the clause it used to trail counts the structurally
+    trained ones, which in the real report have none. Attached there it reads
+    as a claim about the trained arms -- and about them it is exactly wrong,
+    since their cells are negative. It has to be its own sentence.
+    """
+    trailing = [s for s in _sentences(build_caption(STUB))
+                if "trained ones" in s]
+    assert trailing, "the caption no longer counts the trained arms separately"
+    for sentence in trailing:
+        assert "positive" not in sentence, sentence
+        assert "negative" not in sentence, sentence
 
 
 def test_the_preview_renders_the_new_table():

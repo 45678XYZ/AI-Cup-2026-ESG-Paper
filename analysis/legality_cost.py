@@ -289,18 +289,21 @@ def _tally(arms, contrast, metric) -> dict:
 def _shared_direction(arms, contrast, metric) -> str:
     """A direction for the detectable arms, but only if they agree on one.
 
-    Stated as a clause or not at all. Averaging a split sign into a single
-    word is how "joint decoding reverses both signs" survived four arms that
-    contradicted it.
+    One word, or none. Two things it must not do: average a split sign into a
+    single word -- that is how "joint decoding reverses both signs" survived
+    four arms that contradicted it -- and arrive as a trailing clause. It is
+    computed over *all* arms, so appending it to whichever subgroup the
+    sentence counted last attributes it to that subgroup, which in this report
+    is the trained arms, which have no detectable cells and are negative
+    throughout. The caller gives it its own sentence and names the referent.
     """
-    cells = [a[contrast][metric] for a in arms]
-    shown = [c for c in cells if _detectable(c)]
+    shown = [c for c in (a[contrast][metric] for a in arms) if _detectable(c)]
     if not shown:
         return ""
     if all(c["delta"] > 0 for c in shown):
-        return ", positive in each"
+        return "positive"
     if all(c["delta"] < 0 for c in shown):
-        return ", negative in each"
+        return "negative"
     return ""
 
 
@@ -322,6 +325,8 @@ def build_caption(report) -> str:
                        "official_weighted_macro_f1")
     dec_trained = _tally(trained, "decoder_vs_projection",
                          "official_weighted_macro_f1")
+    dec_all = _tally(arms, "decoder_vs_projection",
+                     "official_weighted_macro_f1")
     dec_dir = _shared_direction(arms, "decoder_vs_projection",
                                 "official_weighted_macro_f1")
 
@@ -347,8 +352,9 @@ def build_caption(report) -> str:
         f"{dec_row['down']} of {dec_row['n']} arms, detectable in "
         f"{dec_row['detectable']}; on the official metric it is detectable in "
         f"{dec_plain['detectable']} of the {dec_plain['n']} untrained arms and "
-        f"{dec_trained['detectable']} of the {dec_trained['n']} trained "
-        f"ones{dec_dir}.",
+        f"{dec_trained['detectable']} of the {dec_trained['n']} trained ones."
+        + (f" Each of those {dec_all['detectable']} detectable cells is "
+           f"{dec_dir}." if dec_dir else ""),
         "\\textbf{Exploratory.} These contrasts were named after the primary "
         "analysis and form no Holm family; bold marks an interval excluding "
         "zero, not a corrected verdict. The claim is the sign pattern across "
