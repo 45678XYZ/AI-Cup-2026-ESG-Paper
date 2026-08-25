@@ -73,11 +73,11 @@ docs/           paper plan and interface contract
 figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
 splits/         generated split manifests (version controlled)
 probs/          30 probability bundles, one per rotation, from the official fits
-probs_lambda_sweep/  the structural arm's lambda sweep; scored into no table
-probs_structural/  30 selected-lambda probability bundles from the structural arm
+runs/lambda_sweep/  the structural arm's lambda sweep; scored into no table
+runs/structural/probs/  30 selected-lambda probability bundles from the structural arm
 predictions/    42 per-row prediction files (.csv.gz), one per protocol/seed/method
 results/        42 aggregate result manifests, one per predictions file
-structural_arm/ structural predictions/results plus the cross-arm comparison JSON
+runs/structural/ structural predictions/results plus the cross-arm comparison JSON
 tables/         contract-4 deliverables: Table 1-3, their captions, the dataset
                 audit, and the manifest tying each printed number to its inputs
 tests/          pytest suite
@@ -129,12 +129,12 @@ row has been in Test exactly once, and the five test partitions are concatenated
 before a single score is computed — per-fold F1 is never averaged, because folds
 differ in which rare classes are present. Two split protocols answer two
 different questions: `pdf_group` (document-disjoint) and `row_strat`
-(same-document). Full detail in [docs/paper_plan.md](docs/paper_plan.md).
+(same-document). Full detail in [docs/governance/paper_plan.md](docs/governance/paper_plan.md).
 
 ## Boundaries between contributors
 
 Work is handed off through file formats, not conversations. Schemas, invariants,
-and example files live in [docs/interface_contract.md](docs/interface_contract.md).
+and example files live in [docs/governance/interface_contract.md](docs/governance/interface_contract.md).
 Two boundary rules matter most:
 
 - **Rows are identified by their `id` string, never by position.** Positional
@@ -292,19 +292,19 @@ the full study is the same 6 invocations as the training stage — 42 prediction
 files and 42 results files, a few seconds in total.
 
 The completed training-time structural arm is kept separate from the frozen
-study. Its selected-lambda bundles live in `probs_structural/`; its 42 decision
-files and the pre-registered cross-arm comparison live in `structural_arm/`.
+study. Its selected-lambda bundles live in `runs/structural/probs/`; its 42 decision
+files and the pre-registered cross-arm comparison live in `runs/structural/`.
 Rebuild the comparison, including the 10,000-resample H2 bootstrap, with:
 
 ```bash
 python -m analysis.structural_arm \
-    --structural-root structural_arm \
-    --probs-dir probs_structural \
-    --out structural_arm/comparison.json
+    --structural-root runs/structural \
+    --probs-dir runs/structural/probs \
+    --out runs/structural/comparison.json
 ```
 
 The execution record and interpretation are in
-[`docs/structural_training_results.md`](docs/structural_training_results.md).
+[`docs/results/structural_training_results.md`](docs/results/structural_training_results.md).
 
 One invocation loads the five rotations once and runs every requested method
 over that one loaded set, which is what makes "identical probabilities on
@@ -343,7 +343,7 @@ One design point in that code is easy to misread: under conditional
 their conditioning subset. They are pinned at 0.0 by
 definition (`paper/labels.py::CONDITIONAL_PINNED_CLASSES`), which leaves M3
 unaffected but gives M6 three pinned terms where M5 fits four. See
-[docs/paper_plan.md](docs/paper_plan.md) §3.2.
+[docs/governance/paper_plan.md](docs/governance/paper_plan.md) §3.2.
 
 The official GPU setup is frozen in `paper/train_config.py`: the exact Hugging
 Face revision is pinned, the fixed budget is 12 epochs, and the last three epoch
@@ -353,7 +353,7 @@ and validated.
 The 30 bundles were re-run on 2026-08-21 after the short-batch loss scaling was
 corrected (`paper/accumulation.py::loss_scale`). All record the clean source
 commit `35dea657eede733ea6c8945f3976a1561cfab80d`, the same training-configuration
-hash and the RTX 3090 environment. `docs/gpu_training_progress.md` records the
+hash and the RTX 3090 environment. `docs/results/gpu_training_progress.md` records the
 original defect, the epoch evidence, the smoke test and the completed campaign.
 
 The full official run has been materialised: `predictions/` and `results/`

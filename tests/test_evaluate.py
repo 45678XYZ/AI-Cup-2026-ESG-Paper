@@ -139,7 +139,7 @@ def test_examples_reproduce_the_properties_downstream_code_must_handle(examples)
 
 
 def test_contract4_placeholders_are_bare_tabulars(examples):
-    for name in ("table1_dataset", "table2_main", "table3_regimes"):
+    for name in ("table1_dataset", "table2_main", "table6_regimes"):
         tex = (examples / "tables" / f"{name}.tex").read_text(encoding="utf-8")
         assert tex.startswith(r"\begin{tabular}")
         # D controls float placement and captions under the 8-page budget, so C

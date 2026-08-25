@@ -5,9 +5,9 @@
 **GPU：NVIDIA GeForce RTX 3090**　
 **Conda 環境：`aicup-esg`**
 
-這份紀錄是 `docs/pre_registration_structural_training.md` 的執行結果。主要數字由
+這份紀錄是 `docs/preregistration/pre_registration_structural_training.md` 的執行結果。主要數字由
 `python -m analysis.structural_arm` 直接讀取兩個 arm 的逐列 predictions 產生，完整物件、
-bootstrap 設定與 84 個輸入檔的 SHA-256 在 `structural_arm/comparison.json`。
+bootstrap 設定與 84 個輸入檔的 SHA-256 在 `runs/structural/comparison.json`。
 
 ## 執行順序與產物
 
@@ -92,17 +92,17 @@ H2 只對 M1 做預登記的統計推論；其餘 M0–M6 差異是完整呈現 
 ## 重現
 
 ```bash
-python -m paper.validate probs_structural/*
+python -m paper.validate runs/structural/probs/*
 
 for protocol in pdf_group row_strat; do
   for seed in 42 123 456; do
     python -m paper.run_decisions --protocol "$protocol" --seed "$seed" \
-      --probs-dir probs_structural --out-dir structural_arm
+      --probs-dir runs/structural/probs --out-dir runs/structural
   done
 done
 
-python -m paper.validate structural_arm/predictions/*.csv.gz
+python -m paper.validate runs/structural/predictions/*.csv.gz
 python -m analysis.structural_arm \
-  --baseline-root . --structural-root structural_arm \
-  --probs-dir probs_structural --out structural_arm/comparison.json
+  --baseline-root . --structural-root runs/structural \
+  --probs-dir runs/structural/probs --out runs/structural/comparison.json
 ```

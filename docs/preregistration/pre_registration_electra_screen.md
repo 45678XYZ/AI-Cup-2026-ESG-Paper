@@ -36,10 +36,10 @@ lambda = 0.3 是 structural arm 只用 calibration 選出的固定值；不使�
 ## 4. 輸出隔離
 
 ```text
-probs_architecture/electra_180g_large/lambda_0.0/
-probs_architecture/electra_180g_large/lambda_0.3/
-architecture_screen/electra_180g_large/lambda_0.0/{predictions,results}/
-architecture_screen/electra_180g_large/lambda_0.3/{predictions,results}/
+runs/electra_180g_large/lambda_0.0/
+runs/electra_180g_large/lambda_0.3/
+runs/electra_180g_large/lambda_0.0/{predictions,results}/
+runs/electra_180g_large/lambda_0.3/{predictions,results}/
 ```
 
 不覆寫既有 main、structural 或 DeBERTa artifacts。
@@ -66,5 +66,5 @@ Primary checks 是 M0 independent-argmax invalid tuple rate 與 M1 weighted macr
 - [x] M1 weighted macro-F1（三 seed mean）：0.556177 → 0.558882（+0.002706）
 - [x] 擴充 gate：seed42 同時降低 M0 invalid 並提高 M1，已依規則擴充 123/456
 
-完整結果、bootstrap 與限制見 `docs/electra_screen_results.md`；machine-readable
-comparison 見 `architecture_screen/electra_180g_large/comparison.json`。
+完整結果、bootstrap 與限制見 `docs/results/electra_screen_results.md`；machine-readable
+comparison 見 `runs/electra_180g_large/comparison.json`。

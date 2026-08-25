@@ -72,7 +72,7 @@ RQ3 寫在 `paper_plan.md` §2.2，早於結果。
 Δ = +0.00250，95% CI [−0.00384, +0.00860]，p = 0.427。**H2 不受支持。**
 
 H1（非法率 12.55% → 5.18%）依登記為**純描述，不做檢定**。論文提到它時
-**不得使用「顯著」二字** —— `docs/structural_training_results.md:57` 目前用了，要改。
+**不得使用「顯著」二字** —— `docs/results/structural_training_results.md:57` 目前用了，要改。
 
 ---
 

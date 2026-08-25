@@ -1,6 +1,6 @@
 """The writing report is hand-written prose quoting generated numbers.
 
-`docs/study_report.md` is 82% background, method and protocol -- text a rerun
+`docs/writing/study_report.md` is 82% background, method and protocol -- text a rerun
 cannot invalidate -- and 18% figures lifted from `tables/`. The two halves fail
 differently. Prose goes stale only when the study design changes, and a reader
 can tell. A quoted interval goes stale the moment anything is recomputed, and
@@ -23,7 +23,7 @@ import re
 
 from paper.data import REPO_ROOT
 
-DOCS = REPO_ROOT / "docs"
+DOCS = REPO_ROOT / "docs" / "writing"
 TABLES = REPO_ROOT / "tables"
 
 REPORT = (DOCS / "study_report.md").read_text(encoding="utf-8")
@@ -33,7 +33,7 @@ INTERVAL = re.compile(r"\[[-+]?\d+\.\d+,\s*[-+]?\d+\.\d+\]")
 P_HOLM = re.compile(r"p_?Holm[=\s]*([01]\.\d{3})", re.IGNORECASE)
 
 
-PAPER_SOURCES = ("table2_main_caption.txt", "table3_regimes.tex",
+PAPER_SOURCES = ("table2_main_caption.txt", "table6_regimes.tex",
                  "table4_contrasts.tex", "table4_contrasts_caption.txt")
 
 
@@ -67,7 +67,7 @@ def test_report_quotes_every_interval_that_reaches_the_paper():
     missing = sorted(ci for ci in _paper_intervals() if ci not in REPORT)
     assert not missing, (
         f"{len(missing)} interval(s) in tables/ are absent from the report; "
-        f"rerun `python -m analysis`, then update docs/study_report.md: {missing}"
+        f"rerun `python -m analysis`, then update docs/writing/study_report.md: {missing}"
     )
 
 
@@ -149,3 +149,20 @@ def test_report_invents_no_corrected_p_value():
         "the report quotes corrected p-values that no deliverable contains: "
         f"{unknown}"
     )
+
+
+def test_report_quotes_the_mechanism_rates():
+    """Two figures the structural argument rests on -- what the metric pays for
+    an illegal row, and how well the model already makes the call the hierarchy
+    determines. Both were hand-computed into an earlier draft before any script
+    produced them, which is how a load-bearing number goes stale in silence."""
+    totals = json.loads(
+        (TABLES / "case_analysis.json").read_text(encoding="utf-8"))["totals"]
+    credit = f"{totals['partial_credit_on_invalid'] * 100:.1f}"
+    assert credit in REPORT, f"partial credit {credit}% is absent from the report"
+
+    na = [row["na_determination"]
+          for row in totals["hierarchy_information"].values()]
+    lo, hi = f"{min(na) * 100:.0f}", f"{max(na) * 100:.0f}"
+    assert f"{lo}–{hi}%" in REPORT or f"{lo}-{hi}%" in REPORT, (
+        f"the N/A-determination range {lo}-{hi}% is absent from the report")

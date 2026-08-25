@@ -99,7 +99,7 @@ M1 三 seed mean per-class F1：
 - lambda=0 GPU train time：6,289.0 秒（104.8 分）
 - lambda=0.3 GPU train time：6,324.5 秒（105.4 分）
 - 合計 GPU fit time：約 210.2 分（3.50 小時）
-- Machine-readable report：`architecture_screen/electra_180g_large/comparison.json`
+- Machine-readable report：`runs/electra_180g_large/comparison.json`
 - 所有 comparison inputs 的 SHA256 都收錄在該 JSON
 
 ## 判讀限制

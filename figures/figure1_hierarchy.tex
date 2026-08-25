@@ -19,6 +19,10 @@
 % from the output path and the clock. The date half is pinned by
 % SOURCE_DATE_EPOCH in analysis/figure1.py.
 \ifdefined\pdftrailerid\pdftrailerid{}\fi
+% SOURCE_DATE_EPOCH reaches latexmk but the standalone class does not honour it,
+% so the timestamp is omitted outright instead. A figure whose bytes change on
+% every rebuild cannot be committed, and this one is.
+\ifdefined\pdfinfoomitdate\pdfinfoomitdate=1\fi
 
 \usepackage[T1]{fontenc}
 \usepackage[tt=false,type1=true]{libertine}

@@ -14,7 +14,7 @@
    "input_files": [],
    "input_sha256": {}
   },
-  "table3_regimes.tex": {
+  "table6_regimes.tex": {
    "source_script": "contracts/make_examples.py",
    "input_files": [],
    "input_sha256": {}

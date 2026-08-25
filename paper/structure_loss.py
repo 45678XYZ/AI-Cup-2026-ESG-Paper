@@ -34,7 +34,7 @@ from paper.labels import FIELDS
 LAMBDA_UNSET = 0.0
 
 # Candidate strengths for the pre-registered selection sweep
-# (docs/pre_registration_structural_training.md). Chosen so the penalty spans
+# (docs/preregistration/pre_registration_structural_training.md). Chosen so the penalty spans
 # well below to slightly above the base loss at initialisation, where the two
 # terms are about 1.20 and 1.95 respectively.
 LAMBDA_GRID = (0.1, 0.3, 1.0)

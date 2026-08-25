@@ -178,7 +178,7 @@ def main():
                     help="weight of the training-time legality penalty "
                          "(paper/structure_loss.py). 0 reproduces the frozen "
                          "study; the structural arm is pre-registered in "
-                         "docs/pre_registration_structural_training.md")
+                         "docs/preregistration/pre_registration_structural_training.md")
     ap.add_argument("--model-name", default=MODEL_NAME,
                     help="Hugging Face model id; defaults to the frozen anchor")
     ap.add_argument("--model-revision", default=MODEL_REVISION,

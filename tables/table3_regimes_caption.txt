@@ -1,1 +1,0 @@
-Same-document versus document-disjoint evaluation. The left column measures seen-report, unseen-paragraph generalisation and matches the competition distribution, since test and development draw on the same 49 reports; the right column measures generalisation to entirely unseen reports. $\Delta$ is the gap between two estimation targets and is not a bias estimate.

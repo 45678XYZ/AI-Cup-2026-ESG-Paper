@@ -199,3 +199,20 @@ def test_a_leftover_build_cache_does_not_change_the_output(tmp_path):
     assert first == second, (
         "a second build in the same directory differs; leftover latexmk state "
         "is reaching the output")
+
+
+@pytest.mark.skipif(shutil.which("latexmk") is None, reason="no TeX installation")
+def test_the_figure_carries_no_timestamp(tmp_path):
+    """Two builds seconds apart match; two builds minutes apart did not.
+
+    `test_two_builds_in_different_directories_are_byte_identical` runs both
+    builds inside one test, so they land in the same wall-clock second and a
+    clock-dependent stamp passes it. That is how a committed figure went on
+    changing on every regeneration while a test named for byte-identity stayed
+    green. SOURCE_DATE_EPOCH reaches latexmk but the standalone class does not
+    honour it, so the stamp is omitted outright -- and absence is what this
+    asserts, because absence cannot drift.
+    """
+    pdf = build(tmp_path / "figure1_hierarchy.pdf").read_bytes()
+    assert b"/CreationDate" not in pdf
+    assert b"/ModDate" not in pdf

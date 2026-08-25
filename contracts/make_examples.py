@@ -168,7 +168,7 @@ CAPTIONS = {
                       "development data and is absent from most calibration partitions.",
     "table2_main": "Controlled comparison of decision rules on identical base probabilities "
                    "and identical test rows. Cells are seed mean$\\pm$std.",
-    "table3_regimes": "Same-document versus document-disjoint evaluation. $\\Delta$ is the gap "
+    "table6_regimes": "Same-document versus document-disjoint evaluation. $\\Delta$ is the gap "
                       "between two estimation targets, not a bias estimate.",
 }
 
@@ -184,7 +184,7 @@ def make_contract4(out_root):
     files = {
         "table1_dataset.tex": TABLE1,
         "table2_main.tex": TABLE2 % body,
-        "table3_regimes.tex": TABLE3,
+        "table6_regimes.tex": TABLE3,
     }
     for name, content in files.items():
         (tables_dir / name).write_text(content, encoding="utf-8")

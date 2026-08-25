@@ -11,17 +11,21 @@ from analysis.aggregate import protocol_summary, regime_comparison
 from analysis.audit import full_audit
 from analysis.load import EXAMPLES_ROOT, pdf_clusters
 from analysis.tables import (
+    FAMILY_LABELS,
+    _resolution_clause,
+    _word,
     TABLE_FILES,
     render_table4,
-    render_table5,
     build_captions,
     render_table1,
     render_table2,
-    render_table3,
+    render_table5_headroom,
+    render_table6_regimes,
     table_inputs,
     write_tables,
 )
 from paper.data import REPO_ROOT, canonical_row_order, file_sha256, load_dev
+from paper.labels import EVAL_FIELDS, FIELD_WEIGHTS
 
 DEV = load_dev()
 ORDER = canonical_row_order(DEV)
@@ -44,7 +48,7 @@ def _column_count(tex):
 
 def test_tables_carry_only_a_tabular_environment():
     rendered = (render_table1(AUDIT), render_table2(SUMMARIES["pdf_group"]),
-                render_table3(REGIMES))
+                render_table6_regimes(REGIMES))
     for tex in rendered:
         assert tex.lstrip().startswith(r"\begin{tabular}")
         # Layout is D's call under the 8-page budget (contract section 5).
@@ -56,7 +60,7 @@ def test_column_counts_match_the_placeholders():
     for name, rendered in (
         ("table1_dataset.tex", render_table1(AUDIT)),
         ("table2_main.tex", render_table2(SUMMARIES["pdf_group"])),
-        ("table3_regimes.tex", render_table3(REGIMES)),
+        ("table6_regimes.tex", render_table6_regimes(REGIMES)),
     ):
         placeholder = (PLACEHOLDERS / name).read_text(encoding="utf-8")
         assert _column_count(rendered) == _column_count(placeholder), name
@@ -113,13 +117,13 @@ def test_written_manifest_records_every_input_checksum(tmp_path):
 
 def test_captions_are_written_beside_the_tables(tmp_path):
     write_tables(tmp_path, AUDIT, SUMMARIES, REGIMES, INPUTS)
-    for stem in ("table1_dataset", "table2_main", "table3_regimes"):
+    for stem in ("table1_dataset", "table2_main", "table6_regimes"):
         caption = (tmp_path / f"{stem}_caption.txt").read_text(encoding="utf-8")
         assert caption.strip()
     # The two disclosures the plan requires captions to carry.
     assert "Misleading" in (tmp_path / "table1_dataset_caption.txt").read_text(
         encoding="utf-8")
-    assert "not a bias" in (tmp_path / "table3_regimes_caption.txt").read_text(
+    assert "not a bias" in (tmp_path / "table6_regimes_caption.txt").read_text(
         encoding="utf-8")
 
 
@@ -222,8 +226,8 @@ def test_table2_and_3_captions_follow_the_audit_too():
     assert "2,000" not in captions["table2_main"]
     assert "two seeds" in captions["table2_main"]
     assert "three seeds" not in captions["table2_main"]
-    assert "same 7 reports" in captions["table3_regimes"]
-    assert "49" not in captions["table3_regimes"]
+    assert "same 7 reports" in captions["table6_regimes"]
+    assert "49" not in captions["table6_regimes"]
 
 
 # ------------------------------------------------------- table 2 contrasts
@@ -357,13 +361,14 @@ def test_table1_flags_that_every_report_is_shared_with_the_test_split():
     assert "n/a" not in shared[0]             # this one IS known for test
 
 
-def test_table1_discloses_the_known_cross_split_duplicate():
-    """Plan section 4.1 requires the duplicate to be disclosed. It is audited
-    already; before this it never reached a deliverable."""
-    tex = render_table1(AUDIT)
-    dup = [l for l in tex.splitlines() if "uplicat" in l]
-    assert len(dup) == 1
-    assert str(len(AUDIT["duplicates"]["dev_test"])) in dup[0]
+def test_the_caption_discloses_the_known_cross_split_duplicate():
+    """Plan section 4.1 requires the duplicate to be disclosed, not made
+    prominent -- unlike the report overlap, which section 7 does require in the
+    tabular. One duplicated paragraph out of 2,000 is a disclosure, so it reads
+    better as a clause than as a row whose two columns both say 1."""
+    cap = build_captions(AUDIT)["table1_dataset"]
+    assert "duplicat" in cap.lower()
+    assert _word(len(AUDIT["duplicates"]["dev_test"])) in cap
 
 
 def test_table1_caption_states_the_overlap_and_the_duplicate():
@@ -381,11 +386,16 @@ def test_table1_caption_states_the_overlap_and_the_duplicate():
 
 
 def test_table4_lists_every_contrast_of_every_family():
+    """Derived from FAMILY_LABELS rather than a hard-coded list of four.
+
+    The list used to be written out here, which meant demoting two families
+    broke this test for the wrong reason -- it was asserting the old design
+    rather than the property "every contrast of every reported family appears
+    exactly once".
+    """
     summary = SUMMARIES["pdf_group"]
     tex = render_table4(summary)
-    families = [k for k in ("contrasts", "consistent_contrasts",
-                            "hierarchical_contrasts", "tuple_contrasts")
-                if summary.get(k)]
+    families = [k for k, _ in FAMILY_LABELS if summary.get(k)]
     body = [l for l in tex.splitlines() if l.endswith(r"\\") and "midrule" not in l]
     # one header row plus one row per (family, contrast)
     assert len(body) == 1 + sum(len(summary[k]) for k in families)
@@ -397,9 +407,7 @@ def test_table4_marks_what_survived_the_correction():
     """The reader has to be able to see the verdict without recomputing it."""
     summary = SUMMARIES["pdf_group"]
     tex = render_table4(summary)
-    survivors = sum(1 for family in ("contrasts", "consistent_contrasts",
-                                     "hierarchical_contrasts", "tuple_contrasts")
-                    if summary.get(family)
+    survivors = sum(1 for family, _ in FAMILY_LABELS if summary.get(family)
                     for row in summary[family].values() if row["p_holm"] < 0.05)
     assert tex.count(r"\textbf{") >= survivors
 
@@ -414,17 +422,157 @@ def test_table4_carries_only_a_tabular():
 # --- table 5: the metric study ----------------------------------------------
 
 
-def test_table5_scores_every_method_under_every_metric():
-    tex = render_table5(SUMMARIES["pdf_group"])
-    for method in ("M0", "M1", "M2", "M3", "M4", "M5", "M6"):
-        assert f"{method} &" in tex
-
-
 def test_table5_shows_the_two_metrics_disagreeing_about_the_winner():
     """If the columns ever agreed on the best method the table would have no
-    reason to exist, and the paper would need a different argument."""
-    methods = SUMMARIES["pdf_group"]["methods"]
-    best_official = max(methods, key=lambda m: methods[m]["weighted_macro_f1_mean"])
-    best_h = max(methods, key=lambda m: methods[m]["hierarchical_mean"]["hF"])
-    tex = render_table5(SUMMARIES["pdf_group"])
-    assert best_official in tex and best_h in tex
+    reason to exist, and the paper would need a different
+ the gold itself contained
+    illegal tuples, "the metric pays for combinations the labels call
+    impossible" would be our opinion rather than an internal inconsistency.
+
+    It lives in the caption rather than the tabular because it is a single
+    fact about the label space, not a development-versus-test statistic -- but
+    a load-bearing fact left unchecked is how it stops being true, so it is
+    asserted here against the audit rather than trusted to prose."""
+    caption = build_captions(AUDIT)["table1_dataset"]
+    assert f"{AUDIT['development']['invalid_rows']} " in caption or "no development row violates" in caption
+    assert "120" in caption and "17" in caption
+
+
+def test_table1_caption_gives_the_size_of_the_legal_space():
+    """"15 / 17" in the tabular says nothing about how much the hierarchy
+    excludes; 17 of 120 does."""
+    caption = build_captions(AUDIT)["table1_dataset"]
+    assert "17" in caption and "120" in caption
+
+
+def test_table4_reports_only_the_two_pre_specified_families():
+    """docs/governance/inference_families.md settles this: the official metric and tuple
+    exact-match are the pre-specified families; path-constrained wF1 and hF
+    were added after the primary analysis and drop to prose.
+
+    Rendering four families side by side presents all four as equally planned,
+    which is the impression the whole document exists to prevent -- and it puts
+    ten exploratory tests on the page for a reader to count.
+    """
+    body = render_table4(SUMMARIES["pdf_group"])
+    assert "Weighted macro-F1 (official)" in body
+    assert "Tuple accuracy" in body
+    assert "Path-constrained" not in body
+    assert "Hierarchical F1" not in body
+
+
+def test_table4_caption_says_where_the_demoted_metrics_went():
+    """Silently dropping two families a previous draft carried is the kind of
+    edit that reads as tidying and lands as selective reporting."""
+    caption = build_captions(AUDIT, contrasts=SUMMARIES["pdf_group"]["contrasts"],
+                             tuple_contrasts=SUMMARIES["pdf_group"]["tuple_contrasts"],
+                             methods=SUMMARIES["pdf_group"]["methods"],
+                             )["table4_contrasts"]
+    assert "exploratory" in caption.lower()
+
+
+
+# --- the resolution clause -------------------------------------------------
+#
+# One sentence carrying two claims that are easy to get wrong: which metric it
+# scanned, and what the magnitude it offers as scale is measuring.
+
+
+def _shaped(delta, low, high, p_holm):
+    return {"delta": delta, "ci_low": low, "ci_high": high, "p_holm": p_holm}
+
+
+SHAPED_CONTRAST = {"M6-M5": _shaped(-0.009, -0.017, -0.001, 0.135)}
+
+
+def _scores(**kwargs):
+    return {k: {"weighted_macro_f1_mean": v} for k, v in kwargs.items()}
+
+
+def test_the_resolution_clause_names_the_metric_it_scanned():
+    """It reads the official family only, but the table it captions also prints
+    tuple accuracy, where M1-M0 is +0.035 -- four times the effect the sentence
+    calls the largest. Unscoped, the sentence is false about its own table."""
+    clause = _resolution_clause(
+        SHAPED_CONTRAST, _scores(M0=0.570, M5=0.576, M6=0.567))
+    assert "official" in clause.lower(), clause
+
+
+def test_the_scale_is_not_offered_as_corroboration_when_it_is_the_same_number():
+    """M5 is the highest-scoring rule and M6 the lowest, so 'the full range
+    across the seven rules' *is* |M6-M5|. Printed after 'for scale' it reads as
+    a second, independent measurement; it is the first one restated. Where the
+    contrast spans the extremes the clause says that instead."""
+    clause = _resolution_clause(
+        SHAPED_CONTRAST, _scores(M0=0.570, M5=0.576, M6=0.567))
+    assert "for scale" not in clause.lower(), clause
+    assert "highest- and lowest-scoring" in clause, clause
+
+
+def test_the_scale_is_still_offered_when_it_measures_something_else():
+    """With M0 at the bottom the range is 0.076 and the contrast is 0.009 --
+    two different quantities, and the comparison is the useful one."""
+    clause = _resolution_clause(
+        SHAPED_CONTRAST, _scores(M0=0.500, M5=0.576, M6=0.567))
+    assert "for scale" in clause.lower(), clause
+    assert "0.0760" in clause, clause
+
+
+def test_the_marginal_value_column_names_the_quantity_it_computes():
+    """The column holds weight / |classes| * 0.1 -- what raising *one class's*
+    F1 by 0.1 adds to the weighted total. Read as a gain in the field's
+    macro-F1 it invites weight * 0.1: 0.035 for evidence_quality against the
+    0.0087 printed, a factor of four. The arithmetic is the useful one, and it
+    is the arithmetic the caption's own reasoning depends on -- a field with
+    more classes returns less per class. Only the name was wrong.
+    """
+    table = render_table5_headroom(SUMMARIES["pdf_group"])
+    header = next(l for l in table.splitlines() if "Field &" in l)
+    row = next(l for l in table.splitlines() if "evidence\\_quality" in l)
+    printed = float(row.split("&")[-1].replace("\\\\", "").strip())
+
+    weight = FIELD_WEIGHTS["evidence_quality"]
+    per_class = weight / len(EVAL_FIELDS["evidence_quality"]) * 0.10
+    assert printed == pytest.approx(per_class, abs=5e-5)
+    # The two readings are different numbers, which is why the label decides
+    # whether the column is informative or off by the class count.
+    assert printed != pytest.approx(weight * 0.10, abs=5e-5)
+    assert "class" in header.lower(), header
+
+
+def test_table5_caption_says_the_gain_is_on_one_class_not_on_the_field():
+    caption = build_captions(AUDIT, methods=SUMMARIES["pdf_group"]["methods"],
+                             )["table5_headroom"]
+    assert "single class" in caption
+    assert "that field's macro-F1" not in caption
+
+
+def test_table8_caption_names_the_class_that_is_structurally_unreachable():
+    """`Misleading` has two instances and is never predicted, so a quarter of
+    the highest-weighted field's macro-F1 is out of reach by construction. A
+    reader given the shortfall without that fact will over-estimate what is
+    available."""
+    caption = build_captions(AUDIT, methods=SUMMARIES["pdf_group"]["methods"],
+                             )["table5_headroom"]
+    assert "Misleading" in caption
+
+
+def test_table4_caption_carries_the_resolution_the_deleted_table_showed():
+    """table7 used to say this by re-presenting table 4's official block sorted
+    by effect size. Everything it showed was already in those rows, so it is a
+    sentence now -- but a sentence that vanishes is how a deleted table becomes
+    a deleted finding."""
+    caption = build_captions(AUDIT, contrasts=SUMMARIES["pdf_group"]["contrasts"],
+                             methods=SUMMARIES["pdf_group"]["methods"],
+                             )["table4_contrasts"]
+    family = SUMMARIES["pdf_group"]["contrasts"]
+    shaped = [k for k, r in family.items()
+              if (r["ci_low"] > 0 or r["ci_high"] < 0) and r["p_holm"] >= 0.05]
+    if shaped:
+        assert "excluding zero" in caption
+        # Either framing carries the scale; which one fires depends on whether
+        # the contrast happens to span the best- and worst-scoring rules, and
+        # on these synthetic inputs it need not.
+        assert ("range across the seven" in caption
+                or "highest- and lowest-scoring" in caption), caption
+
