@@ -80,6 +80,7 @@ PROVENANCE_META = (
 RECIPE_META = (
     "model_name", "model_revision", "train_config_sha256",
     "checkpoint_rule", "checkpoint_last_k", "epochs", "structure_lambda",
+    "amp_dtype",
 )
 
 # Keys a bundle may predate. Absent is not "unknown": the 30 bundles of the
@@ -87,7 +88,10 @@ RECIPE_META = (
 # their silence as a different recipe would report the control arm as a
 # mixture of two. Anything not listed here is compared as-is, so a genuinely
 # missing key still surfaces.
-RECIPE_DEFAULTS = {"structure_lambda": LAMBDA_UNSET}
+RECIPE_DEFAULTS = {
+    "structure_lambda": LAMBDA_UNSET,
+    "amp_dtype": "float16",
+}
 
 
 def recipe_value(meta, key):
@@ -234,7 +238,8 @@ def _check_bundle_arrays(bundle_dir, meta) -> list[str]:
     return problems
 
 
-def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR) -> list[str]:
+def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR,
+                       split: dict | None = None) -> list[str]:
     """Check that a set of bundles forms one coherent (protocol, seed) run.
 
     Invariant 1b of contract §3 exists for a failure no per-bundle check can
@@ -264,16 +269,18 @@ def validate_probs_run(bundle_dirs, splits_dir=SPLITS_DIR) -> list[str]:
         return problems
 
     # Every row is Test exactly once, which is what makes the five test
-    # partitions concatenable into one 2,000-row score.
+    # partitions concatenable into one corpus-wide score.
     seen: list[str] = []
     for _, m in metas:
         seen += m.get("test_ids", [])
     protocol, seed = metas[0][1].get("protocol"), metas[0][1].get("seed")
-    try:
-        split = load_split(protocol, seed, splits_dir)
-        expected = split["canonical_row_order"]
-    except (FileNotFoundError, TypeError):
-        expected = canonical_row_order()
+    if split is None:
+        try:
+            split = load_split(protocol, seed, splits_dir)
+        except (FileNotFoundError, TypeError):
+            split = None
+    expected = (split["canonical_row_order"] if split is not None
+                else canonical_row_order())
     if sorted(seen) != sorted(expected):
         problems.append(
             f"concatenated test_ids cover {len(set(seen))} distinct rows "
@@ -435,7 +442,6 @@ def _validate_paths(paths, rows, splits_dir=SPLITS_DIR) -> list[str]:
 
     for p in bundles:
         problems += validate_probs_bundle(p, splits_dir=splits_dir)
-
     # A corpus may contain several arms whose bundle basenames intentionally
     # repeat.  The English replication, for example, has one ``probs/``
     # directory per (backbone, lambda), and every one contains
@@ -456,7 +462,7 @@ def _validate_paths(paths, rows, splits_dir=SPLITS_DIR) -> list[str]:
                 problems += [f"{label}: {m}"
                              for m in validate_probs_run(dirs, splits_dir=splits_dir)]
         if len(by_run) > 1:
-            problems += validate_probs_study(arm_bundles)
+            problems += [f"{arm}: {m}" for m in validate_probs_study(arm_bundles)]
 
     for p in predictions:
         problems += validate_predictions(p, rows=rows, method=_method_of(p),

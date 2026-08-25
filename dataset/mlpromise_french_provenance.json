@@ -1,0 +1,17 @@
+{
+ "name": "ML-Promise (French portion)",
+ "file": "dataset/mlpromise_french.json",
+ "sha256": "sha256:50b8473f36c1fe433e2dd30cb69da23eb57ebdaf865511fb973396c784963ac2",
+ "n_rows": 400,
+ "retrieved": "2026-08-25",
+ "source_file_name": "Trainset_French.json",
+ "source_drive_folder": "https://drive.google.com/drive/folders/1wWwo5DBY2qFj2KSEqjkjinuK5CB5ku5K",
+ "source_drive_file_id": "1YJDgaNd_DZNngJc9KH_S-TfD0YRhz96F",
+ "paper": "Seki et al. (2025), ML-Promise: A Multilingual Dataset for Corporate Promise Verification, EMNLP 2025",
+ "paper_url": "https://aclanthology.org/2025.emnlp-main.1028/",
+ "arxiv": "https://arxiv.org/abs/2411.04473",
+ "licence": "CC BY-NC-SA 4.0",
+ "modifications": "none; the file is byte-identical to the release. All normalisation happens at load time in paper/data_ml.py.",
+ "notice": "dataset/mlpromise_french.NOTICE",
+ "licence_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+}

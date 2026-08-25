@@ -182,6 +182,18 @@ def test_training_produces_contract_shaped_probabilities(probs):
         assert arr.dtype == np.float32, field
 
 
+def test_unknown_amp_dtype_is_rejected_before_training(tiny_model_dir):
+    import paper.train_fold as tf
+
+    rows = load_dev()
+    tokenizer = BertTokenizer.from_pretrained(str(tiny_model_dir))
+    with pytest.raises(ValueError, match="unsupported amp_dtype"):
+        tf.train_rotation(
+            rows[:8], tokenizer, seed=42, model_name=str(tiny_model_dir),
+            revision=None, amp_dtype="float8",
+        )
+
+
 def test_the_probabilities_survive_the_bundle_writer(probs):
     """float32 softmax has to clear the write-time distribution check, or every
     real run fails at the last step of the rotation it just spent an hour on."""

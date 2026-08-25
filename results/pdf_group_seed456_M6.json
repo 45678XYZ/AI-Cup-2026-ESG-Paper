@@ -4,17 +4,17 @@
  "seed": 456,
  "method": "M6",
  "predictions_file": "predictions/pdf_group_seed456_M6.csv.gz",
- "predictions_sha256": "sha256:28fb436844ec67d26ee3a6d0d3d2c472d66d5184636897849e2b2f88c58b1c48",
+ "predictions_sha256": "sha256:b329dfd91ebf02431da8d6620fd0cd4fd1488166d6626464ad766e824abc86f8",
  "data_checksum": "sha256:e420b03d99aa8cf3353a0bff3bcea49e382946c2f68585d00dc6d0e2b3669e9a",
- "git_sha": "35dea657eede733ea6c8945f3976a1561cfab80d",
- "created_at": "2026-08-21T11:34:07.575501+00:00",
+ "git_sha": "6f4914b0a6db764f44cef35283035869319c2644",
+ "created_at": "2026-08-25T14:27:08.371279+00:00",
  "n_rows": 2000,
- "weighted_macro_f1": 0.5672257252671364,
+ "weighted_macro_f1": 0.5670696667264036,
  "per_field_macro_f1": {
   "promise_status": 0.781159102454324,
   "verification_timeline": 0.4665004730701499,
-  "evidence_status": 0.6369760145926123,
-  "evidence_quality": 0.4283600841084726
+  "evidence_status": 0.6367429143595121,
+  "evidence_quality": 0.4281140027633219
  },
  "per_class_f1": {
   "promise_status": {
@@ -29,15 +29,15 @@
    "N/A": 0.6322378716744914
   },
   "evidence_status": {
-   "Yes": 0.8475524475524475,
+   "Yes": 0.8468531468531468,
    "No": 0.4311377245508982,
    "N/A": 0.6322378716744914
   },
   "evidence_quality": {
-   "Clear": 0.7842081650964559,
-   "Not Clear": 0.3116883116883117,
+   "Clear": 0.7836517103509552,
+   "Not Clear": 0.3130148270181219,
    "Misleading": 0.0,
-   "N/A": 0.6175438596491228
+   "N/A": 0.6157894736842106
   }
  },
  "per_class_support": {
@@ -66,10 +66,10 @@
  },
  "conditional_f1": {
   "verification_timeline_given_ps_yes": 0.4437541205880478,
-  "evidence_status_given_ps_yes": 0.675051477805394,
-  "evidence_quality_given_es_yes": 0.41453379027317405
+  "evidence_status_given_ps_yes": 0.6746836955324995,
+  "evidence_quality_given_es_yes": 0.41587490962042434
  },
- "tuple_exact_match": 0.4175,
+ "tuple_exact_match": 0.4205,
  "invalid_tuple_rate": 0.0,
  "decision_params": {
   "0": {
@@ -247,9 +247,9 @@
      "N/A": 0.0
     },
     "evidence_quality": {
-     "Clear": 0.2,
+     "Clear": 0.5,
      "Not Clear": 0.6,
-     "Misleading": 2.2,
+     "Misleading": 0.0,
      "N/A": 0.0
     }
    },
