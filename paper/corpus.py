@@ -1,11 +1,11 @@
 """Which set of labelled rows a run is about, and where its artifacts live.
 
-Two corpora reach the pipeline. They share the label vocabulary -- the English
-one is translated into it at load time, see ``paper/labels_en.py`` -- so
+Five corpora reach the pipeline. They share the label vocabulary -- all four
+ML-Promise languages are translated into it at load time -- so
 everything downstream of ``load_rows`` is language-blind, and this module is
 the only place that has to name them.
 
-Every path here exists to keep the two apart on disk. The frozen study's
+Every path here exists to keep them apart on disk. The frozen study's
 directories are named by contract section 4 and cannot move, and the English
 artifacts are named identically within them: a decision run writes
 ``predictions/pdf_group_seed42_M0.csv.gz`` for either corpus. Defaulting the
@@ -30,6 +30,14 @@ def _load_english():
     return load_english()
 
 
+def _load_mlpromise(language):
+    def load():
+        from paper.data_ml import load as load_language
+
+        return load_language(language)
+    return load
+
+
 CORPORA = {
     "aicup_zh": {
         "load": load_dev,
@@ -48,6 +56,27 @@ CORPORA = {
         "probs_dir": None,
         "decisions_root": "runs_en",
         "description": "ML-Promise English, 400 rows, 9 reports (external replication)",
+    },
+    "mlpromise_fr": {
+        "load": _load_mlpromise("fr"),
+        "splits_dir": "splits_fr",
+        "probs_dir": None,
+        "decisions_root": "runs_fr",
+        "description": "ML-Promise French, 400 rows, 9 reports (external replication)",
+    },
+    "mlpromise_ja": {
+        "load": _load_mlpromise("ja"),
+        "splits_dir": "splits_ja",
+        "probs_dir": None,
+        "decisions_root": "runs_ja",
+        "description": "ML-Promise Japanese, 400 rows, 19 report files (external replication)",
+    },
+    "mlpromise_ko": {
+        "load": _load_mlpromise("ko"),
+        "splits_dir": "splits_ko",
+        "probs_dir": None,
+        "decisions_root": "runs_ko",
+        "description": "ML-Promise Korean, 500 labelled PDF pages, 32 reports (local text extraction)",
     },
 }
 

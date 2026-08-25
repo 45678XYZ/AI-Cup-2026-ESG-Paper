@@ -17,8 +17,26 @@ from paper.data import load_dev
 from paper.data_en import load_english
 
 
-def test_the_two_corpora_are_the_ones_the_study_has():
-    assert set(corpus.CORPORA) == {"aicup_zh", "mlpromise_en"}
+MLPROMISE_CORPORA = {
+    "mlpromise_en": "en",
+    "mlpromise_fr": "fr",
+    "mlpromise_ja": "ja",
+    "mlpromise_ko": "ko",
+}
+
+
+def available_corpora():
+    """Korean needs the explicitly local page-text preparation step."""
+    from paper.data_ml import SPECS
+
+    return [
+        name for name in corpus.CORPORA
+        if name != "mlpromise_ko" or SPECS["ko"]["path"].exists()
+    ]
+
+
+def test_the_five_corpora_are_the_ones_the_study_has():
+    assert set(corpus.CORPORA) == {"aicup_zh", *MLPROMISE_CORPORA}
     assert corpus.DEFAULT == "aicup_zh"
 
 
@@ -51,15 +69,15 @@ def test_english_has_arms_rather_than_one_probs_directory():
 
 def test_an_unknown_corpus_is_refused():
     with pytest.raises(ValueError, match="unknown corpus"):
-        corpus.load_rows("mlpromise_fr")
+        corpus.load_rows("mlpromise_de")
 
 
-def test_both_corpora_speak_the_frozen_vocabulary():
+def test_all_available_corpora_speak_the_frozen_vocabulary():
     """The point of translating English at load time: nothing downstream of
     ``load_rows`` can tell which corpus it was handed."""
     from paper.labels import EVAL_FIELDS, FIELDS, is_valid_tuple
 
-    for name in corpus.CORPORA:
+    for name in available_corpora():
         rows = corpus.load_rows(name)
         for row in rows:
             for field in FIELDS:
@@ -67,9 +85,13 @@ def test_both_corpora_speak_the_frozen_vocabulary():
             assert is_valid_tuple(*(row[field] for field in FIELDS)), (name, row["id"])
 
 
-def test_the_two_corpora_share_no_row_id():
+def test_the_corpora_share_no_row_id():
     """A wrong-corpus join must return nothing rather than something."""
-    assert not {r["id"] for r in load_dev()} & {r["id"] for r in load_english()}
+    seen = set()
+    for name in available_corpora():
+        ids = {row["id"] for row in corpus.load_rows(name)}
+        assert not seen & ids, name
+        seen |= ids
 
 
 def test_a_split_manifest_identifies_the_corpus_it_was_built_from():
@@ -95,6 +117,8 @@ def test_the_shipped_manifests_match_their_corpus(name):
 
     from paper.data import REPO_ROOT
 
+    if name not in available_corpora():
+        pytest.skip("prepare Korean report-page text before validating its splits")
     directory = Path(REPO_ROOT) / corpus.CORPORA[name]["splits_dir"]
     manifests = sorted(directory.glob("*.json"))
     assert manifests, directory
@@ -109,9 +133,9 @@ def test_the_shipped_manifests_match_their_corpus(name):
 def data_checksum_of(name: str) -> str:
     if name == "aicup_zh":
         return zh_checksum()
-    from paper.data_en import data_checksum as en_checksum
+    from paper.data import data_checksum
 
-    return en_checksum()
+    return data_checksum(corpus.load_rows(name))
 
 
 @pytest.mark.parametrize("name", sorted(corpus.CORPORA))
@@ -125,6 +149,8 @@ def test_every_row_is_tested_exactly_once_per_seed(name):
 
     from paper.data import REPO_ROOT
 
+    if name not in available_corpora():
+        pytest.skip("prepare Korean report-page text before validating its splits")
     rows = corpus.load_rows(name)
     directory = Path(REPO_ROOT) / corpus.CORPORA[name]["splits_dir"]
     for path in sorted(directory.glob("*.json")):
@@ -165,6 +191,14 @@ def test_the_english_decisions_root_is_not_the_repository_root():
     assert corpus.decisions_root("aicup_zh") == "."
     assert corpus.decisions_root("mlpromise_en") != "."
     assert corpus.decisions_root("mlpromise_en") == "runs_en"
+
+
+@pytest.mark.parametrize("name", sorted(MLPROMISE_CORPORA))
+def test_every_external_corpus_has_an_isolated_artifact_root(name):
+    suffix = MLPROMISE_CORPORA[name]
+    assert corpus.splits_dir(name) == f"splits_{suffix}"
+    assert corpus.probs_dir(name) is None
+    assert corpus.decisions_root(name) == f"runs_{suffix}"
 
 
 def _dirs(name):

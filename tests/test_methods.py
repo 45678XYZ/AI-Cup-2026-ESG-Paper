@@ -126,8 +126,9 @@ def test_loading_a_run_forwards_the_selected_splits_directory(monkeypatch, tmp_p
 
     seen = {}
 
-    def validate_run(dirs, *, splits_dir):
+    def validate_run(dirs, *, splits_dir, split):
         seen["splits_dir"] = splits_dir
+        seen["split"] = split
         return []
 
     monkeypatch.setattr(run_decisions, "validate_probs_run", validate_run)
@@ -135,10 +136,14 @@ def test_loading_a_run_forwards_the_selected_splits_directory(monkeypatch, tmp_p
     monkeypatch.setattr(run_decisions, "load_bundle", lambda path: ({}, {}))
 
     selected = tmp_path / "splits_en"
-    loaded = load_run(tmp_path, "pdf_group", 42, {}, splits_dir=selected)
+    selected_split = {"canonical_row_order": ["en-row"]}
+    loaded = load_run(
+        tmp_path, "pdf_group", 42, selected_split, splits_dir=selected,
+    )
 
     assert len(loaded) == 5
     assert seen["splits_dir"] == selected
+    assert seen["split"] is selected_split
 
 
 def test_a_run_covers_every_row_exactly_once(run):

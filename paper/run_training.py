@@ -23,7 +23,7 @@ import time
 from pathlib import Path
 
 import torch
-from huggingface_hub import snapshot_download
+from huggingface_hub import list_repo_files, snapshot_download
 from transformers import AutoTokenizer
 
 from paper.artifacts import write_probs_bundle
@@ -90,7 +90,46 @@ def resolve_pinned_snapshot(model_name=MODEL_NAME, revision=MODEL_REVISION):
     Hugging Face lays snapshots out as ``snapshots/<commit>``, so the directory
     name *is* the resolved commit and can be compared against the pin.
     """
-    path = Path(snapshot_download(model_name, revision=revision))
+    # The campaign invokes this driver once per (protocol, seed, arm). Reusing
+    # a complete pinned snapshot must not require the Hub DNS/API to be up for
+    # every invocation. A partial snapshot (for example an interrupted model
+    # download) is not accepted merely because its directory exists.
+    try:
+        cached = Path(snapshot_download(
+            model_name, revision=revision, local_files_only=True,
+        ))
+    except OSError:
+        cached = None
+    if cached is not None and (cached / "config.json").exists():
+        if (cached / "model.safetensors").exists() or (cached / "pytorch_model.bin").exists():
+            if revision not in UNPINNED_REVISIONS and cached.name != revision:
+                raise SystemExit(
+                    f"{model_name} resolved to snapshot {cached.name}, not the pinned "
+                    f"{revision}. Refusing to train against unidentified weights."
+                )
+            return cached
+
+    files = set(list_repo_files(model_name, revision=revision))
+    if "model.safetensors" in files:
+        weights = "model.safetensors"
+    elif "pytorch_model.bin" in files:
+        weights = "pytorch_model.bin"
+    else:
+        raise OSError(
+            f"{model_name}@{revision} has neither model.safetensors nor "
+            "pytorch_model.bin"
+        )
+    # Some multilingual repositories also carry TensorFlow, Flax and ONNX
+    # copies, each as large as the PyTorch checkpoint. Fetching a pinned model
+    # must not silently multiply disk/network use by four. These patterns are
+    # the complete set AutoModel/AutoTokenizer need for the selected backend.
+    allow_patterns = [
+        "config.json", weights, "tokenizer*.json", "special_tokens_map.json",
+        "added_tokens.json", "*.model", "vocab.txt", "merges.txt",
+    ]
+    path = Path(snapshot_download(
+        model_name, revision=revision, allow_patterns=allow_patterns,
+    ))
     if revision not in UNPINNED_REVISIONS and path.name != revision:
         raise SystemExit(
             f"{model_name} resolved to snapshot {path.name}, not the pinned "
@@ -101,7 +140,8 @@ def resolve_pinned_snapshot(model_name=MODEL_NAME, revision=MODEL_REVISION):
 
 def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=False,
                  model_source=None, structure_lambda=LAMBDA_UNSET,
-                 model_name=MODEL_NAME, model_revision=MODEL_REVISION):
+                 model_name=MODEL_NAME, model_revision=MODEL_REVISION,
+                 amp_dtype="float16"):
     by_id = index_by_id(rows)
     rot = next(r for r in split["rotations"] if r["k"] == rotation)
 
@@ -125,6 +165,7 @@ def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=Fal
     model, avg_state = train_rotation(
         train_data, tokenizer, split["seed"], model_name=model_source,
         local_files_only=True, structure_lambda=structure_lambda,
+        amp_dtype=amp_dtype,
     )
     probs = {name: predict_probs(model, data, tokenizer) for name, data in partitions.items()}
     elapsed = time.time() - t0
@@ -143,6 +184,7 @@ def run_rotation(split, rotation, rows, tokenizer, out_root, save_checkpoint=Fal
             # other value is the pre-registered structural arm, and mixing the
             # two inside one run would put two recipes into one score.
             "structure_lambda": structure_lambda,
+            "amp_dtype": amp_dtype,
             "hardware": _hardware(),
             "started_at": started,
             "finished_at": now_iso(),
@@ -183,6 +225,9 @@ def main():
                     help="Hugging Face model id; defaults to the frozen anchor")
     ap.add_argument("--model-revision", default=MODEL_REVISION,
                     help="immutable Hugging Face commit for --model-name")
+    ap.add_argument("--amp-dtype", default="float16",
+                    choices=["float16", "bfloat16", "float32"],
+                    help="training autocast dtype; float32 disables AMP")
     args = ap.parse_args()
 
     if args.splits_dir is None:
@@ -252,6 +297,7 @@ def main():
             split, k, rows, tokenizer, args.out_dir, args.save_checkpoint,
             model_source=model_source, structure_lambda=args.structure_lambda,
             model_name=args.model_name, model_revision=args.model_revision,
+            amp_dtype=args.amp_dtype,
         )
 
     print(f"\nbundles written to {args.out_dir}/{args.protocol}_seed{args.seed}_r*")

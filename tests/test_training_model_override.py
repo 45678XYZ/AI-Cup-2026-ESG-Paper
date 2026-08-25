@@ -25,8 +25,17 @@ def test_snapshot_override_uses_requested_model_and_revision(monkeypatch, tmp_pa
     snapshot.mkdir()
     seen = {}
 
-    def fake_download(model_name, *, revision):
-        seen.update(model_name=model_name, revision=revision)
+    monkeypatch.setattr(
+        run_training, "list_repo_files",
+        lambda model_name, *, revision: ["config.json", "model.safetensors"],
+    )
+
+    def fake_download(model_name, *, revision, allow_patterns=None,
+                      local_files_only=False):
+        if local_files_only:
+            raise OSError("not cached")
+        seen.update(model_name=model_name, revision=revision,
+                    allow_patterns=allow_patterns)
         return str(snapshot)
 
     monkeypatch.setattr(run_training, "snapshot_download", fake_download)
@@ -34,18 +43,26 @@ def test_snapshot_override_uses_requested_model_and_revision(monkeypatch, tmp_pa
     resolved = run_training.resolve_pinned_snapshot("example/base-model", revision)
 
     assert resolved == snapshot
-    assert seen == {
-        "model_name": "example/base-model",
-        "revision": revision,
-    }
+    assert seen["model_name"] == "example/base-model"
+    assert seen["revision"] == revision
+    assert "model.safetensors" in seen["allow_patterns"]
+    assert "pytorch_model.bin" not in seen["allow_patterns"]
 
 
 def test_snapshot_override_rejects_a_different_resolved_revision(monkeypatch, tmp_path):
     snapshot = tmp_path / "different-revision"
     snapshot.mkdir()
     monkeypatch.setattr(
+        run_training, "list_repo_files",
+        lambda model_name, *, revision: ["config.json", "pytorch_model.bin"],
+    )
+    monkeypatch.setattr(
         run_training, "snapshot_download",
-        lambda model_name, *, revision: str(snapshot),
+        lambda model_name, *, revision, allow_patterns=None,
+               local_files_only=False: (
+                   (_ for _ in ()).throw(OSError("not cached"))
+                   if local_files_only else str(snapshot)
+               ),
     )
 
     with pytest.raises(SystemExit) as excinfo:

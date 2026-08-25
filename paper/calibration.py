@@ -29,10 +29,13 @@ fields decouple completely, and maximising them separately maximises the
 official weighted sum exactly -- the weights only matter where one knob trades
 one field against another, and no such knob exists in this space.
 
-Two kinds of coordinate are never estimated:
+Three kinds of coordinate are never estimated:
 
-* classes absent from the objective's own gold, which are fixed at 0.0 and
-  recorded per rotation as ``fallback_applied`` (contract §2);
+* classes seen during Train but absent from the objective's own Calibration
+  gold, which are fixed at 0.0 and recorded per rotation as
+  ``fallback_applied`` (contract §2);
+* classes absent from Train itself, which are also fixed at 0.0 but are not a
+  calibration fallback -- the model had no supervised example to calibrate;
 * the three child-field ``N/A`` classes under conditional estimation, which are
   unidentifiable rather than merely unsupported and are pinned at 0.0 by
   definition (``labels.CONDITIONAL_PINNED_CLASSES``, plan §3.2). Those are
@@ -162,6 +165,12 @@ def fit_biases(mode, probs, ids, rotation, rows, grid=GRID) -> tuple[dict, dict]
         field: np.array([LABEL2ID[field][by_id[i][field]] for i in ids])
         for field in FIELDS
     }
+    train_gold = {
+        field: np.array([
+            LABEL2ID[field][by_id[i][field]] for i in rotation["train_ids"]
+        ])
+        for field in FIELDS
+    }
     scores = log_scores(probs)
     for field in FIELDS:
         if len(scores[field]) != len(ids):
@@ -177,8 +186,11 @@ def fit_biases(mode, probs, ids, rotation, rows, grid=GRID) -> tuple[dict, dict]
 
         mask = _subset_mask(field, mode, gold)
         observed = set(gold[field][mask].tolist())
-        absent = [c for c in estimable if LABEL2ID[field][c] not in observed]
-        free = [LABEL2ID[field][c] for c in estimable if c not in absent]
+        train_mask = _subset_mask(field, mode, train_gold)
+        trained = set(train_gold[field][train_mask].tolist())
+        eligible = [c for c in estimable if LABEL2ID[field][c] in trained]
+        absent = [c for c in eligible if LABEL2ID[field][c] not in observed]
+        free = [LABEL2ID[field][c] for c in eligible if c not in absent]
 
         biases[field] = _fit_field(scores[field][mask], gold[field][mask], free, grid)
         if absent:

@@ -11,7 +11,7 @@ every method reads the *same* bundles and is scored on the *same* rows, because
 one invocation runs all of them over one loaded set of probabilities.
 
 The five rotations of a (protocol, seed) are concatenated into a single
-2,000-row file before anything is scored — never averaged (plan §4.2 rule 7),
+corpus-wide file before anything is scored — never averaged (plan §4.2 rule 7),
 because folds differ in which rare classes they contain and their F1 values are
 not on a common scale.
 """
@@ -63,10 +63,11 @@ def load_run(probs_dir, protocol, seed, split,
     if missing:
         raise SystemExit(f"missing probability bundles: {missing}")
 
-    # Keep the run-level coverage check on the same corpus as the split that
-    # main loaded.  Falling back to validate.py's Chinese default makes every
-    # conforming English run look short (400 rows versus 2,000).
-    problems = validate_probs_run(dirs, splits_dir=splits_dir)
+    # Keep the run-level coverage check on the exact split main loaded. This
+    # may describe a 400-row English/French/Japanese corpus, a 500-row Korean
+    # corpus, or the 2,000-row Chinese corpus; falling back to the validator's
+    # default would silently check the wrong geometry.
+    problems = validate_probs_run(dirs, splits_dir=splits_dir, split=split)
     for d in dirs:
         problems += validate_probs_bundle(d, split)
     if problems:

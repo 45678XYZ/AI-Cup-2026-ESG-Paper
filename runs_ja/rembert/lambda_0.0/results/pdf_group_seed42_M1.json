@@ -1,0 +1,101 @@
+{
+ "contract_version": "1.0",
+ "protocol": "pdf_group",
+ "seed": 42,
+ "method": "M1",
+ "predictions_file": "predictions/pdf_group_seed42_M1.csv.gz",
+ "predictions_sha256": "sha256:1ecfdc46475811b54508b661c258ecd884805a716cd42d344c2000a085329ea4",
+ "data_checksum": "sha256:b91df62c272023cb0f0f3d43179c0e8bba55d8e15af5eded716cff7056068d79",
+ "git_sha": "62bf2f601d58c003526f0b3f84c673b02f7291a2",
+ "created_at": "2026-08-25T05:23:33.987077+00:00",
+ "n_rows": 400,
+ "weighted_macro_f1": 0.3890667003766436,
+ "per_field_macro_f1": {
+  "promise_status": 0.5633374716383407,
+  "verification_timeline": 0.2792910208285285,
+  "evidence_status": 0.44916753481479055,
+  "evidence_quality": 0.28501512137216867
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.8449848024316109,
+   "No": 0.28169014084507044
+  },
+  "verification_timeline": {
+   "already": 0.6205357142857143,
+   "within_2_years": 0.08695652173913043,
+   "between_2_and_5_years": 0.06060606060606061,
+   "more_than_5_years": 0.3466666666666667,
+   "N/A": 0.28169014084507044
+  },
+  "evidence_status": {
+   "Yes": 0.7128712871287128,
+   "No": 0.35294117647058826,
+   "N/A": 0.28169014084507044
+  },
+  "evidence_quality": {
+   "Clear": 0.5052631578947369,
+   "Not Clear": 0.08928571428571429,
+   "Misleading": 0.037037037037037035,
+   "N/A": 0.5084745762711864
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 359,
+   "No": 41
+  },
+  "verification_timeline": {
+   "already": 284,
+   "within_2_years": 19,
+   "between_2_and_5_years": 22,
+   "more_than_5_years": 34,
+   "N/A": 41
+  },
+  "evidence_status": {
+   "Yes": 279,
+   "No": 80,
+   "N/A": 41
+  },
+  "evidence_quality": {
+   "Clear": 186,
+   "Not Clear": 82,
+   "Misleading": 11,
+   "N/A": 121
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.29019265198434113,
+  "evidence_status_given_ps_yes": 0.5505305919416349,
+  "evidence_quality_given_es_yes": 0.2227494042357839
+ },
+ "tuple_exact_match": 0.1875,
+ "invalid_tuple_rate": 0.0,
+ "decision_params": {
+  "0": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "1": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "2": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "3": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "4": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  }
+ }
+}

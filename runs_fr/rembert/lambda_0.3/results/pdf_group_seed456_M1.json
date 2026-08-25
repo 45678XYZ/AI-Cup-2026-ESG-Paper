@@ -1,0 +1,101 @@
+{
+ "contract_version": "1.0",
+ "protocol": "pdf_group",
+ "seed": 456,
+ "method": "M1",
+ "predictions_file": "predictions/pdf_group_seed456_M1.csv.gz",
+ "predictions_sha256": "sha256:3d4e71d7961521108ebf646db6bd9c1d388e64ad8d2f362d3c8e62ba25184582",
+ "data_checksum": "sha256:185a49dc4c094e55f1330a892f5806919f0660b9e32a08ebe9fa2dcbea1ec1df",
+ "git_sha": "62bf2f601d58c003526f0b3f84c673b02f7291a2",
+ "created_at": "2026-08-25T05:22:32.316994+00:00",
+ "n_rows": 400,
+ "weighted_macro_f1": 0.5010587579776453,
+ "per_field_macro_f1": {
+  "promise_status": 0.718560213301733,
+  "verification_timeline": 0.3454098255412714,
+  "evidence_status": 0.5354736494636417,
+  "evidence_quality": 0.4139804189914728
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.8789808917197452,
+   "No": 0.5581395348837209
+  },
+  "verification_timeline": {
+   "already": 0.5055555555555555,
+   "within_2_years": 0.09523809523809523,
+   "between_2_and_5_years": 0.2782608695652174,
+   "more_than_5_years": 0.2898550724637681,
+   "N/A": 0.5581395348837209
+  },
+  "evidence_status": {
+   "Yes": 0.7881188118811882,
+   "No": 0.2601626016260163,
+   "N/A": 0.5581395348837209
+  },
+  "evidence_quality": {
+   "Clear": 0.7142857142857143,
+   "Not Clear": 0.30434782608695654,
+   "Misleading": 0.0,
+   "N/A": 0.6372881355932203
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 319,
+   "No": 81
+  },
+  "verification_timeline": {
+   "already": 223,
+   "within_2_years": 10,
+   "between_2_and_5_years": 54,
+   "more_than_5_years": 32,
+   "N/A": 81
+  },
+  "evidence_status": {
+   "Yes": 271,
+   "No": 48,
+   "N/A": 81
+  },
+  "evidence_quality": {
+   "Clear": 205,
+   "Not Clear": 63,
+   "Misleading": 3,
+   "N/A": 129
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.3044810179786705,
+  "evidence_status_given_ps_yes": 0.5573195955262754,
+  "evidence_quality_given_es_yes": 0.36697262558075533
+ },
+ "tuple_exact_match": 0.3375,
+ "invalid_tuple_rate": 0.0,
+ "decision_params": {
+  "0": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "1": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "2": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "3": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  },
+  "4": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": null
+  }
+ }
+}

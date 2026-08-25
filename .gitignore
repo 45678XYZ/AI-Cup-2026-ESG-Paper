@@ -22,6 +22,9 @@
 #                           new tree silently, leaving bundles that carry a
 #                           meta.json and no probabilities, which every
 #                           validator that reads metadata still passes
+# runs_fr/, runs_ja/, runs_ko/
+#              COMMITTED  — equivalent external-replication arms for the
+#                           remaining non-Chinese ML-Promise languages
 # tables/      COMMITTED  — the contract-4 deliverables D includes, plus the
 #                           manifest that ties each printed number back to the
 #                           artifacts it was computed from
@@ -47,8 +50,16 @@
 !/probs_structural/**/*.npy
 !/probs_architecture/**/*.npy
 !/runs_en/**/*.npy
+!/runs_fr/**/*.npy
+!/runs_ja/**/*.npy
+!/runs_ko/**/*.npy
 /checkpoints/
 /checkpoints_*/
+
+# Korean's released labels name report pages but contain no text. The reports
+# and page text reconstructed by scripts/prepare_korean_pages.py are local
+# inputs with their own source copyrights, not redistributed dataset files.
+/local_data/
 
 # Logs
 *.log

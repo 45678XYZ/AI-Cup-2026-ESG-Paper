@@ -1,0 +1,17 @@
+{
+ "name": "ML-Promise (Japanese portion)",
+ "file": "dataset/mlpromise_japanese.json",
+ "sha256": "sha256:bc4b6e6a7fae9d3696da3df85c2ab5fc0b478b080487f43da0d4bbc2b8cf6e65",
+ "n_rows": 400,
+ "retrieved": "2026-08-25",
+ "source_file_name": "Trainset_Japanese.json",
+ "source_drive_folder": "https://drive.google.com/drive/folders/1wWwo5DBY2qFj2KSEqjkjinuK5CB5ku5K",
+ "source_drive_file_id": "1NBZQgmANeUdMuo565IXDcMi5XxKu3B0E",
+ "paper": "Seki et al. (2025), ML-Promise: A Multilingual Dataset for Corporate Promise Verification, EMNLP 2025",
+ "paper_url": "https://aclanthology.org/2025.emnlp-main.1028/",
+ "arxiv": "https://arxiv.org/abs/2411.04473",
+ "licence": "CC BY-NC-SA 4.0",
+ "modifications": "none; the file is byte-identical to the release. The UTF-8 BOM is preserved and all normalisation happens at load time in paper/data_ml.py.",
+ "notice": "dataset/mlpromise_japanese.NOTICE",
+ "licence_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+}

@@ -31,6 +31,13 @@ arm and licensed **CC BY-NC-SA 4.0**. It is byte-identical to the release; all
 normalisation happens at load time. Attribution, source and licence terms are
 in [`dataset/mlpromise_english.NOTICE`](dataset/mlpromise_english.NOTICE).
 
+The multilingual replication additionally vendors the byte-identical French,
+Japanese and Korean training releases. Their source file IDs, hashes, licence
+and load-time normalisation are recorded in the corresponding
+`dataset/mlpromise_{french,japanese,korean}.{NOTICE,json}` provenance files.
+The Korean release contains no text field; report-page text is reconstructed
+locally by `scripts/prepare_korean_pages.py` and is deliberately not committed.
+
 Everything else in this repository is the study's own work. The AI CUP data
 under `dataset/vpesg4k_*.json` is covered by the competition's own terms.
 
@@ -72,6 +79,7 @@ contracts/      interface schemas and example files
 docs/           paper plan and interface contract
 figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
 splits/         generated split manifests (version controlled)
+splits_{en,fr,ja,ko}/  isolated ML-Promise manifests by language
 probs/          30 probability bundles, one per rotation, from the official fits
 runs/lambda_sweep/  the structural arm's lambda sweep; scored into no table
 runs/structural/probs/  30 selected-lambda probability bundles from the structural arm
@@ -152,6 +160,30 @@ python -m contracts.make_fixtures       # -> synthetic probability fixtures   (5
 python -m contracts.make_examples       # -> synthetic results + placeholder tables (42 + 42)
 pytest -q                               # asserts the invariants on what was generated
 ```
+
+The portable multilingual driver runs the frozen French, Japanese and Korean
+matrix with two disjoint workers. Run each command on its own GPU (the number
+passed to `--gpu` is the physical CUDA device index):
+
+```bash
+python -m scripts.run_multilingual_experiments --worker large --gpu 0
+python -m scripts.run_multilingual_experiments --worker base  --gpu 1
+```
+
+Both commands are resume-safe and generate decisions after training. Limit a
+run with `--languages mlpromise_fr` (or `mlpromise_ja` / `mlpromise_ko`), and
+use `--train-only` or `--decisions-only` when only one stage is needed. Validate
+the completed language artifacts from any ordinary clone with:
+
+```bash
+python -m paper.validate --all --corpus mlpromise_fr
+python -m paper.validate --all --corpus mlpromise_ja
+python -m paper.validate --all --corpus mlpromise_ko
+```
+
+`scripts/queue_after_english.py` and `scripts/finalize_multilingual_recovery.py`
+record the machine-specific sequencing used for the original campaign; they
+are not required by this portable procedure.
 
 ## Tables and the figure
 

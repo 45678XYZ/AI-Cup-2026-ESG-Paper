@@ -1,0 +1,140 @@
+{
+ "contract_version": "1.0",
+ "protocol": "pdf_group",
+ "seed": 123,
+ "method": "M4",
+ "predictions_file": "predictions/pdf_group_seed123_M4.csv.gz",
+ "predictions_sha256": "sha256:ca0b017c3b9fedd198b24a77ce4bb976f3067efd3f5aa8cb9fbd047f1d2cc715",
+ "data_checksum": "sha256:7d7b7428c7a86ddb2374f799364b74977a9b4dd9304f146261467f9b6ada9878",
+ "git_sha": "62bf2f601d58c003526f0b3f84c673b02f7291a2",
+ "created_at": "2026-08-25T05:24:10.441249+00:00",
+ "n_rows": 500,
+ "weighted_macro_f1": 0.5551808744696902,
+ "per_field_macro_f1": {
+  "promise_status": 0.7617189750250064,
+  "verification_timeline": 0.38276973823910615,
+  "evidence_status": 0.5690296404291635,
+  "evidence_quality": 0.4991792188573543
+ },
+ "per_class_f1": {
+  "promise_status": {
+   "Yes": 0.8775235531628532,
+   "No": 0.6459143968871596
+  },
+  "verification_timeline": {
+   "already": 0.31666666666666665,
+   "within_2_years": 0.42857142857142855,
+   "between_2_and_5_years": 0.1956521739130435,
+   "more_than_5_years": 0.3270440251572327,
+   "N/A": 0.6459143968871596
+  },
+  "evidence_status": {
+   "Yes": 0.8246153846153846,
+   "No": 0.23655913978494625,
+   "N/A": 0.6459143968871596
+  },
+  "evidence_quality": {
+   "Clear": 0.6911764705882353,
+   "Not Clear": 0.1320754716981132,
+   "N/A": 0.6742857142857143
+  }
+ },
+ "per_class_support": {
+  "promise_status": {
+   "Yes": 379,
+   "No": 121
+  },
+  "verification_timeline": {
+   "already": 142,
+   "within_2_years": 136,
+   "between_2_and_5_years": 42,
+   "more_than_5_years": 59,
+   "N/A": 121
+  },
+  "evidence_status": {
+   "Yes": 351,
+   "No": 28,
+   "N/A": 121
+  },
+  "evidence_quality": {
+   "Clear": 322,
+   "Not Clear": 29,
+   "Misleading": 0,
+   "N/A": 149
+  }
+ },
+ "conditional_f1": {
+  "verification_timeline_given_ps_yes": 0.3350017206395766,
+  "evidence_status_given_ps_yes": 0.5673555223035548,
+  "evidence_quality_given_es_yes": 0.43238129381771834
+ },
+ "tuple_exact_match": 0.322,
+ "invalid_tuple_rate": 0.0,
+ "decision_params": {
+  "0": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "1": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "2": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "3": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  },
+  "4": {
+   "calibration_biases": null,
+   "fallback_applied": null,
+   "decoder": {
+    "alpha": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "mode": "fixed"
+   }
+  }
+ }
+}

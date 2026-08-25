@@ -1,0 +1,20 @@
+Third-party data notice: dataset/mlpromise_japanese.json
+========================================================
+
+This repository redistributes a byte-identical copy of the Japanese portion
+of ML-Promise, released as Trainset_Japanese.json. Its original UTF-8 BOM is
+preserved.
+
+Work: ML-Promise: A Multilingual Dataset for Corporate Promise Verification
+Creators: Yohei Seki, Hakusen Shu, Anaïs Lhuissier, Hanwool Lee, Juyeon Kang,
+Min-Yuh Day, and Chung-Chi Chen
+Published in: EMNLP 2025 (https://aclanthology.org/2025.emnlp-main.1028/)
+Source: the paper's Google Drive folder
+https://drive.google.com/drive/folders/1wWwo5DBY2qFj2KSEqjkjinuK5CB5ku5K
+Retrieved: 2026-08-25
+Licence: CC BY-NC-SA 4.0
+https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+Modifications: none to the stored file. Normalisation is performed at load
+time in paper/data_ml.py and paper/labels_ml.py. The exact source file id and
+sha256 are recorded in dataset/mlpromise_japanese_provenance.json.

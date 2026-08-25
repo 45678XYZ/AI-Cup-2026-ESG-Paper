@@ -138,6 +138,24 @@ def test_an_absent_class_is_pinned_and_recorded(bundle):
     assert biases["evidence_quality"][LABEL2ID["evidence_quality"]["Misleading"]] == 0.0
 
 
+def test_a_class_absent_from_train_is_pinned_but_not_a_calibration_fallback(bundle):
+    """Korean has no Misleading rows anywhere; that is not fold-specific."""
+    meta, probs = bundle
+    rows = [dict(row) for row in ROWS]
+    for row in rows:
+        if row["evidence_quality"] == "Misleading":
+            row["evidence_quality"] = "Not Clear"
+    rot = dict(_rotation(meta["rotation"]))
+    rot["calibration_absent_classes"] = {}
+
+    biases, fallback = fit_biases(
+        "global", probs["calibration"], meta["calibration_ids"], rot, rows,
+    )
+
+    assert fallback == {}
+    assert biases["evidence_quality"][LABEL2ID["evidence_quality"]["Misleading"]] == 0.0
+
+
 def test_the_structural_na_classes_are_pinned_but_are_not_fallback(bundle):
     """Plan §3.2: unidentifiable, not unsupported. Recording them as fallback
     would conflate a property of the hierarchy with a property of this split."""

@@ -106,13 +106,22 @@ def _loss(criteria, logits, labels, structure_lambda=LAMBDA_UNSET):
 
 
 def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None,
-                   local_files_only=False, structure_lambda=LAMBDA_UNSET):
+                   local_files_only=False, structure_lambda=LAMBDA_UNSET,
+                   amp_dtype="float16"):
     """Train the anchor on ``train_data`` only.
 
     Returns ``(model, avg_state)``: the model already carries the averaged
     weights; ``avg_state`` is handed back so the driver can archive it without
     pulling the parameters off the GPU a second time.
     """
+    amp_types = {
+        "float16": torch.float16,
+        "bfloat16": torch.bfloat16,
+        "float32": torch.float32,
+    }
+    if amp_dtype not in amp_types:
+        raise ValueError(f"unsupported amp_dtype {amp_dtype!r}")
+
     set_seed(seed)
 
     loader = DataLoader(
@@ -139,7 +148,13 @@ def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None,
         )
         for field in EVAL_FIELDS
     }
-    scaler = torch.cuda.amp.GradScaler()
+    use_amp = DEVICE.type == "cuda" and amp_dtype != "float32"
+    # BF16 has FP32's exponent range and therefore does not need loss scaling.
+    # Keeping GradScaler disabled for it also avoids treating a BF16-compatible
+    # step as though it had overflowed in the narrower FP16 format.
+    scaler = torch.cuda.amp.GradScaler(
+        enabled=DEVICE.type == "cuda" and amp_dtype == "float16"
+    )
 
     # Fixed epoch budget, average the last K states: no evaluation labels are
     # consulted at any point (train_config.CHECKPOINT_RULE).
@@ -153,7 +168,8 @@ def train_rotation(train_data, tokenizer, seed, model_name=None, revision=None,
             attention_mask = batch["attention_mask"].to(DEVICE)
             labels = {f: batch["labels"][f].to(DEVICE) for f in EVAL_FIELDS}
 
-            with torch.cuda.amp.autocast():
+            with torch.cuda.amp.autocast(enabled=use_amp,
+                                         dtype=amp_types[amp_dtype]):
                 logits = model(input_ids, attention_mask)
                 _, update_due = accumulation_window(step, len(loader))
                 loss = (_loss(criteria, logits, labels, structure_lambda)
