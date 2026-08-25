@@ -72,21 +72,25 @@ def _escape(text) -> str:
     return "".join(out)
 
 
-def build(tables_dir=None, out_path=None) -> Path:
-    """Compile the preview and return where it landed."""
-    tables_dir = Path(tables_dir or REPO_ROOT / "tables")
-    out_path = Path(out_path or tables_dir / "preview.pdf")
-    if not tex_available():
-        raise RuntimeError(
-            "no latexmk on PATH. The preview needs TeX; the tables themselves "
-            "do not -- `python -m analysis` still regenerates them."
-        )
+def _body(tables_dir) -> list[str]:
+    """The document body: every delivered table, in order, with its caption.
 
+    A missing tabular raises. It used to be skipped, which is how a table stops
+    reaching the paper without anything failing -- ``ALL_TABLE_FILES`` names it
+    as delivered, the writer was never wired into ``python -m analysis``, and
+    the preview simply comes out one page shorter. Table 7 did exactly that.
+    """
+    tables_dir = Path(tables_dir)
     body = [PREAMBLE]
     for name in ALL_TABLE_FILES:
         tabular = tables_dir / name
         if not tabular.exists():
-            continue
+            raise FileNotFoundError(
+                f"{name} is listed in ALL_TABLE_FILES but absent from "
+                f"{tables_dir}. Rebuild with `python -m analysis`; if it does "
+                "not appear, its writer is not registered in "
+                "analysis.tables.EXTERNAL_TABLES."
+            )
         stem = name.removesuffix(".tex")
         caption = tables_dir / f"{stem}_caption.txt"
         body += [rf"\section*{{{_escape(stem)}}}",
@@ -97,6 +101,20 @@ def build(tables_dir=None, out_path=None) -> Path:
             body += [r"\footnotesize", _escape(caption.read_text(encoding="utf-8")),
                      r"\normalsize"]
         body.append(r"\newpage")
+    return body
+
+
+def build(tables_dir=None, out_path=None) -> Path:
+    """Compile the preview and return where it landed."""
+    tables_dir = Path(tables_dir or REPO_ROOT / "tables")
+    out_path = Path(out_path or tables_dir / "preview.pdf")
+    if not tex_available():
+        raise RuntimeError(
+            "no latexmk on PATH. The preview needs TeX; the tables themselves "
+            "do not -- `python -m analysis` still regenerates them."
+        )
+
+    body = _body(tables_dir)
 
     figure = REPO_ROOT / "figures" / "figure1_hierarchy.pdf"
     if figure.exists():

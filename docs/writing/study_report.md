@@ -654,7 +654,7 @@ macro-F1 對四類等權平均，所以這一欄的分數**天花板是 0.75**�
 
 # 第七部分：交付物
 
-## 六張表
+## 七張表
 
 | 檔案 | 內容 | 建議 |
 |---|---|---|
@@ -664,6 +664,7 @@ macro-F1 對四類等權平均，所以這一欄的分數**天花板是 0.75**�
 | `tables/table4_contrasts.tex` | 兩個事先指定家族的統計 | 進本體 |
 | `tables/table5_headroom.tex` | 失分分布與邊際價值 | 視頁面 |
 | `tables/table6_regimes.tex` | 評估切分 | 附錄 |
+| **`tables/table7_multilingual_mechanism.tex`** | ⭐ **機制在五個語料上的重測** | **進本體** |
 
 每張表都有對應的 `_caption.txt`。⚠️ **caption 會逐字進入論文，其中的數字同樣由程式生成，不要手改。**
 
@@ -687,7 +688,7 @@ export PATH="$HOME/texlive/2026/bin/universal-darwin:$PATH"
 python -m analysis.preview          # → tables/preview.pdf
 ```
 
-六張表連同 caption 與 Figure 1 包成一份 PDF，**有進版控**，沒裝 TeX 也看得到。
+七張表連同 caption 與 Figure 1 包成一份 PDF，**有進版控**，沒裝 TeX 也看得到。
 
 ## 排版注意事項
 
@@ -705,7 +706,7 @@ python -m analysis.preview          # → tables/preview.pdf
 ## 重算一切
 
 ```bash
-python -m analysis              # 六張表、caption、findings、Figure 1
+python -m analysis              # 七張表、caption、findings、Figure 1
 python -m analysis.preview      # 渲染後的 PDF
 python -m paper.validate --all  # 產物完整性
 python -m pytest -q             # 416 個測試

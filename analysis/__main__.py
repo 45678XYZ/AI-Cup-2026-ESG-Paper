@@ -11,6 +11,7 @@ artifacts, must reproduce the tables exactly.
 
 import argparse
 import json
+from importlib import import_module
 from pathlib import Path
 
 from analysis.aggregate import protocol_summary, regime_comparison
@@ -20,8 +21,7 @@ from analysis.findings import write_findings
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT
 from analysis.figure1 import build as build_figure1, tex_available
 from analysis.load import EXAMPLES_ROOT, REAL_ROOT, pdf_clusters
-from analysis.legality_cost import write_legality_cost
-from analysis.tables import table_inputs, write_tables
+from analysis.tables import EXTERNAL_TABLES, table_inputs, write_tables
 from paper.data import REPO_ROOT, canonical_row_order, load_dev
 from paper.train_config import PROTOCOLS, SEEDS
 
@@ -94,16 +94,26 @@ def main() -> None:
     write_tables(args.out_dir, audit, summaries, regimes, inputs, seeds=SEEDS)
     print(f"tables  -> {args.out_dir}")
 
-    # Table 6 spans the seven (backbone, lambda) arms, so its inputs are not
-    # the cross-seed summaries above and it writes itself. It is skipped rather
-    # than failed when an arm's predictions are absent: a checkout that carries
-    # only the frozen anchor -- which is what contract section 4 promises -- can
-    # still rebuild every other deliverable.
-    try:
-        legality = write_legality_cost(args.out_dir, root=args.predictions_root)
-        print(f"legality-> {legality}")
-    except FileNotFoundError as missing:
-        print(f"legality-> skipped, an arm is absent from this checkout: {missing}")
+    # Tables whose inputs are not the cross-seed summaries above write
+    # themselves. They are driven from the registry rather than called by name
+    # so that registering one is the same act as rebuilding it -- listing a
+    # table without wiring its writer is how a paper float silently stops being
+    # regenerated. Each is skipped rather than failed when its inputs are
+    # absent: a checkout carrying only the frozen anchor -- which is what
+    # contract section 4 promises -- can still rebuild every other deliverable.
+    available = {"root": args.predictions_root, "n_boot": args.n_boot}
+    for name, spec in EXTERNAL_TABLES.items():
+        module_name, func_name = spec["writer"].split(":")
+        writer = getattr(import_module(module_name), func_name)
+        kwargs = {k: available[k] for k in spec["kwargs"] if k in available}
+        try:
+            writer(args.out_dir, **kwargs)
+            print(f"{name:34}-> {args.out_dir}")
+        except FileNotFoundError as missing:
+            if not spec["skip_if_absent"]:
+                raise
+            print(f"{name:34}-> skipped, an input is absent from this "
+                  f"checkout: {missing}")
 
     # The figure is TikZ, so rebuilding it needs TeX. Its counts come from
     # paper.labels rather than from this run, so skipping it cannot put the

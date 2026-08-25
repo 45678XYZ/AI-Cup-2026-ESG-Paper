@@ -11,6 +11,8 @@ from analysis.aggregate import protocol_summary, regime_comparison
 from analysis.audit import full_audit
 from analysis.load import EXAMPLES_ROOT, pdf_clusters
 from analysis.tables import (
+    EXTERNAL_TABLES,
+    EXTERNAL_TABLE_FILES,
     FAMILY_LABELS,
     _resolution_clause,
     _word,
@@ -470,6 +472,33 @@ def test_table4_caption_says_where_the_demoted_metrics_went():
                              )["table4_contrasts"]
     assert "exploratory" in caption.lower()
 
+
+
+def test_every_external_table_declares_a_writer_the_entry_point_can_call():
+    """A table listed as delivered but not rebuilt leaves the paper silently.
+
+    ``ALL_TABLE_FILES`` is what the preview enumerates and what D counts as
+    floats, and ``analysis/preview.py`` skips a tabular that is not on disk
+    rather than failing. So a table registered here whose writer nobody wired
+    into ``analysis/__main__`` survives until the next full rebuild and then
+    drops out of the PDF with every command still reporting success.
+
+    Deriving ``EXTERNAL_TABLE_FILES`` from the writers removes the gap --
+    registering a table *is* wiring it. What is left to check is that each
+    declared writer exists and takes the arguments the entry point passes it,
+    since a typo there fails only at rebuild time.
+    """
+    import inspect
+    from importlib import import_module
+
+    assert tuple(EXTERNAL_TABLES) == EXTERNAL_TABLE_FILES
+    for name, spec in EXTERNAL_TABLES.items():
+        module_name, func_name = spec["writer"].split(":")
+        writer = getattr(import_module(module_name), func_name)
+        assert callable(writer), name
+        params = inspect.signature(writer).parameters
+        for keyword in spec["kwargs"]:
+            assert keyword in params, (name, keyword)
 
 
 # --- the resolution clause -------------------------------------------------
