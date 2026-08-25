@@ -217,6 +217,32 @@ def test_tracked_manuscript_has_no_empty_body_column():
     assert imbalanced == [], f"body pages with an effectively empty column: {imbalanced}"
 
 
+def test_tracked_manuscript_title_is_compact_and_balanced():
+    """The rendered title must not be split into narrow manual fragments."""
+    page = PdfReader(
+        str(REPO_ROOT / "manuscript" / "build" / "main.pdf")
+    ).pages[0]
+    midpoint = float(page.mediabox.width) / 2
+    title_lines = []
+
+    def collect_title_lines(text, cm, tm, font_dict, font_size):
+        clean = " ".join(text.split())
+        if clean and font_size >= 16:
+            x = mult(tm, cm)[4]
+            title_lines.append((clean, 2 * (midpoint - x)))
+
+    page.extract_text(visitor_text=collect_title_lines)
+    expected_title = (
+        "When Field-Wise Metrics Miss Hierarchical Structure: "
+        "Controlled Evidence Across Five Languages"
+    )
+    widths = [width for _, width in title_lines]
+
+    assert " ".join(text for text, _ in title_lines) == expected_title
+    assert len(title_lines) <= 3, f"title rendered across {len(title_lines)} lines"
+    assert min(widths) >= max(widths) * 0.65, f"unbalanced title widths: {widths}"
+
+
 def test_log_rejects_unresolved_references(tmp_path):
     log = tmp_path / "main.log"
     log.write_text("LaTeX Warning: There were undefined references.", encoding="utf-8")
