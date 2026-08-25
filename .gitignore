@@ -16,6 +16,12 @@
 # probs_architecture/
 #              COMMITTED  — paired exploratory backbone screens, namespaced by
 #                           architecture and structural-loss arm
+# runs_en/     COMMITTED  — the ML-Promise English replication, one directory
+#                           per (backbone, lambda) arm, same shape as runs/.
+#                           Needs its own negation below: "*.npy" swallows a
+#                           new tree silently, leaving bundles that carry a
+#                           meta.json and no probabilities, which every
+#                           validator that reads metadata still passes
 # tables/      COMMITTED  — the contract-4 deliverables D includes, plus the
 #                           manifest that ties each printed number back to the
 #                           artifacts it was computed from
@@ -40,6 +46,7 @@
 !/probs_lambda_sweep/**/*.npy
 !/probs_structural/**/*.npy
 !/probs_architecture/**/*.npy
+!/runs_en/**/*.npy
 /checkpoints/
 /checkpoints_*/
 

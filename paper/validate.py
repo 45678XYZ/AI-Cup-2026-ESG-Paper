@@ -32,6 +32,9 @@ from pathlib import Path
 import numpy as np
 
 from paper.artifacts import PREDICTION_COLUMNS, read_predictions
+from paper.corpus import CORPORA, probs_globs, splits_dir as corpus_splits_dir
+from paper.corpus import DEFAULT as DEFAULT_CORPUS
+from paper.corpus import load_rows
 from paper.data import (
     REPO_ROOT,
     canonical_row_order,
@@ -425,24 +428,39 @@ def _method_of(path) -> str | None:
     return tail if tail.startswith("M") and tail[1:].isdigit() else None
 
 
-def _validate_paths(paths, rows) -> list[str]:
+def _validate_paths(paths, rows, splits_dir=SPLITS_DIR) -> list[str]:
     problems: list[str] = []
     bundles = [p for p in paths if p.is_dir()]
     predictions = [p for p in paths if p.is_file()]
 
     for p in bundles:
-        problems += validate_probs_bundle(p)
-    by_run: dict[str, list[Path]] = {}
+        problems += validate_probs_bundle(p, splits_dir=splits_dir)
+
+    # A corpus may contain several arms whose bundle basenames intentionally
+    # repeat.  The English replication, for example, has one ``probs/``
+    # directory per (backbone, lambda), and every one contains
+    # ``pdf_group_seed42_r0``.  Grouping only by basename merges those arms,
+    # then falsely reports duplicate rotations and mixed model revisions.
+    # The containing probs directory is the arm boundary used by both the run
+    # and study-level checks.
+    by_arm: dict[Path, list[Path]] = {}
     for p in bundles:
-        by_run.setdefault(p.name.rsplit("_r", 1)[0], []).append(p)
-    for run, dirs in sorted(by_run.items()):
-        if len(dirs) > 1:
-            problems += [f"{run}: {m}" for m in validate_probs_run(dirs)]
-    if len(by_run) > 1:
-        problems += validate_probs_study(bundles)
+        by_arm.setdefault(p.parent.resolve(), []).append(p)
+    for arm, arm_bundles in sorted(by_arm.items(), key=lambda item: str(item[0])):
+        by_run: dict[str, list[Path]] = {}
+        for p in arm_bundles:
+            by_run.setdefault(_run_of(p.name), []).append(p)
+        for run, dirs in sorted(by_run.items()):
+            if len(dirs) > 1:
+                label = f"{arm.parent.name}/{arm.name}/{run}" if len(by_arm) > 1 else run
+                problems += [f"{label}: {m}"
+                             for m in validate_probs_run(dirs, splits_dir=splits_dir)]
+        if len(by_run) > 1:
+            problems += validate_probs_study(arm_bundles)
 
     for p in predictions:
-        problems += validate_predictions(p, rows=rows, method=_method_of(p))
+        problems += validate_predictions(p, rows=rows, method=_method_of(p),
+                                         splits_dir=splits_dir)
     return problems
 
 
@@ -451,24 +469,35 @@ def main() -> None:
     ap.add_argument("paths", nargs="*", type=Path,
                     help="probability bundle directories and/or predictions .csv.gz")
     ap.add_argument("--all", action="store_true",
-                    help="validate every bundle under probs/ and every predictions file")
+                    help="validate every bundle and predictions file of --corpus")
+    # Which rows and which fold manifests the artifacts are checked against.
+    # Without this, English bundles are compared to the Chinese manifests and
+    # the Chinese data checksum, and every mismatch is reported as a defect in
+    # the bundle rather than as the wrong corpus having been named.
+    ap.add_argument("--corpus", default=DEFAULT_CORPUS, choices=sorted(CORPORA),
+                    help="which corpus these artifacts belong to")
     args = ap.parse_args()
+
+    splits_dir = REPO_ROOT / corpus_splits_dir(args.corpus)
+    bundle_glob, predictions_glob = probs_globs(args.corpus)
 
     paths = list(args.paths)
     if args.all:
-        paths += sorted(p for p in (REPO_ROOT / "probs").glob("*") if p.is_dir())
-        paths += sorted((REPO_ROOT / "predictions").glob("*.csv.gz"))
+        paths += sorted(p for p in REPO_ROOT.glob(bundle_glob) if p.is_dir())
+        paths += sorted(REPO_ROOT.glob(predictions_glob))
         if not paths:
             # The normal state of a fresh clone: B has not delivered yet.
             # Nothing to check is not a usage error.
-            print("nothing to validate: probs/ and predictions/ are empty")
+            print(f"nothing to validate: {bundle_glob} and "
+                  f"{predictions_glob} match nothing")
             return
     if not paths:
         ap.error("give at least one path, or --all")
 
-    rows = load_dev()
+    rows = load_rows(args.corpus)
+    print(f"corpus: {args.corpus}")
     print(f"data_checksum: {data_checksum(rows)}")
-    problems = _validate_paths(paths, rows)
+    problems = _validate_paths(paths, rows, splits_dir=splits_dir)
 
     for p in problems:
         print(f"  FAIL  {p}")

@@ -15,6 +15,7 @@ from contracts.make_fixtures import make_rotation_fixture
 from paper.data import load_dev
 from paper.splits import build_split
 from paper.validate import (
+    _validate_paths,
     validate_predictions,
     validate_probs_bundle,
     validate_probs_run,
@@ -195,6 +196,29 @@ def test_a_second_gpu_or_a_pull_mid_run_is_not_an_error(run, tmp_path):
                                                 hardware="RTX 3090 (idx 0)"))
     ]
     assert validate_probs_run(spread) == []
+
+
+def test_all_keeps_repeated_run_names_in_separate_arms(run, tmp_path):
+    """English arms deliberately repeat every bundle basename.
+
+    ``--all`` must validate each arm as its own study; otherwise two complete
+    five-rotation runs become one ten-bundle run with duplicate rotations and
+    conflicting model revisions.
+    """
+    import shutil
+
+    other = tmp_path / "other_arm" / "probs"
+    copied = []
+    for src in run:
+        dst = other / src.name
+        shutil.copytree(src, dst)
+        meta = json.load(open(dst / "meta.json", encoding="utf-8"))
+        meta.update(model_name="other/model", model_revision="cafebabe")
+        with open(dst / "meta.json", "w", encoding="utf-8") as f:
+            json.dump(meta, f)
+        copied.append(dst)
+
+    assert _validate_paths(list(run) + copied, ROWS) == []
 
 
 # --- contract 3 -----------------------------------------------------------

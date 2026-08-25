@@ -160,4 +160,5 @@ def test_paired_delta_accepts_another_metric():
     out = paired_delta([(gold, better)], [(gold, worse)], clusters,
                        n_boot=200, score=tuple_accuracy)
     assert out["delta"] == 0.5
+    assert out["per_seed_delta"] == [0.5]
     assert out["ci_low"] > 0 and out["ci_high"] >= out["ci_low"]

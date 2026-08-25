@@ -1,0 +1,62 @@
+Third-party data notice: dataset/mlpromise_english.json
+=======================================================
+
+This repository redistributes a copy of the English portion of the ML-Promise
+dataset. The notice exists because the repository is public: anyone who clones
+it receives that data from us rather than from its authors, which makes the
+attribution below an obligation of the licence rather than a courtesy.
+
+
+Work
+----
+ML-Promise: A Multilingual Dataset for Corporate Promise Verification
+(English portion; released as Trainset_English.json)
+
+Creators
+--------
+Yohei Seki, Hakusen Shu, Anaïs Lhuissier, Hanwool Lee, Juyeon Kang,
+Min-Yuh Day, Chung-Chi Chen
+
+Published in
+------------
+Proceedings of the 2025 Conference on Empirical Methods in Natural Language
+Processing (EMNLP 2025)
+https://aclanthology.org/2025.emnlp-main.1028/
+https://arxiv.org/abs/2411.04473
+
+Source
+------
+The Google Drive folder named in the paper's own text:
+https://drive.google.com/drive/folders/1wWwo5DBY2qFj2KSEqjkjinuK5CB5ku5K
+Retrieved 2026-08-24. File sha256 recorded in
+dataset/mlpromise_english_provenance.json.
+
+Licence
+-------
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+(CC BY-NC-SA 4.0)
+https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+Modifications
+-------------
+None. dataset/mlpromise_english.json is byte-identical to the file as released.
+
+This study does normalise the data before use -- whitespace is stripped from
+one label, row ids are derived from row content, and the labels are translated
+into this study's own vocabulary -- but all of that happens at load time in
+paper/data_en.py and paper/labels_en.py. The stored file is never rewritten, so
+the recorded sha256 keeps meaning "what the authors published".
+
+
+What is and is not covered
+--------------------------
+This notice covers dataset/mlpromise_english.json only.
+
+Artifacts derived from it -- the fold manifests under splits_en/ and the
+predictions written by paper/run_decisions.py -- carry row ids and labels but
+none of the source paragraph text. The rest of this repository is independent
+work collected alongside the dataset, not an adaptation of it.
+
+Nothing here is legal advice. It records what was retrieved, from where, under
+which licence, and what was changed, which is what the licence asks a
+redistributor to state.

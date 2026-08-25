@@ -23,12 +23,14 @@ import numpy as np
 
 from paper.artifacts import prediction_row, write_predictions
 from paper.calibration import as_json, fit_biases
+from paper.corpus import DEFAULT as DEFAULT_CORPUS
+from paper.corpus import CORPORA, load_rows
 from paper.data import REPO_ROOT, data_checksum, index_by_id, load_dev
 from paper.evaluate import build_results, write_results
 from paper.labels import FIELDS
 from paper.methods import METHOD_IDS, METHODS, decide
 from paper.train_config import N_FOLDS, SEEDS
-from paper.validate import load_split, validate_probs_bundle, validate_probs_run
+from paper.validate import SPLITS_DIR, load_split, validate_probs_bundle, validate_probs_run
 
 
 def load_bundle(bundle_dir) -> tuple[dict, dict]:
@@ -48,7 +50,8 @@ def load_bundle(bundle_dir) -> tuple[dict, dict]:
     return meta, probs
 
 
-def load_run(probs_dir, protocol, seed, split) -> list[tuple[dict, dict]]:
+def load_run(probs_dir, protocol, seed, split,
+             splits_dir=SPLITS_DIR) -> list[tuple[dict, dict]]:
     """Load and check all five rotations of one (protocol, seed).
 
     Validation happens here rather than being left to the operator: these
@@ -60,7 +63,10 @@ def load_run(probs_dir, protocol, seed, split) -> list[tuple[dict, dict]]:
     if missing:
         raise SystemExit(f"missing probability bundles: {missing}")
 
-    problems = validate_probs_run(dirs)
+    # Keep the run-level coverage check on the same corpus as the split that
+    # main loaded.  Falling back to validate.py's Chinese default makes every
+    # conforming English run look short (400 rows versus 2,000).
+    problems = validate_probs_run(dirs, splits_dir=splits_dir)
     for d in dirs:
         problems += validate_probs_bundle(d, split)
     if problems:
@@ -139,20 +145,42 @@ def main() -> None:
     ap.add_argument("--protocol", required=True, choices=["pdf_group", "row_strat"])
     ap.add_argument("--seed", required=True, type=int, choices=list(SEEDS))
     ap.add_argument("--methods", nargs="+", default=METHOD_IDS, choices=METHOD_IDS)
-    ap.add_argument("--probs-dir", type=Path, default=REPO_ROOT / "probs")
-    ap.add_argument("--splits-dir", type=Path, default=REPO_ROOT / "splits")
-    ap.add_argument("--out-dir", type=Path, default=REPO_ROOT)
+    ap.add_argument("--corpus", default=DEFAULT_CORPUS, choices=sorted(CORPORA),
+                    help="which labelled rows the bundles were fit on; supplies "
+                         "the defaults for --probs-dir and --splits-dir")
+    ap.add_argument("--probs-dir", type=Path, default=None)
+    ap.add_argument("--splits-dir", type=Path, default=None)
+    ap.add_argument("--out-dir", type=Path, default=None)
     args = ap.parse_args()
 
-    rows = load_dev()
+    if args.probs_dir is None:
+        args.probs_dir = REPO_ROOT / CORPORA[args.corpus]["probs_dir"]
+    if args.splits_dir is None:
+        args.splits_dir = REPO_ROOT / CORPORA[args.corpus]["splits_dir"]
+    if args.out_dir is None:
+        # Beside the bundles it scored, not at a fixed root. A decision run
+        # names its output {protocol}_seed{seed}_{method}.csv.gz whatever it
+        # was fit on, so seven arms sharing one output directory would each
+        # overwrite the last, and an English run defaulted to the repository
+        # root would overwrite the frozen study's predictions file by file.
+        args.out_dir = (REPO_ROOT / CORPORA[args.corpus]["decisions_root"]
+                        if args.corpus == DEFAULT_CORPUS
+                        else args.probs_dir.parent)
+        print(f"writing decisions to {args.out_dir}")
+
+    rows = load_rows(args.corpus)
     checksum = data_checksum(rows)
     split = load_split(args.protocol, args.seed, args.splits_dir)
     if split["data_checksum"] != checksum:
-        raise SystemExit(f"{args.splits_dir} was built against different data; refusing to run.")
+        raise SystemExit(
+            f"{args.splits_dir} was built against different data; refusing to "
+            f"run.\n--corpus is {args.corpus!r}."
+        )
 
     # Loaded once and shared by every method: this is what "identical
     # probabilities on identical rows" means operationally.
-    run = load_run(args.probs_dir, args.protocol, args.seed, split)
+    run = load_run(args.probs_dir, args.protocol, args.seed, split,
+                   splits_dir=args.splits_dir)
     print(f"{args.protocol} seed{args.seed}: {len(run)} rotations validated", flush=True)
 
     bias_cache: dict = {}
