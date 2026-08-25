@@ -521,7 +521,7 @@ git commit -m "chore(paper): refresh focused manuscript tables"
 - Regenerate and commit: `manuscript/build/main.pdf`
 - Do not commit: `manuscript/build/main.log` and other build products
 
-- [ ] **Step 1: Run the complete Python suite**
+- [x] **Step 1: Run the complete Python suite**
 
 Run:
 
@@ -531,7 +531,7 @@ pytest -q
 
 Expected: all tests pass, with only explicitly registered skips.
 
-- [ ] **Step 2: Validate multilingual artifacts**
+- [x] **Step 2: Validate multilingual artifacts**
 
 Run:
 
@@ -543,7 +543,7 @@ pytest tests/test_multilingual_replication.py -q
 
 Expected: French and Japanese each report 360 clean artifacts. The summary-rebuild test also proves Korean prediction rescoring. Document that the full Korean validator additionally needs the intentionally undistributed `local_data/mlpromise_korean_pages.json`; do not fabricate or fetch it.
 
-- [ ] **Step 3: Build and run final manuscript checks**
+- [x] **Step 3: Build and run final manuscript checks**
 
 Run:
 
@@ -555,11 +555,11 @@ pdftotext manuscript/build/main.pdf - | rg '32/32|14/32|49|AI CUP weights applie
 
 Expected: final check exits zero, the PDF is at most eight pages, and the central focused claims survive compilation.
 
-- [ ] **Step 4: Inspect every rendered page visually**
+- [x] **Step 4: Inspect every rendered page visually**
 
 Render the PDF to a new `mktemp -d` directory with `pdftoppm -png -r 144`, then inspect every page with the image viewer. Check table legibility, clipping, font substitution, whitespace, float placement, bibliography breaks, and that no table or reference line crosses a page boundary awkwardly.
 
-- [ ] **Step 5: Verify tracking and exclusion gates**
+- [x] **Step 5: Verify tracking and exclusion gates**
 
 Run:
 
@@ -573,14 +573,14 @@ git status --short
 
 Expected: `git check-ignore` returns nonzero, `git ls-files` succeeds, M7 grep has no output, and only the intended final PDF/source adjustments remain.
 
-- [ ] **Step 6: Commit the latest manuscript**
+- [x] **Step 6: Commit the latest manuscript**
 
 ```bash
 git add manuscript manuscript/build/main.pdf
 git commit -m "docs(paper): publish focused multilingual revision"
 ```
 
-- [ ] **Step 7: Verify the committed endpoint**
+- [x] **Step 7: Verify the committed endpoint**
 
 Run:
 
@@ -596,18 +596,18 @@ Expected: clean `paper/ntcir19-manuscript`, final checks still pass from the com
 
 ## Final Acceptance Checklist
 
-- [ ] `multilingual-replication` is merged with both histories preserved.
-- [ ] `manuscript/build/main.pdf` is tracked and not ignored.
-- [ ] The manuscript is focused on Chinese confirmatory evidence plus multilingual replication.
-- [ ] Table 6 is generated from committed evidence and covered by checksum provenance.
-- [ ] Chinese Companies is 49; no report is said to cover two companies.
-- [ ] The abstract reports the pre-specified tuple result and does not headline the post-hoc C-wF1 p-value.
-- [ ] External results say tuple `32/32` and weighted `14/32`, without raw cross-language ranking.
-- [ ] ML-Promise weighted scores are explicitly labelled unofficial AI CUP-weighted scores.
-- [ ] Korean input/support/reproducibility limitations are disclosed.
-- [ ] The selected-best same-document Table 3 is absent from the manuscript.
-- [ ] Structural loss and backbone screens remain compact and exploratory.
-- [ ] No M7 design or result appears in the manuscript revision.
-- [ ] Full tests and final manuscript checks pass.
-- [ ] The visually inspected PDF is at most eight pages including references.
-- [ ] The final branch is clean and the latest PDF is committed.
+- [x] `multilingual-replication` is merged with both histories preserved.
+- [x] `manuscript/build/main.pdf` is tracked and not ignored.
+- [x] The manuscript is focused on Chinese confirmatory evidence plus multilingual replication.
+- [x] Table 6 is generated from committed evidence and covered by checksum provenance.
+- [x] Chinese Companies is 49; no report is said to cover two companies.
+- [x] The abstract reports the pre-specified tuple result and does not headline the post-hoc C-wF1 p-value.
+- [x] External results say tuple `32/32` and weighted `14/32`, without raw cross-language ranking.
+- [x] ML-Promise weighted scores are explicitly labelled unofficial AI CUP-weighted scores.
+- [x] Korean input/support/reproducibility limitations are disclosed.
+- [x] The selected-best same-document Table 3 is absent from the manuscript.
+- [x] Structural loss and backbone screens remain compact and exploratory.
+- [x] No M7 design or result appears in the manuscript revision.
+- [x] Full tests and final manuscript checks pass.
+- [x] The visually inspected PDF is at most eight pages including references.
+- [x] The final branch is clean and the latest PDF is committed.
