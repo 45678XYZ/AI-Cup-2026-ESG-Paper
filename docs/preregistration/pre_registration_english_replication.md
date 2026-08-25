@@ -102,7 +102,9 @@ en          ~4.0         1528         11.8%
 en          ~4.5         1719          8.0%
 ```
 
-**估計值落在 8–16%，中文是 7%。** 同一個量級，不是設計缺陷。
+**事前估計值落在 8–16%，中文是 7%。** 這是用字元數近似 BPE 長度的粗估，
+只用來判斷是否值得執行下面的 tokenizer gate；不是實測截斷率。後來改用 word count
+重估為 3–9%，顯示原本的 8–16% 偏高。兩種 proxy 都不能取代 tokenizer 實測。
 
 ⚠️ **B 開跑前請用真的 tokenizer 量一次**（30 秒），把確切數字回報：
 
@@ -116,6 +118,24 @@ print(sum(x > 384 for x in n) / len(n))
 
 若確切值明顯高於 20%，先回報再決定要不要跑 —— 截斷率兩臂差太多會變成一個
 無法歸因的混淆變數，而不是可以照報的限制。
+
+#### 執行紀錄（2026-08-25 補錄）
+
+量測定義與上面的 gate 完全相同：不先截斷，保留 tokenizer 自動加入的 special
+tokens，計算完整 `input_ids` 長度嚴格大於 384 的列數。為了與實際 fit 一致，量測
+使用 bundle 記錄的固定 model revision，以及 `paper.run_training` 預設載入的 fast
+tokenizer。
+
+| backbone | tokenizer（固定 revision） | `n > 384` | 確切截斷率 | 量測時點 |
+|---|---|---:|---:|---|
+| RoBERTa-large | `RobertaTokenizerFast` (`722cf37b1afa9454edce342e7895e588b6ff1d59`) | 22 / 400 | **5.50%** | 第一個英文 fit 前的 stop gate；本表於結果完成後補錄 |
+| DeBERTa-v3-large | `DebertaV2TokenizerFast` (`64a8c8eab3e352a784c658aef62be1662607476f`) | 15 / 400 | **3.75%** | 結果完成後的限制分析 |
+
+兩者都低於 20% stop gate。DeBERTa-v3-large 使用 SentencePiece-derived tokenizer；
+以 slow `DebertaV2Tokenizer` 重算仍是 15 / 400（3.75%），所以 fast tokenizer 的
+byte-fallback 警告不改變這個計數。這個補測也不改變任何已報結果：同一 arm 的
+M1−M0 是對同一組 probabilities 套兩個 decision rules，截斷會同時進入兩者；不過
+英文臂的 5.50%（RoBERTa）與 3.75%（DeBERTa）仍須在論文 limitations 中揭露。
 
 ### 2.5 已知的資料瑕疵
 
