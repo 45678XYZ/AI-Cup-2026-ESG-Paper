@@ -23,9 +23,11 @@ from manuscript.check import (
 CANONICAL_TABLE_NAMES = (
     "table1_dataset.tex",
     "table2_main.tex",
-    "table3_regimes.tex",
+    "table3_legality_cost.tex",
     "table4_contrasts.tex",
-    "table5_metrics.tex",
+    "table5_headroom.tex",
+    "table6_regimes.tex",
+    "table7_multilingual_mechanism.tex",
 )
 
 
@@ -33,6 +35,18 @@ def write_minimal(root: Path, body: str, metadata: str = "") -> None:
     root.mkdir()
     (root / "main.tex").write_text(body, encoding="utf-8")
     (root / "metadata.tex").write_text(metadata, encoding="utf-8")
+
+
+def write_policy_valid(root: Path, metadata: str = "") -> None:
+    write_minimal(
+        root,
+        "\\input{tables/table4_contrasts.tex}\n"
+        "\\input{tables/table7_multilingual_mechanism.tex}",
+        metadata,
+    )
+    (root / "tables").mkdir()
+    for name in ("table4_contrasts.tex", "table7_multilingual_mechanism.tex"):
+        (root / "tables" / name).write_text("", encoding="utf-8")
 
 
 def make_valid_asset_repo(root: Path) -> Path:
@@ -109,9 +123,7 @@ def test_layout_author_placeholders_warn_in_draft_and_block_final_even_with_emai
         [*(f"\\author{{Student Author {number}}}" for number in range(1, 5)),
          "\\email{student@example.org}"]
     )
-    write_minimal(root, "\\input{tables/table4_contrasts.tex}", metadata)
-    (root / "tables").mkdir()
-    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
+    write_policy_valid(root, metadata)
 
     assert source_errors(root) == []
     assert any("layout-only author placeholders" in warning for warning in source_warnings(root))
@@ -121,13 +133,9 @@ def test_layout_author_placeholders_warn_in_draft_and_block_final_even_with_emai
 
 def test_real_author_and_email_metadata_are_accepted_in_final_mode(tmp_path):
     root = tmp_path / "m"
-    write_minimal(
-        root,
-        "\\input{tables/table4_contrasts.tex}",
-        "\\author{Ada Example}\n\\email{ada@example.org}",
+    write_policy_valid(
+        root, "\\author{Ada Example}\n\\email{ada@example.org}"
     )
-    (root / "tables").mkdir()
-    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
 
     assert source_errors(root, final=True) == []
     assert source_warnings(root) == []
@@ -152,13 +160,10 @@ def test_commented_layout_placeholders_do_not_block_active_real_metadata(tmp_pat
     commented_placeholders = "\n".join(
         f"% \\author{{Student Author {number}}}" for number in range(1, 5)
     )
-    write_minimal(
+    write_policy_valid(
         root,
-        "\\input{tables/table4_contrasts.tex}",
         f"{commented_placeholders}\n\\author{{Ada Example}}\n\\email{{ada@example.org}}",
     )
-    (root / "tables").mkdir()
-    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
 
     assert source_errors(root, final=True) == []
     assert source_warnings(root) == []
@@ -218,6 +223,60 @@ def test_equivalence_language_and_bound_metric_names_require_disclosure(tmp_path
 def test_table4_comment_spoof_is_not_an_inclusion(tmp_path):
     write_minimal(tmp_path / "m", "% \\input{../tables/table4_contrasts.tex}")
     assert any("table4_contrasts.tex" in error for error in source_errors(tmp_path / "m"))
+
+
+def test_draft_requires_the_canonical_multilingual_table(tmp_path):
+    repo = tmp_path / "repo"
+    manuscript = repo / "manuscript"
+    tables = repo / "tables"
+    tables.mkdir(parents=True)
+    (tables / "table4_contrasts.tex").write_text("table 4\n", encoding="utf-8")
+    (tables / "table7_multilingual_mechanism.tex").write_text(
+        "table 7\n", encoding="utf-8"
+    )
+    write_minimal(manuscript, "\\input{../tables/table4_contrasts.tex}")
+
+    errors = source_errors(manuscript, repo_root=repo)
+    assert any("table7_multilingual_mechanism.tex" in error for error in errors)
+
+
+def test_draft_rejects_an_external_multilingual_table_decoy(tmp_path):
+    repo = tmp_path / "repo"
+    manuscript = repo / "manuscript"
+    tables = repo / "tables"
+    external = tmp_path / "external" / "table7_multilingual_mechanism.tex"
+    tables.mkdir(parents=True)
+    external.parent.mkdir()
+    (tables / "table4_contrasts.tex").write_text("table 4\n", encoding="utf-8")
+    (tables / "table7_multilingual_mechanism.tex").write_text(
+        "canonical\n", encoding="utf-8"
+    )
+    external.write_text("decoy\n", encoding="utf-8")
+    write_minimal(
+        manuscript,
+        "\\input{../tables/table4_contrasts.tex}\n"
+        "\\input{../../external/table7_multilingual_mechanism.tex}",
+    )
+
+    errors = source_errors(manuscript, repo_root=repo)
+    assert any("Table 7 inclusion must resolve" in error for error in errors)
+
+
+def test_draft_rejects_active_m7_but_not_a_comment(tmp_path):
+    active = tmp_path / "active"
+    commented = tmp_path / "commented"
+    write_minimal(active, "We evaluate M7.")
+    write_minimal(commented, "% M7 was removed.")
+
+    assert any("M7" in error for error in source_errors(active))
+    assert not any("M7" in error for error in source_errors(commented))
+
+
+def test_draft_rejects_the_selected_best_regime_table(tmp_path):
+    root = tmp_path / "m"
+    write_minimal(root, "\\input{../tables/table3_regimes.tex}")
+
+    assert any("selected-best Table 3" in error for error in source_errors(root))
 
 
 def test_cli_rejects_external_table4_decoy(tmp_path, monkeypatch, capsys):
@@ -310,13 +369,13 @@ def test_asset_check_rejects_untracked_canonical_table(tmp_path):
     repo = make_valid_asset_repo(tmp_path)
     assert asset_errors(repo) == []
     subprocess.run(
-        ["git", "rm", "--cached", "tables/table3_regimes.tex"],
+        ["git", "rm", "--cached", "tables/table3_legality_cost.tex"],
         cwd=repo,
         check=True,
         capture_output=True,
     )
 
-    assert "canonical generated asset is not tracked: tables/table3_regimes.tex" \
+    assert "canonical generated asset is not tracked: tables/table3_legality_cost.tex" \
            in asset_errors(repo)
 
 
@@ -361,7 +420,7 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     for caption in (
         "Dataset summary from the frozen study artifact.",
         "Main document-disjoint results from the frozen study artifact.",
-        "Comparison of the two evaluation estimands.",
+        "Fixed document-disjoint, lambda=0",
         "All pre-specified contrasts across four metric families.",
     ):
         assert caption in document_text
@@ -416,8 +475,7 @@ def test_missing_required_table_manifest_entry_is_rejected(tmp_path):
     tables = tmp_path / "tables"
     figures = tmp_path / "figures"
     tables.mkdir(); figures.mkdir()
-    for name in ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
-                 "table4_contrasts.tex", "table5_metrics.tex"):
+    for name in CANONICAL_TABLE_NAMES:
         (tables / name).write_text(name, encoding="utf-8")
     (figures / "figure1_hierarchy.pdf").write_bytes(b"pdf")
     (tables / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
@@ -432,8 +490,7 @@ def test_tampered_table_input_is_rejected(tmp_path):
     (tables / "manifest.json").write_text(json.dumps({"tables": {
         name: {"source_script": "script.py", "input_files": ["input.json"],
                "input_sha256": {"input.json": "sha256:bad"}}
-        for name in ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
-                     "table4_contrasts.tex", "table5_metrics.tex")
+        for name in CANONICAL_TABLE_NAMES
     }}), encoding="utf-8")
     (tmp_path / "run_manifest.json").write_text(json.dumps({"consistency": []}), encoding="utf-8")
     errors = asset_errors(tmp_path)
@@ -484,8 +541,7 @@ def test_asset_check_rejects_malformed_consistency_shapes(tmp_path):
 def test_asset_check_rejects_malformed_input_file_shapes(tmp_path):
     tables = tmp_path / "tables"
     tables.mkdir()
-    names = ("table1_dataset.tex", "table2_main.tex", "table3_regimes.tex",
-             "table4_contrasts.tex", "table5_metrics.tex")
+    names = CANONICAL_TABLE_NAMES
     for name in names:
         (tables / name).write_text(name, encoding="utf-8")
     (tmp_path / "run_manifest.json").write_text(

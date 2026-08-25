@@ -16,12 +16,25 @@ SOURCE_GLOBS = ("*.tex", "sections/*.tex", "*.bib")
 REQUIRED_ASSETS = (
     "tables/table1_dataset.tex",
     "tables/table2_main.tex",
-    "tables/table3_regimes.tex",
+    "tables/table3_legality_cost.tex",
     "tables/table4_contrasts.tex",
-    "tables/table5_metrics.tex",
+    "tables/table5_headroom.tex",
+    "tables/table6_regimes.tex",
+    "tables/table7_multilingual_mechanism.tex",
     "figures/figure1_hierarchy.pdf",
 )
+MANIFEST_REQUIRED_TABLES = (
+    "table1_dataset.tex",
+    "table2_main.tex",
+    "table4_contrasts.tex",
+    "table5_headroom.tex",
+    "table6_regimes.tex",
+)
 CANONICAL_FROZEN_ASSETS = REQUIRED_ASSETS + ("tables/manifest.json",)
+REQUIRED_TABLE_INCLUSIONS = (
+    ("Table 4", "table4_contrasts.tex"),
+    ("Table 7", "table7_multilingual_mechanism.tex"),
+)
 LAYOUT_PLACEHOLDER_AUTHORS = frozenset(
     f"Student Author {number}" for number in range(1, 5)
 )
@@ -71,20 +84,26 @@ def source_errors(root: Path, final: bool = False, repo_root: Path | None = None
         errors.append("replace 'no difference' with 'no detectable difference'")
     if re.search(r"\bequivalence\b|\bequivalent\b", lowered):
         errors.append("an equivalence claim requires an equivalence design")
+    if re.search(r"\bm7\b", lowered):
+        errors.append("M7 is outside the focused manuscript")
     inclusions = re.findall(r"\\(?:input|include)\s*\{([^}]+)\}", active)
-    table4 = [target for target in inclusions if Path(target).name == "table4_contrasts.tex"]
-    if not table4:
-        errors.append("the full generated table4_contrasts.tex is not included")
-    else:
-        canonical_table4 = ((repo_root or root) / "tables" / "table4_contrasts.tex").resolve()
-        for target in table4:
+    for table_label, table_name in REQUIRED_TABLE_INCLUSIONS:
+        targets = [target for target in inclusions if Path(target).name == table_name]
+        if not targets:
+            errors.append(f"the full generated {table_name} is not included")
+            continue
+        canonical = ((repo_root or root) / "tables" / table_name).resolve()
+        for target in targets:
             resolved = (root / target).resolve()
-            if resolved != canonical_table4:
+            if resolved != canonical:
                 errors.append(
-                    f"Table 4 inclusion must resolve to canonical generated asset: {target}"
+                    f"{table_label} inclusion must resolve to canonical generated asset: "
+                    f"{target}"
                 )
             elif not resolved.is_file():
                 errors.append(f"included generated asset is missing: {target}")
+    if any(Path(target).name == "table3_regimes.tex" for target in inclusions):
+        errors.append("the selected-best Table 3 is excluded from the focused manuscript")
     metrics_present = ("path-constrained" in lowered or "hierarchical f1" in lowered
                        or re.search(r"\bc-wf1\b|\bhf\b", lowered) is not None)
     if metrics_present and "post hoc" not in lowered:
@@ -163,7 +182,7 @@ def asset_errors(repo_root: Path) -> list[str]:
     if not isinstance(run_data, dict):
         errors.append("run manifest top level must be an object")
         run_data = {}
-    required_tables = [Path(path).name for path in REQUIRED_ASSETS if path.startswith("tables/")]
+    required_tables = MANIFEST_REQUIRED_TABLES
     manifest_tables = table_data.get("tables", {})
     if not isinstance(manifest_tables, dict):
         errors.append("tables section must be an object")

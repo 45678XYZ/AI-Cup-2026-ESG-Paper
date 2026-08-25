@@ -604,4 +604,3 @@ def test_table4_caption_carries_the_resolution_the_deleted_table_showed():
         # on these synthetic inputs it need not.
         assert ("range across the seven" in caption
                 or "highest- and lowest-scoring" in caption), caption
-

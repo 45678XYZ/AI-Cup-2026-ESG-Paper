@@ -257,7 +257,7 @@ test were completed during Task 2 because the corrected Table 1 otherwise made
 the first post-merge full-suite verification fail. The remaining Table 6, M7,
 and Table 3 policy work stays in this task.
 
-- [ ] **Step 1: Add failing policy tests**
+- [x] **Step 1: Add failing policy tests**
 
 Add tests that demonstrate all of the following:
 
@@ -267,7 +267,7 @@ Add tests that demonstrate all of the following:
 - a committed corrected Table 1 is accepted even though it differs from the old local `main` branch;
 - an uncommitted edit to a canonical generated table is rejected relative to `HEAD`.
 
-- [ ] **Step 2: Run focused tests and confirm the new failures**
+- [x] **Step 2: Run focused tests and confirm the new failures**
 
 Run:
 
@@ -277,15 +277,15 @@ pytest tests/test_manuscript.py -q
 
 Expected: the new policy tests fail against the old asset list, main-relative drift rule, and old Table 3 inclusion.
 
-- [ ] **Step 3: Implement minimal policy changes**
+- [x] **Step 3: Implement minimal policy changes**
 
 Add Table 6 to `REQUIRED_ASSETS` and `CANONICAL_FROZEN_ASSETS`, extend canonical-inclusion validation using the same containment rules as Table 4, add active-source M7 rejection, and reject an active Table 3 inclusion. Replace the `git diff main` asset check with `git diff --quiet HEAD -- <asset>` while retaining tracked-file and manifest-input hash checks. Update fixture manifest/table-name lists in the tests.
 
-- [ ] **Step 4: Mechanically switch the included result table**
+- [x] **Step 4: Mechanically switch the included result table**
 
 In `06_results.tex`, remove the old `table3_regimes.tex` table environment and insert the canonical `table6_multilingual.tex` table environment with its generated caption. Replace only the immediately adjacent selected-best wording with a neutral fixed-arm introduction; the full Results rewrite remains Task 6.
 
-- [ ] **Step 5: Run policy tests and commit the foundation**
+- [x] **Step 5: Run policy tests and commit the foundation**
 
 Run:
 
