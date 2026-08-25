@@ -1,46 +1,61 @@
 \section{Discussion}
 
-Within this controlled design, official wF1 and C-wF1 differ only in credit for
-an ancestor-unsupported child. Official M1--M0 is unresolved
-($p_{\mathrm{Holm}}=1.000$), whereas post-hoc C-wF1 survives correction
-($p_{\mathrm{Holm}}=.025$). This localizes the mismatch to that scoring choice
-for this task, not a universal defect of field-wise metrics. Projection trades
-gains when the hierarchy forces \emph{N/A} against replacing otherwise correct
-substantive children when an ancestor is wrong. Field-wise macro averaging and
-whole-row scoring value that exchange differently.
+The repeated result is a contrast pattern, not a ranking of languages or raw
+scores. Projection enforces the supplied hierarchy in every arm and improves
+exact whole-tuple accuracy throughout the executed external matrix. Its effect
+on field-wise weighted macro-F1 instead changes sign across backbones and
+corpora. Together with the Chinese confirmatory null and pre-specified tuple
+gain, this supports a metric--structure mismatch in these controlled arms: a
+field-weighted score need not reward a decision rule for making the combined
+output more coherent and more often exactly correct.
 
-Metric choice also changes the point-estimate ranking. Official wF1 ranks M5
-first, whereas hF ranks M6 first, so ``best'' is meaningful only together with
-the evaluation metric. Nor does a larger structured search guarantee a better
-tuple. A 17-state decoder can improve a parent decision without repairing the
-remaining children; conversely, changing a correct parent to an incorrect one
-necessarily destroys whole-row correctness. This asymmetry explains how a
-parent can improve while tuple accuracy declines, without implying that either
-validity-preserving rule is universally superior.
+The mechanism is a trade-off. If an independently predicted parent is wrong,
+projection may replace a correct substantive child with the structurally
+required \emph{N/A}; when the parent is correct, the same operation can repair
+an unsupported child. Field-wise macro-F1 values these changes class by class,
+whereas tuple accuracy credits only four-field agreement. Post-hoc C-wF1 and
+hF point in the tuple direction, but were chosen after the primary analysis
+and are not needed to establish the pre-specified secondary result.
+
+Validity alone also does not identify the better structured rule. In Chinese,
+M4 scores all 17 legal states jointly yet loses tuple accuracy to greedy M1.
+Joint search can improve one field while changing another field that projection
+had already made correct. This adverse result cautions against treating a
+larger legal-state search as automatically superior; it does not imply that
+joint decoding must fail on other models or tasks.
 
 \subsection{Limitations}
-The report-cluster bootstrap has an effective sample size of 49, limiting its
-resolution. Evidence comes from one dataset, language, ESG-report domain, and
-backbone. A seed jointly controls fold assignment and training randomness, so
-their effects cannot be separated. The \emph{Misleading} class has only
-$n=2$; we make no class-level improvement or significance claim. Biases
-optimize per-field macro-F1 before projection or decoding, so downstream
-legalization can undo a field-level gain. The calibrated arms may therefore
-understate the potential of decoder-specific metric-aware calibration.
+The corpora differ in language, reports, annotation distributions, and primary
+backbones, so the replication matrix is not a factorial estimate of a pure
+language effect. English and French each have only nine report clusters, and
+even Chinese inference resamples just 49. The $32/32$ and $14/32$ summaries
+are therefore descriptive directions across executed arms, not a pooled
+significance test. AI CUP weights applied to ML-Promise are not an official
+ML-Promise metric.
 
-We tested decision-time rules, not a structural training loss, direct 17-class
-classifier, classifier chain, LLM, or alternate backbone. We did not evaluate
-temporal or industry splits; the released rows contain no explicit report-date
-or industry field. The primary C-wF1 contrast is resolved only under
-document-disjoint evaluation ($p_{\mathrm{Holm}}=.025$),
-not same-document evaluation ($p_{\mathrm{Holm}}=.739$). Both C-wF1 and hF
-were selected post hoc. Training and decision hyperparameters use one frozen
-configuration without sensitivity analysis. Finally, defects in training-time
-gradient accumulation and in the original statistical decision rule were
-corrected before this analysis; all reported artifacts were regenerated after
-the corrections.
+Korean has a further input mismatch: its 500 examples are first-384-token PDF
+pages rather than released paragraphs, and it has no gold \emph{Misleading}
+example. The extracted local page text and source PDFs are intentionally not
+redistributed. Nevertheless, the committed split manifests and row-level
+predictions are sufficient to rescore the reported Korean decision results
+from a fresh clone. They are not sufficient to retrain the models without
+reconstructing the local page inputs.
+
+\begin{sloppypar}
+Results for structural loss and other backbones remain exploratory. They show
+that reducing invalidity need not yield a conclusive gain on the official
+score, but the fixed loss weights and limited checkpoint set cannot
+characterize all training objectives or architectures. The Chinese rarest quality label has
+only two examples, Korean has none, and no class-level claim is licensed for
+it. Finally, each seed jointly changes folds and optimization randomness, so
+those sources of variation cannot be separated.
+\end{sloppypar}
 
 \section{Conclusion}
 
-On this ESG dataset and backbone, field-wise scoring can fail to reflect
-validity-preserving decisions.
+Across the controlled Chinese study and four external corpora, field-wise
+weighted macro-F1 did not consistently reflect the validity and exact-match
+gains observed after hierarchical projection. Evaluations of dependent output
+fields should therefore report both field-wise metrics and a structured
+whole-output measure, while treating validity as a requirement rather than a
+surrogate for downstream accuracy.

@@ -417,23 +417,23 @@ git commit -m "docs(paper): center multilingual hierarchy replication"
 **Files:**
 - Modify: `manuscript/sections/07_discussion.tex`
 
-- [ ] **Step 1: Interpret the repeated pattern, not raw language scores**
+- [x] **Step 1: Interpret the repeated pattern, not raw language scores**
 
 Explain that projection always enforces validity and repeatedly improves exact whole-tuple correctness in the executed external arms, while field-wise weighted macro-F1 has inconsistent direction. State that this supports metric--structure mismatch, not language ranking or universal model superiority.
 
-- [ ] **Step 2: Preserve the decoder caution**
+- [x] **Step 2: Preserve the decoder caution**
 
 Retain the adverse Chinese M4--M1 tuple result and explain that searching all legal states can improve one field while disrupting a previously correct whole tuple. Do not generalize this single confirmatory-dataset result to every decoder.
 
-- [ ] **Step 3: State limitations compactly**
+- [x] **Step 3: State limitations compactly**
 
 Include corpus/backbone confounding, small report-cluster counts, Korean page-level input and zero `Misleading` support, AI CUP weights being unofficial on ML-Promise, descriptive external directions, and exploratory structural/backbone evidence. State that the Korean committed predictions can be rescored from a fresh clone although the local extracted page-text training input is not redistributed.
 
-- [ ] **Step 4: End with the licensed conclusion**
+- [x] **Step 4: End with the licensed conclusion**
 
 Conclude that field-wise weighted macro-F1 did not consistently reflect the validity and exact-match gains observed after hierarchical projection; recommend reporting both field-wise and structured whole-output measures.
 
-- [ ] **Step 5: Run prose and policy checks**
+- [x] **Step 5: Run prose and policy checks**
 
 Run:
 
@@ -445,7 +445,7 @@ git diff --check
 
 Expected: all manuscript tests and draft source checks pass.
 
-- [ ] **Step 6: Commit the calibrated interpretation**
+- [x] **Step 6: Commit the calibrated interpretation**
 
 ```bash
 git add manuscript/sections/07_discussion.tex
