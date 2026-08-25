@@ -18,7 +18,13 @@ from analysis.load import METHODS, predictions_path
 from paper.corpus import arm_dir, splits_dir
 from paper.data import REPO_ROOT, file_sha256
 from paper.data_ml import provenance, release_rows
-from paper.multilingual_config import LAMBDAS, LANGUAGES, MODELS, SEEDS
+from paper.multilingual_config import (
+    LAMBDAS,
+    LANGUAGES,
+    MODELS,
+    SEEDS,
+    expected_bundle_count,
+)
 
 
 REPORT_VERSION = "1.0"
@@ -82,6 +88,40 @@ def _artifact_counts(root: Path) -> dict:
         "prediction_files": len(list(root.glob("*/lambda_*/predictions/*.csv.gz"))),
         "result_files": len(list(root.glob("*/lambda_*/results/*.json"))),
     }
+
+
+def _class_support(root: Path) -> dict:
+    """Gold class counts for the corpus, agreed across every arm.
+
+    A property of the corpus's gold rather than of any one arm: the arms differ
+    in backbone and objective, never in what the test rows are labelled. So it
+    is read from all of them and their agreement is asserted.
+
+    Sampling one instead is what this replaces. ``next(root.glob(...))`` yields
+    the first match in filesystem order, not sorted order -- here it returned
+    ``xlm_roberta_base/lambda_0.3`` while ``sorted()`` starts at
+    ``bert_base_multilingual_cased/lambda_0.0``. The eight arms happen to agree
+    today, so the recorded value was right by luck; had one disagreed, the
+    report would have recorded whichever the operating system handed back, and
+    a different machine could record a different one.
+    """
+    paths = sorted(root.glob("*/lambda_*/results/pdf_group_seed42_M0.json"))
+    if not paths:
+        raise FileNotFoundError(f"{root}: no pdf_group seed-42 M0 result to read")
+    supports = {}
+    for path in paths:
+        with open(path, encoding="utf-8") as f:
+            support = json.load(f)["per_class_support"]
+        supports.setdefault(json.dumps(support, sort_keys=True), []).append(
+            str(path.relative_to(root)))
+    if len(supports) > 1:
+        disagreeing = sorted(names[0] for names in supports.values())
+        raise ValueError(
+            f"{root}: arms disagree on per_class_support, e.g. {disagreeing}. "
+            "The arms share one set of test rows, so this means they were not "
+            "scored against the same gold."
+        )
+    return json.loads(next(iter(supports)))
 
 
 def _input_hashes(root: Path) -> dict:
@@ -161,15 +201,18 @@ def build_report(corpus: str) -> dict:
 
     released = release_rows(language)
     prov = provenance(language)
-    first_result = next(root.glob("*/lambda_*/results/pdf_group_seed42_M0.json"))
-    with open(first_result, encoding="utf-8") as f:
-        class_support = json.load(f)["per_class_support"]
+    class_support = _class_support(root)
 
     counts = _artifact_counts(root)
+    # Derived from the frozen matrix rather than written down beside it: the
+    # two would drift the moment a model or a lambda is added, and the check
+    # would then be asserting a stale shape while looking exactly as strict.
+    per_arm_files = len(SEEDS) * len(METHODS)
+    protocol_runs = sum(len(model["protocols"]) for model in MODELS) * len(LAMBDAS)
     expected = {
-        "probability_bundles": 150,
-        "prediction_files": 210,
-        "result_files": 210,
+        "probability_bundles": expected_bundle_count(corpus),
+        "prediction_files": protocol_runs * per_arm_files,
+        "result_files": protocol_runs * per_arm_files,
     }
     if counts != expected:
         raise ValueError(f"{root}: artifact counts are {counts}, expected {expected}")
