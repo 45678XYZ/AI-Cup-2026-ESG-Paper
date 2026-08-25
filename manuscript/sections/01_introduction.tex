@@ -18,28 +18,22 @@ the value of enforcing the supplied hierarchy.
 
 We study that question as a controlled decision comparison, not as a model or
 competition-performance claim. Seven rules consume identical cross-fitted base
-probabilities and test rows. Independent argmax emits 12.6\% illegal tuples in
-the primary unseen-report evaluation, whereas the structured rules are
-legal by construction. Projection versus independent argmax has no detectable
-difference on the official metric ($p_{\mathrm{Holm}}=1.000$). The post-hoc
-C-wF1 contrast, differing by a single scoring change, is positive after Holm
-correction ($p_{\mathrm{Holm}}=.025$); pre-specified tuple accuracy corroborates
-its direction ($p_{\mathrm{Holm}}=.001$). Post-hoc hF also resolves M1--M0
-($p_{\mathrm{Holm}}=.017$), but changes the aggregation. These results are
-limited to this dataset, backbone, and set of decision rules.
+probabilities and test rows. In Chinese, the confirmatory official-score family
+is null, yet pre-specified exact whole-tuple accuracy improves under projection.
+We then repeat the same within-arm M1--M0 contrast across four ML-Promise
+languages, four backbones per language, and two fixed training objectives.
+Tuple accuracy improves in all 32 external arms, while weighted macro-F1 has a
+mixed sign. This repeated pattern concerns decision contrasts within each
+corpus; raw scores do not isolate language effects.
 
 Our contributions are:
 \begin{enumerate}
-  \item We formulate AI CUP ESG promise verification as a multi-task problem
-  constrained to 17 legal tuples out of 120 possible field combinations and
-  audit the development data, including its severe class and state imbalance.
-  \item We compare seven decision rules in a controlled design that holds the
-  cross-fitted base probabilities and evaluated rows identical.
-  \item We quantify a task--metric mismatch by comparing official weighted
-  macro-F1 with post-hoc C-wF1. Only the scoring of unsupported children
-  changes.
-  \item We report the adverse tuple result for uncalibrated M4 versus M1 and
-  protocol sensitivity. Under same-document evaluation, the headline C-wF1
-  finding does not replicate. Here, $p_{\mathrm{Holm}}=.739$. The
-  0.012--0.015 estimand gaps are not bias estimates.
+  \item We formalize the supplied hierarchy as 17 legal tuples out of 120 and
+  audit 2,000 Chinese paragraphs from 49 companies.
+  \item We compare seven decision rules on shared predictions and report the
+  complete confirmatory official-score family, the pre-specified secondary
+  tuple family, and adverse as well as favorable results.
+  \item We externally replicate the within-arm projection contrast across four
+  languages and 32 backbone-by-loss arms, while keeping post-hoc metrics and
+  structural/backbone screens explicitly exploratory.
 \end{enumerate}

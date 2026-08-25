@@ -365,23 +365,23 @@ git commit -m "docs(paper): add multilingual replication protocol"
 - Modify: `manuscript/sections/01_introduction.tex`
 - Modify: `manuscript/sections/06_results.tex`
 
-- [ ] **Step 1: Add failing focused-content regression tests**
+- [x] **Step 1: Add failing focused-content regression tests**
 
 In `tests/test_manuscript.py`, assert that the real manuscript source states 49 Chinese companies; contains `32/32`, `14/32`, and “AI CUP weights applied to ML-Promise”; includes the pre-specified tuple result in the abstract without headlining `p_Holm=.025`; and contains no raw cross-language winner claim. Run the new tests and confirm they fail for missing focused prose, not for checker infrastructure.
 
-- [ ] **Step 2: Rewrite the title and abstract**
+- [x] **Step 2: Rewrite the title and abstract**
 
 Lead with the mismatch between hierarchical output quality and field-wise scoring. Preserve the Chinese confirmatory null (`M1--M0` official wF1 approximately `-0.001`, `p_Holm=1.000`), report the pre-specified tuple gain (`+0.035`, `p_Holm=.001`), and summarize external repetition (`32/32` tuple-positive versus `14/32` weighted-positive arms). Do not headline post-hoc `p_Holm=.025`.
 
-- [ ] **Step 3: Rewrite the introduction and contributions**
+- [x] **Step 3: Rewrite the introduction and contributions**
 
 Frame three contributions only: controlled Chinese decision comparison, pre-specified whole-tuple evidence, and multilingual within-arm replication. Mention structural/backbone experiments only as robustness checks, not as additional main research questions.
 
-- [ ] **Step 4: Finish the generated multilingual table integration**
+- [x] **Step 4: Finish the generated multilingual table integration**
 
 Review the mechanically inserted `\input{../tables/table6_multilingual.tex}` environment in its final Results context. Remove all remaining “best calibrated projection/best decoder” selection language. Keep one short same-document sensitivity sentence only if it fits the page budget.
 
-- [ ] **Step 5: Order Results by inferential priority**
+- [x] **Step 5: Order Results by inferential priority**
 
 Present:
 
@@ -391,7 +391,7 @@ Present:
 4. all external arms: tuple `32/32`, weighted `14/32` (EN 7/8, FR 5/8, JA 0/8, KO 2/8);
 5. one compact exploratory robustness paragraph: Chinese invalidity `12.55% -> 5.18%`, external structural-loss invalidity reduction `16/16`, mixed downstream effects, and non-conclusive backbone screens.
 
-- [ ] **Step 6: Run focused manuscript tests**
+- [x] **Step 6: Run focused manuscript tests**
 
 Run:
 
@@ -402,7 +402,7 @@ git grep -n -E 'M7|batch decoder' -- manuscript analysis/multilingual_table.py
 
 Expected: claim tests for the abstract, table inclusion, 49 companies, and repeated direction counts pass; the M7 grep has no output.
 
-- [ ] **Step 7: Commit the focused core rewrite**
+- [x] **Step 7: Commit the focused core rewrite**
 
 ```bash
 git add manuscript/main.tex manuscript/sections/01_introduction.tex \

@@ -1,18 +1,46 @@
 \section{Results}
 \label{sec:results}
 
-\paragraph{Controlled decision comparison.}
+\paragraph{Chinese confirmatory family.}
 Table~\ref{tab:main-results} compares decision rules on identical base
 probabilities and Test rows. Independent argmax (M0) produces invalid tuples
-for 12.6\% of document-disjoint predictions; projection and 17-state decoding
+for 12.55\% of document-disjoint predictions; projection and 17-state decoding
 (M1--M6) reduce this rate to zero by construction. The $\pm$ values are sample
 standard deviations across the three seeds. Because each seed determines both
 fold assignment and training randomness, they describe spread over the whole
 split-and-training pipeline, not a confidence interval.
 
-\paragraph{Fixed-arm multilingual comparison.}
-Table~\ref{tab:multilingual} compares projection with independent argmax in
-one fixed document-disjoint, $\lambda=0$ arm per language.
+All five official wF1 contrasts are undetected after Holm correction. For the
+central M1--M0 contrast, $\Delta=-0.001$ with 95\% interval
+$[-0.006,0.003]$ and $p_{\mathrm{Holm}}=1.000$. This is absence of a detected
+difference; it does not establish a zero effect.
+
+\paragraph{Pre-specified tuple family.}
+Exact whole-tuple accuracy tells a different story. M1--M0 is $+0.035$
+$[0.028,0.043]$, $p_{\mathrm{Holm}}=.001$. Conversely, joint legal-state
+decoding is not uniformly better: M4--M1 is $-0.006$
+$[-0.010,-0.002]$, $p_{\mathrm{Holm}}=.028$. Searching every legal state can
+therefore reduce whole-row correctness relative to greedy projection.
+
+\begin{table*}[t]
+  \centering
+  \small
+  \caption{Chinese paired contrasts on four metrics. Official wF1 and tuple
+  accuracy are separate pre-specified Holm families of five. C-wF1 and hF were
+  added post hoc; their displayed adjusted values are exploratory and support
+  no claim. Intervals are uncorrected 95\% report-cluster bootstrap intervals.}
+  \label{tab:contrasts}
+  \input{../tables/table4_contrasts.tex}
+\end{table*}
+
+The post-hoc C-wF1 and hF M1--M0 point estimates are also positive
+($+0.004$ and $+0.003$), but they do not alter the inferential hierarchy. In
+the same-document sensitivity analysis, C-wF1 remains positive at $+0.002$,
+while its interval $[-0.001,0.005]$ crosses zero.
+
+\paragraph{Multilingual replication.}
+Table~\ref{tab:multilingual} fixes one arm per language before inspecting
+scores. Each uses document-disjoint evaluation and $\lambda=0$.
 
 \begin{table*}[t]
   \centering
@@ -26,43 +54,22 @@ one fixed document-disjoint, $\lambda=0$ arm per language.
   \endgroup
 \end{table*}
 
-The C-wF1 result does not replicate under same-document evaluation: M1--M0
-remains positive at $+0.002$ $[-0.001,0.005]$ but does not survive Holm
-correction ($p_{\mathrm{Holm}}=.739$).
+Across all four external corpora and their four backbones at both loss
+settings, M1--M0 tuple accuracy is positive in $32/32$ arms. The weighted
+macro-F1 contrast is positive in only $14/32$: English $7/8$, French $5/8$,
+Japanese $0/8$, and Korean $2/8$. These are within-arm directions, not a raw
+score ranking across languages. For the pre-registered fixed English arm, the
+one-sided report-cluster bootstrap tuple effect is $+0.0725$
+$[0.0452,0.1019]$ ($p=.0002$; nine report clusters). ML-Promise weighted
+scores use AI CUP weights applied to ML-Promise (not official).
 
-\paragraph{Metric--constraint mismatch.}
-Table~\ref{tab:contrasts} reports all 20 paired contrasts. For the
-pre-specified official-metric M1--M0 contrast, $\Delta=-0.001$ and the interval
-is $[-0.006,0.003]$. With
-$p_{\mathrm{Holm}}=1.000$, there is no detectable difference. Post-hoc C-wF1
-changes only whether an ancestor-unsupported child prediction receives credit.
-It gives $+0.004$ $[0.001,0.007]$ and survives correction with
-$p_{\mathrm{Holm}}=.025$. Post-hoc hF gives $\Delta=+0.003$ and corroborates
-the direction with $p_{\mathrm{Holm}}=.017$; its interval is
-$[0.001,0.005]$. However, hF also replaces macro with micro aggregation and
-therefore does not isolate consistency.
-Pre-specified tuple accuracy corroborates the direction with $+0.035$
-$[0.028,0.043]$ and $p_{\mathrm{Holm}}=.001$.
-
-\begin{table*}[t]
-  \centering
-  \small
-  \caption{All pre-specified contrasts across four metric families. The five
-  contrasts are evaluated on the document-disjoint protocol. A paired
-  report-cluster bootstrap uses 10,000
-  resamples of source reports, not paragraphs; each metric is a separate Holm
-  family of five. Bracketed
-  95\% percentile intervals are uncorrected and do not determine significance;
-  bold $p_{\mathrm{Holm}}$ marks survival of the correction. The official
-  metric and tuple accuracy were pre-specified; C-wF1 and hF were adopted post
-  hoc.}
-  \label{tab:contrasts}
-  \input{../tables/table4_contrasts.tex}
-\end{table*}
+\paragraph{Exploratory robustness.}
+On the Chinese anchor, training-time structural loss lowers M0 invalidity from
+12.55\% to 5.18\%, but its pre-registered M1 wF1 effect is only $+0.00250$
+$[-0.00384,0.00860]$ ($p=.427$). Across the 16 external backbone pairs,
+structural loss lowers invalidity in $16/16$, while downstream wF1 and tuple
+effects are mixed. Chinese DeBERTa and ELECTRA screens likewise reduce
+invalidity without a conclusive wF1 gain. Chinese RoBERTa-base emits fewer,
+not more, invalid tuples than the large anchor, falsifying the simple
+smaller-model mechanism. These screens are descriptive and exploratory.
 \FloatBarrier
-
-The complete family also contains adverse evidence. Compared with projection,
-uncalibrated 17-state decoding (M4--M1) lowers tuple accuracy by $-0.006$
-$[-0.010,-0.002]$, $p_{\mathrm{Holm}}=.028$. Thus validity-preserving
-decoding is not uniformly superior. Searching every legal state need not
-improve whole-row correctness.

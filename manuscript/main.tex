@@ -12,32 +12,28 @@
 
 \begin{document}
 
-\title[Field-Wise Metrics and Hierarchical Consistency]{When Field-Wise Metrics Miss\\
-  Hierarchical Consistency: A Controlled\\
-  Study on the AI CUP ESG Promise\\
-  Verification Dataset}
+\title[Field-Wise Metrics and Hierarchical Structure]{When Field-Wise Metrics Miss\\
+  Hierarchical Structure:\\
+  Controlled Evidence Across\\
+  Five Languages}
 
 \input{metadata}
 
 \begin{abstract}
+\emergencystretch=1em
 ESG promise verification jointly predicts promise status, verification
 timeline, evidence status, and evidence quality under hard parent--child
 constraints. We compare seven decision rules on identical cross-fitted base
-probabilities and test rows from the AI CUP VeriPromiseESG development set.
-Independent argmax (M0) emits invalid tuples on 12.6\% of document-disjoint
-predictions, whereas projection and 17-state decoding are legal by
-construction. For projection versus independent argmax (M1--M0), the official
-field-wise weighted macro-F1 shows no detectable difference: effect $-0.001$;
-95\% CI $[-0.006,0.003]$; $p_{\mathrm{Holm}}=1.000$. Post-hoc path-constrained
-weighted macro-F1, changing only credit for children unsupported by predicted
-ancestors, gives effect $+0.004$ and CI $[0.001,0.007]$. Its
-$p_{\mathrm{Holm}}=.025$. Pre-specified tuple accuracy gives effect $+0.035$
-and CI $[0.028,0.043]$; $p_{\mathrm{Holm}}=.001$. Conversely, uncalibrated
-17-state decoding versus uncalibrated projection (M4--M1) gives a tuple
-accuracy effect of $-0.006$ and CI $[-0.010,-0.002]$. Its
-$p_{\mathrm{Holm}}=.028$. All intervals are uncorrected and do not determine
-decisions. On this dataset and Chinese backbone, field-wise scoring can
-understate the utility of validity-preserving decisions.
+probabilities and test rows in Chinese, then replicate projection versus
+independent argmax within English, French, Japanese, and Korean corpora. In the
+only confirmatory family, all five Chinese official weighted macro-F1
+contrasts are undetected; projection versus argmax (M1--M0) is $-0.001$ with
+$p_{\mathrm{Holm}}=1.000$. Pre-specified secondary tuple accuracy instead
+improves by $+0.035$ $[0.028,0.043]$ with
+$p_{\mathrm{Holm}}=.001$. Across 32 external backbone-by-loss arms, this tuple
+contrast is positive in $32/32$, whereas weighted macro-F1 is positive in only
+$14/32$. Thus, in these controlled arms, field-wise scoring does not
+consistently reflect gains in complete hierarchical correctness.
 \end{abstract}
 
 \keywords{ESG, promise verification, hierarchical classification,

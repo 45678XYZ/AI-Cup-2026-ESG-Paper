@@ -213,6 +213,44 @@ def test_source_text_reads_root_sections_and_bib(tmp_path):
     assert source_text(tmp_path) == "root\nbib\nsection"
 
 
+def _real_abstract() -> str:
+    main = (REPO_ROOT / "manuscript" / "main.tex").read_text(encoding="utf-8")
+    match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", main, re.DOTALL)
+    assert match is not None
+    return match.group(1)
+
+
+def test_focused_manuscript_states_the_audit_and_replication_contract():
+    text = source_text(REPO_ROOT / "manuscript")
+    for claim in (
+        "49 companies",
+        "32/32",
+        "14/32",
+        "AI CUP weights applied to ML-Promise (not official)",
+    ):
+        assert claim in text
+
+
+def test_focused_abstract_prioritizes_prespecified_tuple_evidence():
+    abstract = _real_abstract()
+    assert re.search(
+        r"\+0\.035.*?p_\{\\mathrm\{Holm\}\}=\.001", abstract, re.DOTALL
+    )
+    assert r"p_{\mathrm{Holm}}=.025" not in abstract
+
+
+def test_focused_manuscript_does_not_rank_languages_by_raw_score():
+    text = source_text(REPO_ROOT / "manuscript").lower()
+    for prohibited in (
+        "best language",
+        "highest-scoring language",
+        "japanese is harder",
+        "korean is easier",
+        "outperforms the other languages",
+    ):
+        assert prohibited not in text
+
+
 def test_equivalence_language_and_bound_metric_names_require_disclosure(tmp_path):
     write_minimal(tmp_path / "m", "C-wF1 and hF establish equivalence.")
     errors = source_errors(tmp_path / "m")
@@ -421,7 +459,7 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
         "Dataset summary from the frozen study artifact.",
         "Main document-disjoint results from the frozen study artifact.",
         "Fixed document-disjoint, lambda=0",
-        "All pre-specified contrasts across four metric families.",
+        "Chinese paired contrasts on four metrics.",
     ):
         assert caption in document_text
     assert all(page_text), "the compiled manuscript contains a blank page"
@@ -432,16 +470,11 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     assert not sparse_body_pages, (
         f"the compiled manuscript contains near-empty body pages: {sparse_body_pages}"
     )
-    table4_caption = "All pre-specified contrasts across four metric families."
-    adverse_start = "The complete family also contains adverse evidence."
-    adverse_end = "improve whole-row correctness."
+    table4_caption = "Chinese paired contrasts on four metrics."
+    external_start = "Across all four external corpora"
     discussion_heading = "7 DISCUSSION"
-    assert (
-        document_text.index(table4_caption)
-        < document_text.index(adverse_start)
-        < document_text.index(adverse_end)
-        < document_text.index(discussion_heading)
-    ), "Table 4 must precede the uninterrupted adverse-result paragraph and Discussion"
+    assert document_text.index(table4_caption) < document_text.index(discussion_heading)
+    assert document_text.index(external_start) < document_text.index(discussion_heading)
     assert "AI CUP 2026 競賽提交格式說明 Sample Submission Format Guide" in " ".join(
         document_text.split()
     )
