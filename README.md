@@ -67,35 +67,69 @@ paper/          study code: label space, data, training, contract artifacts
   validate.py     inbound conformance checks on received artifacts
   provenance.py   the git stamp every generated artifact carries
   run_manifest.py one index for the whole study, with cross-file verdicts
+  corpus.py       which corpus a run is about, and where its artifacts live
+  labels_en.py    the ML-Promise English vocabulary, mapped onto the frozen space
+  data_en.py      the English release, loaded into the shape the study uses
+  labels_ml.py    the French/Japanese/Korean label mapping, corrections counted
+  data_ml.py      the non-English releases, loaded without modifying their files
+  multilingual_config.py  the frozen corpus/model matrix for the replication
 analysis/       audit, statistics, tables and figure (consumes the contracts)
+  __main__.py     one command that regenerates every number C is responsible for
   audit.py        dataset and split audit; the numbers behind Table 1
   metrics.py      subset-aware weighted macro-F1, pinned to paper/score.py
   load.py         prediction sets aligned onto one canonical row order
   bootstrap.py    paired PDF-cluster bootstrap and Holm correction
   aggregate.py    cross-seed aggregation and the pre-specified contrasts
+  cases.py        why removing every invalid tuple barely moves weighted macro-F1
+  findings.py     what the intervals license D to write, computed not agreed
   tables.py       contract-4 tables, captions and provenance manifest
+  legality_cost.py  what enforcing legality costs, measured in every arm (Table 3)
+  multilingual_mechanism.py  the same mechanism across five corpora (Table 7)
+  structural_arm.py       the structural arm against the frozen lambda=0 arm
+  architecture_screen.py  one exploratory backbone's two lambda arms
+  rbt_base.py             the pre-registered backbone generality check
+  english_replication.py      the pre-registered English replication summary
+  multilingual_replication.py the French/Japanese/Korean replication summaries
   figure1.py      Figure 1's counts, and the latexmk build of its source
-contracts/      interface schemas and example files
-docs/           paper plan and interface contract
+  preview.py      every delivered tabular rendered into one PDF
+scripts/        GPU campaign glue; no paper number depends on these
+  prepare_korean_pages.py  derives the Korean model input, output not committed
+  run_multilingual_experiments.py  one GPU's half of the frozen matrix
+  (two queue/recovery helpers alongside them are machine-specific and kept
+   only as a record of how the campaign was sequenced)
+contracts/      interface schemas and example files (fabricated fixtures)
+docs/           governance/ (plan, contract, inference families), preregistration/,
+                results/ (one record per arm), writing/ (the report for D)
 figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
-splits/         generated split manifests (version controlled)
-splits_{en,fr,ja,ko}/  isolated ML-Promise manifests by language
-probs/          30 probability bundles, one per rotation, from the official fits
-runs/lambda_sweep/  the structural arm's lambda sweep; scored into no table
-runs/structural/probs/  30 selected-lambda probability bundles from the structural arm
-predictions/    42 per-row prediction files (.csv.gz), one per protocol/seed/method
-results/        42 aggregate result manifests, one per predictions file
-runs/structural/ structural predictions/results plus the cross-arm comparison JSON
-tables/         contract-4 deliverables: Table 1-3, their captions, the dataset
-                audit, and the manifest tying each printed number to its inputs
 tests/          pytest suite
-dataset/        AI CUP development and test data
-run_manifest.json  the generated study index, committed at results freeze
+dataset/        AI CUP data, plus the four vendored ML-Promise releases
 ```
 
-The four artifact directories above and `run_manifest.json` hold the official
-run and are deliberately version controlled; `.gitignore` records what each one
-keeps and why.
+### Artifact directories, by corpus
+
+All version controlled; `.gitignore` records what each one keeps and why.
+
+```
+                       splits      probability bundles   predictions + results
+AI CUP Chinese         splits/     probs/            30  predictions/, results/
+  exploratory arms                 runs/*/probs/    135  runs/*/
+ML-Promise English     splits_en/  runs_en/*/probs/ 150  runs_en/*/
+ML-Promise French      splits_fr/  runs_fr/*/probs/ 150  runs_fr/*/
+ML-Promise Japanese    splits_ja/  runs_ja/*/probs/ 150  runs_ja/*/
+ML-Promise Korean      splits_ko/  runs_ko/*/probs/ 150  runs_ko/*/
+```
+
+`runs/` holds the five Chinese exploratory arms — `structural/`, `lambda_sweep/`,
+`deberta_v2_320m/`, `electra_180g_large/`, `rbt_base/`. Each corpus with arms
+nests them as `{corpus}/{backbone}/lambda_{x}/`; the frozen Chinese anchor has
+no arm level and keeps the top-level names contract section 4 fixed.
+
+```
+tables/            the seven delivered tables, their captions, the dataset audit,
+                   the mechanism and legality-cost JSON, and the manifest tying
+                   each printed number to the inputs it came from
+run_manifest.json  the generated study index, committed at results freeze
+```
 
 ## Setup
 
@@ -195,11 +229,14 @@ python -m analysis --predictions-root contracts/examples   # against the synthet
 python -m analysis                                         # against real results/
 ```
 
-It writes `tables/table{1,2,3}*.tex`, their captions, `tables/audit.json`,
+It writes all seven `tables/table*.tex`, their captions, `tables/audit.json`,
 `tables/manifest.json` (recording the sha256 of every input, so any printed
 number traces back to the artifacts behind it) and
-`figures/figure1_hierarchy.pdf`. The 10,000-resample
-paired PDF-cluster bootstrap takes about 90 seconds.
+`figures/figure1_hierarchy.pdf`. Rebuilding is a no-op on a clean tree: every
+`.tex`, every caption, the figure and the preview come out byte-identical, and
+only the `generated_at` and `git_sha` fields of the JSON move. The run takes
+about six minutes, most of it the 10,000-resample paired PDF-cluster bootstrap
+across the seven arms.
 
 Nothing here transcribes a score: `analysis/metrics.py` is a vectorised
 restatement of `paper/score.py`, fast enough for the bootstrap, and
@@ -261,14 +298,29 @@ which claims the Holm-corrected intervals license — the distinction between
 "no detectable difference" and "no difference" is a computed output rather
 than an editorial decision.
 
-Two tables past the three the contract names are written as well.
-`tables/table4_contrasts.tex` puts the five pre-specified contrasts against
-all four Holm families side by side with their corrected p-values; it is where
-the study's statistical result actually lives, and its first block — the
-metric the competition ranks by — carries no bold at all.
-`tables/table5_metrics.tex` scores the seven decision rules under six metric
-columns and is descriptive, so it is the one to drop first against a page
-budget.
+Four tables past the three the contract names are written as well.
+
+`tables/table3_legality_cost.tex` is the paper's central table: two rules that
+both emit only legal tuples, scored under both pre-specified metrics, across
+all seven (backbone, λ) arms. `tables/table4_contrasts.tex` puts the five
+pre-specified contrasts against their Holm families side by side with the
+corrected p-values; it is where the study's statistical result actually lives,
+and its first block — the metric the competition ranks by — carries no bold at
+all. `tables/table5_headroom.tex` decomposes the official score's shortfall by
+field and prices what closing each part is worth; it is descriptive, so it is
+the one to drop first against a page budget. `tables/table6_regimes.tex`
+compares the two evaluation splits.
+
+`tables/table7_multilingual_mechanism.tex` carries the external replication:
+the same projection-versus-argmax contrast measured on all five corpora, with
+the per-class ledger that explains why the official metric moves so little.
+
+The last two are written by their own analysis modules rather than by
+`analysis/tables.py`, because their inputs span arms and corpora rather than
+the cross-seed summaries that file consumes. They are registered in
+`analysis.tables.EXTERNAL_TABLES`, which the rebuild iterates — registering a
+table and rebuilding it are the same act, so a delivered table cannot quietly
+stop being regenerated.
 
 The `.tex` files hold a bare `tabular` and do not compile alone. To see them
 rendered, together with their captions and figure 1:
@@ -357,17 +409,57 @@ lets the results table be read as a factorial rather than as seven systems.
 
 ## Status
 
-Done: frozen label space and 17-state definitions, data layer with checksums,
-split generation for both protocols, the hierarchy-constrained projection, the
-training and decision drivers, artifact validation, and synthetic example
-files for every handoff.
+**All experiments are complete.** Five corpora, 765 probability bundles and
+1,050 per-row prediction files:
 
-Implemented: the calibration-only bias API, the fixed-scale joint 17-state
-decoder, the M0-M6 method table, calibration-partition class biases, and the
-decision driver `paper/run_decisions.py`. Consuming the 30 validated probability
-bundles, it writes the 42 per-row prediction files plus their 42 aggregate
-result manifests. Files under `contracts/examples/` remain fabricated fixtures
-and must never be used as paper results.
+| Corpus | Bundles | What it is |
+|---|---:|---|
+| AI CUP Chinese (frozen anchor) | 30 | the pre-specified study |
+| AI CUP Chinese (exploratory arms) | 135 | structural-λ, DeBERTa, ELECTRA, RoBERTa-base |
+| ML-Promise English | 150 | pre-registered external replication |
+| ML-Promise French | 150 | multilingual replication |
+| ML-Promise Japanese | 150 | multilingual replication |
+| ML-Promise Korean | 150 | multilingual replication |
+
+Every score in the paper is recomputed from those per-row predictions by
+`python -m analysis`; nothing is transcribed. A rebuild on a clean tree
+reproduces every table, caption, figure and the preview byte-for-byte.
+
+`536 passed, 3 skipped` with TeX on `PATH` (the three are the torch-only
+training-path tests). `paper.validate --all` reports clean for `aicup_zh` (72
+artifacts) and for the English, French and Japanese corpora (360 each). Korean
+bundle validation additionally needs the locally reconstructed page text, which
+is deliberately not committed; its summary still reproduces from the committed
+predictions, which is what the paper's numbers come from.
+
+Files under `contracts/examples/` remain fabricated fixtures and must never be
+used as paper results.
+
+### What the study found
+
+The pre-specified question — does enforcing the hierarchy raise the official
+score — is answered **no**: none of the five pre-specified contrasts survives
+Holm correction on the competition metric, and the whole spread across the
+seven decision rules is 0.0082, which is itself the largest single contrast
+(M5 is the highest-scoring rule and M6 the lowest) and still fails correction
+at `p_Holm` = 0.171.
+
+What replaced it is an account of *why*. Projection's only lever on a child
+field is writing `N/A`, so its repairs land on one class and its damage on the
+others, and a macro average over classes cancels them. That account is
+arithmetic rather than linguistic, and `table7` shows it holding in all five
+corpora: `N/A` net positive and substantive net negative five times out of
+five, across an M0 illegal rate spanning 12.55% to 31.25%, while whole-row
+accuracy rises in every corpus and the official metric rises in two and falls
+in three.
+
+One consequence is worth stating separately, because it is a property of the
+metric rather than of any method: macro-F1 averages over the classes *present
+in gold*, so a corpus missing one divides that field's weight by a smaller
+number. Korean has no `Misleading` row, which makes a point of one
+`evidence_quality` class worth 0.1167 there against 0.0875 everywhere else.
+The metric's exchange rate is a property of each corpus, not of the schema —
+which is also why cross-corpus scores are not compared here.
 
 One design point in that code is easy to misread: under conditional
 (hierarchy-constrained) estimation, the three child-field `N/A` biases are

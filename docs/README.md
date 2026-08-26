@@ -26,6 +26,8 @@ Each was committed before its arm executed; the commit timestamp is the evidence
 | `pre_registration_deberta_screen.md` | DeBERTa-v2-320M |
 | `pre_registration_electra_screen.md` | ELECTRA-large |
 | `rbt_base_run.md` | Chinese RoBERTa-base |
+| `pre_registration_english_replication.md` | ML-Promise English, the external replication |
+| `pre_registration_multilingual_replication.md` | ML-Promise French, Japanese and Korean |
 
 ## `results/` — written after the run
 
@@ -37,6 +39,8 @@ One per arm, plus the indexes.
 | `deberta_screen_results.md` | |
 | `electra_screen_results.md` | |
 | `rbt_base_results.md` | |
+| `multilingual_replication_results.md` | The French/Japanese/Korean campaign: what ran, and the per-language numbers |
+| `multilingual_mechanism_results.md` | The frozen study's mechanism re-measured on all five corpora, and the finding that the metric's leverage is per-corpus |
 | `consolidated_runs_index.md` | What the four execution branches produced, and how they were merged |
 | `gpu_training_progress.md` | B's training log |
 
@@ -45,7 +49,7 @@ One per arm, plus the indexes.
 | | |
 |---|---|
 | `study_report.md` | **Start here.** The claim, the evidence chain, how to write each section, the red lines, and the reviewer questions. |
-| `related_work_citations.md` | The path-constrained metric traced to its sources, with BibTeX and verbatim quotes. |
+| `related_work_citations.md` | The path-constrained metric traced to its sources, with BibTeX and verbatim quotes. ⚠️ Covers the metric's lineage only, not the whole Related Work; its section on the tension with Plaud et al. still assumes that metric is a pre-specified family, which it stopped being when the analysis demoted it to exploratory. |
 
 ---
 
