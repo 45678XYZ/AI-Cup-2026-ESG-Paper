@@ -233,8 +233,8 @@ def test_tracked_manuscript_title_is_compact_and_balanced():
 
     page.extract_text(visitor_text=collect_title_lines)
     expected_title = (
-        "When Field-Wise Metrics Miss Hierarchical Structure: "
-        "Controlled Evidence Across Five Languages"
+        "Field-Wise Metrics Can Miss Hierarchical Gains: "
+        "Multilingual Evidence from ESG Promise Verification"
     )
     widths = [width for _, width in title_lines]
 
@@ -275,7 +275,7 @@ def test_focused_manuscript_states_the_audit_and_replication_contract():
         "49 companies",
         "32/32",
         "14/32",
-        "AI CUP weights applied to ML-Promise (not official)",
+        "AI CUP weights applied to ML-Promise",
     ):
         assert claim in text
 

@@ -256,10 +256,9 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             f"{absent['n_rotations']} rotations. The four fields admit 120 "
             "combinations, of which the hierarchy leaves 17 legal, and no "
             f"development row violates it. All {audit['pdf_overlap']['n_shared']} "
-            "development reports also appear in the test split, and "
-            f"{_word(len(audit['duplicates']['dev_test']))} paragraph text is "
-            "duplicated across the two. No company contributes more than one "
-            "report, so a document-disjoint split is also company-disjoint. The "
+            "development reports also appear in the test split. No company "
+            "contributes more than one report, so a document-disjoint split "
+            "is also company-disjoint. The "
             "competition test split ships no labels, so its label-derived cells "
             "are marked n/a."
         ),
@@ -432,13 +431,13 @@ def render_table1(audit) -> str:
     # seen-report generalisation. Printing it as a row rather than leaving it
     # to prose is what C's remit asks for.
     shared = audit["pdf_overlap"]["n_shared"]
-    duplicated = len(audit["duplicates"]["dev_test"])
     spanning = audit["company_structure"]["companies_in_multiple_reports"]
-    # Three rows moved to the caption: the duplicate paragraph, the companies
-    # spanning more than one report, and the gold's zero hierarchy violations.
+    # Two rows moved to the caption: the companies spanning more than one report
+    # and the gold's zero hierarchy violations. The duplicate paragraph remains
+    # in the audit trail but is intentionally not a paper statistic.
     # Each is a single fact rather than a development-versus-test statistic --
     # two had one column marked n/a and the third repeated a number the caption
-    # already gave -- and the caption stated all three in prose already, so the
+    # already gave -- and the caption stated both in prose already, so the
     # tabular was restating them in a form that reads worse. The overlap row
     # below is different: plan section 7 requires it to be prominent.
     body = [

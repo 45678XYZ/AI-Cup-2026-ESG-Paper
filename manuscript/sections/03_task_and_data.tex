@@ -1,10 +1,10 @@
 \section{Task and Data}
 
 \paragraph{Outputs and legal states.}
-The task predicts four fields for each paragraph. We study the AI CUP
-VeriPromise\hspace{0pt}ESG development release, which uses the PromiseEval
-label inventory and parent--child logic
-\cite{chen2025promiseeval}.
+The task predicts four fields for each paragraph. We study the AI CUP 2026
+VeriPromise\hspace{0pt}ESG development release
+\cite{aicup2026guidelines}. Its label inventory and parent--child logic follow
+PromiseEval \cite{chen2025promiseeval}.
 Promise status (PS) is \emph{Yes} or \emph{No}. Verification timeline (VT) is
 \emph{already}, \emph{within two years}, \emph{between two and five years},
 \emph{more than five years}, or \emph{N/A}. Evidence status (ES) is
@@ -45,10 +45,9 @@ or significance claim for that class.
   \input{../tables/table1_dataset.tex}
 \end{table}
 
-All 49 development reports also occur in the unlabeled competition test data,
-and one paragraph text occurs in both splits. This overlap describes sources
-and text only: because competition test labels are unavailable, we infer no
-label-derived test statistic. Each company contributes one report.
+All 49 development reports also occur in the unlabeled competition test data.
+Because competition test labels are unavailable, we infer no label-derived
+test statistic. Each company contributes one report.
 Consequently, in this corpus a document-disjoint split is also
 company-disjoint, rather than a separate company-level experiment.
 

@@ -363,20 +363,16 @@ def test_table1_flags_that_every_report_is_shared_with_the_test_split():
     assert "n/a" not in shared[0]             # this one IS known for test
 
 
-def test_the_caption_discloses_the_known_cross_split_duplicate():
-    """Plan section 4.1 requires the duplicate to be disclosed, not made
-    prominent -- unlike the report overlap, which section 7 does require in the
-    tabular. One duplicated paragraph out of 2,000 is a disclosure, so it reads
-    better as a clause than as a row whose two columns both say 1."""
-    cap = build_captions(AUDIT)["table1_dataset"]
-    assert "duplicat" in cap.lower()
-    assert _word(len(AUDIT["duplicates"]["dev_test"])) in cap
+def test_table1_keeps_the_cross_split_duplicate_out_of_the_paper():
+    """The duplicate remains in the audit trail but is not a paper statistic."""
+    tex = render_table1(AUDIT)
+    assert "duplicat" not in tex.lower()
 
 
-def test_table1_caption_states_the_overlap_and_the_duplicate():
+def test_table1_caption_states_the_report_overlap_without_the_duplicate():
     cap = build_captions(AUDIT)["table1_dataset"]
     assert str(AUDIT["pdf_overlap"]["n_shared"]) in cap
-    assert "duplicate" in cap.lower()
+    assert "duplicate" not in cap.lower()
 
 
 # --- table 4: the contrast families ----------------------------------------
