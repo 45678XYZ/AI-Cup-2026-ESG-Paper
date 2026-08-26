@@ -524,9 +524,14 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     discussion_heading = "7 DISCUSSION"
     assert document_text.index(table4_caption) < document_text.index(discussion_heading)
     assert document_text.index(external_start) < document_text.index(discussion_heading)
-    assert "AI CUP 2026 競賽提交格式說明 Sample Submission Format Guide" in " ".join(
-        document_text.split()
+    normalized_document_text = " ".join(document_text.split())
+    assert "AI CUP 2026 競賽提交格式說明 Sample Submission Format Guide" not in (
+        normalized_document_text
     )
+    assert (
+        "SemEval-2025 Task 6: Multinational, Multilingual, Multi-Industry "
+        "Promise Verification"
+    ) in normalized_document_text
     metadata = (manuscript / "metadata.tex").read_text(encoding="utf-8")
     authors = re.findall(r"\\author\{([^}]+)\}", metadata)
     emails = re.findall(r"\\email\{([^}]+)\}", metadata)
