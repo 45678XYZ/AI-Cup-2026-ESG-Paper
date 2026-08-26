@@ -549,6 +549,27 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     assert "could not represent character" not in log
 
 
+def test_two_manuscript_builds_are_byte_identical():
+    """A tracked main.pdf must not churn after an unchanged-source rebuild."""
+    manuscript = REPO_ROOT / "manuscript"
+
+    subprocess.run(
+        ["make", "build"], cwd=manuscript, check=True,
+        capture_output=True, text=True,
+    )
+    first = (manuscript / "build" / "main.pdf").read_bytes()
+    subprocess.run(
+        ["make", "build"], cwd=manuscript, check=True,
+        capture_output=True, text=True,
+    )
+    second = (manuscript / "build" / "main.pdf").read_bytes()
+
+    assert first == second, (
+        "two unchanged manuscript builds differ; the tracked main.pdf would "
+        "make every verification run dirty"
+    )
+
+
 def test_cli_returns_nonzero_for_policy_error(tmp_path, monkeypatch, capsys):
     write_minimal(tmp_path / "m", "no difference")
     monkeypatch.setattr("sys.argv", ["check", "--root", str(tmp_path / "m"), "--repo-root", str(tmp_path)])
