@@ -13,9 +13,6 @@ one per field. The encoder is shared, but neither it nor the heads condition on
 predicted ancestors. The input is paragraph text only; report URL, company,
 ticker, and page metadata are excluded.
 
-The encoder and matching tokenizer are loaded from the pinned snapshot revision
-{\footnotesize\texttt{a25cc9e05974bd9687e528edd516f2cfdb3f5db9}}.
-
 All fits use the same frozen fine-tuning recipe: maximum length 384, 12 epochs,
 minibatches of 8 with two-step gradient accumulation (effective size 16), and
 AdamW with backbone and head learning rates $2\times10^{-5}$ and $10^{-4}$.

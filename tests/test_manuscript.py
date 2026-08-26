@@ -195,6 +195,14 @@ def test_pdf_page_limit(tmp_path):
     assert any("9 pages" in error for error in pdf_errors(path, max_pages=8))
 
 
+def test_tracked_manuscript_omits_snapshot_revision():
+    reader = PdfReader(str(REPO_ROOT / "manuscript" / "build" / "main.pdf"))
+    document_text = "\n".join(page.extract_text() for page in reader.pages)
+
+    assert "snapshot revision" not in document_text
+    assert "a25cc9e05974bd9687e528edd516f2cfdb3f5db9" not in document_text
+
+
 def test_tracked_manuscript_has_no_empty_body_column():
     """A text-heavy body page must not abandon either ACM column."""
     reader = PdfReader(str(REPO_ROOT / "manuscript" / "build" / "main.pdf"))
