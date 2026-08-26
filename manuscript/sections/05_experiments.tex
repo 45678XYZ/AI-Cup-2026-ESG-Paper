@@ -7,7 +7,7 @@ Section~\ref{sec:results}.
 \begin{table*}[t]
   \centering
   \small
-  \caption{Main document-disjoint results from the frozen study artifact.}
+  \caption{Document-disjoint cross-fitted results on the Chinese development set.}
   \label{tab:main-results}
   \input{../tables/table2_main.tex}
 \end{table*}
@@ -56,8 +56,11 @@ For Chinese, the primary metric is the official weighted macro-F1,
   \label{eq:official-metric}
 \end{equation}
 where each $F_t$ is field-level macro-F1 over classes present in the gold
-labels being scored. Whole-tuple accuracy, which requires all four fields to
-match, was pre-specified. Path-constrained weighted macro-F1 (C-wF1) and
+labels being scored. Because this denominator depends on gold support,
+per-class leverage differs by corpus: a unit gain on one EQ class contributes
+$0.35/3=0.1167$ to the Korean weighted total but $0.35/4=0.0875$ elsewhere.
+Pre-specified whole-tuple accuracy requires all four fields to match.
+Path-constrained weighted macro-F1 (C-wF1) and
 hierarchical F1 (hF) were adopted post hoc. C-wF1 retains the official field
 weights but counts a substantive child prediction as wrong when its predicted
 ancestors do not support it. Following the hierarchical precision/recall/F1

@@ -9,13 +9,15 @@ gain, this supports a metric--structure mismatch in these controlled arms: a
 field-weighted score need not reward a decision rule for making the combined
 output more coherent and more often exactly correct.
 
-The mechanism is a trade-off. If an independently predicted parent is wrong,
-projection may replace a correct substantive child with the structurally
-required \emph{N/A}; when the parent is correct, the same operation can repair
-an unsupported child. Field-wise macro-F1 values these changes class by class,
-whereas tuple accuracy credits only four-field agreement. Post-hoc C-wF1 and
-hF point in the tuple direction, but were chosen after the primary analysis
-and are not needed to establish the pre-specified secondary result.
+The measured ledger makes the trade-off explicit: the $N\!/\!A$ net is
+positive and the substantive-class net negative in all five fixed arms. If an
+independently predicted parent is wrong, projection may replace a correct
+substantive child with the structurally required \emph{N/A}; when the parent is
+correct, the same operation can repair an unsupported child. Field-wise
+macro-F1 values these changes class by class, whereas tuple accuracy credits
+only four-field agreement. Post-hoc C-wF1 and hF point in the tuple direction,
+but were chosen after the primary analysis and are not needed to establish the
+pre-specified secondary result.
 
 Validity alone also does not identify the better structured rule. In Chinese,
 M4 scores all 17 legal states jointly yet loses tuple accuracy to greedy M1.
@@ -35,11 +37,9 @@ ML-Promise metric.
 
 Korean has a further input mismatch: its 500 examples are first-384-token PDF
 pages rather than released paragraphs, and it has no gold \emph{Misleading}
-example. The extracted local page text and source PDFs are intentionally not
-redistributed. Nevertheless, the committed split manifests and row-level
-predictions are sufficient to rescore the reported Korean decision results
-from a fresh clone. They are not sufficient to retrain the models without
-reconstructing the local page inputs.
+example. We do not redistribute the extracted Korean text or source PDFs.
+The reported Korean predictions can be rescored, but retraining requires
+reconstructing the page inputs from their source documents.
 
 \begin{sloppypar}
 Results for structural loss and other backbones remain exploratory. They show

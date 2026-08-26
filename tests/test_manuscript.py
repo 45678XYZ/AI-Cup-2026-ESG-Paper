@@ -514,9 +514,9 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     page_text = [page.extract_text().strip() for page in reader.pages]
     document_text = "\n".join(page_text)
     for caption in (
-        "Dataset summary from the frozen study artifact.",
-        "Main document-disjoint results from the frozen study artifact.",
-        "Fixed document-disjoint, lambda=0",
+        "AI CUP 2026 dataset summary.",
+        "Document-disjoint cross-fitted results on the Chinese development set.",
+        "Projection (M1) against independent argmax (M0) on five corpora",
         "Chinese paired contrasts on four metrics.",
     ):
         assert caption in document_text
