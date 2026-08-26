@@ -3,7 +3,7 @@
 執行日期：2026-08-25（Asia/Taipei）
 
 本文件是
-[`pre_registration_multilingual_replication.md`](preregistration/pre_registration_multilingual_replication.md)
+[`pre_registration_multilingual_replication.md`](../preregistration/pre_registration_multilingual_replication.md)
 的執行後紀錄。法文、日文、韓文的數字由提交的逐列 prediction 檔重建；完整
 machine-readable 報告分別位於 `runs_fr/summary.json`、`runs_ja/summary.json`、
 `runs_ko/summary.json`。ML-Promise 沒有官方指標，表中的 weighted macro-F1 是

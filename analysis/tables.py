@@ -45,7 +45,31 @@ TABLE_FILES = ("table1_dataset.tex", "table2_main.tex",
 # sha256 per prediction file per arm, which is finer than the manifest's
 # per-table list. Listed here so anything that enumerates delivered tables --
 # the preview, and D counting floats -- sees all of them from one place.
-EXTERNAL_TABLE_FILES = ("table3_legality_cost.tex",)
+#
+# Keyed by the file each writer produces, and ``EXTERNAL_TABLE_FILES`` is
+# derived from it, so a table cannot be listed as delivered without naming
+# something that rebuilds it. That gap is not hypothetical: table 7 was
+# registered in the list alone and ``python -m analysis`` did not regenerate
+# it, while ``analysis/preview.py`` skips a tabular that is missing from disk
+# instead of failing -- so the next full rebuild would have dropped a paper
+# float with every command still reporting success.
+#
+# ``kwargs`` names the entry point's arguments each writer wants; both take
+# ``out_dir`` positionally.
+EXTERNAL_TABLES = {
+    "table3_legality_cost.tex": {
+        "writer": "analysis.legality_cost:write_legality_cost",
+        "kwargs": ("root", "n_boot"),
+        "skip_if_absent": True,
+    },
+    "table7_multilingual_mechanism.tex": {
+        "writer": "analysis.multilingual_mechanism:write_report",
+        "kwargs": (),
+        "skip_if_absent": True,
+    },
+}
+
+EXTERNAL_TABLE_FILES = tuple(EXTERNAL_TABLES)
 
 # Sorted by number so anything that enumerates the deliverables -- the
 # preview, and D reading the directory -- sees them in the order the paper
