@@ -20,6 +20,7 @@ from analysis.figure1 import (
     SOURCE,
     build,
     state_counts,
+    tex_available,
     write_defs,
 )
 from paper.labels import EVAL_FIELDS, NUM_LABELS, STATES
@@ -91,7 +92,17 @@ def test_tex_available_reports_whether_the_figure_can_be_rebuilt(monkeypatch):
 
     monkeypatch.setattr(figure1.shutil, "which", lambda name: None)
     assert figure1.tex_available() is False
-    monkeypatch.setattr(figure1.shutil, "which", lambda name: "/usr/bin/" + name)
+    monkeypatch.setattr(
+        figure1.shutil,
+        "which",
+        lambda name: "/usr/bin/tectonic" if name == "tectonic" else None,
+    )
+    assert figure1.tex_available() is True
+    monkeypatch.setattr(
+        figure1.shutil,
+        "which",
+        lambda name: "/usr/bin/latexmk" if name == "latexmk" else None,
+    )
     assert figure1.tex_available() is True
 
 
@@ -100,8 +111,31 @@ def test_build_names_the_missing_tool(monkeypatch, tmp_path):
     import analysis.figure1 as figure1
 
     monkeypatch.setattr(figure1.shutil, "which", lambda name: None)
-    with pytest.raises(RuntimeError, match="latexmk"):
+    with pytest.raises(RuntimeError, match="latexmk.*tectonic|tectonic.*latexmk"):
         figure1.build(tmp_path / "figure1_hierarchy.pdf")
+
+
+def test_build_uses_tectonic_when_latexmk_is_missing(monkeypatch, tmp_path):
+    """The repository's manuscript compiler is a valid figure compiler too."""
+    import analysis.figure1 as figure1
+
+    out = tmp_path / "figure1_hierarchy.pdf"
+    commands = []
+
+    def fake_run(cmd, **kwargs):
+        commands.append(cmd)
+        out.write_bytes(b"%PDF-1.5\nnot empty")
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr(
+        figure1.shutil,
+        "which",
+        lambda name: "/usr/bin/tectonic" if name == "tectonic" else None,
+    )
+    monkeypatch.setattr(figure1.subprocess, "run", fake_run)
+
+    assert figure1.build(out) == out
+    assert commands and commands[0][0] == "tectonic"
 
 
 def test_build_rejects_an_empty_pdf(monkeypatch, tmp_path):
@@ -124,7 +158,7 @@ def test_build_rejects_an_empty_pdf(monkeypatch, tmp_path):
         figure1.build(out)
 
 
-@pytest.mark.skipif(shutil.which("latexmk") is None, reason="no TeX installation")
+@pytest.mark.skipif(not tex_available(), reason="no TeX installation")
 def test_build_emits_a_vector_pdf_with_every_font_embedded(tmp_path):
     """Contract §5: vector PDF, fonts embedded, no raster fallback."""
     pypdf = pytest.importorskip("pypdf")
@@ -153,7 +187,38 @@ def test_build_emits_a_vector_pdf_with_every_font_embedded(tmp_path):
         assert embedded, f"{desc.get('/FontName')} is referenced but not embedded"
 
 
-@pytest.mark.skipif(shutil.which("latexmk") is None, reason="no TeX installation")
+@pytest.mark.skipif(not tex_available(), reason="no TeX installation")
+def test_render_uses_multiple_non_grey_fill_colours(tmp_path):
+    """The architecture should retain its visual grouping when rendered.
+
+    This inspects the PDF drawing operators rather than grepping the TikZ
+    source. Removing the filled task, route, or outcome groups is the break it
+    catches; coloured strokes alone do not satisfy the contract.
+    """
+    pypdf = pytest.importorskip("pypdf")
+
+    out = build(tmp_path / "figure1_hierarchy.pdf")
+    content = pypdf.PdfReader(str(out)).pages[0].get_contents().get_data()
+    fills = {
+        tuple(float(component) for component in match.groups())
+        for match in re.finditer(
+            rb"(?<![\d.])(\d*\.\d+|\d+) (\d*\.\d+|\d+) "
+            rb"(\d*\.\d+|\d+) rg\b",
+            content,
+        )
+    }
+    non_grey = {
+        colour for colour in fills
+        if max(colour) - min(colour) > 0.05 and max(colour) < 0.99
+    }
+
+    assert len(non_grey) >= 3, (
+        "Figure 1 needs at least three non-grey vector fills to distinguish "
+        "task constraints, an invalid route, and validity-preserving routes"
+    )
+
+
+@pytest.mark.skipif(not tex_available(), reason="no TeX installation")
 def test_build_is_reproducible_from_a_clean_directory(tmp_path):
     """__main__ passes an arbitrary --figures-dir; build must not need repo state."""
     out = build(tmp_path / "nested" / "figure1_hierarchy.pdf")
@@ -161,7 +226,7 @@ def test_build_is_reproducible_from_a_clean_directory(tmp_path):
     assert (out.parent / DEFS_NAME).exists()
 
 
-@pytest.mark.skipif(shutil.which("latexmk") is None, reason="no TeX installation")
+@pytest.mark.skipif(not tex_available(), reason="no TeX installation")
 def test_two_builds_in_different_directories_are_byte_identical(tmp_path):
     """Figure 1 is committed, so rebuilding it must be a no-op.
 
@@ -181,7 +246,7 @@ def test_two_builds_in_different_directories_are_byte_identical(tmp_path):
         "churning the working tree on every regeneration")
 
 
-@pytest.mark.skipif(shutil.which("latexmk") is None, reason="no TeX installation")
+@pytest.mark.skipif(not tex_available(), reason="no TeX installation")
 def test_a_leftover_build_cache_does_not_change_the_output(tmp_path):
     """Building twice into the *same* directory must give the same bytes.
 
