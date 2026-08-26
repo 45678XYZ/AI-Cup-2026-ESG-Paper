@@ -20,6 +20,7 @@ from analysis.cases import write_case_analysis
 from analysis.findings import write_findings
 from analysis.bootstrap import BOOTSTRAP_SEED, N_BOOT
 from analysis.figure1 import build as build_figure1, tex_available
+from analysis.figure2 import build as build_figure2
 from analysis.load import EXAMPLES_ROOT, REAL_ROOT, pdf_clusters
 from analysis.tables import EXTERNAL_TABLES, table_inputs, write_tables
 from paper.data import REPO_ROOT, canonical_row_order, load_dev
@@ -115,15 +116,25 @@ def main() -> None:
             print(f"{name:34}-> skipped, an input is absent from this "
                   f"checkout: {missing}")
 
-    # The figure is TikZ, so rebuilding it needs TeX. Its counts come from
-    # paper.labels rather than from this run, so skipping it cannot put the
-    # committed PDF out of step with the tables printed above.
+    # Both figures are TikZ, so rebuilding them needs TeX. Figure 1's counts
+    # come from paper.labels; Figure 2 consumes the external multilingual table
+    # written by the registry above.
     if tex_available():
-        figure = build_figure1(args.figures_dir / "figure1_hierarchy.pdf")
-        print(f"figure  -> {figure}")
+        figure1 = build_figure1(args.figures_dir / "figure1_hierarchy.pdf")
+        print(f"figure  -> {figure1}")
+        multilingual_table = args.out_dir / "table7_multilingual_mechanism.tex"
+        if multilingual_table.is_file():
+            figure2 = build_figure2(
+                multilingual_table,
+                args.figures_dir / "figure2_multilingual.pdf",
+            )
+            print(f"figure  -> {figure2}")
+        else:
+            print("figure2 -> skipped, table7_multilingual_mechanism.tex "
+                  "was not generated")
     else:
-        print("figure  -> skipped, no latexmk on PATH; the committed "
-              "figures/figure1_hierarchy.pdf is unchanged and still current")
+        print("figure  -> skipped, no TeX compiler on PATH; the committed "
+              "figure PDFs are unchanged and still current")
 
     if Path(args.predictions_root).resolve() == EXAMPLES_ROOT.resolve():
         print("\nINPUTS WERE SYNTHETIC. Every score above is fabricated and "

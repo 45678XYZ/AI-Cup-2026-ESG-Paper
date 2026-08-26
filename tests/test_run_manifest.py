@@ -57,6 +57,7 @@ def test_it_indexes_the_contract_4_deliverables(manifest):
     assert "manifest.json" in manifest["outputs"]["tables"]
     assert "table2_main.tex" in manifest["outputs"]["tables"]
     assert "figure1_hierarchy.pdf" in manifest["outputs"]["figures"]
+    assert "figure2_multilingual.pdf" in manifest["outputs"]["figures"]
 
 
 def test_it_is_json_serialisable(manifest):

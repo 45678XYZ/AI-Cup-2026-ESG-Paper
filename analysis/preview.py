@@ -19,7 +19,13 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from analysis.figure1 import LATEX_ENV, tex_available
+from analysis.figure1 import (
+    LATEXMK,
+    LATEX_ENV,
+    TECTONIC,
+    tex_available,
+    tex_engine,
+)
 from analysis.tables import ALL_TABLE_FILES
 from paper.data import REPO_ROOT
 
@@ -110,25 +116,34 @@ def build(tables_dir=None, out_path=None) -> Path:
     out_path = Path(out_path or tables_dir / "preview.pdf")
     if not tex_available():
         raise RuntimeError(
-            "no latexmk on PATH. The preview needs TeX; the tables themselves "
+            "no TeX compiler on PATH. The preview needs TeX; the tables themselves "
             "do not -- `python -m analysis` still regenerates them."
         )
 
     body = _body(tables_dir)
 
-    figure = REPO_ROOT / "figures" / "figure1_hierarchy.pdf"
-    if figure.exists():
-        body += [r"\section*{figure1\_hierarchy}",
-                 rf"\begin{{center}}\includegraphics[width=0.95\textwidth]{{{figure}}}\end{{center}}"]
+    for name in ("figure1_hierarchy", "figure2_multilingual"):
+        figure = REPO_ROOT / "figures" / f"{name}.pdf"
+        if figure.exists():
+            body += [rf"\section*{{{_escape(name)}}}",
+                     rf"\begin{{center}}\includegraphics[width=0.95\textwidth]{{{figure}}}\end{{center}}",
+                     r"\newpage"]
     body.append(r"\end{document}")
 
     with tempfile.TemporaryDirectory() as tmp:
         source = Path(tmp) / "preview.tex"
         source.write_text("\n".join(body), encoding="utf-8")
+        engine = tex_engine()
+        assert engine is not None
+        command = (
+            [LATEXMK, "-pdf", "-interaction=nonstopmode", "-halt-on-error",
+             f"-outdir={tmp}", source.name]
+            if engine == LATEXMK else
+            [TECTONIC, source.name, "--outdir", ".", "--keep-logs", "--reruns", "1"]
+        )
         subprocess.run(
-            ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error",
-             f"-outdir={tmp}", str(source)],
-            check=True, capture_output=True, text=True,
+            command,
+            cwd=tmp, check=True, capture_output=True, text=True,
             env={**os.environ, **LATEX_ENV})
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_bytes((Path(tmp) / "preview.pdf").read_bytes())
