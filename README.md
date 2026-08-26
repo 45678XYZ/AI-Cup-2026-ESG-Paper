@@ -67,35 +67,69 @@ paper/          study code: label space, data, training, contract artifacts
   validate.py     inbound conformance checks on received artifacts
   provenance.py   the git stamp every generated artifact carries
   run_manifest.py one index for the whole study, with cross-file verdicts
+  corpus.py       which corpus a run is about, and where its artifacts live
+  labels_en.py    the ML-Promise English vocabulary, mapped onto the frozen space
+  data_en.py      the English release, loaded into the shape the study uses
+  labels_ml.py    the French/Japanese/Korean label mapping, corrections counted
+  data_ml.py      the non-English releases, loaded without modifying their files
+  multilingual_config.py  the frozen corpus/model matrix for the replication
 analysis/       audit, statistics, tables and figure (consumes the contracts)
+  __main__.py     one command that regenerates every number C is responsible for
   audit.py        dataset and split audit; the numbers behind Table 1
   metrics.py      subset-aware weighted macro-F1, pinned to paper/score.py
   load.py         prediction sets aligned onto one canonical row order
   bootstrap.py    paired PDF-cluster bootstrap and Holm correction
   aggregate.py    cross-seed aggregation and the pre-specified contrasts
+  cases.py        why removing every invalid tuple barely moves weighted macro-F1
+  findings.py     what the intervals license D to write, computed not agreed
   tables.py       contract-4 tables, captions and provenance manifest
+  legality_cost.py  what enforcing legality costs, measured in every arm (Table 3)
+  multilingual_mechanism.py  the same mechanism across five corpora (Table 7)
+  structural_arm.py       the structural arm against the frozen lambda=0 arm
+  architecture_screen.py  one exploratory backbone's two lambda arms
+  rbt_base.py             the pre-registered backbone generality check
+  english_replication.py      the pre-registered English replication summary
+  multilingual_replication.py the French/Japanese/Korean replication summaries
   figure1.py      Figure 1's counts, and the latexmk build of its source
-contracts/      interface schemas and example files
-docs/           paper plan and interface contract
+  preview.py      every delivered tabular rendered into one PDF
+scripts/        GPU campaign glue; no paper number depends on these
+  prepare_korean_pages.py  derives the Korean model input, output not committed
+  run_multilingual_experiments.py  one GPU's half of the frozen matrix
+  (two queue/recovery helpers alongside them are machine-specific and kept
+   only as a record of how the campaign was sequenced)
+contracts/      interface schemas and example files (fabricated fixtures)
+docs/           governance/ (plan, contract, inference families), preregistration/,
+                results/ (one record per arm), writing/ (the report for D)
 figures/        Figure 1 as standalone TikZ, its generated defs, and the PDF
-splits/         generated split manifests (version controlled)
-splits_{en,fr,ja,ko}/  isolated ML-Promise manifests by language
-probs/          30 probability bundles, one per rotation, from the official fits
-runs/lambda_sweep/  the structural arm's lambda sweep; scored into no table
-runs/structural/probs/  30 selected-lambda probability bundles from the structural arm
-predictions/    42 per-row prediction files (.csv.gz), one per protocol/seed/method
-results/        42 aggregate result manifests, one per predictions file
-runs/structural/ structural predictions/results plus the cross-arm comparison JSON
-tables/         contract-4 deliverables: Table 1-3, their captions, the dataset
-                audit, and the manifest tying each printed number to its inputs
 tests/          pytest suite
-dataset/        AI CUP development and test data
-run_manifest.json  the generated study index, committed at results freeze
+dataset/        AI CUP data, plus the four vendored ML-Promise releases
 ```
 
-The four artifact directories above and `run_manifest.json` hold the official
-run and are deliberately version controlled; `.gitignore` records what each one
-keeps and why.
+### Artifact directories, by corpus
+
+All version controlled; `.gitignore` records what each one keeps and why.
+
+```
+                       splits      probability bundles   predictions + results
+AI CUP Chinese         splits/     probs/            30  predictions/, results/
+  exploratory arms                 runs/*/probs/    135  runs/*/
+ML-Promise English     splits_en/  runs_en/*/probs/ 150  runs_en/*/
+ML-Promise French      splits_fr/  runs_fr/*/probs/ 150  runs_fr/*/
+ML-Promise Japanese    splits_ja/  runs_ja/*/probs/ 150  runs_ja/*/
+ML-Promise Korean      splits_ko/  runs_ko/*/probs/ 150  runs_ko/*/
+```
+
+`runs/` holds the five Chinese exploratory arms — `structural/`, `lambda_sweep/`,
+`deberta_v2_320m/`, `electra_180g_large/`, `rbt_base/`. Each corpus with arms
+nests them as `{corpus}/{backbone}/lambda_{x}/`; the frozen Chinese anchor has
+no arm level and keeps the top-level names contract section 4 fixed.
+
+```
+tables/            the seven delivered tables, their captions, the dataset audit,
+                   the mechanism and legality-cost JSON, and the manifest tying
+                   each printed number to the inputs it came from
+run_manifest.json  the generated study index, committed at results freeze
+```
 
 ## Setup
 
