@@ -19,7 +19,7 @@
 - Do not add, restore, describe, or cite M7. Active manuscript source and repository changes for this revision must contain no M7 design.
 - Chinese official weighted macro-F1 is the only confirmatory family. Chinese tuple exact-match is a separate pre-specified secondary family. C-wF1 and hF remain post-hoc descriptive checks.
 - External comparisons are within-language M1--M0 contrasts. Do not rank raw scores across languages or claim a pure language effect.
-- On ML-Promise, call the weighted score “AI CUP weights applied to ML-Promise (not official).”
+- On ML-Promise, call the weighted score “AI CUP weights applied to ML-Promise.”
 - Use fixed `pdf_group`, `lambda=0` arms in the five-language table: Chinese frozen large backbone, English RoBERTa-large, and French/Japanese/Korean XLM-R-large.
 - Report the external direction pattern as tuple positive in `32/32` arms and weighted macro-F1 positive in `14/32`, with the per-language counts available in prose.
 - Correct the Chinese audit to 49 companies and remove the false claim that one report contains two companies.

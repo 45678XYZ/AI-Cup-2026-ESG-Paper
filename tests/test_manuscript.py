@@ -278,6 +278,7 @@ def test_focused_manuscript_states_the_audit_and_replication_contract():
         "AI CUP weights applied to ML-Promise",
     ):
         assert claim in text
+    assert "(not official)" not in text
 
 
 def test_focused_abstract_prioritizes_prespecified_tuple_evidence():
