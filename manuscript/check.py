@@ -22,7 +22,6 @@ REQUIRED_ASSETS = (
     "tables/table6_regimes.tex",
     "tables/table7_multilingual_mechanism.tex",
     "figures/figure1_hierarchy.pdf",
-    "figures/figure2_multilingual.pdf",
 )
 MANIFEST_REQUIRED_TABLES = (
     "table1_dataset.tex",
@@ -32,9 +31,9 @@ MANIFEST_REQUIRED_TABLES = (
     "table6_regimes.tex",
 )
 CANONICAL_FROZEN_ASSETS = REQUIRED_ASSETS + ("tables/manifest.json",)
-REQUIRED_INCLUSIONS = (
-    ("Table 4", "table4_contrasts.tex", "tables"),
-    ("Figure 2", "figure2_multilingual.pdf", "figures"),
+REQUIRED_TABLE_INCLUSIONS = (
+    ("Table 4", "table4_contrasts.tex"),
+    ("Table 7", "table7_multilingual_mechanism.tex"),
 )
 LAYOUT_PLACEHOLDER_AUTHORS = frozenset(
     f"Student Author {number}" for number in range(1, 5)
@@ -87,20 +86,18 @@ def source_errors(root: Path, final: bool = False, repo_root: Path | None = None
         errors.append("an equivalence claim requires an equivalence design")
     if re.search(r"\bm7\b", lowered):
         errors.append("M7 is outside the focused manuscript")
-    inclusions = re.findall(
-        r"\\(?:input|include|includegraphics)\s*\{([^}]+)\}", active
-    )
-    for asset_label, asset_name, asset_dir in REQUIRED_INCLUSIONS:
-        targets = [target for target in inclusions if Path(target).name == asset_name]
+    inclusions = re.findall(r"\\(?:input|include)\s*\{([^}]+)\}", active)
+    for table_label, table_name in REQUIRED_TABLE_INCLUSIONS:
+        targets = [target for target in inclusions if Path(target).name == table_name]
         if not targets:
-            errors.append(f"the canonical generated {asset_name} is not included")
+            errors.append(f"the full generated {table_name} is not included")
             continue
-        canonical = ((repo_root or root) / asset_dir / asset_name).resolve()
+        canonical = ((repo_root or root) / "tables" / table_name).resolve()
         for target in targets:
             resolved = (root / target).resolve()
             if resolved != canonical:
                 errors.append(
-                    f"{asset_label} inclusion must resolve to canonical generated asset: "
+                    f"{table_label} inclusion must resolve to canonical generated asset: "
                     f"{target}"
                 )
             elif not resolved.is_file():

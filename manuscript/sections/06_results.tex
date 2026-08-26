@@ -12,17 +12,17 @@
   \input{../tables/table4_contrasts.tex}
 \end{table*}
 
-\begin{figure*}[t]
+\begin{table*}[t]
   \centering
-  \includegraphics{../figures/figure2_multilingual.pdf}
-  \caption{Multilingual projection effects in fixed document-disjoint arms.
-  Each row is the preselected $\lambda=0$ M1--M0 arm. Rates and score deltas
-  are means over three seeds; repair nets pool the same seeds. Equal-sized
-  ledger cards encode signs and exact counts, not comparable magnitudes across
-  differently sized corpora. ML-Promise wF1 applies AI CUP weights and is not
-  an official ML-Promise metric.}
-  \label{fig:multilingual}
-\end{figure*}
+  \small
+  \caption{\protect\input{../tables/table7_multilingual_mechanism_caption.txt}}
+  \label{tab:multilingual}
+  \begingroup
+  \scriptsize
+  \setlength{\tabcolsep}{4pt}
+  \input{../tables/table7_multilingual_mechanism.tex}
+  \endgroup
+\end{table*}
 
 \paragraph{Chinese confirmatory family.}
 Table~\ref{tab:main-results} compares decision rules on identical base
@@ -51,7 +51,7 @@ the same-document sensitivity analysis, C-wF1 remains positive at $+0.002$,
 while its interval $[-0.001,0.005]$ crosses zero.
 
 \paragraph{Multilingual replication.}
-Figure~\ref{fig:multilingual} fixes one arm per language before inspecting
+Table~\ref{tab:multilingual} fixes one arm per language before inspecting
 scores. Each uses document-disjoint evaluation and $\lambda=0$.
 
 Across all four external corpora and their four backbones at both loss

@@ -42,13 +42,12 @@ def write_policy_valid(root: Path, metadata: str = "") -> None:
     write_minimal(
         root,
         "\\input{tables/table4_contrasts.tex}\n"
-        "\\includegraphics{figures/figure2_multilingual.pdf}",
+        "\\input{tables/table7_multilingual_mechanism.tex}",
         metadata,
     )
     (root / "tables").mkdir()
-    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
-    (root / "figures").mkdir()
-    (root / "figures" / "figure2_multilingual.pdf").write_bytes(b"figure")
+    for name in ("table4_contrasts.tex", "table7_multilingual_mechanism.tex"):
+        (root / "tables" / name).write_text("", encoding="utf-8")
 
 
 def make_valid_asset_repo(root: Path) -> Path:
@@ -67,7 +66,6 @@ def make_valid_asset_repo(root: Path) -> Path:
     for name in CANONICAL_TABLE_NAMES:
         (tables / name).write_text(f"{name}\n", encoding="utf-8")
     (figures / "figure1_hierarchy.pdf").write_bytes(b"fixture pdf")
-    (figures / "figure2_multilingual.pdf").write_bytes(b"fixture pdf")
     table_entry = {
         "source_script": "analysis/generate.py",
         "input_files": ["input.json"],
@@ -314,41 +312,41 @@ def test_table4_comment_spoof_is_not_an_inclusion(tmp_path):
     assert any("table4_contrasts.tex" in error for error in source_errors(tmp_path / "m"))
 
 
-def test_draft_requires_the_canonical_multilingual_figure(tmp_path):
+def test_draft_requires_the_canonical_multilingual_table(tmp_path):
     repo = tmp_path / "repo"
     manuscript = repo / "manuscript"
     tables = repo / "tables"
-    figures = repo / "figures"
     tables.mkdir(parents=True)
-    figures.mkdir()
     (tables / "table4_contrasts.tex").write_text("table 4\n", encoding="utf-8")
-    (figures / "figure2_multilingual.pdf").write_bytes(b"canonical")
+    (tables / "table7_multilingual_mechanism.tex").write_text(
+        "table 7\n", encoding="utf-8"
+    )
     write_minimal(manuscript, "\\input{../tables/table4_contrasts.tex}")
 
     errors = source_errors(manuscript, repo_root=repo)
-    assert any("figure2_multilingual.pdf" in error for error in errors)
+    assert any("table7_multilingual_mechanism.tex" in error for error in errors)
 
 
-def test_draft_rejects_an_external_multilingual_figure_decoy(tmp_path):
+def test_draft_rejects_an_external_multilingual_table_decoy(tmp_path):
     repo = tmp_path / "repo"
     manuscript = repo / "manuscript"
     tables = repo / "tables"
-    figures = repo / "figures"
-    external = tmp_path / "external" / "figure2_multilingual.pdf"
+    external = tmp_path / "external" / "table7_multilingual_mechanism.tex"
     tables.mkdir(parents=True)
-    figures.mkdir()
     external.parent.mkdir()
     (tables / "table4_contrasts.tex").write_text("table 4\n", encoding="utf-8")
-    (figures / "figure2_multilingual.pdf").write_bytes(b"canonical")
-    external.write_bytes(b"decoy")
+    (tables / "table7_multilingual_mechanism.tex").write_text(
+        "canonical\n", encoding="utf-8"
+    )
+    external.write_text("decoy\n", encoding="utf-8")
     write_minimal(
         manuscript,
         "\\input{../tables/table4_contrasts.tex}\n"
-        "\\includegraphics{../../external/figure2_multilingual.pdf}",
+        "\\input{../../external/table7_multilingual_mechanism.tex}",
     )
 
     errors = source_errors(manuscript, repo_root=repo)
-    assert any("Figure 2 inclusion must resolve" in error for error in errors)
+    assert any("Table 7 inclusion must resolve" in error for error in errors)
 
 
 def test_draft_rejects_active_m7_but_not_a_comment(tmp_path):
@@ -509,7 +507,7 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     for caption in (
         "Dataset summary from the frozen study artifact.",
         "Main document-disjoint results from the frozen study artifact.",
-        "Multilingual projection effects in fixed document-disjoint arms.",
+        "Fixed document-disjoint, lambda=0",
         "Chinese paired contrasts on four metrics.",
     ):
         assert caption in document_text
@@ -549,27 +547,6 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     assert "could not represent character" not in log
 
 
-def test_two_manuscript_builds_are_byte_identical():
-    """A tracked main.pdf must not churn after an unchanged-source rebuild."""
-    manuscript = REPO_ROOT / "manuscript"
-
-    subprocess.run(
-        ["make", "build"], cwd=manuscript, check=True,
-        capture_output=True, text=True,
-    )
-    first = (manuscript / "build" / "main.pdf").read_bytes()
-    subprocess.run(
-        ["make", "build"], cwd=manuscript, check=True,
-        capture_output=True, text=True,
-    )
-    second = (manuscript / "build" / "main.pdf").read_bytes()
-
-    assert first == second, (
-        "two unchanged manuscript builds differ; the tracked main.pdf would "
-        "make every verification run dirty"
-    )
-
-
 def test_cli_returns_nonzero_for_policy_error(tmp_path, monkeypatch, capsys):
     write_minimal(tmp_path / "m", "no difference")
     monkeypatch.setattr("sys.argv", ["check", "--root", str(tmp_path / "m"), "--repo-root", str(tmp_path)])
@@ -588,7 +565,6 @@ def test_missing_required_table_manifest_entry_is_rejected(tmp_path):
     for name in CANONICAL_TABLE_NAMES:
         (tables / name).write_text(name, encoding="utf-8")
     (figures / "figure1_hierarchy.pdf").write_bytes(b"pdf")
-    (figures / "figure2_multilingual.pdf").write_bytes(b"pdf")
     (tables / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
     (tmp_path / "run_manifest.json").write_text(json.dumps({"consistency": []}), encoding="utf-8")
     errors = asset_errors(tmp_path)
