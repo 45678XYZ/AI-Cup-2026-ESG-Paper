@@ -24,11 +24,13 @@ $\min\{10,n/(K_t\,n_{t,c})\}$ when $n_{t,c}\geq5$, and 1 otherwise. Hierarchy
 masking is disabled. We average the last three epoch checkpoints and perform
 no label-driven early stopping.
 
-For the external fixed arms, English uses RoBERTa-large and French, Japanese,
-and Korean use XLM-R-large. English robustness runs add large DeBERTa-v3 and
-ELECTRA checkpoints plus RoBERTa-base. The other languages add RemBERT,
-XLM-R-base, and mBERT. Every backbone uses the same maximum
-length, optimization recipe, three seeds, and five rotations. For each
+For the external fixed arms, English uses RoBERTa-large
+\cite{liu2019roberta} and French, Japanese, and Korean use XLM-R-large
+\cite{conneau2020xlmr}. English robustness runs add large DeBERTa-v3
+\cite{he2023debertav3} and ELECTRA \cite{clark2020electra} checkpoints plus
+RoBERTa-base. The other languages add RemBERT \cite{chung2021rembert},
+XLM-R-base, and mBERT \cite{devlin2019bert}. Every backbone uses the same
+maximum length, optimization recipe, three seeds, and five rotations. For each
 backbone we run the ordinary objective ($\lambda=0$) and a fixed
 hierarchy-aware objective ($\lambda=0.3$):
 \begin{equation}
