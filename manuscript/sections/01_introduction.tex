@@ -1,38 +1,43 @@
 \section{Introduction}
 
-ESG promise verification is not four unrelated classification problems. The
-predicted promise status, verification timeline, evidence status, and evidence
-quality describe one claim, and their parent--child implications determine
-whether the combined output is internally usable. For example, a paragraph
-predicted to contain no promise cannot coherently receive a substantive
-timeline, and a prediction of no evidence cannot coherently receive an evidence
-quality. Individually plausible field labels can therefore form an illegal
-tuple.
+ESG promise verification is intended to support audit-oriented decisions, for
+which internal consistency is a basic requirement.
 
-The official weighted macro-F1 nevertheless scores each field separately. It
-can award credit to a substantive child whose predicted ancestors do not
-support that child, while a rule that preserves validity must repair or replace
-it. This creates a gap between what the task structure requires and what the
-ranking metric rewards. We ask whether the official field-wise score reflects
-the value of enforcing the supplied hierarchy.
+Promise status,
+verification timeline, evidence status, and evidence quality describe one
+claim, and their parent--child implications determine whether the combined
+output is usable as a coherent record. A paragraph predicted to contain no
+promise cannot coherently receive a substantive timeline, and a prediction of
+no evidence cannot coherently receive an evidence quality. Individually
+plausible field labels can therefore form an illegal tuple.
 
-We study that question as a controlled decision comparison, not as a model or
-competition-performance claim. Seven rules consume identical cross-fitted base
-probabilities and test rows. In Chinese, the confirmatory official-score family
-is null, yet pre-specified exact whole-tuple accuracy improves under projection.
-We then repeat the same within-arm M1--M0 contrast across four ML-Promise
-languages, four backbones per language, and two fixed training objectives.
-Tuple accuracy improves in all 32 external arms, while weighted macro-F1 has a
-mixed sign. This repeated pattern concerns decision contrasts within each
-corpus; raw scores do not isolate language effects.
+Field-wise weighted macro-F1 is a standard measure of classification quality
+for multi-field tasks, and it is the official ranking metric here. It does not,
+however, assess whether the four predictions form a jointly legal tuple. A
+validity-preserving rule may therefore repair an unsupported child without
+receiving a corresponding field-score gain. We ask whether a retraining-free
+inference constraint can guarantee legal outputs, and how its effects differ
+under field-wise and whole-tuple evaluation.
+
+We answer that question through a controlled decision comparison rather than a
+model or competition-performance claim. Seven rules consume identical
+cross-fitted base probabilities and test rows. Projection acts as a validity
+layer over those probabilities: it guarantees a legal tuple without changing
+the encoder or retraining the classifier. In Chinese, the confirmatory
+official-score family is null, yet pre-specified exact whole-tuple accuracy
+improves under projection. Across four ML-Promise languages, four backbones per
+language, and two fixed training objectives, tuple accuracy improves in all 32
+external arms while weighted macro-F1 has a mixed sign. These are within-corpus
+decision contrasts; raw scores do not isolate language effects.
 
 Our contributions are:
 \begin{enumerate}
   \item We formalize the supplied hierarchy as 17 legal tuples out of 120 and
-  audit 2,000 Chinese paragraphs from 49 companies.
-  \item We compare seven decision rules on shared predictions and report the
-  complete confirmatory official-score family, the pre-specified secondary
-  tuple family, and adverse as well as favorable results.
+  verify that all 2,000 audited Chinese paragraphs from 49 companies are legal.
+  \item We evaluate projection as a retraining-free validity layer in a
+  seven-rule controlled comparison, reporting the complete confirmatory
+  official-score family and the pre-specified tuple family, including adverse
+  results.
   \item We externally replicate the within-arm projection contrast across four
   languages and 32 backbone-by-loss arms, while keeping post-hoc metrics and
   structural/backbone screens explicitly exploratory.

@@ -12,26 +12,29 @@
 
 \begin{document}
 
-\title[Field-Wise Metrics and Hierarchical Gains]{Field-Wise Metrics Can Miss
-  Hierarchical Gains: Multilingual Evidence from ESG Promise Verification}
+\title[Hierarchical Projection as a Validity Layer]{Hierarchical Projection as
+  a Validity Layer\\for ESG Promise Verification: Multilingual Evidence}
 
 \input{metadata}
 
 \begin{abstract}
 \emergencystretch=1em
-ESG promise verification jointly predicts promise status, verification
-timeline, evidence status, and evidence quality under hard parent--child
-constraints. We compare seven decision rules on identical cross-fitted base
-probabilities and test rows in Chinese, then replicate projection versus
-independent argmax within English, French, Japanese, and Korean corpora. In the
-only confirmatory family, all five Chinese official weighted macro-F1
-contrasts are undetected; projection versus argmax (M1--M0) is $-0.001$ with
-$p_{\mathrm{Holm}}=1.000$. Pre-specified secondary tuple accuracy instead
-improves by $+0.035$ $[0.028,0.043]$ with
-$p_{\mathrm{Holm}}=.001$. Across 32 external backbone-by-loss arms, this tuple
-contrast is positive in $32/32$, whereas weighted macro-F1 is positive in only
-$14/32$. Thus, in these controlled arms, field-wise scoring does not
-consistently reflect gains in complete hierarchical correctness.
+ESG promise verification requires jointly predicted fields to satisfy hard
+parent--child constraints, particularly when outputs are intended for
+audit-oriented use. We study hierarchical projection as a retraining-free
+validity layer for field-wise classifiers. Seven decision rules are compared
+on identical cross-fitted probabilities and test rows in Chinese, followed by
+projection-versus-argmax replication across English, French, Japanese, and
+Korean corpora. Projection reduces the Chinese invalid-tuple rate from
+12.55\% to zero by construction. Its official weighted macro-F1 contrast is
+undetected ($\Delta=-0.001$, $p_{\mathrm{Holm}}=1.000$), while pre-specified
+tuple accuracy improves by $+0.035$ ($p_{\mathrm{Holm}}=.001$). Across 32
+external backbone-by-loss arms, tuple accuracy improves in all 32, whereas
+weighted macro-F1 improves in 14. These results position hierarchical
+projection not as a guaranteed route to higher field-wise scores, but as a
+practical way to guarantee coherent outputs and repeatedly improve
+complete-output correctness, with field-score trade-offs varying across
+models and corpora.
 \end{abstract}
 
 \keywords{ESG, promise verification, hierarchical classification,

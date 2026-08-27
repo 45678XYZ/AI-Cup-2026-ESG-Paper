@@ -83,7 +83,9 @@ fallback.
 
 \subsection{Validity-Preserving Output Rules}
 \paragraph{Complete projection.}
-Projection is greedy and top-down. At each field it selects the highest-scoring
+We treat projection as a validity layer over compatible field-wise
+probabilities, rather than as a new encoder or a claim of improved base-model
+accuracy. Projection is greedy and top-down. At each field it selects the highest-scoring
 class allowed by the chosen ancestors. Under PS=No, it sets VT, ES, and EQ to
 N/A. Under PS=Yes, it excludes N/A from VT and ES and chooses each field's best
 substantive class. Under ES=No, EQ becomes N/A; under ES=Yes, projection chooses

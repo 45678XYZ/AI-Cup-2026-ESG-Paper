@@ -45,11 +45,15 @@ backbones under both $\lambda=0$ and 0.3, giving 32 external arms. The
 fixed-arm table uses $\lambda=0$: RoBERTa-large for English and XLM-R-large
 for the other three languages. Arm choice never depends on observed scores.
 The same-document protocol is descriptive and available only for the primary
-large backbone.
+large backbone. The complete executed study contains 765 training artifacts
+and 1,050 row-level prediction files across five corpora.
 \par\endgroup
 
 \subsection{Metrics and Inference}
-For Chinese, the primary metric is the official weighted macro-F1,
+The field-wise weighted macro-F1 is a standard choice for multi-field
+classification, but it contains no term that assesses the joint validity of a
+four-field tuple. For Chinese, the primary metric is the official weighted
+macro-F1,
 \begin{equation}
   \mathrm{wF1}=0.20F_{\mathrm{PS}}+0.15F_{\mathrm{VT}}
   +0.30F_{\mathrm{ES}}+0.35F_{\mathrm{EQ}},

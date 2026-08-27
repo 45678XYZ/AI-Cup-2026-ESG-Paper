@@ -4,10 +4,10 @@
 \begin{table*}[t]
   \centering
   \small
-  \caption{Chinese paired contrasts on four metrics. Official wF1 and tuple
-  accuracy are separate pre-specified Holm families of five. C-wF1 and hF were
-  added post hoc; their displayed adjusted values are exploratory and support
-  no claim. Intervals are uncorrected 95\% report-cluster bootstrap intervals.}
+  \caption{Chinese paired contrasts on the two pre-specified metrics. Official
+  wF1 and tuple accuracy are separate Holm families of five. Intervals are
+  uncorrected 95\% report-cluster bootstrap intervals. Post-hoc C-wF1 and hF
+  are discussed only in the text.}
   \label{tab:contrasts}
   \input{../tables/table4_contrasts.tex}
 \end{table*}
@@ -24,26 +24,29 @@
   \endgroup
 \end{table*}
 
-\paragraph{Chinese confirmatory family.}
+\paragraph{Guaranteed validity and Chinese confirmatory evidence.}
 Table~\ref{tab:main-results} compares decision rules on identical base
 probabilities and Test rows. Independent argmax (M0) produces invalid tuples
 for 12.55\% of document-disjoint predictions; projection and 17-state decoding
-(M1--M6) reduce this rate to zero by construction. The $\pm$ values are sample
-standard deviations across the three seeds. Because each seed determines both
-fold assignment and training randomness, they describe spread over the whole
-split-and-training pipeline, not a confidence interval.
+(M1--M6) reduce this rate to zero by construction. This zero rate is a
+deterministic property of the validity layer, not evidence that the base model
+became more accurate. The $\pm$ values are sample standard deviations across
+the three seeds. Because each seed determines both fold assignment and
+training randomness, they describe spread over the whole split-and-training
+pipeline, not a confidence interval.
 
 All five official wF1 contrasts are undetected after Holm correction. For the
 central M1--M0 contrast, $\Delta=-0.001$ with 95\% interval
 $[-0.006,0.003]$ and $p_{\mathrm{Holm}}=1.000$. This is absence of a detected
 difference; it does not establish a zero effect.
 
-\paragraph{Pre-specified tuple family.}
+\paragraph{Whole-tuple effects.}
 Exact whole-tuple accuracy tells a different story. M1--M0 is $+0.035$
 $[0.028,0.043]$, $p_{\mathrm{Holm}}=.001$. Conversely, joint legal-state
 decoding is not uniformly better: M4--M1 is $-0.006$
 $[-0.010,-0.002]$, $p_{\mathrm{Holm}}=.028$. Searching every legal state can
-therefore reduce whole-row correctness relative to greedy projection.
+therefore reduce whole-row correctness relative to greedy projection. The
+validity guarantee is shared, but the choice among legal tuples still matters.
 
 The post-hoc C-wF1 and hF M1--M0 point estimates are also positive
 ($+0.004$ and $+0.003$), but they do not alter the inferential hierarchy. In
@@ -63,10 +66,16 @@ Across all four external corpora and their four backbones at both loss
 settings, M1--M0 tuple accuracy is positive in $32/32$ arms. The weighted
 macro-F1 contrast is positive in only $14/32$: English $7/8$, French $5/8$,
 Japanese $0/8$, and Korean $2/8$. These are within-arm directions, not a raw
-score ranking across languages. For the pre-registered fixed English arm, the
-one-sided report-cluster bootstrap tuple effect is $+0.0725$
-$[0.0452,0.1019]$ ($p=.0002$; nine report clusters). ML-Promise weighted
-scores use AI CUP weights applied to ML-Promise.
+score ranking across languages. Projection thus combines a deterministic
+validity guarantee with a repeated complete-tuple improvement, while its
+field-score effect is not directionally stable across arms.
+
+\begin{sloppypar}
+For the pre-registered fixed English arm, the one-sided tuple effect is
+$+0.0725$. Its report-cluster bootstrap interval is $[0.0452,0.1019]$
+($p=.0002$; nine report clusters). ML-Promise weighted scores use AI CUP
+weights applied to ML-Promise.
+\end{sloppypar}
 
 \paragraph{Exploratory robustness.}
 On the Chinese anchor, training-time structural loss lowers M0 invalidity from

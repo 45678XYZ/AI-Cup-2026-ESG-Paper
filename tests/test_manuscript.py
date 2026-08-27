@@ -241,8 +241,8 @@ def test_tracked_manuscript_title_is_compact_and_balanced():
 
     page.extract_text(visitor_text=collect_title_lines)
     expected_title = (
-        "Field-Wise Metrics Can Miss Hierarchical Gains: "
-        "Multilingual Evidence from ESG Promise Verification"
+        "Hierarchical Projection as a Validity Layer for ESG Promise "
+        "Verification: Multilingual Evidence"
     )
     widths = [width for _, width in title_lines]
 
@@ -295,6 +295,26 @@ def test_focused_abstract_prioritizes_prespecified_tuple_evidence():
         r"\+0\.035.*?p_\{\\mathrm\{Holm\}\}=\.001", abstract, re.DOTALL
     )
     assert r"p_{\mathrm{Holm}}=.025" not in abstract
+
+
+def test_focused_abstract_positions_projection_as_a_validity_layer():
+    abstract = " ".join(_real_abstract().split())
+    for claim in (
+        "retraining-free validity layer",
+        r"from 12.55\% to zero by construction",
+        "not as a guaranteed route to higher field-wise scores",
+    ):
+        assert claim in abstract
+
+
+def test_focused_conclusion_states_the_positive_bounded_contribution():
+    text = " ".join(source_text(REPO_ROOT / "manuscript").split())
+    for claim in (
+        "retraining-free validity layer",
+        "improves exact whole-tuple accuracy on the Chinese anchor and in all 32",
+        "Its field-score effect varies across models and corpora, but its logical guarantee does not",
+    ):
+        assert claim in text
 
 
 def test_focused_manuscript_does_not_rank_languages_by_raw_score():
@@ -517,7 +537,7 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
         "AI CUP 2026 dataset summary.",
         "Document-disjoint cross-fitted results on the Chinese development set.",
         "Projection (M1) against independent argmax (M0) on five corpora",
-        "Chinese paired contrasts on four metrics.",
+        "Chinese paired contrasts on the two pre-specified metrics.",
     ):
         assert caption in document_text
     assert all(page_text), "the compiled manuscript contains a blank page"
@@ -528,12 +548,21 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     assert not sparse_body_pages, (
         f"the compiled manuscript contains near-empty body pages: {sparse_body_pages}"
     )
-    table4_caption = "Chinese paired contrasts on four metrics."
+    table4_caption = "Chinese paired contrasts on the two pre-specified metrics."
     external_start = "Across all four external corpora"
     discussion_heading = "7 DISCUSSION"
     assert document_text.index(table4_caption) < document_text.index(discussion_heading)
     assert document_text.index(external_start) < document_text.index(discussion_heading)
     normalized_document_text = " ".join(document_text.split())
+    for disclosure in (
+        "All 2,000 development rows obey the hierarchy",
+        "field-wise weighted macro-F1 is a standard choice",
+        "no term that assesses the joint validity of a four-field tuple",
+        "765 training artifacts and 1,050 row-level prediction files across five corpora",
+    ):
+        assert disclosure in normalized_document_text
+    assert "Chinese paired contrasts on four metrics" not in normalized_document_text
+    assert "their displayed adjusted values" not in normalized_document_text
     assert "AI CUP 2026 競賽提交格式說明 Sample Submission Format Guide" not in (
         normalized_document_text
     )

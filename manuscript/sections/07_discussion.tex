@@ -1,23 +1,26 @@
 \section{Discussion}
 
-The repeated result is a contrast pattern, not a ranking of languages or raw
-scores. Projection enforces the supplied hierarchy in every arm and improves
-exact whole-tuple accuracy throughout the executed external matrix. Its effect
-on field-wise weighted macro-F1 instead changes sign across backbones and
-corpora. Together with the Chinese confirmatory null and pre-specified tuple
-gain, this supports a metric--structure mismatch in these controlled arms: a
-field-weighted score need not reward a decision rule for making the combined
-output more coherent and more often exactly correct.
+The practical contribution of projection is its guarantee rather than a
+universal field-score gain. As a retraining-free layer over compatible
+field-wise probabilities, it enforces the supplied hierarchy in every arm and
+improves exact whole-tuple accuracy throughout the executed external matrix.
+Together with the Chinese pre-specified tuple gain, this repeated result shows
+that a validity layer can improve complete-output correctness without claiming
+that it improves the underlying encoder or the official score in every arm.
 
-The measured ledger makes the trade-off explicit: the $N\!/\!A$ net is
-positive and the substantive-class net negative in all five fixed arms. If an
-independently predicted parent is wrong, projection may replace a correct
-substantive child with the structurally required \emph{N/A}; when the parent is
-correct, the same operation can repair an unsupported child. Field-wise
-macro-F1 values these changes class by class, whereas tuple accuracy credits
-only four-field agreement. Post-hoc C-wF1 and hF point in the tuple direction,
-but were chosen after the primary analysis and are not needed to establish the
-pre-specified secondary result.
+This guarantee is not cost-free in every scoring view. The measured ledger
+makes that trade-off explicit.
+
+The $N\!/\!A$ net is positive and the
+substantive-class net negative in all five fixed arms. If an independently
+predicted parent is wrong, projection may replace a correct substantive child
+with the structurally required \emph{N/A}; when the parent is correct, the same
+operation can repair an unsupported child. Field-wise macro-F1 values these
+changes class by class, whereas tuple accuracy credits only four-field
+agreement. The field-score effect therefore varies across backbones and
+corpora. Post-hoc C-wF1 and hF point in the tuple direction, but were chosen
+after the primary analysis and are not needed to establish the pre-specified
+secondary result.
 
 Validity alone also does not identify the better structured rule. In Chinese,
 M4 scores all 17 legal states jointly yet loses tuple accuracy to greedy M1.
@@ -53,9 +56,11 @@ those sources of variation cannot be separated.
 
 \section{Conclusion}
 
-Across the controlled Chinese study and four external corpora, field-wise
-weighted macro-F1 did not consistently reflect the validity and exact-match
-gains observed after hierarchical projection. Evaluations of dependent output
-fields should therefore report both field-wise metrics and a structured
-whole-output measure, while treating validity as a requirement rather than a
-surrogate for downstream accuracy.
+Hierarchical projection is not a guaranteed route to higher field-wise
+weighted macro-F1. It is instead a retraining-free validity layer that
+eliminates illegal tuples by construction and improves exact whole-tuple
+accuracy on the Chinese anchor and in all 32 evaluated external arms. Its
+field-score effect varies across models and corpora, but its logical guarantee
+does not. For audit-oriented tasks with dependent outputs, field-wise
+performance, whole-tuple correctness, and structural validity should therefore
+be reported together.
