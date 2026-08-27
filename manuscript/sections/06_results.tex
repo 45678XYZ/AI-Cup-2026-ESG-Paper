@@ -78,12 +78,10 @@ weights applied to ML-Promise.
 \end{sloppypar}
 
 \paragraph{Exploratory robustness.}
-On the Chinese anchor, training-time structural loss lowers M0 invalidity from
-12.55\% to 5.18\%, but its pre-registered M1 wF1 effect is only $+0.00250$
-$[-0.00384,0.00860]$ ($p=.427$). Across the 16 external backbone pairs,
-structural loss lowers invalidity in $16/16$, while downstream wF1 and tuple
-effects are mixed. Chinese DeBERTa and ELECTRA screens likewise reduce
-invalidity without a conclusive wF1 gain. Chinese RoBERTa-base emits fewer,
-not more, invalid tuples than the large anchor, falsifying the simple
-smaller-model mechanism. These screens are descriptive and exploratory.
+On the Chinese anchor, structural loss lowers M0 invalidity from 12.55\% to
+5.18\%; its pre-registered M1 wF1 effect is $+0.00250$
+$[-0.00384,0.00860]$ ($p=.427$). It lowers invalidity in all 16 external
+backbone pairs, with mixed wF1 and tuple effects. Exploratory Chinese
+DeBERTa/ELECTRA screens likewise lack conclusive wF1 gains; RoBERTa-base's
+lower invalidity contradicts a simple smaller-model mechanism.
 \FloatBarrier

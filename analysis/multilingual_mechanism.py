@@ -241,48 +241,26 @@ def build_caption(report) -> str:
     entries = report["corpora"]
     obs = report["observations"]
     n = len(entries)
-    up = sum(1 for e in entries.values()
-             if e["metrics"][CONSTRAINED]["tuple_accuracy"]
-             > e["metrics"][BASELINE]["tuple_accuracy"])
-    off_up = sum(1 for e in entries.values()
-                 if e["metrics"][CONSTRAINED]["weighted_macro_f1"]
-                 > e["metrics"][BASELINE]["weighted_macro_f1"])
-    lo = min(e["invalid_rate"][BASELINE] for e in entries.values())
-    hi = max(e["invalid_rate"][BASELINE] for e in entries.values())
     missing = obs["corpora_missing_a_class"]
 
     parts = [
-        f"Projection (M1) against independent argmax (M0) on {_word(n)} corpora, "
-        f"each on its own primary backbone at $\\lambda$ = 0 and its "
-        f"document-disjoint protocol, means over {_word(len(SEEDS))} seeds. "
-        f"M0's illegal rate spans {lo * 100:.2f}\\% to {hi * 100:.2f}\\%; M1's "
-        f"is 0\\% everywhere by construction.",
-        f"The two net columns are the mechanism. Projection's only lever on a "
-        f"child field is writing $N\\!/\\!A$, so its repairs land on that class "
-        f"and its damage on the substantive ones: the sign pattern is "
-        f"$N\\!/\\!A$ positive and substantive negative in {_word(n)} of "
-        f"{_word(n)} corpora. Macro-F1 weights those classes equally, which is "
-        f"where the movement cancels.",
-        f"Whole-row accuracy rises in {_word(up)} of {_word(n)} corpora; the "
-        f"official metric rises in {_word(off_up)}. The same predictions, "
-        f"scored two ways, do not agree on whether anything improved.",
+        f"Projection (M1) versus independent argmax (M0) on {_word(n)} corpora, "
+        f"each using its preselected primary backbone at $\\lambda=0$ and "
+        f"document-disjoint evaluation; values are means over "
+        f"{_word(len(SEEDS))} seeds.",
+        f"M1 guarantees 0\\% invalid output. The $N\\!/\\!A$ and substantive "
+        f"net columns summarize changes in correct child predictions after "
+        f"projection.",
     ]
     if missing:
         names = ", ".join(LABELS[c] for c in missing)
         absent = {c: entries[c]["classes_absent"] for c in missing}
-        field, classes = next(
+        _, classes = next(
             (f, v) for f, v in absent[missing[0]].items() if v)
-        lev = entries[missing[0]]["leverage"][field]
-        other = next(e["leverage"][field] for c, e in entries.items()
-                     if c not in missing)
         parts.append(
-            f"\\textbf{{The metric's exchange rate is not the same in every "
-            f"corpus.}} macro-F1 averages over the classes present in gold, and "
-            f"{names} has no {classes[0]} row, so its "
-            f"{field.replace('_', chr(92) + '_')} divides by one class fewer: "
-            f"a point of one class's F1 is worth {lev:.4f} there against "
-            f"{other:.4f} elsewhere. Cross-corpus scores are therefore not on "
-            f"one scale and are not ranked here."
+            f"Official-score deltas should not be compared directly across "
+            f"corpora because macro-F1 averages over gold-present classes, and "
+            f"{names} contains no {classes[0]} example."
         )
     return " ".join(parts)
 
