@@ -61,6 +61,10 @@
 # inputs with their own source copyrights, not redistributed dataset files.
 /local_data/
 
+# Local writing aids; these may contain internal review notes and translations.
+/docs/writing/manuscript_positive_reframing.md
+/docs/writing/manuscript_zh_tw.md
+
 # Logs
 *.log
 
