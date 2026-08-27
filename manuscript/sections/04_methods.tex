@@ -29,8 +29,13 @@ For the external fixed arms, English uses RoBERTa-large
 \cite{conneau2020xlmr}. English robustness runs add large DeBERTa-v3
 \cite{he2023debertav3} and ELECTRA \cite{clark2020electra} checkpoints plus
 RoBERTa-base. The other languages add RemBERT \cite{chung2021rembert},
-XLM-R-base, and mBERT \cite{devlin2019bert}. Every backbone uses the same
-maximum length, optimization recipe, three seeds, and five rotations. For each
+XLM-R-base, and mBERT \cite{devlin2019bert}. The Chinese anchor adds three
+exploratory screens of its own, distinct from those English checkpoints: a
+Chinese DeBERTa-v2-320M, a Chinese ELECTRA-large discriminator
+\cite{cui2020revisiting}, and the base-sized checkpoint of the same
+RoBERTa-WWM family as the primary encoder \cite{cui2021wwm}. Every backbone
+uses the same maximum
+length, optimization recipe, three seeds, and five rotations. For each
 backbone we run the ordinary objective ($\lambda=0$) and a fixed
 hierarchy-aware objective ($\lambda=0.3$):
 \begin{equation}
