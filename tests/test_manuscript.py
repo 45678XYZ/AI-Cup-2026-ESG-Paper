@@ -533,13 +533,14 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     reader = PdfReader(str(pdf))
     page_text = [page.extract_text().strip() for page in reader.pages]
     document_text = "\n".join(page_text)
+    compact_document_text = re.sub(r"[\s-]+", "", document_text)
     for caption in (
-        "AI CUP 2026 dataset summary.",
+        "AI CUP 2026 dataset composition and hierarchy audit.",
         "Document-disjoint cross-fitted results on the Chinese development set.",
         "Projection (M1) against independent argmax (M0) on five corpora",
         "Chinese paired contrasts on the two pre-specified metrics.",
     ):
-        assert caption in document_text
+        assert re.sub(r"[\s-]+", "", caption) in compact_document_text
     assert all(page_text), "the compiled manuscript contains a blank page"
     sparse_body_pages = [
         index for index, text in enumerate(page_text[:-1], start=1)

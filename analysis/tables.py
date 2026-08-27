@@ -424,6 +424,15 @@ def render_table1(audit) -> str:
     def row(label, dev_value, test_value):
         return f"{label} & {dev_value} & {test_value} \\\\"
 
+    def yes_no(value):
+        return "Yes" if value else "No"
+
+    def valid_gold(partition):
+        if not partition["labelled"]:
+            return NA
+        valid = partition["paragraphs"] - partition["invalid_rows"]
+        return f"{valid} / {partition['paragraphs']}"
+
     eq = dev["class_support"]["evidence_quality"]
     vt = dev["class_support"]["verification_timeline"]
     # The overlap is the reason Table 3 exists: development and test are drawn
@@ -431,30 +440,26 @@ def render_table1(audit) -> str:
     # seen-report generalisation. Printing it as a row rather than leaving it
     # to prose is what C's remit asks for.
     shared = audit["pdf_overlap"]["n_shared"]
-    spanning = audit["company_structure"]["companies_in_multiple_reports"]
-    # Two rows moved to the caption: the companies spanning more than one report
-    # and the gold's zero hierarchy violations. The duplicate paragraph remains
-    # in the audit trail but is intentionally not a paper statistic.
-    # Each is a single fact rather than a development-versus-test statistic --
-    # two had one column marked n/a and the third repeated a number the caption
-    # already gave -- and the caption stated both in prose already, so the
-    # tabular was restating them in a form that reads worse. The overlap row
-    # below is different: plan section 7 requires it to be prominent.
     body = [
         row("Paragraphs", dev["paragraphs"], test["paragraphs"]),
         row("Source reports (PDFs)", dev["pdfs"], test["pdfs"]),
         # Stays in the tabular by remit, not by taste: plan section 7 requires
         # the 100% dev/test overlap to be prominent rather than left to a
         # caption, because it is the reason Table 3 exists at all.
-        row("\\quad shared across splits", shared, shared),
+        row("\\quad shared with other split", shared, shared),
         row("Companies", dev["companies"], test["companies"]),
+        row("Gold labels available", yes_no(dev["labelled"]),
+            yes_no(test["labelled"])),
+        row("Gold hierarchy-valid tuples", valid_gold(dev), valid_gold(test)),
         row("Legal states observed", f"{dev['legal_states_observed']} / 17", NA),
         "\\midrule",
         "\\multicolumn{3}{l}{\\emph{Rarest classes}} \\\\",
         row("\\quad within\\_2\\_years", vt["within_2_years"], NA),
         row("\\quad Misleading", eq["Misleading"], NA),
     ]
-    return _tabular("lrr", "Statistic & Development & Test", body)
+    return _tabular(
+        "lrr", "Statistic & Development & Competition test", body,
+    )
 
 
 def render_table2(summary) -> str:

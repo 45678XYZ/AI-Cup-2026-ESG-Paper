@@ -75,6 +75,31 @@ def test_table1_leaves_the_unlabelled_test_column_empty():
     assert "2" in misleading              # Development column carries n=2
 
 
+def test_table1_names_the_unlabelled_column_as_the_competition_test():
+    header = render_table1(AUDIT).splitlines()[2]
+    assert header == r"Statistic & Development & Competition test \\"
+
+
+def test_table1_makes_gold_label_availability_explicit():
+    rows = {
+        line.split("&")[0].strip(): [c.strip() for c in line.split("&")[1:]]
+        for line in render_table1(AUDIT).splitlines() if "&" in line
+    }
+    assert rows["Gold labels available"][:2] == ["Yes", r"No \\"]
+
+
+def test_table1_prints_the_audited_number_of_hierarchy_valid_gold_tuples():
+    altered = copy.deepcopy(AUDIT)
+    altered["development"]["invalid_rows"] = 3
+    rows = {
+        line.split("&")[0].strip(): [c.strip() for c in line.split("&")[1:]]
+        for line in render_table1(altered).splitlines() if "&" in line
+    }
+    assert rows["Gold hierarchy-valid tuples"][:2] == [
+        "1997 / 2000", r"n/a \\",
+    ]
+
+
 def test_table1_prints_the_audited_counts():
     """Row by row rather than by substring. The previous version asserted that
     "50" appeared somewhere in the table, which passed for two months while the
