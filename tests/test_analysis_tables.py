@@ -496,6 +496,29 @@ def test_table4_caption_says_where_the_demoted_metrics_went():
 
 
 
+def test_every_caption_is_latex_safe_as_written():
+    """Captions are inputted into ``\\caption{}``, so they must not need escaping.
+
+    ``analysis/preview.py`` escapes captions on the way into its own document,
+    which hides the problem: an unescaped ``pdf_group`` rendered in the preview
+    for weeks and then aborted the manuscript build the first time that caption
+    was included, with ``Missing $ inserted``. The caption file is the
+    deliverable, so it is the file that has to be safe.
+
+    Math spans are stripped first -- ``$p_{\\mathrm{Holm}}$`` is legal and is
+    exactly what a naive scan flags.
+    """
+    for path in sorted((REPO_ROOT / "tables").glob("*_caption.txt")):
+        text = re.sub(r"\$[^$]*\$", "", path.read_text(encoding="utf-8"))
+        for i, ch in enumerate(text):
+            if ch in "_&#%" and not (i and text[i - 1] == "\\"):
+                context = text[max(0, i - 30):i + 15].replace("\n", " ")
+                raise AssertionError(
+                    f"{path.name}: unescaped {ch!r} outside math mode: "
+                    f"...{context}..."
+                )
+
+
 RETIRED_METRIC_LABELS = ("Weighted F1", "Whole-row", "whole-row")
 
 

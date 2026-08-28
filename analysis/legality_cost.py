@@ -237,15 +237,19 @@ def render_table(report) -> str:
         " & & & \\multicolumn{2}{c}{Enforce legality (M1$-$M0)} & "
         "\\multicolumn{2}{c}{Joint decoding (M4$-$M1)} \\\\\n"
         "\\cmidrule(lr){4-5}\\cmidrule(lr){6-7}\n"
-        "Backbone & $\\lambda$ & M0 invalid & wF1 & Tuple acc. & "
+        # ``M0 illegal \\%`` matches the multilingual table's column rather than
+        # spelling the same quantity two ways, and the backbones are prefixed
+        # because ``RoBERTa-large`` names a different checkpoint here than in
+        # the English replication -- the two tables sit a page apart.
+        "Backbone & $\\lambda$ & M0 illegal \\% & wF1 & Tuple acc. & "
         "wF1 & Tuple acc."
     )
 
     def line(arm) -> str:
         cells = [
-            arm["backbone"],
+            f"Chinese {arm['backbone']}",
             f"{arm['structure_lambda']:g}",
-            f"{arm['invalid_rate']['M0'] * 100:.2f}\\%",
+            f"{arm['invalid_rate']['M0'] * 100:.2f}",
         ]
         for key in ("legality_cost", "decoder_vs_projection"):
             cells += [_cell(arm[key]["official_weighted_macro_f1"]),
@@ -332,7 +336,7 @@ def build_caption(report) -> str:
 
     parts = [
         f"Two decision rules over one set of probabilities, on the "
-        f"{report['protocol']} protocol. M0 takes each field's argmax "
+        f"{_tex(report['protocol'])} protocol. M0 takes each field's argmax "
         f"independently; M1 projects onto the 17 legal states top-down; M4 "
         f"scores all 17 and takes the best. \\textbf{{M1 and M4 both emit an "
         f"invalid tuple on 0\\% of rows in every arm}} -- their output space "
@@ -356,12 +360,64 @@ def build_caption(report) -> str:
         f"{dec_trained['detectable']} of the {dec_trained['n']} trained ones."
         + (f" Each of those {dec_all['detectable']} detectable cells is "
            f"{dec_dir}." if dec_dir else ""),
+        _lambda_note(arms, plain, trained),
         "\\textbf{Exploratory.} These contrasts were named after the primary "
         "analysis and form no Holm family; bold marks an interval excluding "
         "zero, not a corrected verdict. The claim is the sign pattern across "
         "arms, not any single cell. See docs/governance/inference\\_families.md.",
     ]
     return " ".join(parts)
+
+
+def _tex(text: str) -> str:
+    """Escape an identifier that reaches LaTeX as caption prose.
+
+    Captions are contract deliverables and D inputs them into ``\\caption{}``
+    directly, so they have to be LaTeX-safe as written. ``analysis/preview.py``
+    escapes on the way in, which is why an unescaped ``pdf_group`` rendered
+    there for weeks and only aborted the build the first time the manuscript
+    included this caption.
+    """
+    return text.replace("\\", "\\textbackslash{}").replace("_", "\\_")
+
+
+def _lambda_note(arms, plain, trained) -> str:
+    """Two things the rows look like defects until they are explained.
+
+    A backbone that appears once reads as a run that was never finished, and a
+    non-zero M0 rate in the structurally trained block reads as a failed
+    guarantee. Neither is the case: the base-checkpoint arm was pre-registered
+    to ask whether a smaller model is more consistent, a question that needs no
+    training objective, and the training-time penalty is a pull toward the
+    legal set rather than a restriction to it -- which is the reason a
+    decision-stage rule is what turns the tendency into a guarantee.
+    """
+    if not trained:
+        return ""
+    single = sorted({a["backbone"] for a in plain}
+                    - {a["backbone"] for a in trained})
+    rates = [a["invalid_rate"][BASELINE] for a in trained]
+    # Deliberately phrased as "the lambda = 0.3 arms" rather than "the
+    # structurally trained arms": the caption's guard requires any sentence
+    # naming that subgroup to name the metric it holds for, and this sentence
+    # is about the illegal rate rather than about either metric.
+    note = (
+        f"The $\\lambda$ = {trained[0]['structure_lambda']:g} arms still emit "
+        f"illegal tuples on "
+        f"{min(rates) * 100:.2f}--{max(rates) * 100:.2f}\\% of rows: the "
+        "training-time penalty moves probability mass toward the legal set "
+        "without confining the output to it, which is what the decision rule "
+        "does."
+    )
+    if single:
+        names = ", ".join(f"Chinese {b}" for b in single)
+        note += (
+            f" {names} appears at $\\lambda$ = 0 only; its pre-registration "
+            "asks whether a smaller checkpoint of the same family is more "
+            "internally consistent, which does not involve the training "
+            "objective."
+        )
+    return note
 
 
 def write_legality_cost(out_dir, root=REPO_ROOT, *, n_boot=N_BOOT) -> Path:
