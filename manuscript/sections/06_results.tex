@@ -18,7 +18,7 @@
   \caption{\protect\input{../tables/table7_multilingual_mechanism_caption.txt}}
   \label{tab:multilingual}
   \begingroup
-  \scriptsize
+  \small
   \setlength{\tabcolsep}{4pt}
   \input{../tables/table7_multilingual_mechanism.tex}
   \endgroup
@@ -81,11 +81,14 @@ while its interval $[-0.001,0.005]$ crosses zero.
 \begin{table}[t]
   \centering
   \small
-  \caption{\protect\input{../tables/table6_regimes_caption.txt}}
+  \caption{Chinese anchor scored under both evaluation protocols.
+  Same-document holds out paragraphs from reports seen in training;
+  document-disjoint holds out whole reports. $\Delta$ separates two
+  estimands and is not a bias estimate.}
   \label{tab:regimes}
   \begingroup
-  \scriptsize
-  \setlength{\tabcolsep}{3.5pt}
+  \small
+  \setlength{\tabcolsep}{4pt}
   \input{../tables/table6_regimes.tex}
   \endgroup
 \end{table}
@@ -130,13 +133,11 @@ weights applied to ML-Promise.
   \caption{Chinese backbone and structural-loss screens, as paired
   within-arm contrasts. All checkpoints are Chinese; the base-sized arm was
   pre-registered without a training-objective condition, so it appears at
-  $\lambda=0$ only. The $\lambda=0.3$ arms still emit illegal tuples: the
-  training penalty pulls probability mass toward the legal set without
-  confining the output to it. Bold marks an interval excluding zero; these
-  contrasts are exploratory and form no Holm family.}
+  $\lambda=0$ only. Bold marks an interval excluding zero; these contrasts are
+  exploratory and form no Holm family.}
   \label{tab:legality-cost}
   \begingroup
-  \tiny
+  \scriptsize
   \setlength{\tabcolsep}{2.5pt}
   \input{../tables/table3_legality_cost.tex}
   \endgroup
@@ -151,10 +152,13 @@ DeBERTa and ELECTRA screens likewise lack conclusive wF1 gains; the
 same-family base checkpoint's lower invalidity contradicts a simple
 smaller-model mechanism.
 
+\begingroup\emergencystretch=1em
 Table~\ref{tab:legality-cost} reports those seven Chinese arms as paired
-within-arm contrasts. Two sign patterns hold across all of them even though the
-official-score column does not: M1--M0 raises tuple accuracy in 7/7, and
-M4--M1 lowers it in 7/7. The single-arm M4--M1 result above is therefore the
-sign the whole screen shows, not one arm's outcome; on the official metric the
-same seven arms disagree.
+within-arm contrasts. Its first column shows what the penalty does not do: the
+$\lambda=0.3$ arms still emit illegal tuples, because it pulls probability mass
+toward the legal set without confining the output to it. Two sign patterns then
+hold across all seven arms even though the official column does not: M1--M0
+raises tuple accuracy in 7/7, and M4--M1 lowers it in 7/7. The single-arm
+M4--M1 result above is the sign the whole screen shows, not one arm's outcome.
+\par\endgroup
 \FloatBarrier
