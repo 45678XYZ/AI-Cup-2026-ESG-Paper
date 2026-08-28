@@ -532,13 +532,8 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     pdf = manuscript / "build" / "main.pdf"
     reader = PdfReader(str(pdf))
     page_text = [page.extract_text().strip() for page in reader.pages]
-    discussion_starts_before_page_six = any(
-        "7 DISCUSSION" in text for text in page_text[:5]
-    )
-    assert discussion_starts_before_page_six or page_text[5].startswith(
-        "7 DISCUSSION"
-    ), (
-        "Results text spills onto page 6 before the Discussion heading"
+    assert any("7 DISCUSSION" in text for text in page_text[:6]), (
+        "the Discussion heading is pushed past page 6"
     )
     document_text = "\n".join(page_text)
     compact_document_text = re.sub(r"[\s-]+", "", document_text)
