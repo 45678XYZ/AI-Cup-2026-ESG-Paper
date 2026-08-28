@@ -50,8 +50,12 @@ that reducing invalidity need not yield a conclusive gain on the official
 score, but the fixed loss weights and limited checkpoint set cannot
 characterize all training objectives or architectures. The Chinese rarest quality label has
 only two examples, Korean has none, and no class-level claim is licensed for
-it. Finally, each seed jointly changes folds and optimization randomness, so
-those sources of variation cannot be separated.
+it. The evaluation protocol also moves scores more than the decision rule does:
+all seven rules score $0.010$--$0.020$ higher under same-document than under
+document-disjoint evaluation, with every interval excluding zero, which is
+larger than the $0.0082$ that separates the rules themselves. Finally, each
+seed jointly changes folds and optimization randomness, so those sources of
+variation cannot be separated.
 \end{sloppypar}
 
 \section{Conclusion}

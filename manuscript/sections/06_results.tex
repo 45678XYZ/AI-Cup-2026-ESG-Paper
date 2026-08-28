@@ -102,6 +102,24 @@ $+0.0725$. Its report-cluster bootstrap interval is $[0.0452,0.1019]$
 weights applied to ML-Promise.
 \end{sloppypar}
 
+\begin{table}[t]
+  \centering
+  \small
+  \caption{Chinese backbone and structural-loss screens, as paired
+  within-arm contrasts. All checkpoints are Chinese; the base-sized arm was
+  pre-registered without a training-objective condition, so it appears at
+  $\lambda=0$ only. The $\lambda=0.3$ arms still emit illegal tuples: the
+  training penalty pulls probability mass toward the legal set without
+  confining the output to it. Bold marks an interval excluding zero; these
+  contrasts are exploratory and form no Holm family.}
+  \label{tab:legality-cost}
+  \begingroup
+  \tiny
+  \setlength{\tabcolsep}{2.5pt}
+  \input{../tables/table3_legality_cost.tex}
+  \endgroup
+\end{table}
+
 \paragraph{Exploratory robustness.}
 On the Chinese anchor, structural loss lowers M0 invalidity from 12.55\% to
 5.18\%; its pre-registered M1 wF1 effect is $+0.00250$
@@ -110,4 +128,11 @@ language-by-backbone pairs, with mixed wF1 and tuple effects. The Chinese
 DeBERTa and ELECTRA screens likewise lack conclusive wF1 gains; the
 same-family base checkpoint's lower invalidity contradicts a simple
 smaller-model mechanism.
+
+Table~\ref{tab:legality-cost} reports those seven Chinese arms as paired
+within-arm contrasts. Two sign patterns hold across all of them even though the
+official-score column does not: M1--M0 raises tuple accuracy in 7/7, and
+M4--M1 lowers it in 7/7. The single-arm M4--M1 result above is therefore the
+sign the whole screen shows, not one arm's outcome; on the official metric the
+same seven arms disagree.
 \FloatBarrier
