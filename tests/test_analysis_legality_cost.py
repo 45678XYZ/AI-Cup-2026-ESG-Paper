@@ -141,7 +141,9 @@ def test_the_table_has_one_row_per_arm():
 def test_both_contrasts_get_their_own_column_pair():
     header = render_table(STUB)
     assert "M1$-$M0" in header and "M4$-$M1" in header
-    assert header.count("Official") == 2 and header.count("Whole-row") == 2
+    # The same two column names tables 2 and 7 print, so a reader carrying the
+    # official-versus-tuple comparison between them need not re-map it.
+    assert header.count("wF1") == 2 and header.count("Tuple acc.") == 2
 
 
 def test_only_cells_whose_interval_clears_zero_are_bold():

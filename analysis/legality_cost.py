@@ -237,8 +237,8 @@ def render_table(report) -> str:
         " & & & \\multicolumn{2}{c}{Enforce legality (M1$-$M0)} & "
         "\\multicolumn{2}{c}{Joint decoding (M4$-$M1)} \\\\\n"
         "\\cmidrule(lr){4-5}\\cmidrule(lr){6-7}\n"
-        "Backbone & $\\lambda$ & M0 invalid & Official & Whole-row & "
-        "Official & Whole-row"
+        "Backbone & $\\lambda$ & M0 invalid & wF1 & Tuple acc. & "
+        "wF1 & Tuple acc."
     )
 
     def line(arm) -> str:
@@ -341,14 +341,15 @@ def build_caption(report) -> str:
         f"Means over {len(arms[0]['seeds'])} seeds; paired PDF-cluster "
         f"bootstrap, {report['n_boot']:,} resamples, seed "
         f"{report['bootstrap_seed']}, one resample shared within each contrast.",
-        f"Enforcing legality raises whole-row accuracy in {row['up']} of "
+        f"Enforcing legality raises tuple accuracy -- all four fields correct "
+        f"in the same row -- in {row['up']} of "
         f"{row['n']} arms, {row['detectable']} of those intervals excluding "
         f"zero. On the official metric it is negative in {off_plain['down']} "
         f"of the {off_plain['n']} arms trained without the structural "
         f"objective and detectable in {off_plain['detectable']} of them, "
         f"against {off_trained['detectable']} of {off_trained['n']} among the "
         f"structurally trained arms.",
-        f"Joint decoding lowers whole-row accuracy relative to projection in "
+        f"Joint decoding lowers tuple accuracy relative to projection in "
         f"{dec_row['down']} of {dec_row['n']} arms, detectable in "
         f"{dec_row['detectable']}; on the official metric it is detectable in "
         f"{dec_plain['detectable']} of the {dec_plain['n']} untrained arms and "

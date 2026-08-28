@@ -11,6 +11,7 @@ from analysis.aggregate import protocol_summary, regime_comparison
 from analysis.audit import full_audit
 from analysis.load import EXAMPLES_ROOT, pdf_clusters
 from analysis.tables import (
+    ALL_TABLE_FILES,
     EXTERNAL_TABLES,
     EXTERNAL_TABLE_FILES,
     FAMILY_LABELS,
@@ -493,6 +494,37 @@ def test_table4_caption_says_where_the_demoted_metrics_went():
                              )["table4_contrasts"]
     assert "exploratory" in caption.lower()
 
+
+
+RETIRED_METRIC_LABELS = ("Weighted F1", "Whole-row", "whole-row")
+
+
+def test_the_two_headline_metrics_are_named_the_same_way_in_every_table():
+    """A reader has to follow these two columns across three tables.
+
+    The paper's claim is that the official metric and whole-tuple accuracy
+    disagree about the same predictions, so those two columns are exactly what
+    a reader compares between tables. They used to be spelled ``Weighted
+    F1``/``Tuple Acc.`` in table 2, ``Official``/``Whole-row`` in table 3 and
+    ``Delta official``/``Delta whole-row`` in table 7 -- three tables, and the
+    headers for the same two quantities never repeated.
+
+    ``Weighted F1`` is retired for being ambiguous as well: the
+    path-constrained variant is also a weighted F1, so the short form cannot
+    identify the official metric where both appear. Table 4 lists four metric
+    families and keeps its long labels for that reason.
+    """
+    for name in ALL_TABLE_FILES:
+        tex = (REPO_ROOT / "tables" / name).read_text(encoding="utf-8")
+        for retired in RETIRED_METRIC_LABELS:
+            assert retired not in tex, f"{name} still says {retired!r}"
+
+    for name in ("table2_main.tex", "table3_legality_cost.tex",
+                 "table7_multilingual_mechanism.tex"):
+        head = (REPO_ROOT / "tables" / name).read_text(encoding="utf-8")
+        head = head.split("\\midrule")[0]
+        assert "wF1" in head, f"{name}: the official column is not called wF1"
+        assert "uple acc." in head, f"{name}: the whole-tuple column is not 'tuple acc.'"
 
 
 def test_every_external_table_declares_a_writer_the_entry_point_can_call():

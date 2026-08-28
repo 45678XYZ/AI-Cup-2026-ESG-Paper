@@ -483,8 +483,13 @@ def render_table2(summary) -> str:
             f"{fields} & {_f(row['tuple_exact_match_mean'])} & "
             f"{_f(row['invalid_tuple_rate_mean'] * 100, 1)} \\\\"
         )
-    header = ("ID & Calibration & Decoding & Weighted F1 & PS & VT & ES & EQ "
-              "& Tuple Acc. & Invalid \\%")
+    # ``wF1 (official)`` rather than ``Weighted F1``: the path-constrained
+    # variant in table 4 is also a weighted F1, so the bare short form does not
+    # identify the metric the competition ranks by. ``Tuple acc.`` is the same
+    # quantity tables 3 and 7 print, spelled the same way -- these are the two
+    # columns a reader carries between them.
+    header = ("ID & Calibration & Decoding & wF1 (official) & PS & VT & ES & EQ "
+              "& Tuple acc. & Invalid \\%")
     return _tabular("llrrrrrrrr", header, body)
 
 

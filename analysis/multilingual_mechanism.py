@@ -231,7 +231,7 @@ def render_table(report) -> str:
             f"{d_f1:+.4f} & \\textbf{{{d_row:+.4f}}} \\\\"
         )
     header = ("Corpus & Rows & M0 illegal \\% & $N\\!/\\!A$ net & Subst.\\ net & "
-              "$\\Delta$ official & $\\Delta$ whole-row")
+              "$\\Delta$ wF1 & $\\Delta$ tuple acc.")
     return ("\\begin{tabular}{lrrrrrr}\n\\toprule\n"
             f"{header} \\\\\n\\midrule\n" + "\n".join(body)
             + "\n\\bottomrule\n\\end{tabular}\n")
