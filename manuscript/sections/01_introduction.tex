@@ -15,7 +15,11 @@ Field-wise weighted macro-F1 is a standard measure of classification quality
 for multi-field tasks, and it is the official ranking metric here. It does not,
 however, assess whether the four predictions form a jointly legal tuple. A
 validity-preserving rule may therefore repair an unsupported child without
-receiving a corresponding field-score gain. We ask whether a retraining-free
+receiving a corresponding field-score gain. The weight the metric places on
+legality is not merely small: because each field is scored on its own, an
+illegal tuple still collects 44.3\% of the available weighted field credit on
+average, since a field answered correctly is paid for even when the ancestors
+that would license it were answered wrongly. We ask whether a retraining-free
 inference constraint can guarantee legal outputs, and how its effects differ
 under field-wise and whole-tuple evaluation.
 

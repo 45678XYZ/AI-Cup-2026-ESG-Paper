@@ -30,7 +30,12 @@ probabilities and Test rows. Independent argmax (M0) produces invalid tuples
 for 12.55\% of document-disjoint predictions; projection and 17-state decoding
 (M1--M6) reduce this rate to zero by construction. This zero rate is a
 deterministic property of the validity layer, not evidence that the base model
-became more accurate. The $\pm$ values are sample standard deviations across
+became more accurate. Pooled over both protocols, all seeds and all methods,
+M0 emits 1{,}527 illegal tuples in 12{,}000 rows, and 95.2\% of them break one
+of two rules: a substantive timeline under \textsf{PS}=No, or an evidence
+quality under \textsf{ES}=No. The failure is concentrated in predictions that
+deny a parent and then answer its children anyway, rather than spread evenly
+over the label space. The $\pm$ values are sample standard deviations across
 the three seeds. Because each seed determines both fold assignment and
 training randomness, they describe spread over the whole split-and-training
 pipeline, not a confidence interval.
@@ -41,6 +46,15 @@ five official wF1 contrasts are undetected after Holm correction. For the
 central M1--M0 contrast, $\Delta=-0.001$ with 95\% interval
 $[-0.006,0.003]$ and $p_{\mathrm{Holm}}=1.000$. This is absence of a detected
 difference; it does not establish a zero effect.
+
+The null is not confined to that contrast. The seven decision rules span
+$0.0082$ in official wF1, and that spread is itself a single contrast: M5 is
+the highest-scoring rule and M6 the lowest, so the range equals
+$|\textrm{M6}-\textrm{M5}|$, which has an interval excluding zero
+($[-0.016,-0.001]$) and still does not survive correction
+($p_{\mathrm{Holm}}=.171$). The largest gap between any two of the rules
+compared here is therefore below what this evaluation can resolve, which bounds
+what any decision-stage comparison on this benchmark can demonstrate.
 \par\endgroup
 
 \paragraph{Whole-tuple effects.}
