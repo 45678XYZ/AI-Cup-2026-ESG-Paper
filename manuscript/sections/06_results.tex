@@ -30,10 +30,10 @@ probabilities and Test rows. Independent argmax (M0) produces invalid tuples
 for 12.55\% of document-disjoint predictions; projection and 17-state decoding
 (M1--M6) reduce this rate to zero by construction. This zero rate is a
 deterministic property of the validity layer, not evidence that the base model
-became more accurate. Pooled over both protocols, all seeds and all methods,
-M0 emits 1{,}527 illegal tuples in 12{,}000 rows, and 95.2\% of them break one
-of two rules: a substantive timeline under \textsf{PS}=No, or an evidence
-quality under \textsf{ES}=No. The failure is concentrated in predictions that
+became more accurate. Pooled over both protocols and all three seeds, M0 emits
+1{,}527 illegal tuples in 12{,}000 rows, and 95.2\% of them break one of two
+rules: a substantive child under \textsf{PS}=No, or an evidence quality under
+\textsf{ES}=No. The failure is concentrated in predictions that
 deny a parent and then answer its children anyway, rather than spread evenly
 over the label space. The $\pm$ values are sample standard deviations across
 the three seeds. Because each seed determines both fold assignment and
@@ -154,11 +154,12 @@ smaller-model mechanism.
 
 \begingroup\emergencystretch=1em
 Table~\ref{tab:legality-cost} reports those seven Chinese arms as paired
-within-arm contrasts. Its first column shows what the penalty does not do: the
-$\lambda=0.3$ arms still emit illegal tuples, because it pulls probability mass
-toward the legal set without confining the output to it. Two sign patterns then
-hold across all seven arms even though the official column does not: M1--M0
-raises tuple accuracy in 7/7, and M4--M1 lowers it in 7/7. The single-arm
-M4--M1 result above is the sign the whole screen shows, not one arm's outcome.
+within-arm contrasts. Its invalidity column shows what the penalty does not do:
+the $\lambda=0.3$ arms still emit illegal tuples, because it pulls probability
+mass toward the legal set without confining the output to it. Two sign patterns
+then hold across all seven arms even though the official column does not:
+M1--M0 raises tuple accuracy in 7/7, and M4--M1 lowers it in 7/7. The
+single-arm M4--M1 result above is the sign the whole screen shows, not one
+arm's outcome.
 \par\endgroup
 \FloatBarrier
