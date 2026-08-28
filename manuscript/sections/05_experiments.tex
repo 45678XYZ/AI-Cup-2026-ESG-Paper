@@ -80,16 +80,20 @@ ML-Promise has no official weighted metric. We therefore label its scores
 ``AI CUP weights applied to ML-Promise.'' All external
 comparisons remain paired within corpus, backbone, and $\lambda$.
 
+\begingroup\emergencystretch=1em
 For paired method contrasts, we perform a paired PDF-cluster bootstrap over 49
 source-report clusters. Each of 10,000 replicates samples 49 reports with
 replacement using seed 20260814, applies the same sampled rows to both methods
 and all three seeds, computes the within-seed differences, and averages those
 differences. The five pre-specified contrasts are M1--M0, M3--M2, M4--M1,
-M6--M3, and M6--M5. Our only confirmatory family applies Holm correction to
+M6--M3, and M6--M5. M1--M0 changes only the output rule, with calibration held
+out of both arms; it is therefore the cleanest test of projection rather than
+the highest-scoring configuration. Our only confirmatory family applies Holm correction to
 these five contrasts on Chinese official wF1 \cite{holm1979}. Pre-specified
 Chinese tuple exact-match is a separate secondary family of five. Bracketed
 95\% intervals are uncorrected bootstrap percentile intervals; decisions use
 $p_{\mathrm{Holm}}<.05$, not whether an interval excludes zero.
+\par\endgroup
 
 External replication was pre-registered around within-arm contrast directions;
 we additionally apply a report-cluster bootstrap only to the fixed English
