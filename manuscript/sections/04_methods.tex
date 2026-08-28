@@ -31,7 +31,8 @@ For the external fixed arms, English uses RoBERTa-large
 RoBERTa-base. The other languages add RemBERT \cite{chung2021rembert},
 XLM-R-base, and mBERT \cite{devlin2019bert}. The Chinese anchor adds three
 exploratory screens of its own, distinct from those English checkpoints: a
-Chinese DeBERTa-v2-320M, a Chinese ELECTRA-large discriminator
+Chinese DeBERTa-v2-320M \cite{fengshenbang}, a Chinese ELECTRA-large
+discriminator
 \cite{cui2020revisiting}, and the base-sized checkpoint of the primary
 encoder's own family \cite{cui2021wwm}. Every backbone uses the same maximum
 length, optimization recipe, three seeds, and five rotations. For each
@@ -42,10 +43,13 @@ hierarchy-aware objective ($\lambda=0.3$):
   \lambda\log\sum_{s\in\mathcal S}\prod_t p_{t,s_t}(x).
   \label{eq:structural-loss}
 \end{equation}
-The second term penalizes probability mass outside the 17 legal states without
-choosing which legal state is correct. Structural-loss and alternate-backbone
+\begingroup\emergencystretch=1em
+The second term is the semantic loss of Xu et al.\ \cite{xu2018semantic}: it
+penalizes probability mass outside the 17 legal states without choosing which
+legal state is correct. Structural-loss and alternate-backbone
 comparisons are exploratory; the primary decision comparison uses
 $\lambda=0$.
+\par\endgroup
 
 \subsection{Metric-Aware Decision Calibration}
 Calibration is the second factor of the comparison: the results table crosses
