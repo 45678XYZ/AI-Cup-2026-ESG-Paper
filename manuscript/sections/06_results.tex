@@ -78,6 +78,28 @@ The post-hoc C-wF1 and hF M1--M0 point estimates are also positive
 the same-document sensitivity analysis, C-wF1 remains positive at $+0.002$,
 while its interval $[-0.001,0.005]$ crosses zero.
 
+\begin{table}[t]
+  \centering
+  \small
+  \caption{\protect\input{../tables/table6_regimes_caption.txt}}
+  \label{tab:regimes}
+  \begingroup
+  \scriptsize
+  \setlength{\tabcolsep}{3.5pt}
+  \input{../tables/table6_regimes.tex}
+  \endgroup
+\end{table}
+
+\paragraph{Evaluation protocol.}
+Section~\ref{sec:experiments} treats the two protocols as distinct estimands
+rather than as a biased and an unbiased version of one quantity;
+Table~\ref{tab:regimes} is what that separation costs. Every rule scores
+higher under same-document evaluation, by $0.010$ to $0.020$, and every
+interval excludes zero. The gap is therefore a property of the split rather
+than of any rule, and it is larger than the $0.0082$ that separates the rules
+themselves: on this benchmark, which paragraphs are held out matters more than
+which decision rule is applied to them.
+
 \paragraph{Multilingual replication.}
 Table~\ref{tab:multilingual} fixes one arm per language before inspecting
 scores. Each uses document-disjoint evaluation and $\lambda=0$.
