@@ -238,16 +238,17 @@ def render_table(report) -> str:
         "\\multicolumn{2}{c}{Joint decoding (M4$-$M1)} \\\\\n"
         "\\cmidrule(lr){4-5}\\cmidrule(lr){6-7}\n"
         # ``M0 illegal \\%`` matches the multilingual table's column rather than
-        # spelling the same quantity two ways, and the backbones are prefixed
-        # because ``RoBERTa-large`` names a different checkpoint here than in
-        # the English replication -- the two tables sit a page apart.
+        # spelling the same quantity two ways. The backbone cells stay short so
+        # the table fits one column; that ``RoBERTa-large`` is a different
+        # checkpoint from the English replication's is stated in the caption,
+        # which is where a reader looks when two tables sit a page apart.
         "Backbone & $\\lambda$ & M0 illegal \\% & wF1 & Tuple acc. & "
         "wF1 & Tuple acc."
     )
 
     def line(arm) -> str:
         cells = [
-            f"Chinese {arm['backbone']}",
+            arm["backbone"],
             f"{arm['structure_lambda']:g}",
             f"{arm['invalid_rate']['M0'] * 100:.2f}",
         ]
@@ -336,7 +337,9 @@ def build_caption(report) -> str:
 
     parts = [
         f"Two decision rules over one set of probabilities, on the "
-        f"{_tex(report['protocol'])} protocol. M0 takes each field's argmax "
+        f"{_tex(report['protocol'])} protocol; every checkpoint here is "
+        f"Chinese, so \\emph{{RoBERTa-large}} names a different model than "
+        f"in the English replication. M0 takes each field's argmax "
         f"independently; M1 projects onto the 17 legal states top-down; M4 "
         f"scores all 17 and takes the best. \\textbf{{M1 and M4 both emit an "
         f"invalid tuple on 0\\% of rows in every arm}} -- their output space "
