@@ -481,7 +481,10 @@ def render_table2(summary) -> str:
             f"{method} & {calibration} & {decoding} & "
             f"{_pm(row['weighted_macro_f1_mean'], row['weighted_macro_f1_std'])} & "
             f"{fields} & {_f(row['tuple_exact_match_mean'])} & "
-            f"{_f(row['invalid_tuple_rate_mean'] * 100, 1)} \\\\"
+            # Two decimals, not one: the running text and tables 4 and 6 all
+            # print this same rate as 12.55, and a table that rounds it to
+            # 12.6 reads as a second, disagreeing measurement of one number.
+            f"{_f(row['invalid_tuple_rate_mean'] * 100, 2)} \\\\"
         )
     # ``wF1 (official)`` rather than ``Weighted F1``: the path-constrained
     # variant in table 4 is also a weighted F1, so the bare short form does not
