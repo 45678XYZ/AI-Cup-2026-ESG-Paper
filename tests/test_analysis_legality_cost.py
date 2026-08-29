@@ -31,13 +31,13 @@ def test_every_declared_arm_has_predictions_on_disk():
 
 def test_the_arms_cover_every_backbone_and_lambda_that_was_run():
     labels = {(a.backbone, a.structure_lambda) for a in ARMS}
-    assert ("RoBERTa-large", 0.0) in labels     # frozen anchor
-    assert ("RoBERTa-large", 0.3) in labels     # pre-registered structural arm
-    assert ("DeBERTa-v2-320M", 0.0) in labels
-    assert ("DeBERTa-v2-320M", 0.3) in labels
-    assert ("ELECTRA-large", 0.0) in labels
-    assert ("ELECTRA-large", 0.3) in labels
-    assert ("RoBERTa-base", 0.0) in labels      # generality check, no lambda arm
+    assert ("Chinese RoBERTa-large", 0.0) in labels     # frozen anchor
+    assert ("Chinese RoBERTa-large", 0.3) in labels     # pre-registered structural arm
+    assert ("Chinese DeBERTa-v2-320M", 0.0) in labels
+    assert ("Chinese DeBERTa-v2-320M", 0.3) in labels
+    assert ("Chinese ELECTRA-large", 0.0) in labels
+    assert ("Chinese ELECTRA-large", 0.3) in labels
+    assert ("Chinese RoBERTa-base", 0.0) in labels      # generality check, no lambda arm
     assert len(ARMS) == 7
 
 
@@ -122,10 +122,10 @@ STUB = {
     "arms": [
         # DeBERTa: every column's interval clears zero except the decoder's
         # whole-row cell, which is the one cell that must not be bold.
-        _arm("DeBERTa-v2-320M", 0.0, 0.1975,
+        _arm("Chinese DeBERTa-v2-320M", 0.0, 0.1975,
              _contrast(-0.0080, -0.0158, -0.0007), _contrast(0.0502, 0.041, 0.060),
              _contrast(0.0130, 0.003, 0.023), _contrast(-0.0033, -0.010, 0.003)),
-        _arm("RoBERTa-large", 0.3, 0.0518,
+        _arm("Chinese RoBERTa-large", 0.3, 0.0518,
              _contrast(-0.0009, -0.0040, 0.0017), _contrast(0.0138, 0.010, 0.018),
              _contrast(-0.0008, -0.004, 0.002), _contrast(-0.0013, -0.004, 0.001)),
     ],

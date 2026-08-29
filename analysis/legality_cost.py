@@ -85,19 +85,26 @@ class Arm:
         return f"{self.backbone} (lambda={self.structure_lambda:g})"
 
 
+# Every name is prefixed ``Chinese``. Unprefixed, three of these four collide
+# with an English or multilingual checkpoint printed elsewhere in the same
+# paper: this ``RoBERTa-large`` is hfl/chinese-roberta-wwm-ext-large, while the
+# one in the external-arm table is the English roberta-large, and the two
+# ELECTRA-large and RoBERTa-base cells are likewise different models. A caption
+# sentence a page away is not enough to stop a reader reading down a column and
+# comparing two different checkpoints.
 ARMS = (
-    Arm("RoBERTa-large", 0.0, "", "paper_plan.md"),
-    Arm("RoBERTa-large", 0.3, "runs/structural",
+    Arm("Chinese RoBERTa-large", 0.0, "", "paper_plan.md"),
+    Arm("Chinese RoBERTa-large", 0.3, "runs/structural",
         "pre_registration_structural_training.md"),
-    Arm("DeBERTa-v2-320M", 0.0, "runs/deberta_v2_320m/lambda_0.0",
+    Arm("Chinese DeBERTa-v2-320M", 0.0, "runs/deberta_v2_320m/lambda_0.0",
         "pre_registration_deberta_screen.md"),
-    Arm("DeBERTa-v2-320M", 0.3, "runs/deberta_v2_320m/lambda_0.3",
+    Arm("Chinese DeBERTa-v2-320M", 0.3, "runs/deberta_v2_320m/lambda_0.3",
         "pre_registration_deberta_screen.md"),
-    Arm("ELECTRA-large", 0.0, "runs/electra_180g_large/lambda_0.0",
+    Arm("Chinese ELECTRA-large", 0.0, "runs/electra_180g_large/lambda_0.0",
         "pre_registration_electra_screen.md"),
-    Arm("ELECTRA-large", 0.3, "runs/electra_180g_large/lambda_0.3",
+    Arm("Chinese ELECTRA-large", 0.3, "runs/electra_180g_large/lambda_0.3",
         "pre_registration_electra_screen.md"),
-    Arm("RoBERTa-base", 0.0, "runs/rbt_base", "rbt_base_run.md"),
+    Arm("Chinese RoBERTa-base", 0.0, "runs/rbt_base", "rbt_base_run.md"),
 )
 
 
@@ -237,12 +244,12 @@ def render_table(report) -> str:
         " & & & \\multicolumn{2}{c}{Enforce legality (M1$-$M0)} & "
         "\\multicolumn{2}{c}{Joint decoding (M4$-$M1)} \\\\\n"
         "\\cmidrule(lr){4-5}\\cmidrule(lr){6-7}\n"
-        # ``M0 illegal \\%`` matches the multilingual table's column rather than
+        # ``M0 invalid \\%`` matches the multilingual table's column rather than
         # spelling the same quantity two ways. The backbone cells stay short so
         # the table fits one column; that ``RoBERTa-large`` is a different
         # checkpoint from the English replication's is stated in the caption,
         # which is where a reader looks when two tables sit a page apart.
-        "Backbone & $\\lambda$ & M0 illegal \\% & wF1 & Tuple acc. & "
+        "Backbone & $\\lambda$ & M0 inv.\\ \\% & wF1 & Tuple acc. & "
         "wF1 & Tuple acc."
     )
 
@@ -338,8 +345,10 @@ def build_caption(report) -> str:
     parts = [
         f"Two decision rules over one set of probabilities, on the "
         f"{_tex(report['protocol'])} protocol; every checkpoint here is "
-        f"Chinese, so \\emph{{RoBERTa-large}} names a different model than "
-        f"in the English replication. M0 takes each field's argmax "
+        f"Chinese and is named with that prefix, because \\emph{{RoBERTa-large}}, "
+        f"\\emph{{ELECTRA-large}} and \\emph{{RoBERTa-base}} each also name a "
+        f"different model in the external replication tables. M0 takes each "
+        f"field's argmax "
         f"independently; M1 projects onto the 17 legal states top-down; M4 "
         f"scores all 17 and takes the best. \\textbf{{M1 and M4 both emit an "
         f"invalid tuple on 0\\% of rows in every arm}} -- their output space "
@@ -403,10 +412,10 @@ def _lambda_note(arms, plain, trained) -> str:
     # Deliberately phrased as "the lambda = 0.3 arms" rather than "the
     # structurally trained arms": the caption's guard requires any sentence
     # naming that subgroup to name the metric it holds for, and this sentence
-    # is about the illegal rate rather than about either metric.
+    # is about the invalid rate rather than about either metric.
     note = (
         f"The $\\lambda$ = {trained[0]['structure_lambda']:g} arms still emit "
-        f"illegal tuples on "
+        f"invalid tuples on "
         f"{min(rates) * 100:.2f}--{max(rates) * 100:.2f}\\% of rows: the "
         "training-time penalty moves probability mass toward the legal set "
         "without confining the output to it, which is what the decision rule "

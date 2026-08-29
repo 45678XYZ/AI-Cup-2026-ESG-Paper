@@ -1,16 +1,16 @@
 \section{Discussion}
 
 The practical contribution of projection is its guarantee rather than a
-universal field-score gain. As a retraining-free layer over compatible
+universal field-score gain: as a retraining-free layer over compatible
 field-wise probabilities, it enforces the supplied hierarchy in every arm and
-improves exact whole-tuple accuracy throughout the executed external matrix.
-Together with the Chinese pre-specified tuple gain, this repeated result shows
-that a validity layer can improve complete-output correctness without claiming
-that it improves the underlying encoder or the official score in every arm.
+improves exact whole-tuple accuracy throughout the executed external matrix,
+without any claim about the underlying encoder.
 
-This guarantee is not cost-free in every scoring view. The measured ledger
-makes that trade-off explicit.
-
+\subsection{Why the two metrics disagree}
+\label{sec:mechanism}
+This guarantee is not cost-free in every scoring view, and
+Table~\ref{tab:multilingual} makes the trade-off explicit by counting the
+correct field predictions projection creates against those it destroys.
 The $N\!/\!A$ net is positive and the
 substantive-class net negative in all five fixed arms. If an independently
 predicted parent is wrong, projection may replace a correct substantive child
@@ -29,6 +29,36 @@ had already made correct. This adverse result cautions against treating a
 larger legal-state search as automatically superior; it does not imply that
 joint decoding must fail on other models or tasks.
 
+\subsection{Reproducibility}
+\label{sec:repro}
+Code, pre-registration documents, row-level predictions for all five corpora,
+and the pipeline that regenerates every table here are at \url{\repourl}.
+
+\begin{sloppypar}
+\paragraph{Checkpoints.} Every backbone is a pinned Hugging Face checkpoint,
+its commit revision recorded in the released configuration. Chinese:
+\hfid{hfl/chinese-roberta-wwm-ext-large} (anchor),
+\hfid{hfl/chinese-roberta-wwm-ext},
+\hfid{IDEA-CCNL/Erlangshen-DeBERTa-v2-320M-Chinese},
+\hfid{hfl/chinese-electra-180g-large-discriminator}. English:
+\hfid{roberta-large}, \hfid{roberta-base},
+\hfid{microsoft/deberta-v3-large},
+\hfid{google/electra-large-discriminator}. French, Japanese and Korean:
+\hfid{FacebookAI/xlm-roberta-large}, \hfid{FacebookAI/xlm-roberta-base},
+\hfid{google/rembert}, \hfid{google-bert/bert-base-multilingual-cased}.
+\end{sloppypar}
+
+\paragraph{Procedures given only in outline above.} The document-disjoint
+split sorts reports by identifier, shuffles them under the seed, re-sorts by
+descending row count with a stable sort so the shuffle survives ties, then
+assigns each report uniformly at random to one of the two currently lightest
+folds, ties broken by fold index. Korean pages come from Poppler's \hfid{pdftotext -f P -l P -layout}, one page per labelled
+(URL, page) pair, falling back to \hfid{pdftoppm -r 250} and Tesseract
+(\hfid{-l kor+eng}) for image-only pages; the release already carries one
+label tuple per unique (URL, page), so no further deduplication applies.
+Python 3.10.20, PyTorch 2.2.2+cu121 and Transformers 4.40.2 on Linux; the 32
+external arms consumed 25.4 GPU-hours in total on a single RTX 3090.
+
 \subsection{Limitations}
 The corpora differ in language, reports, annotation distributions, and primary
 backbones, so the replication matrix is not a factorial estimate of a pure
@@ -38,30 +68,37 @@ are therefore descriptive directions across executed arms, not a pooled
 significance test. AI CUP weights applied to ML-Promise are not an official
 ML-Promise metric.
 
+Every contrast here is measured against M0, the unconstrained argmax over our
+own probabilities. That is the right comparator for the question we ask, since
+it holds rows and probabilities fixed, but the paper therefore reports no
+comparison against a published system, an official baseline, or a leaderboard,
+and nothing here is a claim about where this system ranks among participants.
+
 Korean has a further input mismatch: its 500 examples are first-384-token PDF
 pages rather than released paragraphs, and it has no gold \emph{Misleading}
 example. We do not redistribute the extracted Korean text or source PDFs.
-The reported Korean predictions can be rescored, but retraining requires
-reconstructing the page inputs from their source documents.
+The reported Korean predictions are released and can therefore be rescored,
+but retraining requires rebuilding the page inputs from their source documents
+with the recipe in Section~\ref{sec:repro}.
 
 \begin{sloppypar}
-Results for structural loss and other backbones remain exploratory. They show
-that reducing invalidity need not yield a conclusive gain on the official
-score, but the fixed loss weights and limited checkpoint set cannot
-characterize all training objectives or architectures. The Chinese rarest quality label has
-only two examples, Korean has none, and no class-level claim is licensed for
-it. Finally, each
-seed jointly changes folds and optimization randomness, so those sources of
-variation cannot be separated.
+Results for structural loss and other backbones remain exploratory: they show
+that reducing the invalid-tuple rate need not yield a conclusive gain on the
+official score, but the fixed loss weights and limited checkpoint set cannot
+characterize all training objectives or architectures. The rarest Chinese
+quality label has two examples and Korean has none, so no class-level claim is
+licensed for it. Finally, each seed jointly changes folds and optimization
+randomness, so those two sources of variation cannot be separated.
 \end{sloppypar}
 
 \section{Conclusion}
 
 Hierarchical projection is not a guaranteed route to higher field-wise
 weighted macro-F1. It is instead a retraining-free validity layer that
-eliminates illegal tuples by construction and improves exact whole-tuple
-accuracy on the Chinese anchor and in all 32 evaluated external arms. Its
-field-score effect varies across models and corpora, but its logical guarantee
-does not. For audit-oriented tasks with dependent outputs, field-wise
-performance, whole-tuple correctness, and structural validity should therefore
-be reported together.
+eliminates invalid tuples by construction and
+improves exact whole-tuple accuracy on the Chinese anchor and in all 32
+evaluated external arms.
+Its field-score effect varies across models and corpora, but its logical guarantee does not.
+For audit-oriented tasks with dependent outputs, field-wise performance,
+whole-tuple correctness, and structural validity should be reported
+together.

@@ -2,7 +2,8 @@
 
 \subsection{Shared Base Models}
 For the Chinese study, we use
-{\small\texttt{hfl/chinese-roberta-wwm-ext-large}} as the fixed encoder.
+{\small\texttt{hfl/chinese-roberta-wwm-ext-large}} as the fixed encoder, where
+\texttt{hfl} is the Joint Laboratory of HIT and iFLYTEK Research.
 BERT-Large
 has 24 layers and hidden size 1024 \cite{devlin2019bert}; the pinned HFL
 configuration matches those dimensions. Cui et al. document the checkpoint's
@@ -44,8 +45,11 @@ hierarchy-aware objective ($\lambda=0.3$):
   \label{eq:structural-loss}
 \end{equation}
 \begingroup\emergencystretch=1em
-The second term is the semantic loss of Xu et al.\ \cite{xu2018semantic}: it
-penalizes probability mass outside the 17 legal states without choosing which
+Here $\mathcal L_{\mathrm{fields}}$ is the sum of the four weighted
+cross-entropy losses just described, and $\mathcal S$ is the set of 17 legal
+states of Eq.~\eqref{eq:legal-states}. The second term is the semantic loss of
+Xu et al.\ \cite{xu2018semantic}: it
+penalizes probability mass outside $\mathcal S$ without choosing which
 legal state is correct. Structural-loss and alternate-backbone
 comparisons are exploratory; the primary decision comparison uses
 $\lambda=0$.
@@ -88,10 +92,11 @@ conditional with global estimation including their different estimable
 parameter sets.
 
 Biases start at zero and are fitted by deterministic coordinate ascent over
-$[-3,3]$ in increments of 0.05. Coordinates follow a fixed field and class
-order; a move requires a strict improvement, ties favor the smaller absolute
-bias (then the more negative value), and search stops after a pass without
-improvement or at 20 passes. Eligibility is determined from the corresponding
+$[-3,3]$ in increments of 0.05. Coordinates are visited in the order PS, VT,
+ES, EQ and, within a field, in the released label order (for EQ: Clear, Not
+Clear, Misleading, N/A); a move requires a strict improvement, ties favor the
+smaller absolute bias (then the more negative value), and search stops after a
+pass without improvement or at 20 passes. Eligibility is determined from the corresponding
 Train subset: a class absent there is excluded from coordinate ascent and
 retains bias zero. Among Train-eligible classes, one absent from the matching
 Calibration subset also retains bias zero and is recorded as an absent-class
@@ -109,18 +114,21 @@ EQ's best substantive class. These rules completely enforce both directions of
 every parent implication. This bidirectional projection always returns one of
 the 17 legal states; a one-way N/A overwrite would not.
 
-\paragraph{Joint valid-state decoding.}
-The alternative scores every $s$ in the legal set $\mathcal S$ and returns
+\paragraph{17-state decoding.}
+The alternative scores every $s\in\mathcal S$ and returns
 \begin{equation}
   \hat{\mathbf y}=\arg\max_{s\in\mathcal S}
-  \sum_t \alpha_t\{\log p_{t,s_t}(x)+b_{t,s_t}\},
-  \qquad \alpha_t=1.
+  \sum_t \{\log p_{t,s_t}(x)+b_{t,s_t}\}.
   \label{eq:joint-decoder}
 \end{equation}
-Fixing all task scales avoids giving the decoder additional tuned parameters.
+The four fields enter this sum unweighted. A per-field scale $\alpha_t$ would
+be the obvious generalization, and we deliberately do not fit one: the
+comparison against projection is meant to isolate the choice of output rule,
+and a decoder carrying four tuned parameters that projection does not have
+would no longer answer that question.
 
 Figure~\ref{fig:hierarchy} summarizes seven \emph{alternative} rules over
 identical cross-fitted base probabilities, not sequential stages: M0 is
 uncalibrated independent argmax; M1/M2/M3 use projection with respectively no,
 global, or conditional bias; and M4/M5/M6 use 17-state decoding with the same
-three bias choices. Only M0 can emit an illegal tuple.
+three bias choices. Only M0 can emit an invalid tuple.

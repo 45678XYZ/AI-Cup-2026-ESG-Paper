@@ -67,6 +67,19 @@ EXTERNAL_TABLES = {
         "kwargs": (),
         "skip_if_absent": True,
     },
+    # The two numbers the abstract repeats -- 32/32 and 14/32 -- and the two
+    # the Introduction and section 6 repeat -- 44.3% and 95.2% of 1,527 --
+    # had no table behind them. These supply one each.
+    "table8_invalid_anatomy.tex": {
+        "writer": "analysis.invalid_anatomy:write_report",
+        "kwargs": ("root",),
+        "skip_if_absent": True,
+    },
+    "table9_external_arms.tex": {
+        "writer": "analysis.external_arms:write_report",
+        "kwargs": (),
+        "skip_if_absent": True,
+    },
 }
 
 EXTERNAL_TABLE_FILES = tuple(EXTERNAL_TABLES)
@@ -86,8 +99,11 @@ ALL_TABLE_FILES = tuple(sorted(TABLE_FILES + EXTERNAL_TABLE_FILES))
 # prose rather than giving each a Holm family, which removes ten tests from the
 # page and costs nothing -- what they show, tuple exact-match already shows
 # with a pre-specified metric and a ten-times-larger effect.
+# ``wF1 (official)`` is what table 2's own column is called. Spelling the same
+# metric out in full here made this table wide enough to need both columns of
+# the page, for no gain to a reader who has already met the short form.
 FAMILY_LABELS = (
-    ("contrasts", "Weighted macro-F1 (official)"),
+    ("contrasts", "wF1 (official)"),
     ("tuple_contrasts", "Tuple accuracy"),
 )
 
@@ -480,7 +496,8 @@ def render_table2(summary) -> str:
         body.append(
             f"{method} & {calibration} & {decoding} & "
             f"{_pm(row['weighted_macro_f1_mean'], row['weighted_macro_f1_std'])} & "
-            f"{fields} & {_f(row['tuple_exact_match_mean'])} & "
+            f"{fields} & "
+            f"{_pm(row['tuple_exact_match_mean'], row['tuple_exact_match_std'])} & "
             # Two decimals, not one: the running text and tables 4 and 6 all
             # print this same rate as 12.55, and a table that rounds it to
             # 12.6 reads as a second, disagreeing measurement of one number.

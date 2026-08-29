@@ -1,0 +1,255 @@
+{
+ "report_version": "1.0",
+ "contrast": "M1-M0, document-disjoint, mean over three seeds",
+ "corpora": [
+  {
+   "corpus": "English",
+   "directory": "runs_en",
+   "order": [
+    "roberta_large",
+    "deberta_v3_large",
+    "electra_large_discriminator",
+    "roberta_base"
+   ],
+   "arms": {
+    "roberta_large": {
+     "lambda_0.0": {
+      "invalid": 0.2316666666666667,
+      "d_wf1": 0.0032068734259321774,
+      "d_tuple": 0.07249999999999998
+     },
+     "lambda_0.3": {
+      "invalid": 0.1325,
+      "d_wf1": 0.003254566483254173,
+      "d_tuple": 0.035
+     }
+    },
+    "deberta_v3_large": {
+     "lambda_0.0": {
+      "invalid": 0.1725,
+      "d_wf1": -0.004360117213588421,
+      "d_tuple": 0.03500000000000009
+     },
+     "lambda_0.3": {
+      "invalid": 0.08916666666666666,
+      "d_wf1": 0.002898930486591289,
+      "d_tuple": 0.017500000000000016
+     }
+    },
+    "electra_large_discriminator": {
+     "lambda_0.0": {
+      "invalid": 0.1708333333333333,
+      "d_wf1": 0.002994470534405047,
+      "d_tuple": 0.03999999999999998
+     },
+     "lambda_0.3": {
+      "invalid": 0.075,
+      "d_wf1": 0.004357951740675214,
+      "d_tuple": 0.023333333333333317
+     }
+    },
+    "roberta_base": {
+     "lambda_0.0": {
+      "invalid": 0.2041666666666667,
+      "d_wf1": 7.64971647707613e-05,
+      "d_tuple": 0.05000000000000002
+     },
+     "lambda_0.3": {
+      "invalid": 0.09333333333333334,
+      "d_wf1": 0.001213360405131536,
+      "d_tuple": 0.02166666666666664
+     }
+    }
+   }
+  },
+  {
+   "corpus": "French",
+   "directory": "runs_fr",
+   "order": [
+    "xlm_roberta_large",
+    "rembert",
+    "xlm_roberta_base",
+    "bert_base_multilingual_cased"
+   ],
+   "arms": {
+    "xlm_roberta_large": {
+     "lambda_0.0": {
+      "invalid": 0.21083333333333334,
+      "d_wf1": 0.0035620237349657615,
+      "d_tuple": 0.0625
+     },
+     "lambda_0.3": {
+      "invalid": 0.09583333333333334,
+      "d_wf1": 0.002514179985262858,
+      "d_tuple": 0.030000000000000027
+     }
+    },
+    "rembert": {
+     "lambda_0.0": {
+      "invalid": 0.21666666666666667,
+      "d_wf1": -0.011658734480469371,
+      "d_tuple": 0.04416666666666665
+     },
+     "lambda_0.3": {
+      "invalid": 0.08916666666666667,
+      "d_wf1": -0.0021437740005711414,
+      "d_tuple": 0.01833333333333333
+     }
+    },
+    "xlm_roberta_base": {
+     "lambda_0.0": {
+      "invalid": 0.27249999999999996,
+      "d_wf1": 0.00043674963175632797,
+      "d_tuple": 0.065
+     },
+     "lambda_0.3": {
+      "invalid": 0.12833333333333333,
+      "d_wf1": -0.005399400336686122,
+      "d_tuple": 0.02833333333333334
+     }
+    },
+    "bert_base_multilingual_cased": {
+     "lambda_0.0": {
+      "invalid": 0.215,
+      "d_wf1": 0.0025457024467321343,
+      "d_tuple": 0.04833333333333333
+     },
+     "lambda_0.3": {
+      "invalid": 0.095,
+      "d_wf1": 0.002365387192711806,
+      "d_tuple": 0.015000000000000013
+     }
+    }
+   }
+  },
+  {
+   "corpus": "Japanese",
+   "directory": "runs_ja",
+   "order": [
+    "xlm_roberta_large",
+    "rembert",
+    "xlm_roberta_base",
+    "bert_base_multilingual_cased"
+   ],
+   "arms": {
+    "xlm_roberta_large": {
+     "lambda_0.0": {
+      "invalid": 0.3125,
+      "d_wf1": -0.013068049578185617,
+      "d_tuple": 0.07083333333333335
+     },
+     "lambda_0.3": {
+      "invalid": 0.08583333333333333,
+      "d_wf1": -0.007683531597441395,
+      "d_tuple": 0.010833333333333342
+     }
+    },
+    "rembert": {
+     "lambda_0.0": {
+      "invalid": 0.4066666666666667,
+      "d_wf1": -0.017069107273967783,
+      "d_tuple": 0.0625
+     },
+     "lambda_0.3": {
+      "invalid": 0.13583333333333333,
+      "d_wf1": -0.004195173476200261,
+      "d_tuple": 0.014166666666666652
+     }
+    },
+    "xlm_roberta_base": {
+     "lambda_0.0": {
+      "invalid": 0.37083333333333335,
+      "d_wf1": -0.004277790867852904,
+      "d_tuple": 0.07333333333333332
+     },
+     "lambda_0.3": {
+      "invalid": 0.10666666666666667,
+      "d_wf1": -0.009971332003241426,
+      "d_tuple": 0.012499999999999997
+     }
+    },
+    "bert_base_multilingual_cased": {
+     "lambda_0.0": {
+      "invalid": 0.3466666666666667,
+      "d_wf1": -0.019587922802463447,
+      "d_tuple": 0.07333333333333335
+     },
+     "lambda_0.3": {
+      "invalid": 0.0875,
+      "d_wf1": -0.006030509764587466,
+      "d_tuple": 0.017500000000000005
+     }
+    }
+   }
+  },
+  {
+   "corpus": "Korean",
+   "directory": "runs_ko",
+   "order": [
+    "xlm_roberta_large",
+    "rembert",
+    "xlm_roberta_base",
+    "bert_base_multilingual_cased"
+   ],
+   "arms": {
+    "xlm_roberta_large": {
+     "lambda_0.0": {
+      "invalid": 0.22733333333333333,
+      "d_wf1": -0.019226757827598195,
+      "d_tuple": 0.02933333333333336
+     },
+     "lambda_0.3": {
+      "invalid": 0.08866666666666667,
+      "d_wf1": -0.0031832406494322063,
+      "d_tuple": 0.01466666666666668
+     }
+    },
+    "rembert": {
+     "lambda_0.0": {
+      "invalid": 0.32066666666666666,
+      "d_wf1": -0.016447490940855364,
+      "d_tuple": 0.05133333333333332
+     },
+     "lambda_0.3": {
+      "invalid": 0.10266666666666667,
+      "d_wf1": 0.0015103395611377375,
+      "d_tuple": 0.020666666666666667
+     }
+    },
+    "xlm_roberta_base": {
+     "lambda_0.0": {
+      "invalid": 0.28933333333333333,
+      "d_wf1": -0.03171283697438482,
+      "d_tuple": 0.036666666666666646
+     },
+     "lambda_0.3": {
+      "invalid": 0.10066666666666667,
+      "d_wf1": -0.004749940814380256,
+      "d_tuple": 0.01266666666666666
+     }
+    },
+    "bert_base_multilingual_cased": {
+     "lambda_0.0": {
+      "invalid": 0.218,
+      "d_wf1": -0.024477285605186083,
+      "d_tuple": 0.022000000000000002
+     },
+     "lambda_0.3": {
+      "invalid": 0.08066666666666666,
+      "d_wf1": 0.0007755398105027492,
+      "d_tuple": 0.013999999999999993
+     }
+    }
+   }
+  }
+ ],
+ "n_arms": 32,
+ "n_tuple_positive": 32,
+ "n_weighted_positive": 14,
+ "weighted_positive_by_corpus": {
+  "English": 7,
+  "French": 5,
+  "Japanese": 0,
+  "Korean": 2
+ }
+}

@@ -10,7 +10,12 @@ Section~\ref{sec:results}.
   \small
   \caption{Document-disjoint cross-fitted results on the Chinese development set.}
   \label{tab:main-results}
+  % Tighter than the default gutter: tuple accuracy gained a $\pm$ column and
+  % the ten columns no longer clear the two-column width without it.
+  \begingroup
+  \setlength{\tabcolsep}{4pt}
   \input{../tables/table2_main.tex}
+  \endgroup
 \end{table*}
 
 \subsection{Cross-Fitted Evaluation Targets}
@@ -33,24 +38,23 @@ The same-document protocol instead jointly stratifies by gold PS, ES, and VT.
 It shuffles rows within each joint-label bucket and deals them round-robin to
 the five folds. Every report represented in Calibration or Test must also occur
 in Train through a different paragraph. This estimates seen-report,
-unseen-paragraph generalization. The protocols are distinct estimands, not
-biased and unbiased versions of one quantity.
+unseen-paragraph generalization. The two protocols target distinct estimands;
+neither is a biased and the other an unbiased version of one quantity.
 
 Within each protocol and seed, M0--M6 consume the same Test rows and base
 probabilities.
 
 \begingroup\emergencystretch=1em
 External runs use document-disjoint report grouping, three seeds, and five
-rotations. Each language has eight paired arms: four
-backbones under both $\lambda=0$ and 0.3, giving 32 external arms. The
-fixed-arm table uses $\lambda=0$: RoBERTa-large for English and XLM-R-large
-for the other three languages. Arm choice never depends on observed scores.
-The same-document protocol is descriptive and available only for the primary
-large backbone. The complete executed study contains 765 training artifacts
-and 1,050 row-level prediction files across five corpora.
+rotations. Each language has eight paired arms -- four backbones under both
+$\lambda=0$ and 0.3 -- giving 32 external arms, none of them chosen on an
+observed score. The same-document protocol is descriptive and available only
+for the primary large backbone. The complete executed study contains 765
+training artifacts and 1,050 row-level prediction files across five corpora.
 \par\endgroup
 
 \subsection{Metrics and Inference}
+\label{sec:metrics}
 The field-wise weighted macro-F1 is a standard choice for multi-field
 classification, but it contains no term that assesses the joint validity of a
 four-field tuple. For Chinese, the primary metric is the official weighted

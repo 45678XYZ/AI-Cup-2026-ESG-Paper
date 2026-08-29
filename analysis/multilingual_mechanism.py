@@ -230,7 +230,7 @@ def render_table(report) -> str:
             f"{led['na']['net']:+d} & {led['substantive']['net']:+d} & "
             f"{d_f1:+.4f} & \\textbf{{{d_row:+.4f}}} \\\\"
         )
-    header = ("Corpus & Rows & M0 illegal \\% & $N\\!/\\!A$ net & Subst.\\ net & "
+    header = ("Corpus & Rows & M0 invalid \\% & $N\\!/\\!A$ net & Subst.\\ net & "
               "$\\Delta$ wF1 & $\\Delta$ tuple acc.")
     return ("\\begin{tabular}{lrrrrrr}\n\\toprule\n"
             f"{header} \\\\\n\\midrule\n" + "\n".join(body)

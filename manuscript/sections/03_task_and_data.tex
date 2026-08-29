@@ -20,14 +20,24 @@ combinations, but only
   \label{eq:legal-states}
 \end{equation}
 legal tuples: one for PS=No, and for each of four timelines either one ES=No
-state or three ES=Yes quality states.
+state or three ES=Yes quality states. We write $\mathcal S$ for this set of 17
+legal states throughout. Two terms and no others are used for the boundary it
+draws: a state is \emph{legal} when it belongs to $\mathcal S$, and an emitted
+tuple is \emph{invalid} when it does not.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics{../figures/figure1_hierarchy.pdf}
-  \caption{The task hierarchy and the alternative decision routes. All routes
-  consume identical base probabilities; projection and 17-state decoding
-  guarantee a legal tuple, whereas independent argmax does not.}
+  % 0.88 of natural size. The figure's own note fixes 1:1 as the point where
+  % its labels sit at 8pt against 9pt body text; at 0.88 they are just over
+  % 7pt, which is the floor this page budget can buy and still be read.
+  \includegraphics[scale=0.88]{../figures/figure1_hierarchy.pdf}
+  \caption{The task hierarchy and the seven decision rules. Panel (b) is the
+  $2\times3$ design of Section~\ref{sec:results}: either structured output
+  rule may be combined with any of the three calibration settings, and the
+  cells are alternatives rather than stages. All of them consume identical
+  base probabilities; projection and 17-state decoding guarantee a legal
+  tuple, whereas independent argmax does not, which is why its row has only
+  the uncalibrated cell.}
   \label{fig:hierarchy}
 \end{figure*}
 

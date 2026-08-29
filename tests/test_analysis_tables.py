@@ -127,7 +127,8 @@ def test_table2_reports_zero_invalid_for_every_structured_method():
     for line in render_table2(SUMMARIES["pdf_group"]).splitlines():
         cells = [c.strip() for c in line.split("&")]
         if cells and cells[0] in {"M1", "M2", "M3", "M4", "M5", "M6"}:
-            assert cells[-1].replace(r"\\", "").strip() == "0.0"
+            # Two decimals since the rate is printed as 12.55 everywhere.
+            assert cells[-1].replace(r"\\", "").strip() == "0.00"
 
 
 def test_written_manifest_records_every_input_checksum(tmp_path):
@@ -284,7 +285,11 @@ def test_table4_caption_counts_what_survives_the_correction_not_the_intervals():
     caption = build_captions(AUDIT, contrasts=contrasts)["table4_contrasts"]
     n = sum(1 for r in contrasts.values() if r["p_holm"] < 0.05)
     words = {0: "none", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
-    assert f"{words[n]} on Weighted macro-F1" in caption
+    # Read the label from FAMILY_LABELS rather than retyping it: the caption is
+    # built from that constant, so a typed copy here only records what the
+    # label used to be.
+    label = dict(FAMILY_LABELS)["contrasts"]
+    assert f"{words[n]} on {label}" in caption
     assert "uncorrected" in caption.lower()   # the intervals must be labelled
 
 
@@ -323,7 +328,7 @@ def test_survival_summary_counts_each_family_separately():
 
     sentence = _survival_summary({"contrasts": rows(0),
                                   "tuple_contrasts": rows(2)})
-    assert "none on Weighted macro-F1" in sentence
+    assert "none on wF1 (official)" in sentence
     assert "two on Tuple accuracy" in sentence
     assert "Of the five contrasts" in sentence
 
@@ -479,7 +484,7 @@ def test_table4_reports_only_the_two_pre_specified_families():
     ten exploratory tests on the page for a reader to count.
     """
     body = render_table4(SUMMARIES["pdf_group"])
-    assert "Weighted macro-F1 (official)" in body
+    assert "wF1 (official)" in body
     assert "Tuple accuracy" in body
     assert "Path-constrained" not in body
     assert "Hierarchical F1" not in body

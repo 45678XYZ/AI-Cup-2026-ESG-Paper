@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-08-29T11:44:28.076669+00:00",
- "git_sha": "87f05f4cbefe439c93beac65bb8375db36f7d9fc-dirty",
+ "generated_at": "2026-08-29T12:04:13.496921+00:00",
+ "git_sha": "5e0c287ef353060e41d89c4835b26f2bfbace235-dirty",
  "environment": {
   "python": "3.13.5",
   "platform": "macOS-26.3-arm64-arm-64bit-Mach-O",
@@ -19,8 +19,8 @@
  "inference_family": "exploratory (docs/governance/inference_families.md)",
  "arms": [
   {
-   "label": "RoBERTa-large (lambda=0)",
-   "backbone": "RoBERTa-large",
+   "label": "Chinese RoBERTa-large (lambda=0)",
+   "backbone": "Chinese RoBERTa-large",
    "structure_lambda": 0.0,
    "root": "",
    "registration": "paper_plan.md",
@@ -118,8 +118,8 @@
    }
   },
   {
-   "label": "RoBERTa-large (lambda=0.3)",
-   "backbone": "RoBERTa-large",
+   "label": "Chinese RoBERTa-large (lambda=0.3)",
+   "backbone": "Chinese RoBERTa-large",
    "structure_lambda": 0.3,
    "root": "runs/structural",
    "registration": "pre_registration_structural_training.md",
@@ -217,8 +217,8 @@
    }
   },
   {
-   "label": "DeBERTa-v2-320M (lambda=0)",
-   "backbone": "DeBERTa-v2-320M",
+   "label": "Chinese DeBERTa-v2-320M (lambda=0)",
+   "backbone": "Chinese DeBERTa-v2-320M",
    "structure_lambda": 0.0,
    "root": "runs/deberta_v2_320m/lambda_0.0",
    "registration": "pre_registration_deberta_screen.md",
@@ -316,8 +316,8 @@
    }
   },
   {
-   "label": "DeBERTa-v2-320M (lambda=0.3)",
-   "backbone": "DeBERTa-v2-320M",
+   "label": "Chinese DeBERTa-v2-320M (lambda=0.3)",
+   "backbone": "Chinese DeBERTa-v2-320M",
    "structure_lambda": 0.3,
    "root": "runs/deberta_v2_320m/lambda_0.3",
    "registration": "pre_registration_deberta_screen.md",
@@ -415,8 +415,8 @@
    }
   },
   {
-   "label": "ELECTRA-large (lambda=0)",
-   "backbone": "ELECTRA-large",
+   "label": "Chinese ELECTRA-large (lambda=0)",
+   "backbone": "Chinese ELECTRA-large",
    "structure_lambda": 0.0,
    "root": "runs/electra_180g_large/lambda_0.0",
    "registration": "pre_registration_electra_screen.md",
@@ -514,8 +514,8 @@
    }
   },
   {
-   "label": "ELECTRA-large (lambda=0.3)",
-   "backbone": "ELECTRA-large",
+   "label": "Chinese ELECTRA-large (lambda=0.3)",
+   "backbone": "Chinese ELECTRA-large",
    "structure_lambda": 0.3,
    "root": "runs/electra_180g_large/lambda_0.3",
    "registration": "pre_registration_electra_screen.md",
@@ -613,8 +613,8 @@
    }
   },
   {
-   "label": "RoBERTa-base (lambda=0)",
-   "backbone": "RoBERTa-base",
+   "label": "Chinese RoBERTa-base (lambda=0)",
+   "backbone": "Chinese RoBERTa-base",
    "structure_lambda": 0.0,
    "root": "runs/rbt_base",
    "registration": "rbt_base_run.md",

@@ -10,6 +10,22 @@
 \usepackage{placeins}
 \newfontfamily\cjkfont[Path=fonts/]{DroidSansFallback-ai-cup-subset.ttf}
 
+% Nine floats on eight pages. At the class defaults LaTeX refuses to put more
+% than 70% of a page into floats and insists on 20% running text, which on a
+% page carrying two tables leaves a band of whitespace it will not fill. These
+% are the standard relaxations; they change placement only, never content.
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.75}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.78}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{4}
+
+% Hugging Face identifiers are long, contain slashes and hyphens, and TeX will
+% not break them: set as-is they run several centimetres past the column.
+% \path is the url package's breakable verbatim, which is exactly this problem.
+\newcommand{\hfid}[1]{{\small\path{#1}}}
+
 \begin{document}
 
 % \texorpdfstring keeps the typeset line break out of the PDF metadata string.
@@ -38,7 +54,10 @@ weighted macro-F1 improves in 14. These results position hierarchical
 projection not as a guaranteed route to higher field-wise scores, but as a
 practical way to guarantee coherent outputs and repeatedly improve
 complete-output correctness, with field-score trade-offs varying across
-models and corpora.
+models and corpora. Validity alone does not settle which structured rule to
+use: searching all 17 legal states instead of projecting greedily costs
+$-0.006$ tuple accuracy ($p_{\mathrm{Holm}}=.028$), an adverse pre-specified
+result we report in full.
 \end{abstract}
 
 \keywords{ESG, promise verification, hierarchical classification,

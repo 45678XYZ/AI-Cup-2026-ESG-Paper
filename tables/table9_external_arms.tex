@@ -1,0 +1,27 @@
+\begin{tabular}{llrrrrrr}
+\toprule
+ & & \multicolumn{3}{c}{$\lambda=0$} & \multicolumn{3}{c}{$\lambda=0.3$} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+Corpus & Backbone & M0 inv.\ \% & $\Delta$wF1 & $\Delta$tuple & M0 inv.\ \% & $\Delta$wF1 & $\Delta$tuple \\
+\midrule
+\emph{English} & RoBERTa-large & 23.17 & +0.0032 & \textbf{+0.0725} & 13.25 & +0.0033 & \textbf{+0.0350} \\
+ & DeBERTa-v3-large & 17.25 & -0.0044 & \textbf{+0.0350} & 8.92 & +0.0029 & \textbf{+0.0175} \\
+ & ELECTRA-large & 17.08 & +0.0030 & \textbf{+0.0400} & 7.50 & +0.0044 & \textbf{+0.0233} \\
+ & RoBERTa-base & 20.42 & +0.0001 & \textbf{+0.0500} & 9.33 & +0.0012 & \textbf{+0.0217} \\
+\midrule
+\emph{French} & XLM-R-large & 21.08 & +0.0036 & \textbf{+0.0625} & 9.58 & +0.0025 & \textbf{+0.0300} \\
+ & RemBERT & 21.67 & -0.0117 & \textbf{+0.0442} & 8.92 & -0.0021 & \textbf{+0.0183} \\
+ & XLM-R-base & 27.25 & +0.0004 & \textbf{+0.0650} & 12.83 & -0.0054 & \textbf{+0.0283} \\
+ & mBERT & 21.50 & +0.0025 & \textbf{+0.0483} & 9.50 & +0.0024 & \textbf{+0.0150} \\
+\midrule
+\emph{Japanese} & XLM-R-large & 31.25 & -0.0131 & \textbf{+0.0708} & 8.58 & -0.0077 & \textbf{+0.0108} \\
+ & RemBERT & 40.67 & -0.0171 & \textbf{+0.0625} & 13.58 & -0.0042 & \textbf{+0.0142} \\
+ & XLM-R-base & 37.08 & -0.0043 & \textbf{+0.0733} & 10.67 & -0.0100 & \textbf{+0.0125} \\
+ & mBERT & 34.67 & -0.0196 & \textbf{+0.0733} & 8.75 & -0.0060 & \textbf{+0.0175} \\
+\midrule
+\emph{Korean} & XLM-R-large & 22.73 & -0.0192 & \textbf{+0.0293} & 8.87 & -0.0032 & \textbf{+0.0147} \\
+ & RemBERT & 32.07 & -0.0164 & \textbf{+0.0513} & 10.27 & +0.0015 & \textbf{+0.0207} \\
+ & XLM-R-base & 28.93 & -0.0317 & \textbf{+0.0367} & 10.07 & -0.0047 & \textbf{+0.0127} \\
+ & mBERT & 21.80 & -0.0245 & \textbf{+0.0220} & 8.07 & +0.0008 & \textbf{+0.0140} \\
+\bottomrule
+\end{tabular}

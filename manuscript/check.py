@@ -21,6 +21,8 @@ REQUIRED_ASSETS = (
     "tables/table5_headroom.tex",
     "tables/table6_regimes.tex",
     "tables/table7_multilingual_mechanism.tex",
+    "tables/table8_invalid_anatomy.tex",
+    "tables/table9_external_arms.tex",
     "figures/figure1_hierarchy.pdf",
 )
 MANIFEST_REQUIRED_TABLES = (
@@ -34,6 +36,12 @@ CANONICAL_FROZEN_ASSETS = REQUIRED_ASSETS + ("tables/manifest.json",)
 REQUIRED_TABLE_INCLUSIONS = (
     ("Table 4", "table4_contrasts.tex"),
     ("Table 7", "table7_multilingual_mechanism.tex"),
+    # The evidence tables for the counts the abstract and Introduction repeat.
+    # Included by name for the same reason as the two above: a claim whose
+    # supporting table drops out of the build is worse than one that never
+    # had one, because the prose still asserts it.
+    ("Table 8", "table8_invalid_anatomy.tex"),
+    ("Table 9", "table9_external_arms.tex"),
 )
 LAYOUT_PLACEHOLDER_AUTHORS = frozenset(
     f"Student Author {number}" for number in range(1, 5)
