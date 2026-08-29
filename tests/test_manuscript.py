@@ -10,6 +10,8 @@ from pypdf._text_extraction import mult
 from paper.data import REPO_ROOT
 
 from manuscript.check import (
+    REQUIRED_ASSETS,
+    REQUIRED_TABLE_INCLUSIONS,
     asset_errors,
     font_errors,
     log_errors,
@@ -21,14 +23,11 @@ from manuscript.check import (
 )
 
 
-CANONICAL_TABLE_NAMES = (
-    "table1_dataset.tex",
-    "table2_main.tex",
-    "table3_legality_cost.tex",
-    "table4_contrasts.tex",
-    "table5_headroom.tex",
-    "table6_regimes.tex",
-    "table7_multilingual_mechanism.tex",
+# Derived, not transcribed: a hand-kept copy of this list silently describes
+# the previous release the moment check.py requires one more table, and then
+# fails the asset tests for a reason unrelated to what they test.
+CANONICAL_TABLE_NAMES = tuple(
+    Path(path).name for path in REQUIRED_ASSETS if path.startswith("tables/")
 )
 
 
@@ -39,14 +38,15 @@ def write_minimal(root: Path, body: str, metadata: str = "") -> None:
 
 
 def write_policy_valid(root: Path, metadata: str = "") -> None:
+    """A manuscript that includes every table the policy requires by name."""
+    required = [name for _, name in REQUIRED_TABLE_INCLUSIONS]
     write_minimal(
         root,
-        "\\input{tables/table4_contrasts.tex}\n"
-        "\\input{tables/table7_multilingual_mechanism.tex}",
+        "\n".join(f"\\input{{tables/{name}}}" for name in required),
         metadata,
     )
     (root / "tables").mkdir()
-    for name in ("table4_contrasts.tex", "table7_multilingual_mechanism.tex"):
+    for name in required:
         (root / "tables" / name).write_text("", encoding="utf-8")
 
 
@@ -552,19 +552,33 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     assert not sparse_body_pages, (
         f"the compiled manuscript contains near-empty body pages: {sparse_body_pages}"
     )
+    # Positions are taken on the hyphen- and whitespace-stripped text, the same
+    # form the caption checks above use. A raw .index() into the extracted text
+    # raises ValueError the moment the PDF line-breaks one of these strings --
+    # which reports a missing substring instead of the ordering claim actually
+    # being made, and would pass or fail on typesetting rather than on order.
+    def position(needle):
+        compact = re.sub(r"[\s-]+", "", needle)
+        assert compact in compact_document_text, f"not in the PDF: {needle!r}"
+        return compact_document_text.index(compact)
+
     table4_caption = "Chinese paired contrasts on the two pre-specified metrics."
-    external_start = "Across all four external corpora"
+    external_start = "tuple accuracy is positive in 32/32 arms"
     discussion_heading = "7 DISCUSSION"
-    assert document_text.index(table4_caption) < document_text.index(discussion_heading)
-    assert document_text.index(external_start) < document_text.index(discussion_heading)
+    assert position(table4_caption) < position(discussion_heading)
+    assert position(external_start) < position(discussion_heading)
     normalized_document_text = " ".join(document_text.split())
+    # Compacted, for the same reason the caption and ordering checks are: TeX
+    # hyphenates across line breaks ("training arti- facts"), so a check on the
+    # merely whitespace-normalised text asserts the line breaking of one build
+    # rather than the presence of the disclosure.
     for disclosure in (
         "All 2,000 development rows obey the hierarchy",
         "field-wise weighted macro-F1 is a standard choice",
         "no term that assesses the joint validity of a four-field tuple",
         "765 training artifacts and 1,050 row-level prediction files across five corpora",
     ):
-        assert disclosure in normalized_document_text
+        assert re.sub(r"[\s-]+", "", disclosure) in compact_document_text
     assert "Chinese paired contrasts on four metrics" not in normalized_document_text
     assert "their displayed adjusted values" not in normalized_document_text
     assert "AI CUP 2026 競賽提交格式說明 Sample Submission Format Guide" not in (
@@ -575,8 +589,15 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
         "Promise Verification"
     ) in normalized_document_text
     metadata = (manuscript / "metadata.tex").read_text(encoding="utf-8")
-    authors = re.findall(r"\\author\{([^}]+)\}", metadata)
-    emails = re.findall(r"\\email\{([^}]+)\}", metadata)
+    # Commented-out author blocks are how a pending decision is parked in this
+    # file -- the supervising author is one such block. Counting them as
+    # authors makes the count disagree with the compiled PDF, which is the
+    # thing these assertions are actually about.
+    active_metadata = "\n".join(
+        re.sub(r"(?<!\\)%.*", "", line) for line in metadata.splitlines()
+    )
+    authors = re.findall(r"\\author\{([^}]+)\}", active_metadata)
+    emails = re.findall(r"\\email\{([^}]+)\}", active_metadata)
     assert len(authors) == 4
     assert len(emails) == 4
     assert not any(author.startswith("Student Author ") for author in authors)

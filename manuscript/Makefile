@@ -1,5 +1,7 @@
 TECTONIC ?= tectonic
-PYTHON ?= python
+# python3, not python: the bare name is absent on a stock macOS PATH, and
+# `make check` then fails with "command not found" rather than a policy result.
+PYTHON ?= python3
 BUILD_DIR := build
 PDF := $(BUILD_DIR)/main.pdf
 LOG := $(BUILD_DIR)/main.log
