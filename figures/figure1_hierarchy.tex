@@ -50,20 +50,21 @@
   note/.style    = {text=ink, align=center},
   aside/.style   = {text=routegrey, align=center, font=\itshape\scriptsize},
   methods/.style = {text=ink, font=\bfseries\scriptsize},
-  % Panel (b) is a factorial, so it is drawn as a grid: calibration across,
-  % output rule down. One box per cell, all cells the same size, so no two
-  % boxes can line up in a way that suggests a pairing the design does not have.
-  % Node sizes are in cm and the picture is scaled 0.70, so the column pitch
-  % has to clear the box width after scaling: 2.5 units x 0.70 = 1.75cm
-  % against a 1.5cm box leaves a 0.25cm gutter. Getting this wrong makes the
-  % cells abut and the grid read as one bar.
-  colhead/.style = {box, minimum width=1.5cm, minimum height=0.72cm},
+  % Panel (b) is a factorial, and it is set as a rule-ruled matrix rather than
+  % as nine drawn boxes. Nine boxes carried nine outlines for six data points,
+  % and at this size the outlines were most of the ink on the panel. Horizontal
+  % rules in the booktabs idiom -- spanner, header, base -- are what an ACM
+  % reader already reads a factorial in, and they leave the cells as type on
+  % white. Column position alone then carries the calibration factor, which is
+  % what the panel is for.
+  colhead/.style = {text=ink, align=center, font=\scriptsize},
+  spanner/.style = {text=ink, align=center, font=\scriptsize\itshape},
   rowhead/.style = {text=ink, align=right, anchor=east, font=\scriptsize},
-  cell/.style    = {box, minimum width=1.5cm, minimum height=0.62cm,
-                    font=\bfseries},
-  cellna/.style  = {draw=routegrey, densely dotted, rounded corners=1.6pt,
-                    line width=0.35pt, align=center, inner sep=3.2pt,
-                    text=routegrey, minimum width=1.5cm, minimum height=0.62cm},
+  cell/.style    = {text=ink, align=center, font=\bfseries},
+  cellna/.style  = {text=routegrey, align=center},
+  % Rule weights follow booktabs: the outer rules heavier than the inner one.
+  toprule/.style = {draw=ink, line width=0.5pt},
+  midrule/.style = {draw=ink, line width=0.3pt},
   title/.style   = {text=ink, anchor=west, font=\small},
   route/.style   = {draw, line width=0.32pt, -{Stealth[length=2.6pt,width=2pt]}},
   alt/.style     = {route, draw=routegrey, densely dashed},
@@ -105,38 +106,57 @@
 \node[title] at (-0.4, 10.1)
   {(b) Decision rules: output rule $\times$ calibration};
 
-% Calibration is the column, output rule is the row. The previous drawing put
-% one box per calibration in a row directly above one box per output rule, and
-% the three columns lined up: "global bias" sat over "projection" and
-% "conditional bias" over the state decoder, which reads as three pipelines.
-% The design is a 2x3 factorial -- every calibration is available to both
-% structured rules -- so it is drawn as the grid it is.
-\def\colnone{3.95}
-\def\colglobal{6.45}
-\def\colcond{8.95}
-\def\rowargmax{6.35}
-\def\rowproj{4.95}
-\def\rowstate{3.55}
+% Calibration is the column, output rule is the row. An earlier drawing put one
+% box per calibration in a row directly above one box per output rule, and the
+% three columns lined up: "global bias" sat over "projection" and "conditional
+% bias" over the state decoder, which reads as three pipelines. The design is a
+% 2x3 factorial -- every calibration is available to both structured rules --
+% so it is set as the matrix it is.
+\def\colnone{4.35}
+\def\colglobal{6.60}
+\def\colcond{8.85}
+\def\rowargmax{5.35}
+\def\rowproj{3.95}
+\def\rowstate{2.75}
+% The rules run half a column pitch past the outer columns, as a tabular's do.
+\def\ruleleft{3.30}
+\def\ruleright{9.90}
 
-\node[box] (base) at (\colglobal, 8.9)
+% Same height as panel (a)'s root box, so the two panels start together and
+% the title has the same air above the first object in both. At 9.30 the box
+% top sat 0.06cm under the panel title against panel (a)'s 0.34cm.
+\node[box] (base) at (\colglobal, 8.90)
   {base probabilities\\(identical for every method)};
 
-\node[colhead, draw=routenone]   at (\colnone, 7.75)  {no\\calibration};
-\node[colhead, draw=routeglobal] at (\colglobal, 7.75) {global\\bias};
-\node[colhead, draw=routecond]   at (\colcond, 7.75)  {conditional\\bias};
+% Drawn from the node, so TikZ clips the path at its border and the gap below
+% the box cannot be swallowed by a mis-estimated node height -- which is how
+% the box and the header row came to touch before.
+\draw[route] (base) -- (\colglobal, 7.75);
 
-\draw[route] (base) -- (\colglobal, 8.2);
+% The spanner names the factor, so the column heads need only its levels.
+% Heading them "no calibration / global bias / conditional bias" under a
+% spanner reading "calibration" says the word twice and forces two lines.
+\node[spanner] at (\colglobal, 7.40) {calibration};
+\draw[midrule] (\ruleleft, 7.15) -- (\ruleright, 7.15);
 
-\node[rowhead] at (2.55, \rowargmax) {independent argmax\\\emph{may be invalid}};
-\node[rowhead] at (2.55, \rowproj)   {projection\\\emph{always valid}};
-\node[rowhead] at (2.55, \rowstate)  {\NumStates-state decoding\\\emph{always valid}};
+\node[colhead] at (\colnone, 6.65)  {none};
+\node[colhead] at (\colglobal, 6.65) {global};
+\node[colhead] at (\colcond, 6.65)  {conditional};
+
+\draw[toprule] (\ruleleft, 6.15) -- (\ruleright, 6.15);
+
+\node[rowhead] at (3.10, \rowargmax) {independent argmax\\\emph{may be invalid}};
+\node[rowhead] at (3.10, \rowproj)   {projection\\\emph{always valid}};
+\node[rowhead] at (3.10, \rowstate)  {\NumStates-state decoding\\\emph{always valid}};
 
 % M0 is the uncalibrated baseline and exists in one cell only; the other two
-% cells of its row are drawn empty rather than left blank, so that the reader
+% cells of its row carry an em dash rather than nothing, so that the reader
 % sees a deliberate gap instead of a rendering fault.
 \node[cell]   at (\colnone, \rowargmax)   {M0};
-\node[cellna] at (\colglobal, \rowargmax) {--};
-\node[cellna] at (\colcond, \rowargmax)   {--};
+\node[cellna] at (\colglobal, \rowargmax) {---};
+\node[cellna] at (\colcond, \rowargmax)   {---};
+
+\draw[midrule] (\ruleleft, 4.65) -- (\ruleright, 4.65);
 
 \node[cell] at (\colnone, \rowproj)   {M1};
 \node[cell] at (\colglobal, \rowproj) {M2};
@@ -146,7 +166,9 @@
 \node[cell] at (\colglobal, \rowstate) {M5};
 \node[cell] at (\colcond, \rowstate)   {M6};
 
-\node[aside] at (\colglobal, 2.1)
+\draw[toprule] (\ruleleft, 2.05) -- (\ruleright, 2.05);
+
+\node[aside] at (\colglobal, 1.30)
   {the seven rules are alternatives, not stages:\\
    every cell consumes the same base probabilities};
 \end{scope}
