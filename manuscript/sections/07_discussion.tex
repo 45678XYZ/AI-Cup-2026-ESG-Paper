@@ -32,23 +32,21 @@ joint decoding must fail on other models or tasks.
 \subsection{Reproducibility}
 \label{sec:repro}
 \begin{sloppypar}
-The linked repository provides row-level predictions, text-free metadata, and
-the released artifacts underlying all eight paper tables and Figure~1; raw
-corpora, model weights, and retraining are excluded.
+The repository releases row-level predictions and text-free metadata for all
+eight paper tables and Figure~1; raw corpora, model weights, and retraining are
+excluded.
 \end{sloppypar}
 
 \begingroup\emergencystretch=1em
-\paragraph{Reproducibility details.} The Methods list every backbone; released
-configurations pin their exact Hugging Face revisions. For each seed, reports
-are identifier-sorted, shuffled, then stable-sorted by descending row count so
-their randomized tie order survives. Each report is assigned uniformly to one
-of the two currently lightest folds, using fold index to resolve equal loads.
-Korean pages are extracted per labelled (URL, page) using Poppler's
-\hfid{pdftotext -f P -l P -layout}, with \hfid{pdftoppm -r 250} and Tesseract
-(\hfid{-l kor+eng}) fallback for image-only pages. The release has one label
-tuple per unique pair, so no further deduplication is applied. Runs used Python
-3.10.20, PyTorch 2.2.2+cu121, and Transformers 4.40.2 on Linux; the 32 external
-arms consumed 25.4 GPU-hours on one RTX 3090.
+\paragraph{Reproducibility details.} Released configurations pin exact Hugging
+Face revisions for every backbone in the Methods. For each seed, reports are
+identifier-sorted, shuffled, stable-sorted by decreasing row count (preserving
+shuffled ties), then assigned uniformly to one of the two lightest folds, with
+fold index breaking equal loads. Korean pages use Poppler's
+\hfid{pdftotext -f P -l P -layout} per labelled (URL, page); image-only pages
+fall back to \hfid{pdftoppm -r 250} and Tesseract (\hfid{-l kor+eng}). The
+release has one label tuple per unique pair and needs no further deduplication.
+The 32 external arms consumed 25.4 GPU-hours on one RTX 3090.
 \par\endgroup
 
 \subsection{Limitations}

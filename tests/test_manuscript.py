@@ -743,6 +743,68 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     assert "could not represent character" not in log
 
 
+def test_compiled_table_captions_are_nine_point_and_bodies_are_at_least_eight_point():
+    """Catch any table that silently falls back to six-point scriptsize."""
+    manuscript = REPO_ROOT / "manuscript"
+    subprocess.run(
+        ["make", "check"], cwd=manuscript, check=True,
+        capture_output=True, text=True,
+    )
+
+    fragments = []
+    for page in PdfReader(str(manuscript / "build" / "main.pdf")).pages:
+        page.extract_text(
+            visitor_text=lambda text, _cm, _tm, _font, size: fragments.append(
+                (text, float(size))
+            )
+        )
+
+    # One stable data-row fragment from each table that previously used
+    # \scriptsize. Reverting any one table to six points makes its own anchor
+    # fail while allowing the other three to keep passing.
+    body_anchors = (
+        "Chinese (AI CUP) 2,000",
+        "All invalid tuples 1,527",
+        "RoBERTa-large 23.17",
+        "Enforce legality (M1",
+    )
+    for anchor in body_anchors:
+        sizes = [size for text, size in fragments if anchor in text]
+        assert sizes, f"table-body anchor is absent from the PDF: {anchor!r}"
+        assert min(sizes) >= 7.8, f"{anchor!r} rendered at {min(sizes):.3f} pt"
+
+    caption_sizes = [
+        size for text, size in fragments
+        if re.match(r"^Table \d+:", text.strip())
+    ]
+    assert len(caption_sizes) == 8
+    assert all(8.8 <= size <= 9.1 for size in caption_sizes), caption_sizes
+
+
+def test_reproducibility_subsection_does_not_cross_a_page_boundary():
+    """Keep the 7.2 heading and its final compute detail on one PDF page."""
+    manuscript = REPO_ROOT / "manuscript"
+    subprocess.run(
+        ["make", "check"], cwd=manuscript, check=True,
+        capture_output=True, text=True,
+    )
+    page_text = [
+        " ".join((page.extract_text() or "").split())
+        for page in PdfReader(str(manuscript / "build" / "main.pdf")).pages
+    ]
+
+    def unique_page(needle):
+        matches = [index for index, text in enumerate(page_text, start=1) if needle in text]
+        assert len(matches) == 1, f"expected one PDF page containing {needle!r}: {matches}"
+        return matches[0]
+
+    heading_page = unique_page("7.2 Reproducibility")
+    final_detail_page = unique_page("25.4 GPU-hours on one RTX 3090")
+    assert final_detail_page == heading_page, (
+        f"Section 7.2 starts on page {heading_page} but ends on page {final_detail_page}"
+    )
+
+
 def test_cli_returns_nonzero_for_policy_error(tmp_path, monkeypatch, capsys):
     write_minimal(tmp_path / "m", "no difference")
     monkeypatch.setattr("sys.argv", ["check", "--root", str(tmp_path / "m"), "--repo-root", str(tmp_path)])
