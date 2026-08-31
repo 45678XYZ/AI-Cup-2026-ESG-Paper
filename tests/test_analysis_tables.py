@@ -11,6 +11,7 @@ from analysis.aggregate import protocol_summary, regime_comparison
 from analysis.audit import full_audit
 from analysis.load import EXAMPLES_ROOT, pdf_clusters
 from analysis.tables import (
+    ALL_TABLE_FILES,
     EXTERNAL_TABLES,
     EXTERNAL_TABLE_FILES,
     FAMILY_LABELS,
@@ -75,6 +76,31 @@ def test_table1_leaves_the_unlabelled_test_column_empty():
     assert "2" in misleading              # Development column carries n=2
 
 
+def test_table1_names_the_unlabelled_column_as_the_competition_test():
+    header = render_table1(AUDIT).splitlines()[2]
+    assert header == r"Statistic & Development & Competition test \\"
+
+
+def test_table1_makes_gold_label_availability_explicit():
+    rows = {
+        line.split("&")[0].strip(): [c.strip() for c in line.split("&")[1:]]
+        for line in render_table1(AUDIT).splitlines() if "&" in line
+    }
+    assert rows["Gold labels available"][:2] == ["Yes", r"No \\"]
+
+
+def test_table1_prints_the_audited_number_of_hierarchy_valid_gold_tuples():
+    altered = copy.deepcopy(AUDIT)
+    altered["development"]["invalid_rows"] = 3
+    rows = {
+        line.split("&")[0].strip(): [c.strip() for c in line.split("&")[1:]]
+        for line in render_table1(altered).splitlines() if "&" in line
+    }
+    assert rows["Gold hierarchy-valid tuples"][:2] == [
+        "1997 / 2000", r"n/a \\",
+    ]
+
+
 def test_table1_prints_the_audited_counts():
     """Row by row rather than by substring. The previous version asserted that
     "50" appeared somewhere in the table, which passed for two months while the
@@ -101,7 +127,8 @@ def test_table2_reports_zero_invalid_for_every_structured_method():
     for line in render_table2(SUMMARIES["pdf_group"]).splitlines():
         cells = [c.strip() for c in line.split("&")]
         if cells and cells[0] in {"M1", "M2", "M3", "M4", "M5", "M6"}:
-            assert cells[-1].replace(r"\\", "").strip() == "0.0"
+            # Two decimals since the rate is printed as 12.55 everywhere.
+            assert cells[-1].replace(r"\\", "").strip() == "0.00"
 
 
 def test_written_manifest_records_every_input_checksum(tmp_path):
@@ -258,7 +285,11 @@ def test_table4_caption_counts_what_survives_the_correction_not_the_intervals():
     caption = build_captions(AUDIT, contrasts=contrasts)["table4_contrasts"]
     n = sum(1 for r in contrasts.values() if r["p_holm"] < 0.05)
     words = {0: "none", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
-    assert f"{words[n]} on Weighted macro-F1" in caption
+    # Read the label from FAMILY_LABELS rather than retyping it: the caption is
+    # built from that constant, so a typed copy here only records what the
+    # label used to be.
+    label = dict(FAMILY_LABELS)["contrasts"]
+    assert f"{words[n]} on {label}" in caption
     assert "uncorrected" in caption.lower()   # the intervals must be labelled
 
 
@@ -297,7 +328,7 @@ def test_survival_summary_counts_each_family_separately():
 
     sentence = _survival_summary({"contrasts": rows(0),
                                   "tuple_contrasts": rows(2)})
-    assert "none on Weighted macro-F1" in sentence
+    assert "none on wF1 (official)" in sentence
     assert "two on Tuple accuracy" in sentence
     assert "Of the five contrasts" in sentence
 
@@ -363,20 +394,16 @@ def test_table1_flags_that_every_report_is_shared_with_the_test_split():
     assert "n/a" not in shared[0]             # this one IS known for test
 
 
-def test_the_caption_discloses_the_known_cross_split_duplicate():
-    """Plan section 4.1 requires the duplicate to be disclosed, not made
-    prominent -- unlike the report overlap, which section 7 does require in the
-    tabular. One duplicated paragraph out of 2,000 is a disclosure, so it reads
-    better as a clause than as a row whose two columns both say 1."""
-    cap = build_captions(AUDIT)["table1_dataset"]
-    assert "duplicat" in cap.lower()
-    assert _word(len(AUDIT["duplicates"]["dev_test"])) in cap
+def test_table1_keeps_the_cross_split_duplicate_out_of_the_paper():
+    """The duplicate remains in the audit trail but is not a paper statistic."""
+    tex = render_table1(AUDIT)
+    assert "duplicat" not in tex.lower()
 
 
-def test_table1_caption_states_the_overlap_and_the_duplicate():
+def test_table1_caption_states_the_report_overlap_without_the_duplicate():
     cap = build_captions(AUDIT)["table1_dataset"]
     assert str(AUDIT["pdf_overlap"]["n_shared"]) in cap
-    assert "duplicate" in cap.lower()
+    assert "duplicate" not in cap.lower()
 
 
 # --- table 4: the contrast families ----------------------------------------
@@ -457,7 +484,7 @@ def test_table4_reports_only_the_two_pre_specified_families():
     ten exploratory tests on the page for a reader to count.
     """
     body = render_table4(SUMMARIES["pdf_group"])
-    assert "Weighted macro-F1 (official)" in body
+    assert "wF1 (official)" in body
     assert "Tuple accuracy" in body
     assert "Path-constrained" not in body
     assert "Hierarchical F1" not in body
@@ -472,6 +499,60 @@ def test_table4_caption_says_where_the_demoted_metrics_went():
                              )["table4_contrasts"]
     assert "exploratory" in caption.lower()
 
+
+
+def test_every_caption_is_latex_safe_as_written():
+    """Captions are inputted into ``\\caption{}``, so they must not need escaping.
+
+    ``analysis/preview.py`` escapes captions on the way into its own document,
+    which hides the problem: an unescaped ``pdf_group`` rendered in the preview
+    for weeks and then aborted the manuscript build the first time that caption
+    was included, with ``Missing $ inserted``. The caption file is the
+    deliverable, so it is the file that has to be safe.
+
+    Math spans are stripped first -- ``$p_{\\mathrm{Holm}}$`` is legal and is
+    exactly what a naive scan flags.
+    """
+    for path in sorted((REPO_ROOT / "tables").glob("*_caption.txt")):
+        text = re.sub(r"\$[^$]*\$", "", path.read_text(encoding="utf-8"))
+        for i, ch in enumerate(text):
+            if ch in "_&#%" and not (i and text[i - 1] == "\\"):
+                context = text[max(0, i - 30):i + 15].replace("\n", " ")
+                raise AssertionError(
+                    f"{path.name}: unescaped {ch!r} outside math mode: "
+                    f"...{context}..."
+                )
+
+
+RETIRED_METRIC_LABELS = ("Weighted F1", "Whole-row", "whole-row")
+
+
+def test_the_two_headline_metrics_are_named_the_same_way_in_every_table():
+    """A reader has to follow these two columns across three tables.
+
+    The paper's claim is that the official metric and whole-tuple accuracy
+    disagree about the same predictions, so those two columns are exactly what
+    a reader compares between tables. They used to be spelled ``Weighted
+    F1``/``Tuple Acc.`` in table 2, ``Official``/``Whole-row`` in table 3 and
+    ``Delta official``/``Delta whole-row`` in table 7 -- three tables, and the
+    headers for the same two quantities never repeated.
+
+    ``Weighted F1`` is retired for being ambiguous as well: the
+    path-constrained variant is also a weighted F1, so the short form cannot
+    identify the official metric where both appear. Table 4 lists four metric
+    families and keeps its long labels for that reason.
+    """
+    for name in ALL_TABLE_FILES:
+        tex = (REPO_ROOT / "tables" / name).read_text(encoding="utf-8")
+        for retired in RETIRED_METRIC_LABELS:
+            assert retired not in tex, f"{name} still says {retired!r}"
+
+    for name in ("table2_main.tex", "table3_legality_cost.tex",
+                 "table7_multilingual_mechanism.tex"):
+        head = (REPO_ROOT / "tables" / name).read_text(encoding="utf-8")
+        head = head.split("\\midrule")[0]
+        assert "wF1" in head, f"{name}: the official column is not called wF1"
+        assert "uple acc." in head, f"{name}: the whole-tuple column is not 'tuple acc.'"
 
 
 def test_every_external_table_declares_a_writer_the_entry_point_can_call():
@@ -604,4 +685,3 @@ def test_table4_caption_carries_the_resolution_the_deleted_table_showed():
         # on these synthetic inputs it need not.
         assert ("range across the seven" in caption
                 or "highest- and lowest-scoring" in caption), caption
-

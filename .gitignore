@@ -61,6 +61,10 @@
 # inputs with their own source copyrights, not redistributed dataset files.
 /local_data/
 
+# Local writing aids; these may contain internal review notes and translations.
+/docs/writing/manuscript_positive_reframing.md
+/docs/writing/manuscript_zh_tw.md
+
 # Logs
 *.log
 
@@ -73,6 +77,8 @@
 *.fdb_latexmk
 *.fls
 *.synctex.gz
+/manuscript/build/*
+!/manuscript/build/main.pdf
 
 # Python
 __pycache__/
@@ -83,3 +89,5 @@ __pycache__/
 .DS_Store
 
 !/runs/rbt_base/probs/**/*.npy
+
+ntcir19-esg-validity-layer/

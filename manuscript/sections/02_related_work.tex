@@ -1,0 +1,44 @@
+\section{Related Work}
+
+The AI CUP task uses the four-part formulation described in the PromiseEval
+shared-task overview: identify an ESG promise, determine whether it has
+actionable evidence, assess the clarity of the promise--evidence pair, and
+assign a verification horizon
+\cite{chen2025promiseeval}. ML-Promise is the associated
+multilingual corpus resource; we use its English, French, Japanese, and Korean
+releases for external replication \cite{seki2025mlpromise}. This joint
+verification problem differs from
+ClimateBERT-NetZero, which detects corporate and national net-zero or reduction
+targets and supports analysis of their ambition, rather than jointly assessing
+promise status, evidence, evidence quality, and timing
+\cite{schimanski2023climatebert}.
+
+\begingroup\emergencystretch=1em
+These dependent outputs form a compact instance of hierarchical text
+classification, in which labels occupy a supplied structure and coherent
+predictions respect its ancestor relations \cite{plaud2024revisiting}. The AI
+CUP hierarchy comes from the task's official field logic: we neither discover
+the hierarchy nor propose a new hierarchical architecture. Instead, we compare
+decision rules over the same field-wise probabilities while preserving or
+ignoring that given structure.
+\par\endgroup
+
+Yu et al. introduced path-constrained MicroF1 and MacroF1, under which a
+correct node receives credit only when all its ancestors are also correct
+\cite{yu2022constrained}. Ji et al. later named this family \emph{C-metrics}
+\cite{ji2023hierarchical}. Our path-constrained weighted macro-F1 (C-wF1)
+adapts Yu et al.'s principle to this task's fields and its official
+weighted macro-F1; it is therefore not the original C-MacroF1.
+Section~\ref{sec:metrics} defines both it and the set-overlap hierarchical
+F1 (hF). Both were adopted post hoc and are reported as exploratory.
+
+Plaud et al. observed from point estimates that constrained F1 variants did not
+globally change method rankings in their experiments
+\cite{plaud2024revisiting}. That observation and our post-hoc paired contrast
+inference answer different questions: ranking a collection of models is not the
+same estimand as a paired difference between decision rules on shared rows and
+probabilities. Moreover, our hF changes both consistency treatment and
+macro-versus-micro aggregation. Of the two post-hoc metrics, only C-wF1
+isolates the treatment of children whose predicted ancestors do not
+support them, while retaining
+the official field aggregation.

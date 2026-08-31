@@ -1,0 +1,89 @@
+\section{Discussion}
+
+The practical contribution of projection is its guarantee rather than a
+universal field-score gain: as a retraining-free layer over compatible
+field-wise probabilities, it enforces the supplied hierarchy in every arm and
+improves exact whole-tuple accuracy throughout the executed external matrix,
+without any claim about the underlying encoder.
+
+\subsection{Why the two metrics disagree}
+\label{sec:mechanism}
+This guarantee is not cost-free in every scoring view, and
+Table~\ref{tab:multilingual} makes the trade-off explicit by counting the
+correct field predictions projection creates against those it destroys.
+The $N\!/\!A$ net is positive and the
+substantive-class net negative in all five fixed arms. If an independently
+predicted parent is wrong, projection may replace a correct substantive child
+with the structurally required \emph{N/A}; when the parent is correct, the same
+operation can repair an unsupported child. Field-wise macro-F1 values these
+changes class by class, whereas tuple accuracy credits only four-field
+agreement. The field-score effect therefore varies across backbones and
+corpora. Post-hoc C-wF1 and hF point in the tuple direction, but were chosen
+after the primary analysis and are not needed to establish the pre-specified
+secondary result.
+
+Validity alone also does not identify the better structured rule. In Chinese,
+M4 scores all 17 legal states jointly yet loses tuple accuracy to greedy M1.
+Joint search can improve one field while changing another field that projection
+had already made correct. This adverse result cautions against treating a
+larger legal-state search as automatically superior; it does not imply that
+joint decoding must fail on other models or tasks.
+
+\subsection{Reproducibility}
+\label{sec:repro}
+\begin{sloppypar}
+The repository releases row-level predictions and text-free metadata for all
+eight paper tables and Figure~1; raw corpora, model weights, and retraining are
+excluded.
+\end{sloppypar}
+
+\begingroup\emergencystretch=1em
+\paragraph{Reproducibility details.} Released configurations pin exact Hugging
+Face revisions for every backbone in the Methods. For each seed, reports are
+identifier-sorted, shuffled, stable-sorted by decreasing row count (preserving
+shuffled ties), then assigned uniformly to one of the two lightest folds, with
+fold index breaking equal loads. Korean pages use Poppler's
+\hfid{pdftotext -f P -l P -layout} per labelled (URL, page); image-only pages
+fall back to \hfid{pdftoppm -r 250} and Tesseract (\hfid{-l kor+eng}). The
+release has one label tuple per unique pair and needs no further deduplication.
+The 32 external arms consumed 25.4 GPU-hours on one RTX 3090.
+\par\endgroup
+
+\subsection{Limitations}
+The corpora differ in language, reports, annotation distributions, and primary
+backbones, so the replication matrix is not a factorial estimate of a pure
+language effect. English and French each have only nine report clusters, and
+even Chinese inference resamples just 49. The $32/32$ and $14/32$ summaries
+are therefore descriptive directions across executed arms, not a pooled
+significance test. AI CUP weights applied to ML-Promise are not an official
+ML-Promise metric.
+
+Every contrast uses M0, unconstrained argmax on the same probabilities, to
+isolate the decision rule. We do not compare against a published system,
+official baseline, or leaderboard and make no participant-ranking claim.
+
+Korean adds an input mismatch: its 500 examples are first-384-token PDF pages,
+not released paragraphs, and include no gold \emph{Misleading} example. We do
+not redistribute extracted text or source PDFs. Released predictions can be
+rescored, but retraining requires rebuilding pages with the recipe in
+Section~\ref{sec:repro}.
+
+\begin{sloppypar}
+Structural-loss and backbone results remain exploratory: fixed loss weights
+and limited checkpoints cannot characterize all objectives or architectures.
+The rarest Chinese quality label has two examples and Korean has none, so no
+class-level claim is licensed. Each seed jointly changes folds and optimization
+randomness, preventing their effects from being separated.
+\end{sloppypar}
+
+\section{Conclusion}
+
+Hierarchical projection is not a guaranteed route to higher field-wise
+weighted macro-F1. It is instead a retraining-free validity layer that
+eliminates invalid tuples by construction and
+improves exact whole-tuple accuracy on the Chinese anchor and in all 32
+evaluated external arms.
+Its field-score effect varies across models and corpora, but its logical guarantee does not.
+For audit-oriented tasks with dependent outputs, field-wise performance,
+whole-tuple correctness, and structural validity should be reported
+together.

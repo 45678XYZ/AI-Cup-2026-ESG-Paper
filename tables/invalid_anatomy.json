@@ -1,0 +1,41 @@
+{
+ "report_version": "1.0",
+ "baseline": "M0",
+ "protocols": [
+  "pdf_group",
+  "row_strat"
+ ],
+ "seeds": [
+  42,
+  123,
+  456
+ ],
+ "n_rows": 12000,
+ "n_invalid": 1527,
+ "by_rule": {
+  "promise_no_children_set": 699,
+  "promise_yes_children_absent": 47,
+  "evidence_no_quality_set": 755,
+  "evidence_yes_quality_missing": 26
+ },
+ "rule_attribution": "first matching rule, in analysis.cases.RULES order",
+ "field_accuracy_on_invalid": {
+  "promise_status": 0.6724343698136872,
+  "verification_timeline": 0.32033338056221605,
+  "evidence_status": 0.3596682822209774,
+  "evidence_quality": 0.43647385682421086
+ },
+ "field_weights": {
+  "promise_status": 0.2,
+  "verification_timeline": 0.15,
+  "evidence_status": 0.3,
+  "evidence_quality": 0.35
+ },
+ "weighted_credit_by_field": {
+  "promise_status": 0.13448687396273745,
+  "verification_timeline": 0.04805000708433241,
+  "evidence_status": 0.10790048466629322,
+  "evidence_quality": 0.1527658498884738
+ },
+ "weighted_credit_on_invalid": 0.4432032156018369
+}

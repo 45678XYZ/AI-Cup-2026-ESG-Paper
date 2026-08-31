@@ -1,0 +1,1 @@
+All 32 external arms: three-seed mean $M1-M0$ contrasts under document-disjoint evaluation; bold denotes positive tuple-accuracy contrasts.

@@ -37,6 +37,7 @@
 | Draft deadline | **2026-08-31**——當日交給 **AI CUP 負責人**彙整，不是自行投稿 |
 | Camera-ready deadline | **2026-11-01** |
 | 匿名審查 | 不匿名；作者資訊照常填寫 |
+| 作者版面 | 四位學生作者的姓名、National Central University、Taipei, Taiwan 與個別 email 已於 2026-08-24 寫入 `manuscript/metadata.tex`；`check-final` 必須通過 |
 | 標題 | 不須含 task name 或 team name |
 | 資料要求 | 明確使用、分析 ESG 競賽資料集，說明應用方式與研究結果 |
 | 程式碼 | 非格式上的強制項，但應提供可重現版本與固定 commit/tag |

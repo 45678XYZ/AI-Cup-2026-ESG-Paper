@@ -84,9 +84,9 @@ def _partition_audit(rows) -> dict:
 def _duplicate_texts(dev, test) -> dict:
     """Exact text duplicates, within development and across the two splits.
 
-    Plan section 4.1 requires the known dev/test duplicate to be disclosed; the
-    within-development check is here so that a future data drop introducing one
-    cannot pass unnoticed.
+    These remain in the internal audit trail even when they are not selected as
+    manuscript statistics. The within-development check is here so that a
+    future data drop introducing one cannot pass unnoticed.
     """
     dev_by_text = defaultdict(list)
     for r in dev:

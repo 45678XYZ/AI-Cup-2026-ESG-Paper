@@ -230,7 +230,7 @@ def build_report(corpus: str) -> dict:
             "seeds": list(SEEDS),
             "methods": list(METHODS),
             "lambdas": list(LAMBDAS),
-            "weighted_metric_label": "AI CUP weights applied to ML-Promise (not official)",
+            "weighted_metric_label": "AI CUP weights applied to ML-Promise",
             "class_support": class_support,
         },
         "artifact_counts": counts,

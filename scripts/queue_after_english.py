@@ -15,8 +15,22 @@ import sys
 import time
 from pathlib import Path
 
+
+def resolve_english_root(multi_root: Path, configured: str | None = None) -> Path:
+    """Resolve a distinct English worktree without requiring it to exist."""
+    multi_root = Path(multi_root).resolve()
+    if configured:
+        return Path(configured).expanduser().resolve()
+    candidate = multi_root.parent / "AI-Cup-2026-ESG-Paper"
+    if candidate.resolve() == multi_root:
+        candidate = multi_root.with_name(f"{multi_root.name}-english")
+    return candidate
+
+
 MULTI_ROOT = Path(__file__).resolve().parent.parent
-ENGLISH_ROOT = MULTI_ROOT.parent / "AI-Cup-2026-ESG-Paper"
+ENGLISH_ROOT = resolve_english_root(
+    MULTI_ROOT, configured=os.environ.get("AI_CUP_ENGLISH_ROOT")
+)
 PYTHON = Path("/home/tom1030507/miniconda3/envs/aicup-esg/bin/python")
 STATE = MULTI_ROOT / "local_data" / "multilingual_queue_state.json"
 

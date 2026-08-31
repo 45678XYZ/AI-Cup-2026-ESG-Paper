@@ -1,0 +1,915 @@
+import json
+import os
+import re
+import subprocess
+from pathlib import Path
+
+import pytest
+from pypdf import PdfReader, PdfWriter
+from pypdf._text_extraction import mult
+from paper.data import REPO_ROOT
+
+from manuscript.check import (
+    REQUIRED_ASSETS,
+    REQUIRED_TABLE_INCLUSIONS,
+    asset_errors,
+    font_errors,
+    log_errors,
+    pdf_errors,
+    source_errors,
+    source_warnings,
+    source_text,
+    main,
+)
+
+
+# Derived, not transcribed: a hand-kept copy of this list silently describes
+# the previous release the moment check.py requires one more table, and then
+# fails the asset tests for a reason unrelated to what they test.
+CANONICAL_TABLE_NAMES = tuple(
+    Path(path).name for path in REQUIRED_ASSETS if path.startswith("tables/")
+)
+
+
+def write_minimal(root: Path, body: str, metadata: str = "") -> None:
+    root.mkdir()
+    (root / "main.tex").write_text(body, encoding="utf-8")
+    (root / "metadata.tex").write_text(metadata, encoding="utf-8")
+
+
+def write_policy_valid(root: Path, metadata: str = "") -> None:
+    """A manuscript that includes every table the policy requires by name."""
+    required = [name for _, name in REQUIRED_TABLE_INCLUSIONS]
+    submission_front_matter = """\
+\\title{Team_10537 at the NTCIR-19 AI CUP-VeriPromiseESG Task}
+\\keywords{ESG}
+\\maketitle
+\\section*{Team Name}
+\\teamname
+\\section*{Subtasks}
+\\subtasks
+\\section{Introduction}
+"""
+    write_minimal(
+        root,
+        submission_front_matter
+        + "\n".join(f"\\input{{tables/{name}}}" for name in required),
+        "\\newcommand{\\teamname}{Team\\_10537}\n"
+        "\\newcommand{\\subtasks}{AI CUP Special Session at NTCIR}\n"
+        + metadata,
+    )
+    (root / "tables").mkdir()
+    for name in required:
+        (root / "tables" / name).write_text("", encoding="utf-8")
+
+
+def make_valid_asset_repo(root: Path) -> Path:
+    """Create a committed main branch that satisfies every asset policy."""
+    from paper.data import file_sha256
+
+    tables = root / "tables"
+    figures = root / "figures"
+    analysis = root / "analysis"
+    tables.mkdir(parents=True)
+    figures.mkdir()
+    analysis.mkdir()
+    source = root / "input.json"
+    source.write_text("original input\n", encoding="utf-8")
+    (analysis / "generate.py").write_text("# fixture generator\n", encoding="utf-8")
+    for name in CANONICAL_TABLE_NAMES:
+        (tables / name).write_text(f"{name}\n", encoding="utf-8")
+    (figures / "figure1_hierarchy.pdf").write_bytes(b"fixture pdf")
+    table_entry = {
+        "source_script": "analysis/generate.py",
+        "input_files": ["input.json"],
+        "input_sha256": {"input.json": file_sha256(source)},
+    }
+    (tables / "manifest.json").write_text(
+        json.dumps({"tables": {name: table_entry for name in CANONICAL_TABLE_NAMES}}),
+        encoding="utf-8",
+    )
+    (root / "run_manifest.json").write_text(
+        json.dumps({"consistency": [{"status": "pass"}]}),
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "init", "-qb", "main"], cwd=root, check=True)
+    subprocess.run(["git", "config", "user.email", "fixture@example.org"], cwd=root, check=True)
+    subprocess.run(["git", "config", "user.name", "Fixture"], cwd=root, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True)
+    subprocess.run(["git", "commit", "-qm", "fixture"], cwd=root, check=True)
+    return root
+
+
+def test_draft_rejects_prohibited_hardware_and_unqualified_null_claim(tmp_path):
+    write_minimal(tmp_path / "m", "\\input{../tables/table4_contrasts.tex}\n"
+                  "Path-constrained wF1 and hierarchical F1 are post hoc. "
+                  "There was no difference on an L" + "40S run.")
+    errors = source_errors(tmp_path / "m")
+    assert any("prohibited hardware" in error for error in errors)
+    assert any("no detectable difference" in error for error in errors)
+
+
+def test_draft_rejects_an_equivalence_claim(tmp_path):
+    write_minimal(tmp_path / "m", "\\input{../tables/table4_contrasts.tex}\n"
+                  "Path-constrained wF1 and hierarchical F1 are post hoc. "
+                  "The two decision rules are equivalent.")
+    assert any("equivalence" in error for error in source_errors(tmp_path / "m"))
+
+
+def test_draft_requires_full_table4_and_post_hoc_disclosure(tmp_path):
+    write_minimal(tmp_path / "m", "Path-constrained wF1 and hierarchical F1.")
+    errors = source_errors(tmp_path / "m")
+    assert any("table4_contrasts.tex" in error for error in errors)
+    assert any("post hoc" in error for error in errors)
+
+
+def test_author_metadata_is_draft_warning_but_final_error(tmp_path):
+    write_minimal(tmp_path / "m", "\\input{../tables/table4_contrasts.tex}\n"
+                  "Path-constrained wF1 and hierarchical F1 were adopted post hoc.")
+    assert not any("author metadata" in error for error in source_errors(tmp_path / "m"))
+    assert any("author metadata" in warning for warning in source_warnings(tmp_path / "m"))
+    assert any("author metadata" in error for error in source_errors(tmp_path / "m", final=True))
+
+
+def test_layout_author_placeholders_warn_in_draft_and_block_final_even_with_email(tmp_path):
+    root = tmp_path / "m"
+    metadata = "\n".join(
+        [*(f"\\author{{Student Author {number}}}" for number in range(1, 5)),
+         "\\email{student@example.org}"]
+    )
+    write_policy_valid(root, metadata)
+
+    assert source_errors(root) == []
+    assert any("layout-only author placeholders" in warning for warning in source_warnings(root))
+    assert any("layout-only author placeholders" in error
+               for error in source_errors(root, final=True))
+
+
+def test_real_author_and_email_metadata_are_accepted_in_final_mode(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(
+        root, "\\author{Ada Example}\n\\email{ada@example.org}"
+    )
+
+    assert source_errors(root, final=True) == []
+    assert source_warnings(root) == []
+
+
+def test_submission_policy_requires_the_confirmed_task_name_in_the_title(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    main = root / "main.tex"
+    main.write_text(
+        main.read_text(encoding="utf-8").replace(
+            "AI CUP-VeriPromiseESG Task", "an unrelated task"
+        ),
+        encoding="utf-8",
+    )
+
+    assert any("AI CUP-VeriPromiseESG Task" in error for error in source_errors(root))
+
+
+def test_submission_policy_requires_team_name_and_subtasks_before_introduction(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    main = root / "main.tex"
+    source = main.read_text(encoding="utf-8")
+    source = source.replace(
+        "\\section*{Team Name}\n\\teamname\n"
+        "\\section*{Subtasks}\n\\subtasks\n",
+        "",
+    )
+    main.write_text(source, encoding="utf-8")
+
+    errors = source_errors(root)
+    assert any("Team Name" in error for error in errors)
+    assert any("Subtasks" in error for error in errors)
+
+
+def test_submission_policy_requires_values_beneath_the_ntcir_headings(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    main = root / "main.tex"
+    source = main.read_text(encoding="utf-8")
+    source = source.replace("\\teamname\n", "").replace("\\subtasks\n", "")
+    main.write_text(source, encoding="utf-8")
+
+    assert any("front-matter sequence" in error for error in source_errors(root))
+
+
+def test_submission_policy_requires_maketitle_before_the_ntcir_fields(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    main = root / "main.tex"
+    source = main.read_text(encoding="utf-8")
+    source = source.replace("\\maketitle\n", "")
+    source = source.replace("\\section{Introduction}", "\\maketitle\n\\section{Introduction}")
+    main.write_text(source, encoding="utf-8")
+
+    assert any("front-matter sequence" in error for error in source_errors(root))
+
+
+def test_submission_policy_rejects_placeholder_team_name(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    metadata = root / "metadata.tex"
+    metadata.write_text(
+        metadata.read_text(encoding="utf-8").replace("Team\\_10537", "TEAM-NAME-TBD"),
+        encoding="utf-8",
+    )
+
+    assert any("Team_10537" in error for error in source_errors(root))
+
+
+def test_submission_policy_requires_the_confirmed_special_session_subtask(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    metadata = root / "metadata.tex"
+    metadata.write_text(
+        metadata.read_text(encoding="utf-8").replace(
+            "AI CUP Special Session at NTCIR", "Promise Identification (Chinese)"
+        ),
+        encoding="utf-8",
+    )
+
+    assert any("AI CUP Special Session at NTCIR" in error for error in source_errors(root))
+
+
+def test_submission_policy_limits_captions_to_twenty_english_words(tmp_path):
+    twenty_words = (
+        "one two three four five six seven eight nine ten eleven twelve thirteen "
+        "fourteen fifteen sixteen seventeen eighteen nineteen twenty"
+    )
+    accepted = tmp_path / "accepted"
+    write_policy_valid(accepted)
+    accepted_main = accepted / "main.tex"
+    accepted_main.write_text(
+        accepted_main.read_text(encoding="utf-8")
+        + f"\n\\begin{{table}}\\caption{{{twenty_words}}}\\end{{table}}\n",
+        encoding="utf-8",
+    )
+
+    rejected = tmp_path / "rejected"
+    write_policy_valid(rejected)
+    rejected_main = rejected / "main.tex"
+    rejected_main.write_text(
+        rejected_main.read_text(encoding="utf-8")
+        + f"\n\\begin{{table}}\\caption{{{twenty_words} overflow}}\\end{{table}}\n",
+        encoding="utf-8",
+    )
+
+    assert not any("caption exceeds 20 English words" in error
+                   for error in source_errors(accepted))
+    assert any("caption exceeds 20 English words" in error
+               for error in source_errors(rejected))
+
+
+def test_commented_author_and_email_do_not_satisfy_final_metadata(tmp_path):
+    root = tmp_path / "m"
+    write_minimal(
+        root,
+        "\\input{tables/table4_contrasts.tex}",
+        "% \\author{Commented Example}\n% \\email{commented@example.org}",
+    )
+    (root / "tables").mkdir()
+    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
+
+    assert any("author metadata" in error for error in source_errors(root, final=True))
+    assert any("author metadata" in warning for warning in source_warnings(root))
+
+
+def test_commented_layout_placeholders_do_not_block_active_real_metadata(tmp_path):
+    root = tmp_path / "m"
+    commented_placeholders = "\n".join(
+        f"% \\author{{Student Author {number}}}" for number in range(1, 5)
+    )
+    write_policy_valid(
+        root,
+        f"{commented_placeholders}\n\\author{{Ada Example}}\n\\email{{ada@example.org}}",
+    )
+
+    assert source_errors(root, final=True) == []
+    assert source_warnings(root) == []
+
+
+def test_explicit_author_metadata_todo_marker_warns_and_blocks_final_mode(tmp_path):
+    root = tmp_path / "m"
+    write_minimal(
+        root,
+        "\\input{tables/table4_contrasts.tex}",
+        "% TODO(author-metadata)\n\\author{Ada Example}\n\\email{ada@example.org}",
+    )
+    (root / "tables").mkdir()
+    (root / "tables" / "table4_contrasts.tex").write_text("", encoding="utf-8")
+
+    assert any("layout-only author placeholders" in warning for warning in source_warnings(root))
+    assert any("layout-only author placeholders" in error
+               for error in source_errors(root, final=True))
+
+
+def test_pdf_page_limit(tmp_path):
+    path = tmp_path / "nine-pages.pdf"
+    writer = PdfWriter()
+    for _ in range(9):
+        writer.add_blank_page(width=612, height=792)
+    with path.open("wb") as stream:
+        writer.write(stream)
+    assert any("9 pages" in error for error in pdf_errors(path, max_pages=8))
+
+
+def test_tracked_manuscript_omits_snapshot_revision():
+    reader = PdfReader(str(REPO_ROOT / "manuscript" / "build" / "main.pdf"))
+    document_text = "\n".join(page.extract_text() for page in reader.pages)
+
+    assert "snapshot revision" not in document_text
+    assert "a25cc9e05974bd9687e528edd516f2cfdb3f5db9" not in document_text
+
+
+def test_tracked_manuscript_has_no_empty_body_column():
+    """A text-heavy body page must not abandon either ACM column."""
+    reader = PdfReader(str(REPO_ROOT / "manuscript" / "build" / "main.pdf"))
+    imbalanced = []
+    for page_number, page in enumerate(reader.pages[:-1], start=1):
+        midpoint = float(page.mediabox.width) / 2
+        words = [0, 0]
+
+        def count_words(text, cm, tm, font_dict, font_size):
+            clean = text.split()
+            if clean:
+                x = mult(tm, cm)[4]
+                words[0 if x < midpoint else 1] += len(clean)
+
+        page.extract_text(visitor_text=count_words)
+        total = sum(words)
+        if total >= 200 and min(words) < total * 0.1:
+            imbalanced.append((page_number, words))
+
+    assert imbalanced == [], f"body pages with an effectively empty column: {imbalanced}"
+
+
+def test_tracked_manuscript_title_is_compact_and_balanced():
+    """The rendered title must not be split into narrow manual fragments."""
+    reader = PdfReader(str(REPO_ROOT / "manuscript" / "build" / "main.pdf"))
+    page = reader.pages[0]
+    midpoint = float(page.mediabox.width) / 2
+    title_lines = []
+
+    def collect_title_lines(text, cm, tm, font_dict, font_size):
+        clean = " ".join(text.split())
+        if clean and font_size >= 16:
+            x = mult(tm, cm)[4]
+            title_lines.append((clean, 2 * (midpoint - x)))
+
+    page.extract_text(visitor_text=collect_title_lines)
+    expected_title = (
+        "Team_10537 at the NTCIR-19 AI CUP-VeriPromiseESG Task: "
+        "Hierarchical Projection as a Validity Layer for Multilingual ESG "
+        "Promise Verification"
+    )
+    widths = [width for _, width in title_lines]
+
+    assert " ".join(text for text, _ in title_lines) == expected_title
+    assert reader.metadata.title == expected_title
+    assert len(title_lines) == 3, f"title rendered across {len(title_lines)} lines"
+    assert min(widths) >= max(widths) * 0.65, f"unbalanced title widths: {widths}"
+
+
+def test_log_rejects_unresolved_references(tmp_path):
+    log = tmp_path / "main.log"
+    log.write_text("LaTeX Warning: There were undefined references.", encoding="utf-8")
+    assert log_errors(log)
+
+
+def test_log_rejects_an_overfull_vertical_box_above_tolerance(tmp_path):
+    log = tmp_path / "main.log"
+    log.write_text(
+        "Overfull \\vbox (3.125pt too high) has occurred while \\output is active",
+        encoding="utf-8",
+    )
+
+    assert any("vbox" in error for error in log_errors(log))
+
+
+def test_asset_check_names_missing_generated_files(tmp_path):
+    errors = asset_errors(tmp_path)
+    assert any("table4_contrasts.tex" in error for error in errors)
+
+
+def test_source_text_reads_root_sections_and_bib(tmp_path):
+    (tmp_path / "main.tex").write_text("root", encoding="utf-8")
+    (tmp_path / "sections").mkdir()
+    (tmp_path / "sections" / "method.tex").write_text("section", encoding="utf-8")
+    (tmp_path / "refs.bib").write_text("bib", encoding="utf-8")
+    assert source_text(tmp_path) == "root\nbib\nsection"
+
+
+def _real_abstract() -> str:
+    main = (REPO_ROOT / "manuscript" / "main.tex").read_text(encoding="utf-8")
+    match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", main, re.DOTALL)
+    assert match is not None
+    return match.group(1)
+
+
+def test_focused_manuscript_states_the_audit_and_replication_contract():
+    text = source_text(REPO_ROOT / "manuscript")
+    for claim in (
+        "49 companies",
+        "32/32",
+        "14/32",
+        "AI CUP weights applied to ML-Promise",
+    ):
+        assert claim in text
+    assert "(not official)" not in text
+
+
+def test_focused_abstract_prioritizes_prespecified_tuple_evidence():
+    abstract = _real_abstract()
+    assert re.search(
+        r"\+0\.035.*?p_\{\\mathrm\{Holm\}\}=\.001", abstract, re.DOTALL
+    )
+    assert r"p_{\mathrm{Holm}}=.025" not in abstract
+
+
+def test_focused_abstract_positions_projection_as_a_validity_layer():
+    abstract = " ".join(_real_abstract().split())
+    for claim in (
+        "retraining-free validity layer",
+        r"from 12.55\% to zero by construction",
+        "not as a guaranteed route to higher field-wise scores",
+    ):
+        assert claim in abstract
+
+
+def test_focused_conclusion_states_the_positive_bounded_contribution():
+    text = " ".join(source_text(REPO_ROOT / "manuscript").split())
+    for claim in (
+        "retraining-free validity layer",
+        "improves exact whole-tuple accuracy on the Chinese anchor and in all 32",
+        "Its field-score effect varies across models and corpora, but its logical guarantee does not",
+    ):
+        assert claim in text
+
+
+def test_focused_manuscript_does_not_rank_languages_by_raw_score():
+    text = source_text(REPO_ROOT / "manuscript").lower()
+    for prohibited in (
+        "best language",
+        "highest-scoring language",
+        "japanese is harder",
+        "korean is easier",
+        "outperforms the other languages",
+    ):
+        assert prohibited not in text
+
+
+def test_equivalence_language_and_bound_metric_names_require_disclosure(tmp_path):
+    write_minimal(tmp_path / "m", "C-wF1 and hF establish equivalence.")
+    errors = source_errors(tmp_path / "m")
+    assert any("equivalence" in error for error in errors)
+    assert any("post hoc" in error for error in errors)
+
+
+def test_table4_comment_spoof_is_not_an_inclusion(tmp_path):
+    write_minimal(tmp_path / "m", "% \\input{../tables/table4_contrasts.tex}")
+    assert any("table4_contrasts.tex" in error for error in source_errors(tmp_path / "m"))
+
+
+def test_draft_requires_the_canonical_multilingual_table(tmp_path):
+    repo = tmp_path / "repo"
+    manuscript = repo / "manuscript"
+    tables = repo / "tables"
+    tables.mkdir(parents=True)
+    (tables / "table4_contrasts.tex").write_text("table 4\n", encoding="utf-8")
+    (tables / "table7_multilingual_mechanism.tex").write_text(
+        "table 7\n", encoding="utf-8"
+    )
+    write_minimal(manuscript, "\\input{../tables/table4_contrasts.tex}")
+
+    errors = source_errors(manuscript, repo_root=repo)
+    assert any("table7_multilingual_mechanism.tex" in error for error in errors)
+
+
+def test_draft_rejects_an_external_multilingual_table_decoy(tmp_path):
+    repo = tmp_path / "repo"
+    manuscript = repo / "manuscript"
+    tables = repo / "tables"
+    external = tmp_path / "external" / "table7_multilingual_mechanism.tex"
+    tables.mkdir(parents=True)
+    external.parent.mkdir()
+    (tables / "table4_contrasts.tex").write_text("table 4\n", encoding="utf-8")
+    (tables / "table7_multilingual_mechanism.tex").write_text(
+        "canonical\n", encoding="utf-8"
+    )
+    external.write_text("decoy\n", encoding="utf-8")
+    write_minimal(
+        manuscript,
+        "\\input{../tables/table4_contrasts.tex}\n"
+        "\\input{../../external/table7_multilingual_mechanism.tex}",
+    )
+
+    errors = source_errors(manuscript, repo_root=repo)
+    assert any("Table 7 inclusion must resolve" in error for error in errors)
+
+
+def test_draft_rejects_active_m7_but_not_a_comment(tmp_path):
+    active = tmp_path / "active"
+    commented = tmp_path / "commented"
+    write_minimal(active, "We evaluate M7.")
+    write_minimal(commented, "% M7 was removed.")
+
+    assert any("M7" in error for error in source_errors(active))
+    assert not any("M7" in error for error in source_errors(commented))
+
+
+def test_draft_rejects_the_selected_best_regime_table(tmp_path):
+    root = tmp_path / "m"
+    write_minimal(root, "\\input{../tables/table3_regimes.tex}")
+
+    assert any("selected-best Table 3" in error for error in source_errors(root))
+
+
+def test_cli_rejects_external_table4_decoy(tmp_path, monkeypatch, capsys):
+    repo = make_valid_asset_repo(tmp_path)
+    manuscript = repo / "manuscript"
+    external = repo.parent / f"{repo.name}-external" / "table4_contrasts.tex"
+    external.parent.mkdir()
+    external.write_text("decoy\n", encoding="utf-8")
+    write_minimal(manuscript, f"\\input{{../../{external.parent.name}/table4_contrasts.tex}}")
+    monkeypatch.setattr(
+        "sys.argv",
+        ["check", "--root", str(manuscript), "--repo-root", str(repo)],
+    )
+
+    assert main() == 1
+    assert "Table 4 inclusion must resolve to canonical generated asset" in capsys.readouterr().out
+
+
+def test_asset_check_rejects_noncontained_manifest_inputs(tmp_path):
+    from paper.data import file_sha256
+
+    cases = ("absolute", "traversal", "external symlink")
+    for case in cases:
+        repo = make_valid_asset_repo(tmp_path / case.replace(" ", "-"))
+        external = repo.parent / f"{repo.name}-external.json"
+        external.write_text("original input\n", encoding="utf-8")
+        if case == "absolute":
+            manifest_input = str(external)
+            expected = "must be repository-relative"
+        elif case == "traversal":
+            manifest_input = f"../{external.name}"
+            expected = "must not traverse parent directories"
+        else:
+            link = repo / "linked-input.json"
+            link.symlink_to(external)
+            manifest_input = link.name
+            expected = "resolves outside repository"
+        manifest_path = repo / "tables" / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        entry = manifest["tables"]["table1_dataset.tex"]
+        entry["input_files"] = [manifest_input]
+        entry["input_sha256"] = {manifest_input: file_sha256(external)}
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+        subprocess.run(["git", "commit", "-qm", case], cwd=repo, check=True)
+
+        errors = asset_errors(repo)
+        assert any(expected in error for error in errors), (case, errors)
+
+
+@pytest.mark.parametrize("staged", [False, True], ids=["unstaged", "staged"])
+def test_asset_check_detects_tampered_canonical_table(tmp_path, staged):
+    repo = make_valid_asset_repo(tmp_path)
+    assert asset_errors(repo) == []
+
+    (repo / "tables" / "table4_contrasts.tex").write_text("tampered\n", encoding="utf-8")
+    if staged:
+        subprocess.run(
+            ["git", "add", "tables/table4_contrasts.tex"], cwd=repo, check=True
+        )
+
+    assert "canonical generated asset is not clean relative to HEAD: " \
+           "tables/table4_contrasts.tex" in asset_errors(repo)
+
+
+def test_asset_check_accepts_a_committed_table_newer_than_main(tmp_path):
+    repo = make_valid_asset_repo(tmp_path)
+    subprocess.run(["git", "switch", "-qc", "paper"], cwd=repo, check=True)
+    (repo / "tables" / "table1_dataset.tex").write_text(
+        "corrected table\n", encoding="utf-8"
+    )
+    subprocess.run(["git", "add", "tables/table1_dataset.tex"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "correct audit"], cwd=repo, check=True)
+
+    assert asset_errors(repo) == []
+
+
+def test_asset_check_detects_tampered_table_manifest(tmp_path):
+    repo = make_valid_asset_repo(tmp_path)
+    assert asset_errors(repo) == []
+
+    manifest = repo / "tables" / "manifest.json"
+    manifest.write_text(manifest.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+
+    assert "canonical generated asset is not clean relative to HEAD: " \
+           "tables/manifest.json" in asset_errors(repo)
+
+
+def test_asset_check_rejects_untracked_canonical_table(tmp_path):
+    repo = make_valid_asset_repo(tmp_path)
+    assert asset_errors(repo) == []
+    subprocess.run(
+        ["git", "rm", "--cached", "tables/table3_legality_cost.tex"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+
+    assert "canonical generated asset is not tracked: tables/table3_legality_cost.tex" \
+           in asset_errors(repo)
+
+
+def test_font_checker_accepts_pdf_without_font_resources(tmp_path):
+    path = tmp_path / "blank.pdf"
+    writer = PdfWriter()
+    writer.add_blank_page(width=612, height=792)
+    with path.open("wb") as stream:
+        writer.write(stream)
+    assert font_errors(path) == []
+
+
+def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
+    """The archived source must build without host-installed fonts."""
+    manuscript = REPO_ROOT / "manuscript"
+    empty_fonts = tmp_path / "empty-fonts"
+    empty_fonts.mkdir()
+    font_cache = tmp_path / "font-cache"
+    font_config = tmp_path / "fonts.conf"
+    font_config.write_text(
+        "<?xml version='1.0'?>\n"
+        "<!DOCTYPE fontconfig SYSTEM 'urn:fontconfig:fonts.dtd'>\n"
+        "<fontconfig>\n"
+        f"  <dir>{empty_fonts.as_posix()}</dir>\n"
+        f"  <cachedir>{font_cache.as_posix()}</cachedir>\n"
+        "</fontconfig>\n",
+        encoding="utf-8",
+    )
+    env = os.environ.copy()
+    env["FONTCONFIG_FILE"] = str(font_config)
+    env["FONTCONFIG_PATH"] = str(tmp_path)
+    subprocess.run(["make", "clean"], cwd=manuscript, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["make", "check"], cwd=manuscript, env=env, check=True,
+        capture_output=True, text=True,
+    )
+
+    pdf = manuscript / "build" / "main.pdf"
+    reader = PdfReader(str(pdf))
+    page_text = [page.extract_text().strip() for page in reader.pages]
+    assert any("7 DISCUSSION" in text for text in page_text[:-1]), (
+        "the Discussion heading is pushed onto the final page"
+    )
+    document_text = "\n".join(page_text)
+    compact_document_text = re.sub(r"[\s-]+", "", document_text).replace("𝑀", "M")
+    for caption in (
+        "AI CUP 2026 dataset composition and hierarchy audit.",
+        "Document-disjoint cross-fitted results on the Chinese development set.",
+        "Projection (M1) versus independent argmax (M0) on five corpora",
+        "Chinese paired contrasts on the two pre-specified metrics, with uncorrected",
+    ):
+        assert re.sub(r"[\s-]+", "", caption) in compact_document_text
+    assert all(page_text), "the compiled manuscript contains a blank page"
+    sparse_body_pages = [
+        index for index, text in enumerate(page_text[:-1], start=1)
+        if len(text.split()) < 100
+    ]
+    assert not sparse_body_pages, (
+        f"the compiled manuscript contains near-empty body pages: {sparse_body_pages}"
+    )
+    # Positions are taken on the hyphen- and whitespace-stripped text, the same
+    # form the caption checks above use. A raw .index() into the extracted text
+    # raises ValueError the moment the PDF line-breaks one of these strings --
+    # which reports a missing substring instead of the ordering claim actually
+    # being made, and would pass or fail on typesetting rather than on order.
+    def position(needle):
+        compact = re.sub(r"[\s-]+", "", needle)
+        assert compact in compact_document_text, f"not in the PDF: {needle!r}"
+        return compact_document_text.index(compact)
+
+    table4_caption = "Chinese paired contrasts on the two pre-specified metrics, with uncorrected"
+    external_start = "tuple accuracy is positive in 32/32 arms"
+    discussion_heading = "7 DISCUSSION"
+    assert position(table4_caption) < position(discussion_heading)
+    assert position(external_start) < position(discussion_heading)
+    normalized_document_text = " ".join(document_text.split())
+    # Compacted, for the same reason the caption and ordering checks are: TeX
+    # hyphenates across line breaks ("training arti- facts"), so a check on the
+    # merely whitespace-normalised text asserts the line breaking of one build
+    # rather than the presence of the disclosure.
+    for disclosure in (
+        "All 2,000 development rows obey the hierarchy",
+        "field-wise weighted macro-F1 is a standard choice",
+        "no term that assesses the joint validity of a four-field tuple",
+        "765 training artifacts and 1,050 row-level prediction files across five corpora",
+    ):
+        assert re.sub(r"[\s-]+", "", disclosure) in compact_document_text
+    assert "Chinese paired contrasts on four metrics" not in normalized_document_text
+    assert "their displayed adjusted values" not in normalized_document_text
+    assert "AI CUP 2026 競賽提交格式說明 Sample Submission Format Guide" not in (
+        normalized_document_text
+    )
+    assert (
+        "SemEval-2025 Task 6: Multinational, Multilingual, Multi-Industry "
+        "Promise Verification"
+    ) in normalized_document_text
+    metadata = (manuscript / "metadata.tex").read_text(encoding="utf-8")
+    # Commented-out author blocks are how a pending decision is parked in this
+    # file -- the supervising author is one such block. Counting them as
+    # authors makes the count disagree with the compiled PDF, which is the
+    # thing these assertions are actually about.
+    active_metadata = "\n".join(
+        re.sub(r"(?<!\\)%.*", "", line) for line in metadata.splitlines()
+    )
+    authors = re.findall(r"\\author\{([^}]+)\}", active_metadata)
+    emails = re.findall(r"\\email\{([^}]+)\}", active_metadata)
+    assert len(authors) == 4
+    assert len(emails) == 4
+    assert not any(author.startswith("Student Author ") for author in authors)
+    assert all(author in document_text for author in authors)
+    assert all(email in document_text for email in emails)
+    assert font_errors(pdf) == []
+    log = (manuscript / "build" / "main.log").read_text(encoding="utf-8")
+    assert "accessing absolute path" not in log
+    assert "Missing character" not in log
+    assert "could not represent character" not in log
+
+
+def test_compiled_table_captions_are_nine_point_and_bodies_are_at_least_eight_point():
+    """Catch any table that silently falls back to six-point scriptsize."""
+    manuscript = REPO_ROOT / "manuscript"
+    subprocess.run(
+        ["make", "check"], cwd=manuscript, check=True,
+        capture_output=True, text=True,
+    )
+
+    fragments = []
+    for page in PdfReader(str(manuscript / "build" / "main.pdf")).pages:
+        page.extract_text(
+            visitor_text=lambda text, _cm, _tm, _font, size: fragments.append(
+                (text, float(size))
+            )
+        )
+
+    # One stable data-row fragment from each table that previously used
+    # \scriptsize. Reverting any one table to six points makes its own anchor
+    # fail while allowing the other three to keep passing.
+    body_anchors = (
+        "Chinese (AI CUP) 2,000",
+        "All invalid tuples 1,527",
+        "RoBERTa-large 23.17",
+        "Enforce legality (M1",
+    )
+    for anchor in body_anchors:
+        sizes = [size for text, size in fragments if anchor in text]
+        assert sizes, f"table-body anchor is absent from the PDF: {anchor!r}"
+        assert min(sizes) >= 7.8, f"{anchor!r} rendered at {min(sizes):.3f} pt"
+
+    caption_sizes = [
+        size for text, size in fragments
+        if re.match(r"^Table \d+:", text.strip())
+    ]
+    assert len(caption_sizes) == 8
+    assert all(8.8 <= size <= 9.1 for size in caption_sizes), caption_sizes
+
+
+def test_reproducibility_subsection_does_not_cross_a_page_boundary():
+    """Keep the 7.2 heading and its final compute detail on one PDF page."""
+    manuscript = REPO_ROOT / "manuscript"
+    subprocess.run(
+        ["make", "check"], cwd=manuscript, check=True,
+        capture_output=True, text=True,
+    )
+    page_text = [
+        " ".join((page.extract_text() or "").split())
+        for page in PdfReader(str(manuscript / "build" / "main.pdf")).pages
+    ]
+
+    def unique_page(needle):
+        matches = [index for index, text in enumerate(page_text, start=1) if needle in text]
+        assert len(matches) == 1, f"expected one PDF page containing {needle!r}: {matches}"
+        return matches[0]
+
+    heading_page = unique_page("7.2 Reproducibility")
+    final_detail_page = unique_page("25.4 GPU-hours on one RTX 3090")
+    assert final_detail_page == heading_page, (
+        f"Section 7.2 starts on page {heading_page} but ends on page {final_detail_page}"
+    )
+
+
+def test_cli_returns_nonzero_for_policy_error(tmp_path, monkeypatch, capsys):
+    write_minimal(tmp_path / "m", "no difference")
+    monkeypatch.setattr("sys.argv", ["check", "--root", str(tmp_path / "m"), "--repo-root", str(tmp_path)])
+    assert main() == 1
+    assert "ERROR:" in capsys.readouterr().out
+
+
+def test_canonical_repository_assets_have_clean_provenance():
+    assert asset_errors(REPO_ROOT) == []
+
+
+def test_missing_required_table_manifest_entry_is_rejected(tmp_path):
+    tables = tmp_path / "tables"
+    figures = tmp_path / "figures"
+    tables.mkdir(); figures.mkdir()
+    for name in CANONICAL_TABLE_NAMES:
+        (tables / name).write_text(name, encoding="utf-8")
+    (figures / "figure1_hierarchy.pdf").write_bytes(b"pdf")
+    (tables / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
+    (tmp_path / "run_manifest.json").write_text(json.dumps({"consistency": []}), encoding="utf-8")
+    errors = asset_errors(tmp_path)
+    assert any("manifest entry" in error for error in errors)
+
+
+def test_tampered_table_input_is_rejected(tmp_path):
+    tables = tmp_path / "tables"; tables.mkdir()
+    source = tmp_path / "input.json"; source.write_text("original", encoding="utf-8")
+    (tables / "manifest.json").write_text(json.dumps({"tables": {
+        name: {"source_script": "script.py", "input_files": ["input.json"],
+               "input_sha256": {"input.json": "sha256:bad"}}
+        for name in CANONICAL_TABLE_NAMES
+    }}), encoding="utf-8")
+    (tmp_path / "run_manifest.json").write_text(json.dumps({"consistency": []}), encoding="utf-8")
+    errors = asset_errors(tmp_path)
+    assert any("input mismatch" in error for error in errors)
+
+
+def test_missing_or_failed_run_manifest_consistency_is_rejected(tmp_path):
+    (tmp_path / "tables").mkdir()
+    (tmp_path / "tables" / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
+    (tmp_path / "run_manifest.json").write_text(json.dumps({"consistency": [{"status": "fail"}]}), encoding="utf-8")
+    assert any("consistency" in error for error in asset_errors(tmp_path))
+
+
+def test_untracked_figure_is_rejected(tmp_path):
+    (tmp_path / "tables").mkdir(); (tmp_path / "figures").mkdir()
+    (tmp_path / "figures" / "figure1_hierarchy.pdf").write_bytes(b"pdf")
+    assert any("figure" in error for error in asset_errors(tmp_path))
+
+
+def test_asset_check_rejects_malformed_but_valid_manifest_shapes(tmp_path):
+    tables = tmp_path / "tables"
+    tables.mkdir()
+    (tmp_path / "run_manifest.json").write_text(json.dumps({"consistency": []}), encoding="utf-8")
+    cases = [
+        ([], "manifest top level"),
+        ({"tables": []}, "tables section"),
+        ({"tables": {"table1_dataset.tex": []}}, "table manifest entry"),
+        ({"tables": {"table1_dataset.tex": {"input_sha256": []}}}, "input_sha256"),
+    ]
+    for index, (payload, label) in enumerate(cases):
+        path = tables / f"manifest-{index}.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        path.rename(tables / "manifest.json")
+        errors = asset_errors(tmp_path)
+        assert any(label in error for error in errors), (label, errors)
+
+
+def test_asset_check_rejects_malformed_consistency_shapes(tmp_path):
+    tables = tmp_path / "tables"
+    tables.mkdir()
+    (tables / "manifest.json").write_text(json.dumps({"tables": {}}), encoding="utf-8")
+    for payload in ({"consistency": {}}, {"consistency": [{}]}, {"consistency": ["bad"]}):
+        (tmp_path / "run_manifest.json").write_text(json.dumps(payload), encoding="utf-8")
+        errors = asset_errors(tmp_path)
+        assert any("consistency" in error for error in errors)
+
+
+def test_asset_check_rejects_malformed_input_file_shapes(tmp_path):
+    tables = tmp_path / "tables"
+    tables.mkdir()
+    names = CANONICAL_TABLE_NAMES
+    for name in names:
+        (tables / name).write_text(name, encoding="utf-8")
+    (tmp_path / "run_manifest.json").write_text(
+        json.dumps({"consistency": [{"status": "pass"}]}), encoding="utf-8"
+    )
+    malformed_inputs = (
+        "input.json",
+        [[]],
+        [{}],
+        [0],
+        [None],
+        [True],
+        [False],
+    )
+    for inputs in malformed_inputs:
+        manifest = {"tables": {
+            name: {
+                "source_script": "script.py",
+                "input_files": inputs,
+                "input_sha256": {},
+            }
+            for name in names
+        }}
+        (tables / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        errors = asset_errors(tmp_path)
+        assert any("input_files" in error for error in errors), (inputs, errors)

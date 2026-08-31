@@ -1,0 +1,72 @@
+\section{Task and Data}
+
+\paragraph{Outputs and legal states.}
+The task predicts four fields for each paragraph. We study the AI CUP 2026
+VeriPromise\hspace{0pt}ESG development release
+\cite{aicup2026guidelines}. Its label inventory and parent--child logic follow
+PromiseEval \cite{chen2025promiseeval}.
+Promise status (PS) is \emph{Yes} or \emph{No}. Verification timeline (VT) is
+\emph{already}, \emph{within two years}, \emph{between two and five years},
+\emph{more than five years}, or \emph{N/A}. Evidence status (ES) is
+\emph{Yes}, \emph{No}, or \emph{N/A}; evidence quality (EQ) is \emph{Clear},
+\emph{Not Clear}, \emph{Misleading}, or \emph{N/A}. These fields obey hard
+implications: PS=No requires VT=ES=EQ=N/A, whereas PS=Yes requires one of the
+four substantive timelines and ES in \{Yes, No\}. In turn, ES=No requires
+EQ=N/A, whereas ES=Yes requires one of the three substantive quality labels.
+Thus the Cartesian label space has $2\times5\times3\times4=120$
+combinations, but only
+\begin{equation}
+  1+4(1+3)=17
+  \label{eq:legal-states}
+\end{equation}
+legal tuples: one for PS=No, and for each of four timelines either one ES=No
+state or three ES=Yes quality states. We write $\mathcal S$ for this set of 17
+legal states throughout. Two terms and no others are used for the boundary it
+draws: a state is \emph{legal} when it belongs to $\mathcal S$, and an emitted
+tuple is \emph{invalid} when it does not.
+
+\begin{figure*}[t]
+  \centering
+  % 0.88 of natural size. The figure's own note fixes 1:1 as the point where
+  % its labels sit at 8pt against 9pt body text; at 0.88 they are just over
+  % 7pt, which is the floor this page budget can buy and still be read.
+  \includegraphics[scale=0.88]{../figures/figure1_hierarchy.pdf}
+  \caption{The task hierarchy and seven alternative decision rules, which
+  share base probabilities but differ in calibration and validity guarantees.}
+  \label{fig:hierarchy}
+\end{figure*}
+
+\paragraph{Development-set audit.}
+The release contains 2,000 labeled development paragraphs from 49 source
+reports and 49 companies. All 2,000 development rows obey the hierarchy,
+collectively realizing 15 of the 17 legal states
+(Table~\ref{tab:dataset}). The rarest EQ label,
+\emph{Misleading}, has only two instances; we therefore make no improvement
+or significance claim for that class.
+
+\begin{table}[t]
+  \centering
+  \small
+  \caption{AI CUP 2026 dataset composition and hierarchy audit.}
+  \label{tab:dataset}
+  \input{../tables/table1_dataset.tex}
+\end{table}
+
+All 49 development reports also occur in the unlabeled competition test data.
+Because competition test labels are unavailable, we infer no label-derived
+test statistic. Each company contributes one report.
+Consequently, in this corpus a document-disjoint split is also
+company-disjoint, rather than a separate company-level experiment.
+
+\paragraph{External replication corpora.}
+ML-Promise provides labels in the same four fields
+\cite{seki2025mlpromise}. After normalizing its releases to the common
+17-state vocabulary, we retain 400 English paragraphs from 9 reports, 400
+French paragraphs from 9 reports, and 400 Japanese paragraphs from 19 reports.
+The Korean release supplies labels, report URLs, and page numbers but no text;
+we extract the corresponding 500 PDF pages from 32 reports and use the first
+384 tokens of each page. The extracted Korean text is not redistributed.
+Korean has no gold \emph{Misleading} example, and its page-level input is not
+directly comparable to the paragraph inputs. We therefore interpret only
+within-corpus paired decision contrasts, never raw score differences between
+languages.

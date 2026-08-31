@@ -1,0 +1,109 @@
+\section{Experimental Design}
+\label{sec:experiments}
+
+We first define the shared evaluation protocols and inference. Table~\ref{tab:main-results}
+then summarizes the controlled comparison interpreted in
+Section~\ref{sec:results}.
+
+\begin{table*}[t]
+  \centering
+  \small
+  \caption{Document-disjoint cross-fitted results on the Chinese development set.}
+  \label{tab:main-results}
+  % Tighter than the default gutter: tuple accuracy gained a $\pm$ column and
+  % the ten columns no longer clear the two-column width without it.
+  \begingroup
+  \setlength{\tabcolsep}{4pt}
+  \input{../tables/table2_main.tex}
+  \endgroup
+\end{table*}
+
+\subsection{Cross-Fitted Evaluation Targets}
+We use five-way rotating three-way cross-fitting. For rotation $k$, Test is
+fold $k$, Calibration is fold $(k+1)\bmod 5$, and Train comprises the other
+three folds; the three partitions are mutually exclusive. After five
+rotations, every development paragraph has served as Test exactly once. We
+concatenate the 2,000 out-of-fold predictions and compute each metric once,
+rather than average fold-level F1 values whose present gold-label sets may
+differ. The three seeds 42, 123, and 456 each determine both a fold assignment
+and training randomness, so seed variation represents the complete pipeline.
+
+The primary, document-disjoint protocol balances report row counts with a
+randomized greedy procedure. After a seeded shuffle, it processes reports from
+largest to smallest and randomly places each in one of the two currently
+lightest folds. It estimates unseen-report generalization and, given the corpus
+audit, is also company-disjoint.
+
+The same-document protocol instead jointly stratifies by gold PS, ES, and VT.
+It shuffles rows within each joint-label bucket and deals them round-robin to
+the five folds. Every report represented in Calibration or Test must also occur
+in Train through a different paragraph. This estimates seen-report,
+unseen-paragraph generalization. The two protocols target distinct estimands;
+neither is a biased and the other an unbiased version of one quantity.
+
+Within each protocol and seed, M0--M6 consume the same Test rows and base
+probabilities.
+
+\begingroup\emergencystretch=1em
+External runs use document-disjoint report grouping, three seeds, and five
+rotations. Each language has eight paired arms -- four backbones under both
+$\lambda=0$ and 0.3 -- giving 32 external arms, none of them chosen on an
+observed score. The same-document protocol is descriptive and available only
+for the primary large backbone. The complete executed study contains 765
+training artifacts and 1,050 row-level prediction files across five corpora.
+\par\endgroup
+
+\subsection{Metrics and Inference}
+\label{sec:metrics}
+The field-wise weighted macro-F1 is a standard choice for multi-field
+classification, but it contains no term that assesses the joint validity of a
+four-field tuple. For Chinese, the primary metric is the official weighted
+macro-F1,
+\begin{equation}
+  \mathrm{wF1}=0.20F_{\mathrm{PS}}+0.15F_{\mathrm{VT}}
+  +0.30F_{\mathrm{ES}}+0.35F_{\mathrm{EQ}},
+  \label{eq:official-metric}
+\end{equation}
+where each $F_t$ is field-level macro-F1 over classes present in the gold
+labels being scored. Because this denominator depends on gold support,
+per-class leverage differs by corpus: a unit gain on one EQ class contributes
+$0.35/3=0.1167$ to the Korean weighted total but $0.35/4=0.0875$ elsewhere.
+Pre-specified whole-tuple accuracy requires all four fields to match.
+Path-constrained weighted macro-F1 (C-wF1) and
+hierarchical F1 (hF) were adopted post hoc. C-wF1 retains the official field
+weights but counts a substantive child prediction as wrong when its predicted
+ancestors do not support it. Following the hierarchical precision/recall/F1
+set-overlap definition \cite{plaud2024revisiting}, our hF micro-averages over
+emitted non-N/A field--value nodes: hP is total gold--prediction overlap divided
+by predicted nodes, hR divides the same overlap by gold nodes, and hF is their
+harmonic mean. For an inconsistent emitted tuple, we do not add missing
+ancestors before scoring; legal M1--M6 are unaffected because the conventions
+coincide for them. hF changes both consistency treatment and macro-versus-micro
+averaging, so the two supplementary metrics answer different questions.
+
+ML-Promise has no official weighted metric. We therefore label its scores
+``AI CUP weights applied to ML-Promise.'' All external
+comparisons remain paired within corpus, backbone, and $\lambda$.
+
+\begingroup\emergencystretch=1em
+For paired method contrasts, we perform a paired PDF-cluster bootstrap over 49
+source-report clusters. Each of 10,000 replicates samples 49 reports with
+replacement using seed 20260814, applies the same sampled rows to both methods
+and all three seeds, computes the within-seed differences, and averages those
+differences. The five pre-specified contrasts are M1--M0, M3--M2, M4--M1,
+M6--M3, and M6--M5. M1--M0 changes only the output rule, with calibration held
+out of both arms; it is therefore the cleanest test of projection rather than
+the highest-scoring configuration. Our only confirmatory family applies Holm correction to
+these five contrasts on Chinese official wF1 \cite{holm1979}. Pre-specified
+Chinese tuple exact-match is a separate secondary family of five. Bracketed
+95\% intervals are uncorrected bootstrap percentile intervals; decisions use
+$p_{\mathrm{Holm}}<.05$, not whether an interval excludes zero.
+\par\endgroup
+
+External replication was pre-registered around within-arm contrast directions;
+we additionally apply a report-cluster bootstrap only to the fixed English
+M1--M0 tuple contrast. We do not pool languages into a post-hoc significance
+test. C-wF1 and hF were added after the Chinese primary result, while
+structural-loss and alternate-backbone screens test robustness; all are
+exploratory and do not support confirmatory claims regardless of their nominal
+$p$-values.

@@ -85,19 +85,26 @@ class Arm:
         return f"{self.backbone} (lambda={self.structure_lambda:g})"
 
 
+# Every name is prefixed ``Chinese``. Unprefixed, three of these four collide
+# with an English or multilingual checkpoint printed elsewhere in the same
+# paper: this ``RoBERTa-large`` is hfl/chinese-roberta-wwm-ext-large, while the
+# one in the external-arm table is the English roberta-large, and the two
+# ELECTRA-large and RoBERTa-base cells are likewise different models. A caption
+# sentence a page away is not enough to stop a reader reading down a column and
+# comparing two different checkpoints.
 ARMS = (
-    Arm("RoBERTa-large", 0.0, "", "paper_plan.md"),
-    Arm("RoBERTa-large", 0.3, "runs/structural",
+    Arm("Chinese RoBERTa-large", 0.0, "", "paper_plan.md"),
+    Arm("Chinese RoBERTa-large", 0.3, "runs/structural",
         "pre_registration_structural_training.md"),
-    Arm("DeBERTa-v2-320M", 0.0, "runs/deberta_v2_320m/lambda_0.0",
+    Arm("Chinese DeBERTa-v2-320M", 0.0, "runs/deberta_v2_320m/lambda_0.0",
         "pre_registration_deberta_screen.md"),
-    Arm("DeBERTa-v2-320M", 0.3, "runs/deberta_v2_320m/lambda_0.3",
+    Arm("Chinese DeBERTa-v2-320M", 0.3, "runs/deberta_v2_320m/lambda_0.3",
         "pre_registration_deberta_screen.md"),
-    Arm("ELECTRA-large", 0.0, "runs/electra_180g_large/lambda_0.0",
+    Arm("Chinese ELECTRA-large", 0.0, "runs/electra_180g_large/lambda_0.0",
         "pre_registration_electra_screen.md"),
-    Arm("ELECTRA-large", 0.3, "runs/electra_180g_large/lambda_0.3",
+    Arm("Chinese ELECTRA-large", 0.3, "runs/electra_180g_large/lambda_0.3",
         "pre_registration_electra_screen.md"),
-    Arm("RoBERTa-base", 0.0, "runs/rbt_base", "rbt_base_run.md"),
+    Arm("Chinese RoBERTa-base", 0.0, "runs/rbt_base", "rbt_base_run.md"),
 )
 
 
@@ -237,15 +244,20 @@ def render_table(report) -> str:
         " & & & \\multicolumn{2}{c}{Enforce legality (M1$-$M0)} & "
         "\\multicolumn{2}{c}{Joint decoding (M4$-$M1)} \\\\\n"
         "\\cmidrule(lr){4-5}\\cmidrule(lr){6-7}\n"
-        "Backbone & $\\lambda$ & M0 invalid & Official & Whole-row & "
-        "Official & Whole-row"
+        # ``M0 invalid \\%`` matches the multilingual table's column rather than
+        # spelling the same quantity two ways. The backbone cells stay short so
+        # the table fits one column; that ``RoBERTa-large`` is a different
+        # checkpoint from the English replication's is stated in the caption,
+        # which is where a reader looks when two tables sit a page apart.
+        "Backbone & $\\lambda$ & M0 inv.\\ \\% & wF1 & Tuple acc. & "
+        "wF1 & Tuple acc."
     )
 
     def line(arm) -> str:
         cells = [
             arm["backbone"],
             f"{arm['structure_lambda']:g}",
-            f"{arm['invalid_rate']['M0'] * 100:.2f}\\%",
+            f"{arm['invalid_rate']['M0'] * 100:.2f}",
         ]
         for key in ("legality_cost", "decoder_vs_projection"):
             cells += [_cell(arm[key]["official_weighted_macro_f1"]),
@@ -332,7 +344,11 @@ def build_caption(report) -> str:
 
     parts = [
         f"Two decision rules over one set of probabilities, on the "
-        f"{report['protocol']} protocol. M0 takes each field's argmax "
+        f"{_tex(report['protocol'])} protocol; every checkpoint here is "
+        f"Chinese and is named with that prefix, because \\emph{{RoBERTa-large}}, "
+        f"\\emph{{ELECTRA-large}} and \\emph{{RoBERTa-base}} each also name a "
+        f"different model in the external replication tables. M0 takes each "
+        f"field's argmax "
         f"independently; M1 projects onto the 17 legal states top-down; M4 "
         f"scores all 17 and takes the best. \\textbf{{M1 and M4 both emit an "
         f"invalid tuple on 0\\% of rows in every arm}} -- their output space "
@@ -341,26 +357,79 @@ def build_caption(report) -> str:
         f"Means over {len(arms[0]['seeds'])} seeds; paired PDF-cluster "
         f"bootstrap, {report['n_boot']:,} resamples, seed "
         f"{report['bootstrap_seed']}, one resample shared within each contrast.",
-        f"Enforcing legality raises whole-row accuracy in {row['up']} of "
+        f"Enforcing legality raises tuple accuracy -- all four fields correct "
+        f"in the same row -- in {row['up']} of "
         f"{row['n']} arms, {row['detectable']} of those intervals excluding "
         f"zero. On the official metric it is negative in {off_plain['down']} "
         f"of the {off_plain['n']} arms trained without the structural "
         f"objective and detectable in {off_plain['detectable']} of them, "
         f"against {off_trained['detectable']} of {off_trained['n']} among the "
         f"structurally trained arms.",
-        f"Joint decoding lowers whole-row accuracy relative to projection in "
+        f"Joint decoding lowers tuple accuracy relative to projection in "
         f"{dec_row['down']} of {dec_row['n']} arms, detectable in "
         f"{dec_row['detectable']}; on the official metric it is detectable in "
         f"{dec_plain['detectable']} of the {dec_plain['n']} untrained arms and "
         f"{dec_trained['detectable']} of the {dec_trained['n']} trained ones."
         + (f" Each of those {dec_all['detectable']} detectable cells is "
            f"{dec_dir}." if dec_dir else ""),
+        _lambda_note(arms, plain, trained),
         "\\textbf{Exploratory.} These contrasts were named after the primary "
         "analysis and form no Holm family; bold marks an interval excluding "
         "zero, not a corrected verdict. The claim is the sign pattern across "
         "arms, not any single cell. See docs/governance/inference\\_families.md.",
     ]
     return " ".join(parts)
+
+
+def _tex(text: str) -> str:
+    """Escape an identifier that reaches LaTeX as caption prose.
+
+    Captions are contract deliverables and D inputs them into ``\\caption{}``
+    directly, so they have to be LaTeX-safe as written. ``analysis/preview.py``
+    escapes on the way in, which is why an unescaped ``pdf_group`` rendered
+    there for weeks and only aborted the build the first time the manuscript
+    included this caption.
+    """
+    return text.replace("\\", "\\textbackslash{}").replace("_", "\\_")
+
+
+def _lambda_note(arms, plain, trained) -> str:
+    """Two things the rows look like defects until they are explained.
+
+    A backbone that appears once reads as a run that was never finished, and a
+    non-zero M0 rate in the structurally trained block reads as a failed
+    guarantee. Neither is the case: the base-checkpoint arm was pre-registered
+    to ask whether a smaller model is more consistent, a question that needs no
+    training objective, and the training-time penalty is a pull toward the
+    legal set rather than a restriction to it -- which is the reason a
+    decision-stage rule is what turns the tendency into a guarantee.
+    """
+    if not trained:
+        return ""
+    single = sorted({a["backbone"] for a in plain}
+                    - {a["backbone"] for a in trained})
+    rates = [a["invalid_rate"][BASELINE] for a in trained]
+    # Deliberately phrased as "the lambda = 0.3 arms" rather than "the
+    # structurally trained arms": the caption's guard requires any sentence
+    # naming that subgroup to name the metric it holds for, and this sentence
+    # is about the invalid rate rather than about either metric.
+    note = (
+        f"The $\\lambda$ = {trained[0]['structure_lambda']:g} arms still emit "
+        f"invalid tuples on "
+        f"{min(rates) * 100:.2f}--{max(rates) * 100:.2f}\\% of rows: the "
+        "training-time penalty moves probability mass toward the legal set "
+        "without confining the output to it, which is what the decision rule "
+        "does."
+    )
+    if single:
+        names = ", ".join(f"Chinese {b}" for b in single)
+        note += (
+            f" {names} appears at $\\lambda$ = 0 only; its pre-registration "
+            "asks whether a smaller checkpoint of the same family is more "
+            "internally consistent, which does not involve the training "
+            "objective."
+        )
+    return note
 
 
 def write_legality_cost(out_dir, root=REPO_ROOT, *, n_boot=N_BOOT) -> Path:

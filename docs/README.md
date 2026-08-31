@@ -49,6 +49,7 @@ One per arm, plus the indexes.
 | | |
 |---|---|
 | `study_report.md` | **Start here.** The claim, the evidence chain, how to write each section, the red lines, and the reviewer questions. |
+| `supervisor_feedback_2026_08_29.md` | The 2026-08-29 feedback on `nctir_v4.pdf`, item by item, with what is done, what is waiting on information only we can supply, and one item declined with the evidence. Carries the list of placeholder strings that must not ship. |
 | `related_work_citations.md` | The path-constrained metric traced to its sources, with BibTeX and verbatim quotes. ⚠️ Covers the metric's lineage only, not the whole Related Work; its section on the tension with Plaud et al. still assumes that metric is a pre-specified family, which it stopped being when the analysis demoted it to exploratory. |
 
 ---

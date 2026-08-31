@@ -9,7 +9,7 @@ import pytest
 
 from analysis.figure1 import tex_available
 from analysis.preview import _body, _escape, build
-from analysis.tables import ALL_TABLE_FILES, TABLE_FILES
+from analysis.tables import ALL_TABLE_FILES
 from paper.data import REPO_ROOT
 
 
@@ -61,7 +61,7 @@ def test_preview_renders_every_delivered_table(tmp_path):
     assert out.exists() and out.stat().st_size > 10_000
     # one page per table plus the figure; a silently empty preview would pass
     # a mere "file exists" check
-    assert len(TABLE_FILES) >= 5
+    assert len(ALL_TABLE_FILES) >= 5
 
 
 @pytest.mark.skipif(not tex_available(), reason="needs latexmk")

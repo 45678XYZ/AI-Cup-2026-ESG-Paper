@@ -22,7 +22,7 @@
    0.0,
    0.3
   ],
-  "weighted_metric_label": "AI CUP weights applied to ML-Promise (not official)",
+  "weighted_metric_label": "AI CUP weights applied to ML-Promise",
   "companion_metric": "unweighted macro-F1 (four fields at 0.25)",
   "bootstrap_seed": 20260814
  },

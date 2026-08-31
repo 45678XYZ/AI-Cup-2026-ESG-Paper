@@ -2,6 +2,11 @@
 
 Controlled study for the NTCIR-19 AI CUP special session paper.
 
+The manuscript title block contains the four team-supplied student authors,
+their National Central University affiliation, location, and individual email
+addresses. The final manuscript check rejects missing, commented, or
+layout-placeholder metadata.
+
 ## What the study compares
 
 Each paragraph carries four dependent labels — promise status (PS), verification

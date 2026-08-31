@@ -1,0 +1,201 @@
+\section{Results}
+\label{sec:results}
+
+\begin{table}[t]
+  \centering
+  \small
+  \caption{Chinese paired contrasts on the two pre-specified metrics, with
+  uncorrected 95\% report-cluster bootstrap intervals and Holm-adjusted
+  $p$-values.}
+  \label{tab:contrasts}
+  \begingroup
+  \setlength{\tabcolsep}{2.6pt}
+  \input{../tables/table4_contrasts.tex}
+  \endgroup
+\end{table}
+
+\begin{table*}[t]
+  \centering
+  \small
+  \caption{\protect\input{../tables/table7_multilingual_mechanism_caption.txt}}
+  \label{tab:multilingual}
+  \begingroup
+  \small
+  \setlength{\tabcolsep}{2.5pt}
+  \input{../tables/table7_multilingual_mechanism.tex}
+  \endgroup
+\end{table*}
+
+\begin{table}[t]
+  \centering
+  \small
+  \caption{\protect\input{../tables/table8_invalid_anatomy_caption.txt}}
+  \label{tab:invalid-anatomy}
+  \begingroup
+  \small
+  \setlength{\tabcolsep}{3pt}
+  \input{../tables/table8_invalid_anatomy.tex}
+  \endgroup
+\end{table}
+
+\paragraph{Guaranteed validity and Chinese confirmatory evidence.}
+Table~\ref{tab:main-results} compares decision rules on identical base
+probabilities and Test rows. Independent argmax (M0) produces invalid tuples
+for 12.55\% of document-disjoint predictions; projection and 17-state decoding
+(M1--M6) reduce this rate to zero by construction. This zero rate is a
+deterministic property of the validity layer, not evidence that the base model
+became more accurate. Pooled over both protocols and all three seeds, M0 emits
+1{,}527 invalid tuples in 12{,}000 rows, of which 1{,}454 (95.2\%) break one
+of two implications: a substantive child under \textsf{PS}=No, or an evidence
+quality under \textsf{ES}=No. Table~\ref{tab:invalid-anatomy}(a) gives the
+full breakdown, and Table~\ref{tab:invalid-anatomy}(b) derives the 44.3\%
+weighted field credit those rows retain. The failure is concentrated in
+predictions that
+deny a parent and then answer its children anyway, rather than spread evenly
+over the label space. The $\pm$ values are sample standard deviations across
+the three seeds, on both the official metric and tuple accuracy. Because each
+seed determines both fold assignment and
+training randomness, they describe spread over the whole split-and-training
+pipeline, not a confidence interval.
+
+\begingroup\emergencystretch=1em
+Table~\ref{tab:contrasts} reports both pre-specified families in full. All
+five official wF1 contrasts are undetected after Holm correction. For the
+central M1--M0 contrast, $\Delta=-0.001$ with 95\% interval
+$[-0.006,0.003]$ and $p_{\mathrm{Holm}}=1.000$. This is the absence of a
+detected difference; it does not establish a zero effect.
+
+The null is not confined to that contrast. The seven decision rules span
+$0.008$ in official wF1, and that spread is itself a single contrast: M5 is
+the highest-scoring rule and M6 the lowest, so the range equals
+$|\textrm{M6}-\textrm{M5}|$, which has an interval excluding zero
+($[-0.016,-0.001]$) and still does not survive correction
+($p_{\mathrm{Holm}}=.171$). The largest gap between any two of the rules
+compared here is therefore below what this evaluation can resolve, which bounds
+what any decision-stage comparison on this benchmark can demonstrate.
+\par\endgroup
+
+\paragraph{Whole-tuple effects.}
+\begingroup\emergencystretch=1em
+Exact whole-tuple accuracy tells a different story. M1--M0 is $+0.035$
+$[0.028,0.043]$, $p_{\mathrm{Holm}}=.001$. Conversely, 17-state
+decoding is not uniformly better: M4--M1 is $-0.006$
+$[-0.010,-0.002]$, $p_{\mathrm{Holm}}=.028$. Searching every legal state can
+therefore reduce whole-row correctness relative to greedy projection. The
+validity guarantee is shared, but the choice among legal tuples still matters.
+\par\endgroup
+
+The two calibration contrasts are also undetected: conditional bias, fitted
+only on the subset each parent admits, is not distinguishable from global bias
+under either output rule (M3--M2 and M6--M5, on both pre-specified metrics).
+The hierarchy therefore constrains the output rule usefully without improving
+how the biases are estimated. The calibrated projection arms reach 0.428 and
+0.432 on tuple accuracy against M1's 0.394, a step no pre-specified contrast
+covers.
+
+The post-hoc C-wF1 and hF M1--M0 point estimates are also positive ($+0.004$
+and $+0.003$) but do not alter the inferential hierarchy; under same-document
+evaluation C-wF1 stays positive at $+0.002$, on an interval $[-0.001,0.005]$
+that crosses zero.
+
+\begin{table}[t]
+  \centering
+  \small
+  \caption{Chinese anchor under same-document and document-disjoint
+  evaluation; $\Delta$ compares the resulting estimands, with independently
+  rounded values.}
+  \label{tab:regimes}
+  \begingroup
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \input{../tables/table6_regimes.tex}
+  \endgroup
+\end{table}
+
+\paragraph{Evaluation protocol.}
+Section~\ref{sec:experiments} treats the two protocols as targeting distinct
+estimands rather than as a biased and an unbiased version of one quantity;
+Table~\ref{tab:regimes} is what that separation costs. Every rule scores
+higher under same-document evaluation, by $0.010$ to $0.020$, and every
+interval excludes zero. The gap is therefore a property of the split rather
+than of any rule, and it is larger than the $0.008$ that separates the rules
+themselves: on this benchmark, which paragraphs are held out matters more than
+which decision rule is applied to them.
+
+\paragraph{Multilingual replication.}
+Table~\ref{tab:multilingual} fixes one arm per language before inspecting
+scores, each under document-disjoint evaluation at $\lambda=0$. Whole-tuple
+accuracy rises in all five corpora, whereas weighted macro-F1 rises only for
+English and French; Section~\ref{sec:mechanism} reads its two ledger columns.
+
+\begingroup\emergencystretch=1em
+Table~\ref{tab:external-arms} reports all four external corpora at both loss
+settings, arm by arm. M1--M0 tuple accuracy is positive in $32/32$ arms. The
+weighted
+macro-F1 contrast is positive in only $14/32$: English $7/8$, French $5/8$,
+Japanese $0/8$, and Korean $2/8$. These are within-arm directions, not a raw
+score ranking across languages. Projection thus combines a deterministic
+validity guarantee with a repeated complete-tuple improvement, while its
+field-score effect is not directionally stable across arms.
+\par\endgroup
+
+\begin{sloppypar}
+For the pre-registered fixed English arm, the one-sided tuple effect is
+$+0.0725$, with a report-cluster bootstrap interval of $[0.0452,0.1019]$ and
+$p=.0002$. That $p$ is resampled from nine report clusters, which is the
+resolution the English corpus has: it should be read as a direction that
+survived its own resampling, not as a precise tail probability.
+ML-Promise weighted scores use AI CUP weights applied to ML-Promise.
+\end{sloppypar}
+
+\begin{table*}[t]
+  \centering
+  \small
+  \caption{\protect\input{../tables/table9_external_arms_caption.txt}}
+  \label{tab:external-arms}
+  \begingroup
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \input{../tables/table9_external_arms.tex}
+  \endgroup
+\end{table*}
+
+\begin{table*}[t]
+  \centering
+  \small
+  \caption{Exploratory paired Chinese backbone and structural-loss contrasts;
+  bold denotes uncorrected 95\% bootstrap intervals excluding zero.}
+  \label{tab:legality-cost}
+  \begingroup
+  \small
+  % 1.6pt, not the 2.5pt the other tables use: prefixing every backbone with
+  % its language is what pushed this one past the column, and losing a little
+  % gutter is cheaper than losing the prefix that stops a reader comparing
+  % this RoBERTa-large with the English one in Table~\ref{tab:external-arms}.
+  \setlength{\tabcolsep}{1.6pt}
+  \input{../tables/table3_legality_cost.tex}
+  \endgroup
+\end{table*}
+
+\paragraph{Exploratory robustness.}
+\begingroup\emergencystretch=1em
+On the Chinese anchor, structural loss lowers M0's invalid-tuple rate from
+12.55\% to 5.18\%; its pre-registered M1 wF1 effect is $+0.00250$
+$[-0.00384,0.00860]$ ($p=.427$). It also lowers that rate in all 16 external
+language-by-backbone pairs, with mixed wF1 and tuple effects. The Chinese
+DeBERTa and ELECTRA screens likewise lack conclusive wF1 gains; the
+same-family base checkpoint's lower invalid-tuple rate contradicts a simple
+smaller-model mechanism.
+
+\begingroup\emergencystretch=1em
+Table~\ref{tab:legality-cost} reports those seven Chinese arms as paired
+within-arm contrasts. Its invalid-rate column shows what the penalty does not do:
+the $\lambda=0.3$ arms still emit invalid tuples, because the training-time
+penalty pulls probability mass toward $\mathcal S$ without confining the
+output to $\mathcal S$, which is what a decision rule does. Two sign patterns
+then hold across all seven arms even though the official column does not:
+M1--M0 raises tuple accuracy in 7/7, and M4--M1 lowers it in 7/7. The
+single-arm M4--M1 result above is the sign the whole screen shows, not one
+arm's outcome.
+\par\endgroup
+\par\endgroup

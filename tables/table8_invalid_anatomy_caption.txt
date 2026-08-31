@@ -1,0 +1,1 @@
+$1{,}527$ invalid tuples from independent argmax across both protocols and three seeds, partitioned by violated implication and retained field credit.

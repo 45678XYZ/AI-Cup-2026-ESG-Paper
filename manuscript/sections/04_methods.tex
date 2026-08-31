@@ -1,0 +1,134 @@
+\section{Methods}
+
+\subsection{Shared Base Models}
+For the Chinese study, we use
+{\small\texttt{hfl/chinese-roberta-wwm-ext-large}} as the fixed encoder, where
+\texttt{hfl} is the Joint Laboratory of HIT and iFLYTEK Research.
+BERT-Large
+has 24 layers and hidden size 1024 \cite{devlin2019bert}; the pinned HFL
+configuration matches those dimensions. Cui et al. document the checkpoint's
+Chinese RoBERTa-WWM family: it uses whole-word masking, extended pretraining
+data, and no next-sentence prediction \cite{cui2021wwm}. We
+mean-pool its token representations and attach four independent linear heads,
+one per field. The encoder is shared, but neither it nor the heads condition on
+predicted ancestors. The input is paragraph text only; report URL, company,
+ticker, and page metadata are excluded.
+
+All fits use the same frozen fine-tuning recipe: maximum length 384, 12 epochs,
+minibatches of 8 with two-step gradient accumulation (effective size 16), and
+AdamW with backbone and head learning rates $2\times10^{-5}$ and $10^{-4}$.
+The schedule is cosine with 10\% warm-up and layer-wise decay 0.9. The four
+cross-entropy losses use the official PS/VT/ES/EQ weights
+0.20/0.15/0.30/0.35 and label smoothing 0.1. For Train size $n$, $K_t$ classes
+present in field $t$, and class support $n_{t,c}$, the class weight is
+$\min\{10,n/(K_t\,n_{t,c})\}$ when $n_{t,c}\geq5$, and 1 otherwise. Hierarchy
+masking is disabled. We average the last three epoch checkpoints and perform
+no label-driven early stopping.
+
+For the external fixed arms, English uses RoBERTa-large
+\cite{liu2019roberta} and French, Japanese, and Korean use XLM-R-large
+\cite{conneau2020xlmr}. English robustness runs add large DeBERTa-v3
+\cite{he2023debertav3} and ELECTRA \cite{clark2020electra} checkpoints plus
+RoBERTa-base. The other languages add RemBERT \cite{chung2021rembert},
+XLM-R-base, and mBERT \cite{devlin2019bert}. The Chinese anchor adds three
+exploratory screens of its own, distinct from those English checkpoints: a
+Chinese DeBERTa-v2-320M \cite{fengshenbang}, a Chinese ELECTRA-large
+discriminator
+\cite{cui2020revisiting}, and the base-sized checkpoint of the primary
+encoder's own family \cite{cui2021wwm}. Every backbone uses the same maximum
+length, optimization recipe, three seeds, and five rotations. For each
+backbone we run the ordinary objective ($\lambda=0$) and a fixed
+hierarchy-aware objective ($\lambda=0.3$):
+\begin{equation}
+  \mathcal L=\mathcal L_{\mathrm{fields}}-
+  \lambda\log\sum_{s\in\mathcal S}\prod_t p_{t,s_t}(x).
+  \label{eq:structural-loss}
+\end{equation}
+\begingroup\emergencystretch=1em
+Here $\mathcal L_{\mathrm{fields}}$ is the sum of the four weighted
+cross-entropy losses just described, and $\mathcal S$ is the set of 17 legal
+states of Eq.~\eqref{eq:legal-states}. The second term is the semantic loss of
+Xu et al.\ \cite{xu2018semantic}: it
+penalizes probability mass outside $\mathcal S$ without choosing which
+legal state is correct. Structural-loss and alternate-backbone
+comparisons are exploratory; the primary decision comparison uses
+$\lambda=0$.
+\par\endgroup
+
+\subsection{Metric-Aware Decision Calibration}
+Calibration is the second factor of the comparison: the results table crosses
+three calibration settings with the two validity-preserving output rules, and
+each rotation's bias estimates are shared across both rules, which is what
+lets Table~\ref{tab:main-results} be read as a factorial rather than as
+separate systems.
+
+For field $t$ and class $c$, decision calibration adds a class bias in log
+probability space:
+\begin{equation}
+  z_{t,c}(x)=\log p_{t,c}(x)+b_{t,c}.
+  \label{eq:decision-calibration}
+\end{equation}
+This changes decision boundaries and is not a claim of probability
+calibration. Each field's bias vector is fitted by deterministic coordinate
+ascent with that field's macro-F1 on the held-out Calibration partition as the
+objective, before either structured output rule is applied. The four objectives
+therefore decouple. Within every rotation, global and conditional biases are
+fitted separately; that rotation's global fit is shared by M2/M5 and its
+conditional fit by M3/M6.
+
+Global biases use every Calibration row. Conditional biases use all rows for
+PS, only gold PS=Yes rows for VT and ES, and only gold ES=Yes rows for EQ. The
+three child N/A classes are structurally absent from these subsets. Their
+biases are therefore unidentifiable and fixed as
+\begin{equation}
+  b_{\mathrm{VT},\mathrm{N/A}}=
+  b_{\mathrm{ES},\mathrm{N/A}}=
+  b_{\mathrm{EQ},\mathrm{N/A}}=0.
+  \label{eq:pinned-biases}
+\end{equation}
+This has no effect on projection, which emits N/A only when its parent requires
+it. It does affect joint scores for (No, N/A, N/A, N/A); hence M6--M5 compares
+conditional with global estimation including their different estimable
+parameter sets.
+
+Biases start at zero and are fitted by deterministic coordinate ascent over
+$[-3,3]$ in increments of 0.05. Coordinates are visited in the order PS, VT,
+ES, EQ and, within a field, in the released label order (for EQ: Clear, Not
+Clear, Misleading, N/A); a move requires a strict improvement, ties favor the
+smaller absolute bias (then the more negative value), and search stops after a
+pass without improvement or at 20 passes. Eligibility is determined from the corresponding
+Train subset: a class absent there is excluded from coordinate ascent and
+retains bias zero. Among Train-eligible classes, one absent from the matching
+Calibration subset also retains bias zero and is recorded as an absent-class
+fallback.
+
+\subsection{Validity-Preserving Output Rules}
+\paragraph{Complete projection.}
+We treat projection as a validity layer over compatible field-wise
+probabilities, rather than as a new encoder or a claim of improved base-model
+accuracy. Projection is greedy and top-down. At each field it selects the highest-scoring
+class allowed by the chosen ancestors. Under PS=No, it sets VT, ES, and EQ to
+N/A. Under PS=Yes, it excludes N/A from VT and ES and chooses each field's best
+substantive class. Under ES=No, EQ becomes N/A; under ES=Yes, projection chooses
+EQ's best substantive class. These rules completely enforce both directions of
+every parent implication. This bidirectional projection always returns one of
+the 17 legal states; a one-way N/A overwrite would not.
+
+\paragraph{17-state decoding.}
+The alternative scores every $s\in\mathcal S$ and returns
+\begin{equation}
+  \hat{\mathbf y}=\arg\max_{s\in\mathcal S}
+  \sum_t \{\log p_{t,s_t}(x)+b_{t,s_t}\}.
+  \label{eq:joint-decoder}
+\end{equation}
+The four fields enter this sum unweighted. A per-field scale $\alpha_t$ would
+be the obvious generalization, and we deliberately do not fit one: the
+comparison against projection is meant to isolate the choice of output rule,
+and a decoder carrying four tuned parameters that projection does not have
+would no longer answer that question.
+
+Figure~\ref{fig:hierarchy} summarizes seven \emph{alternative} rules over
+identical cross-fitted base probabilities, not sequential stages: M0 is
+uncalibrated independent argmax; M1/M2/M3 use projection with respectively no,
+global, or conditional bias; and M4/M5/M6 use 17-state decoding with the same
+three bias choices. Only M0 can emit an invalid tuple.

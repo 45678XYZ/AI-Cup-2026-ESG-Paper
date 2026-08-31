@@ -67,6 +67,19 @@ EXTERNAL_TABLES = {
         "kwargs": (),
         "skip_if_absent": True,
     },
+    # The two numbers the abstract repeats -- 32/32 and 14/32 -- and the two
+    # the Introduction and section 6 repeat -- 44.3% and 95.2% of 1,527 --
+    # had no table behind them. These supply one each.
+    "table8_invalid_anatomy.tex": {
+        "writer": "analysis.invalid_anatomy:write_report",
+        "kwargs": ("root",),
+        "skip_if_absent": True,
+    },
+    "table9_external_arms.tex": {
+        "writer": "analysis.external_arms:write_report",
+        "kwargs": (),
+        "skip_if_absent": True,
+    },
 }
 
 EXTERNAL_TABLE_FILES = tuple(EXTERNAL_TABLES)
@@ -86,8 +99,11 @@ ALL_TABLE_FILES = tuple(sorted(TABLE_FILES + EXTERNAL_TABLE_FILES))
 # prose rather than giving each a Holm family, which removes ten tests from the
 # page and costs nothing -- what they show, tuple exact-match already shows
 # with a pre-specified metric and a ten-times-larger effect.
+# ``wF1 (official)`` is what table 2's own column is called. Spelling the same
+# metric out in full here made this table wide enough to need both columns of
+# the page, for no gain to a reader who has already met the short form.
 FAMILY_LABELS = (
-    ("contrasts", "Weighted macro-F1 (official)"),
+    ("contrasts", "wF1 (official)"),
     ("tuple_contrasts", "Tuple accuracy"),
 )
 
@@ -256,10 +272,9 @@ def build_captions(audit, seeds=SEEDS, contrasts=None,
             f"{absent['n_rotations']} rotations. The four fields admit 120 "
             "combinations, of which the hierarchy leaves 17 legal, and no "
             f"development row violates it. All {audit['pdf_overlap']['n_shared']} "
-            "development reports also appear in the test split, and "
-            f"{_word(len(audit['duplicates']['dev_test']))} paragraph text is "
-            "duplicated across the two. No company contributes more than one "
-            "report, so a document-disjoint split is also company-disjoint. The "
+            "development reports also appear in the test split. No company "
+            "contributes more than one report, so a document-disjoint split "
+            "is also company-disjoint. The "
             "competition test split ships no labels, so its label-derived cells "
             "are marked n/a."
         ),
@@ -425,6 +440,15 @@ def render_table1(audit) -> str:
     def row(label, dev_value, test_value):
         return f"{label} & {dev_value} & {test_value} \\\\"
 
+    def yes_no(value):
+        return "Yes" if value else "No"
+
+    def valid_gold(partition):
+        if not partition["labelled"]:
+            return NA
+        valid = partition["paragraphs"] - partition["invalid_rows"]
+        return f"{valid} / {partition['paragraphs']}"
+
     eq = dev["class_support"]["evidence_quality"]
     vt = dev["class_support"]["verification_timeline"]
     # The overlap is the reason Table 3 exists: development and test are drawn
@@ -432,30 +456,26 @@ def render_table1(audit) -> str:
     # seen-report generalisation. Printing it as a row rather than leaving it
     # to prose is what C's remit asks for.
     shared = audit["pdf_overlap"]["n_shared"]
-    duplicated = len(audit["duplicates"]["dev_test"])
-    spanning = audit["company_structure"]["companies_in_multiple_reports"]
-    # Three rows moved to the caption: the duplicate paragraph, the companies
-    # spanning more than one report, and the gold's zero hierarchy violations.
-    # Each is a single fact rather than a development-versus-test statistic --
-    # two had one column marked n/a and the third repeated a number the caption
-    # already gave -- and the caption stated all three in prose already, so the
-    # tabular was restating them in a form that reads worse. The overlap row
-    # below is different: plan section 7 requires it to be prominent.
     body = [
         row("Paragraphs", dev["paragraphs"], test["paragraphs"]),
         row("Source reports (PDFs)", dev["pdfs"], test["pdfs"]),
         # Stays in the tabular by remit, not by taste: plan section 7 requires
         # the 100% dev/test overlap to be prominent rather than left to a
         # caption, because it is the reason Table 3 exists at all.
-        row("\\quad shared across splits", shared, shared),
+        row("\\quad shared with other split", shared, shared),
         row("Companies", dev["companies"], test["companies"]),
+        row("Gold labels available", yes_no(dev["labelled"]),
+            yes_no(test["labelled"])),
+        row("Gold hierarchy-valid tuples", valid_gold(dev), valid_gold(test)),
         row("Legal states observed", f"{dev['legal_states_observed']} / 17", NA),
         "\\midrule",
         "\\multicolumn{3}{l}{\\emph{Rarest classes}} \\\\",
         row("\\quad within\\_2\\_years", vt["within_2_years"], NA),
         row("\\quad Misleading", eq["Misleading"], NA),
     ]
-    return _tabular("lrr", "Statistic & Development & Test", body)
+    return _tabular(
+        "lrr", "Statistic & Development & Competition test", body,
+    )
 
 
 def render_table2(summary) -> str:
@@ -476,11 +496,20 @@ def render_table2(summary) -> str:
         body.append(
             f"{method} & {calibration} & {decoding} & "
             f"{_pm(row['weighted_macro_f1_mean'], row['weighted_macro_f1_std'])} & "
-            f"{fields} & {_f(row['tuple_exact_match_mean'])} & "
-            f"{_f(row['invalid_tuple_rate_mean'] * 100, 1)} \\\\"
+            f"{fields} & "
+            f"{_pm(row['tuple_exact_match_mean'], row['tuple_exact_match_std'])} & "
+            # Two decimals, not one: the running text and tables 4 and 6 all
+            # print this same rate as 12.55, and a table that rounds it to
+            # 12.6 reads as a second, disagreeing measurement of one number.
+            f"{_f(row['invalid_tuple_rate_mean'] * 100, 2)} \\\\"
         )
-    header = ("ID & Calibration & Decoding & Weighted F1 & PS & VT & ES & EQ "
-              "& Tuple Acc. & Invalid \\%")
+    # ``wF1 (official)`` rather than ``Weighted F1``: the path-constrained
+    # variant in table 4 is also a weighted F1, so the bare short form does not
+    # identify the metric the competition ranks by. ``Tuple acc.`` is the same
+    # quantity tables 3 and 7 print, spelled the same way -- these are the two
+    # columns a reader carries between them.
+    header = ("ID & Calibration & Decoding & wF1 (official) & PS & VT & ES & EQ "
+              "& Tuple acc. & Invalid \\%")
     return _tabular("llrrrrrrrr", header, body)
 
 

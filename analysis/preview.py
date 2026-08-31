@@ -110,7 +110,7 @@ def build(tables_dir=None, out_path=None) -> Path:
     out_path = Path(out_path or tables_dir / "preview.pdf")
     if not tex_available():
         raise RuntimeError(
-            "no latexmk on PATH. The preview needs TeX; the tables themselves "
+            "no TeX compiler on PATH. The preview needs TeX; the tables themselves "
             "do not -- `python -m analysis` still regenerates them."
         )
 

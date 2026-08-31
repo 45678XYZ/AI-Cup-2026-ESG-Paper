@@ -121,7 +121,13 @@ def method_summary(sets_by_seed, idx=None, no_misleading_idx=None) -> dict:
         },
         "per_field_mean": per_field,
         "conditional_per_field_mean": conditional,
+        "tuple_exact_match_per_seed": [float(v) for v in tuple_acc],
         "tuple_exact_match_mean": float(np.mean(tuple_acc)),
+        # Tuple accuracy carries the study's only surviving pre-specified
+        # result, and until now it was the one column in Table 2 printed
+        # without any spread at all -- a point estimate standing where the
+        # weighted score beside it shows three seeds' worth of variation.
+        "tuple_exact_match_std": float(mean_std(tuple_acc)[1]),
         "invalid_tuple_rate_mean": float(np.mean(invalid)),
     }
     if no_misleading_idx is not None:
