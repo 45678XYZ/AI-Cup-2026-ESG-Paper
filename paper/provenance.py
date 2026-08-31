@@ -37,6 +37,7 @@ CODE_PATHSPEC = (
     "analysis",
     "contracts",
     "scripts",
+    "esg-validity-layer",
     "environment.yml",
     "pyproject.toml",
     ":(exclude)contracts/examples",
