@@ -31,33 +31,25 @@ joint decoding must fail on other models or tasks.
 
 \subsection{Reproducibility}
 \label{sec:repro}
-Code, pre-registration documents, row-level predictions for all five corpora,
-and the pipeline that regenerates every table here are at \url{\repourl}.
-
 \begin{sloppypar}
-\paragraph{Checkpoints.} Every backbone is a pinned Hugging Face checkpoint,
-its commit revision recorded in the released configuration. Chinese:
-\hfid{hfl/chinese-roberta-wwm-ext-large} (anchor),
-\hfid{hfl/chinese-roberta-wwm-ext},
-\hfid{IDEA-CCNL/Erlangshen-DeBERTa-v2-320M-Chinese},
-\hfid{hfl/chinese-electra-180g-large-discriminator}. English:
-\hfid{roberta-large}, \hfid{roberta-base},
-\hfid{microsoft/deberta-v3-large},
-\hfid{google/electra-large-discriminator}. French, Japanese and Korean:
-\hfid{FacebookAI/xlm-roberta-large}, \hfid{FacebookAI/xlm-roberta-base},
-\hfid{google/rembert}, \hfid{google-bert/bert-base-multilingual-cased}.
+The linked repository provides row-level predictions, text-free metadata, and
+the released artifacts underlying all eight paper tables and Figure~1; raw
+corpora, model weights, and retraining are excluded.
 \end{sloppypar}
 
-\paragraph{Procedures given only in outline above.} The document-disjoint
-split sorts reports by identifier, shuffles them under the seed, re-sorts by
-descending row count with a stable sort so the shuffle survives ties, then
-assigns each report uniformly at random to one of the two currently lightest
-folds, ties broken by fold index. Korean pages come from Poppler's \hfid{pdftotext -f P -l P -layout}, one page per labelled
-(URL, page) pair, falling back to \hfid{pdftoppm -r 250} and Tesseract
-(\hfid{-l kor+eng}) for image-only pages; the release already carries one
-label tuple per unique (URL, page), so no further deduplication applies.
-Python 3.10.20, PyTorch 2.2.2+cu121 and Transformers 4.40.2 on Linux; the 32
-external arms consumed 25.4 GPU-hours in total on a single RTX 3090.
+\begingroup\emergencystretch=1em
+\paragraph{Reproducibility details.} The Methods list every backbone; released
+configurations pin their exact Hugging Face revisions. For each seed, reports
+are identifier-sorted, shuffled, then stable-sorted by descending row count so
+their randomized tie order survives. Each report is assigned uniformly to one
+of the two currently lightest folds, using fold index to resolve equal loads.
+Korean pages are extracted per labelled (URL, page) using Poppler's
+\hfid{pdftotext -f P -l P -layout}, with \hfid{pdftoppm -r 250} and Tesseract
+(\hfid{-l kor+eng}) fallback for image-only pages. The release has one label
+tuple per unique pair, so no further deduplication is applied. Runs used Python
+3.10.20, PyTorch 2.2.2+cu121, and Transformers 4.40.2 on Linux; the 32 external
+arms consumed 25.4 GPU-hours on one RTX 3090.
+\par\endgroup
 
 \subsection{Limitations}
 The corpora differ in language, reports, annotation distributions, and primary
@@ -68,27 +60,22 @@ are therefore descriptive directions across executed arms, not a pooled
 significance test. AI CUP weights applied to ML-Promise are not an official
 ML-Promise metric.
 
-Every contrast here is measured against M0, the unconstrained argmax over our
-own probabilities. That is the right comparator for the question we ask, since
-it holds rows and probabilities fixed, but the paper therefore reports no
-comparison against a published system, an official baseline, or a leaderboard,
-and nothing here is a claim about where this system ranks among participants.
+Every contrast uses M0, unconstrained argmax on the same probabilities, to
+isolate the decision rule. We do not compare against a published system,
+official baseline, or leaderboard and make no participant-ranking claim.
 
-Korean has a further input mismatch: its 500 examples are first-384-token PDF
-pages rather than released paragraphs, and it has no gold \emph{Misleading}
-example. We do not redistribute the extracted Korean text or source PDFs.
-The reported Korean predictions are released and can therefore be rescored,
-but retraining requires rebuilding the page inputs from their source documents
-with the recipe in Section~\ref{sec:repro}.
+Korean adds an input mismatch: its 500 examples are first-384-token PDF pages,
+not released paragraphs, and include no gold \emph{Misleading} example. We do
+not redistribute extracted text or source PDFs. Released predictions can be
+rescored, but retraining requires rebuilding pages with the recipe in
+Section~\ref{sec:repro}.
 
 \begin{sloppypar}
-Results for structural loss and other backbones remain exploratory: they show
-that reducing the invalid-tuple rate need not yield a conclusive gain on the
-official score, but the fixed loss weights and limited checkpoint set cannot
-characterize all training objectives or architectures. The rarest Chinese
-quality label has two examples and Korean has none, so no class-level claim is
-licensed for it. Finally, each seed jointly changes folds and optimization
-randomness, so those two sources of variation cannot be separated.
+Structural-loss and backbone results remain exploratory: fixed loss weights
+and limited checkpoints cannot characterize all objectives or architectures.
+The rarest Chinese quality label has two examples and Korean has none, so no
+class-level claim is licensed. Each seed jointly changes folds and optimization
+randomness, preventing their effects from being separated.
 \end{sloppypar}
 
 \section{Conclusion}

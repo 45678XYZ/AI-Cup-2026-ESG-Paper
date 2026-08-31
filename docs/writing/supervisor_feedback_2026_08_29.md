@@ -168,9 +168,8 @@
 - [x] **F1 · 沒有 code／data availability statement** —— 新增 §7.2 Reproducibility，
       並修正 Limitations 中「reported Korean predictions can be rescored」這個自相矛盾的承諾，
       改為指向該節的重建流程。
-- [ ] ⏳ **F1b · repo 網址** —— 目前是 `\repourl` 佔位
-      （`https://github.com/EXAMPLE/REPO-URL-TBD`）。**開好 repo 後給網址即可**，
-      只需改 `manuscript/metadata.tex` 一行。
+- [x] **F1b · repo 網址** —— `\repourl` 已指向最小 CPU 重現包：
+      `https://github.com/tom1030507/ntcir19-esg-validity-layer`。
 - [x] **F2 · 外部模型沒給 checkpoint ID 等** —— 全數補齊：
   - 12 個 Hugging Face checkpoint ID（中／英／法日韓），並註明 commit revision 記於釋出設定。
   - bias coordinate ascent 的 field／class 順序（PS, VT, ES, EQ；欄內依釋出標籤序）。
