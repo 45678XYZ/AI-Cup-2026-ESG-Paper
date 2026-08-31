@@ -4,10 +4,9 @@
 \begin{table}[t]
   \centering
   \small
-  \caption{Chinese paired contrasts on the two pre-specified metrics. Official
-  wF1 and tuple accuracy are separate Holm families of five. Intervals are
-  uncorrected 95\% report-cluster bootstrap intervals. Post-hoc C-wF1 and hF
-  are discussed only in the text.}
+  \caption{Chinese paired contrasts on the two pre-specified metrics, with
+  uncorrected 95\% report-cluster bootstrap intervals and Holm-adjusted
+  $p$-values.}
   \label{tab:contrasts}
   \begingroup
   \setlength{\tabcolsep}{2.6pt}
@@ -102,12 +101,9 @@ that crosses zero.
 \begin{table}[t]
   \centering
   \small
-  \caption{Chinese anchor scored under both evaluation protocols.
-  Same-document holds out paragraphs from reports seen in training;
-  document-disjoint holds out whole reports. $\Delta$ separates two
-  estimands and is not a bias estimate. Columns are rounded independently from
-  the unrounded scores, so $\Delta$ can differ by $0.001$ from the difference
-  of the two columns beside it.}
+  \caption{Chinese anchor under same-document and document-disjoint
+  evaluation; $\Delta$ compares the resulting estimands, with independently
+  rounded values.}
   \label{tab:regimes}
   \begingroup
   \small
@@ -167,13 +163,8 @@ ML-Promise weighted scores use AI CUP weights applied to ML-Promise.
 \begin{table}[t]
   \centering
   \small
-  \caption{Chinese backbone and structural-loss screens, as paired
-  within-arm contrasts. All checkpoints are Chinese; the base-sized arm was
-  pre-registered without a training-objective condition, so it appears at
-  $\lambda=0$ only. Bold marks a contrast whose uncorrected 95\% paired
-  report-cluster bootstrap interval excludes zero; four more interval columns
-  would not fit this width, so the intervals are released with the data rather
-  than printed. These contrasts are exploratory and form no Holm family.}
+  \caption{Exploratory paired Chinese backbone and structural-loss contrasts;
+  bold denotes uncorrected 95\% bootstrap intervals excluding zero.}
   \label{tab:legality-cost}
   \begingroup
   \scriptsize
