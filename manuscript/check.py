@@ -47,6 +47,10 @@ LAYOUT_PLACEHOLDER_AUTHORS = frozenset(
     f"Student Author {number}" for number in range(1, 5)
 )
 LAYOUT_PLACEHOLDER_TODO_MARKERS = ("TODO(author-metadata)",)
+NTCIR_TRACK_NAME = "AI CUP-VeriPromiseESG Task"
+NTCIR_TEAM_NAME = "Team_10537"
+NTCIR_SUBTASK = "AI CUP Special Session at NTCIR"
+CAPTION_WORD_LIMIT = 20
 
 
 def source_text(root: Path) -> str:
@@ -73,6 +77,14 @@ def _metadata(root: Path) -> str:
         return ""
 
 
+def _main_source(root: Path) -> str:
+    path = root / "main.tex"
+    try:
+        return _active_source(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError):
+        return ""
+
+
 def _has_layout_author_placeholders(metadata: str) -> bool:
     authors = re.findall(r"\\author\{([^}]*)\}", _active_source(metadata))
     return (
@@ -81,11 +93,129 @@ def _has_layout_author_placeholders(metadata: str) -> bool:
     )
 
 
+def _caption_arguments(text: str) -> list[tuple[int, str]]:
+    """Return source offsets and balanced arguments of active caption commands."""
+    captions: list[tuple[int, str]] = []
+    for match in re.finditer(r"\\caption\s*\{", text):
+        start = match.end()
+        depth = 1
+        position = start
+        while position < len(text) and depth:
+            if text[position] == "{" and text[position - 1] != "\\":
+                depth += 1
+            elif text[position] == "}" and text[position - 1] != "\\":
+                depth -= 1
+            position += 1
+        if depth == 0:
+            captions.append((match.start(), text[start:position - 1]))
+    return captions
+
+
+def _caption_text(root: Path, argument: str) -> tuple[str, str | None]:
+    input_match = re.fullmatch(
+        r"\s*(?:\\protect\s*)?\\input\s*\{([^}]+)\}\s*", argument
+    )
+    if input_match is None:
+        return argument, None
+    target = input_match.group(1)
+    path = (root / target).resolve()
+    try:
+        return path.read_text(encoding="utf-8"), str(path)
+    except (OSError, UnicodeError):
+        return argument, None
+
+
+def _english_word_count(caption: str) -> int:
+    rendered = re.sub(r"\$[^$]*\$", " ", caption)
+    rendered = re.sub(r"\\(?:ref|pageref|label)\s*\{[^{}]*\}", " ", rendered)
+    rendered = re.sub(r"\\[A-Za-z@]+\*?", " ", rendered)
+    rendered = re.sub(r"\\.", " ", rendered)
+    return len(re.findall(r"[A-Za-z]+(?:[-'][A-Za-z0-9]+)*", rendered))
+
+
+def caption_errors(root: Path) -> list[str]:
+    errors: list[str] = []
+    paths = sorted({
+        path for pattern in ("*.tex", "sections/*.tex")
+        for path in root.glob(pattern) if path.is_file()
+    })
+    for path in paths:
+        try:
+            active = _active_source(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError):
+            continue
+        for offset, argument in _caption_arguments(active):
+            caption, imported_from = _caption_text(root, argument)
+            words = _english_word_count(caption)
+            if words <= CAPTION_WORD_LIMIT:
+                continue
+            source = imported_from or f"{path}:{active.count(chr(10), 0, offset) + 1}"
+            errors.append(
+                f"caption exceeds {CAPTION_WORD_LIMIT} English words: "
+                f"{source} has {words}"
+            )
+    return errors
+
+
 def source_errors(root: Path, final: bool = False, repo_root: Path | None = None) -> list[str]:
     text = source_text(root)
     active = _active_source(text)
     lowered = active.lower()
     errors: list[str] = []
+    main = _main_source(root)
+    title_start = main.find(r"\title")
+    title_end_candidates = (
+        main.find(r"\begin{abstract}", title_start),
+        main.find(r"\keywords", title_start),
+        main.find(r"\maketitle", title_start),
+    )
+    title_end = min(position for position in title_end_candidates if position >= 0) \
+        if any(position >= 0 for position in title_end_candidates) else -1
+    title = main[title_start:title_end] if title_start >= 0 and title_end >= 0 else ""
+    if NTCIR_TRACK_NAME not in title:
+        errors.append(f"paper title must include {NTCIR_TRACK_NAME}")
+
+    keyword_pos = main.find(r"\keywords")
+    maketitle_pos = main.find(r"\maketitle")
+    team_pos = main.find(r"\section*{Team Name}")
+    team_value_pos = main.find(r"\teamname", team_pos + 1) if team_pos >= 0 else -1
+    subtasks_pos = main.find(r"\section*{Subtasks}")
+    subtask_value_pos = main.find(r"\subtasks", subtasks_pos + 1) \
+        if subtasks_pos >= 0 else -1
+    introduction_positions = (
+        main.find(r"\input{sections/01_introduction}"),
+        main.find(r"\section{Introduction}"),
+    )
+    introduction_pos = min(position for position in introduction_positions if position >= 0) \
+        if any(position >= 0 for position in introduction_positions) else -1
+    if team_pos < 0:
+        errors.append("paper must include a Team Name field")
+    if subtasks_pos < 0:
+        errors.append("paper must include a Subtasks field")
+    if not (
+        keyword_pos >= 0
+        and keyword_pos < maketitle_pos < team_pos < team_value_pos
+        < subtasks_pos < subtask_value_pos < introduction_pos
+    ):
+        errors.append(
+            "required NTCIR front-matter sequence is Keywords, maketitle, "
+            "Team Name value, Subtasks value, Introduction"
+        )
+    active_metadata = _active_source(_metadata(root))
+    team_match = re.search(
+        r"\\newcommand\s*\{\\teamname\}\s*\{([^{}]*)\}", active_metadata, re.DOTALL
+    )
+    team_name = " ".join(team_match.group(1).split()).replace(r"\_", "_") \
+        if team_match else ""
+    if team_name != NTCIR_TEAM_NAME:
+        errors.append(f"Team Name must be {NTCIR_TEAM_NAME}")
+    subtask_match = re.search(
+        r"\\newcommand\s*\{\\subtasks\}\s*\{([^{}]*)\}", active_metadata, re.DOTALL
+    )
+    subtask = " ".join(subtask_match.group(1).split()) if subtask_match else ""
+    if subtask != NTCIR_SUBTASK:
+        errors.append(f"Subtasks must be {NTCIR_SUBTASK}")
+    errors.extend(caption_errors(root))
     if any(marker.lower() in lowered for marker in PROHIBITED_HARDWARE):
         errors.append("manuscript contains a prohibited hardware reference")
     if re.search(r"\bno difference\b", lowered):
@@ -295,9 +425,12 @@ def log_errors(log: Path) -> list[str]:
     for pattern in (r"there were undefined references", r"(?:latex|package natbib) warning: citation .* undefined"):
         if re.search(pattern, text):
             errors.append(f"build log matches unresolved-reference pattern: {pattern}")
-    for width in re.findall(r"overfull \\hbox \(([\d.]+)pt too wide\)", text):
-        if float(width) > 2.0:
-            errors.append(f"build log has an overfull box {width}pt too wide")
+    overfull_pattern = r"overfull \\(hbox|vbox) \(([\d.]+)pt too (wide|high)\)"
+    for box_type, excess, direction in re.findall(overfull_pattern, text):
+        if float(excess) > 2.0:
+            errors.append(
+                f"build log has an overfull {box_type} {excess}pt too {direction}"
+            )
     return errors
 
 

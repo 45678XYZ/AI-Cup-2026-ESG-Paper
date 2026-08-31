@@ -28,12 +28,9 @@
 
 \begin{document}
 
-% \texorpdfstring keeps the typeset line break out of the PDF metadata string.
-% Without it hyperref concatenates across the \\ and the document Title reads
-% "Hierarchical Projection as a Validity Layerfor ESG Promise Verification".
-\title[Hierarchical Projection as a Validity Layer]{Hierarchical Projection as
-  a Validity Layer\texorpdfstring{\\}{ }for ESG Promise Verification:
-  Multilingual Evidence}
+\title[Hierarchical Projection as a Validity Layer]{Team\_10537 at the NTCIR-19
+  AI CUP-VeriPromiseESG Task:\texorpdfstring{\\}{ }Hierarchical Projection as a
+  Validity Layer\texorpdfstring{\\}{ }for Multilingual ESG Promise Verification}
 
 \input{metadata}
 
@@ -66,21 +63,12 @@ result we report in full.
 \maketitle
 \pagestyle{plain}
 
-% HELD PENDING CONFIRMATION -- do not enable without checking first.
-%
-% The NTCIR-19 submission checklist requires a "Team Name" and a "Subtasks"
-% field between Keywords and section 1, and a task name in the title. Its
-% task-name list (AEOLLM-2, FinArg-3, Lifelog-7, ...) does not include AI CUP
-% or VeriPromiseESG, and the NTCIR-18 AI CUP session papers carried free-form
-% titles and neither field -- so it is unsettled whether a special-session
-% paper is in scope. Both are one uncomment away once that is confirmed;
-% \teamname and \subtasks are defined in metadata.tex.
-%
-% \section*{Team Name}
-% \teamname
-%
-% \section*{Subtasks}
-% \subtasks
+% AI CUP organizers confirmed these fields for the NTCIR-19 special session.
+\section*{Team Name}
+\teamname
+
+\section*{Subtasks}
+\subtasks
 
 \input{sections/01_introduction}
 \input{sections/02_related_work}

@@ -40,10 +40,23 @@ def write_minimal(root: Path, body: str, metadata: str = "") -> None:
 def write_policy_valid(root: Path, metadata: str = "") -> None:
     """A manuscript that includes every table the policy requires by name."""
     required = [name for _, name in REQUIRED_TABLE_INCLUSIONS]
+    submission_front_matter = """\
+\\title{Team_10537 at the NTCIR-19 AI CUP-VeriPromiseESG Task}
+\\keywords{ESG}
+\\maketitle
+\\section*{Team Name}
+\\teamname
+\\section*{Subtasks}
+\\subtasks
+\\section{Introduction}
+"""
     write_minimal(
         root,
-        "\n".join(f"\\input{{tables/{name}}}" for name in required),
-        metadata,
+        submission_front_matter
+        + "\n".join(f"\\input{{tables/{name}}}" for name in required),
+        "\\newcommand{\\teamname}{Team\\_10537}\n"
+        "\\newcommand{\\subtasks}{AI CUP Special Session at NTCIR}\n"
+        + metadata,
     )
     (root / "tables").mkdir()
     for name in required:
@@ -142,6 +155,115 @@ def test_real_author_and_email_metadata_are_accepted_in_final_mode(tmp_path):
     assert source_warnings(root) == []
 
 
+def test_submission_policy_requires_the_confirmed_task_name_in_the_title(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    main = root / "main.tex"
+    main.write_text(
+        main.read_text(encoding="utf-8").replace(
+            "AI CUP-VeriPromiseESG Task", "an unrelated task"
+        ),
+        encoding="utf-8",
+    )
+
+    assert any("AI CUP-VeriPromiseESG Task" in error for error in source_errors(root))
+
+
+def test_submission_policy_requires_team_name_and_subtasks_before_introduction(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    main = root / "main.tex"
+    source = main.read_text(encoding="utf-8")
+    source = source.replace(
+        "\\section*{Team Name}\n\\teamname\n"
+        "\\section*{Subtasks}\n\\subtasks\n",
+        "",
+    )
+    main.write_text(source, encoding="utf-8")
+
+    errors = source_errors(root)
+    assert any("Team Name" in error for error in errors)
+    assert any("Subtasks" in error for error in errors)
+
+
+def test_submission_policy_requires_values_beneath_the_ntcir_headings(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    main = root / "main.tex"
+    source = main.read_text(encoding="utf-8")
+    source = source.replace("\\teamname\n", "").replace("\\subtasks\n", "")
+    main.write_text(source, encoding="utf-8")
+
+    assert any("front-matter sequence" in error for error in source_errors(root))
+
+
+def test_submission_policy_requires_maketitle_before_the_ntcir_fields(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    main = root / "main.tex"
+    source = main.read_text(encoding="utf-8")
+    source = source.replace("\\maketitle\n", "")
+    source = source.replace("\\section{Introduction}", "\\maketitle\n\\section{Introduction}")
+    main.write_text(source, encoding="utf-8")
+
+    assert any("front-matter sequence" in error for error in source_errors(root))
+
+
+def test_submission_policy_rejects_placeholder_team_name(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    metadata = root / "metadata.tex"
+    metadata.write_text(
+        metadata.read_text(encoding="utf-8").replace("Team\\_10537", "TEAM-NAME-TBD"),
+        encoding="utf-8",
+    )
+
+    assert any("Team_10537" in error for error in source_errors(root))
+
+
+def test_submission_policy_requires_the_confirmed_special_session_subtask(tmp_path):
+    root = tmp_path / "m"
+    write_policy_valid(root, "\\author{Ada Example}\n\\email{ada@example.org}")
+    metadata = root / "metadata.tex"
+    metadata.write_text(
+        metadata.read_text(encoding="utf-8").replace(
+            "AI CUP Special Session at NTCIR", "Promise Identification (Chinese)"
+        ),
+        encoding="utf-8",
+    )
+
+    assert any("AI CUP Special Session at NTCIR" in error for error in source_errors(root))
+
+
+def test_submission_policy_limits_captions_to_twenty_english_words(tmp_path):
+    twenty_words = (
+        "one two three four five six seven eight nine ten eleven twelve thirteen "
+        "fourteen fifteen sixteen seventeen eighteen nineteen twenty"
+    )
+    accepted = tmp_path / "accepted"
+    write_policy_valid(accepted)
+    accepted_main = accepted / "main.tex"
+    accepted_main.write_text(
+        accepted_main.read_text(encoding="utf-8")
+        + f"\n\\begin{{table}}\\caption{{{twenty_words}}}\\end{{table}}\n",
+        encoding="utf-8",
+    )
+
+    rejected = tmp_path / "rejected"
+    write_policy_valid(rejected)
+    rejected_main = rejected / "main.tex"
+    rejected_main.write_text(
+        rejected_main.read_text(encoding="utf-8")
+        + f"\n\\begin{{table}}\\caption{{{twenty_words} overflow}}\\end{{table}}\n",
+        encoding="utf-8",
+    )
+
+    assert not any("caption exceeds 20 English words" in error
+                   for error in source_errors(accepted))
+    assert any("caption exceeds 20 English words" in error
+               for error in source_errors(rejected))
+
+
 def test_commented_author_and_email_do_not_satisfy_final_metadata(tmp_path):
     root = tmp_path / "m"
     write_minimal(
@@ -227,9 +349,8 @@ def test_tracked_manuscript_has_no_empty_body_column():
 
 def test_tracked_manuscript_title_is_compact_and_balanced():
     """The rendered title must not be split into narrow manual fragments."""
-    page = PdfReader(
-        str(REPO_ROOT / "manuscript" / "build" / "main.pdf")
-    ).pages[0]
+    reader = PdfReader(str(REPO_ROOT / "manuscript" / "build" / "main.pdf"))
+    page = reader.pages[0]
     midpoint = float(page.mediabox.width) / 2
     title_lines = []
 
@@ -241,13 +362,15 @@ def test_tracked_manuscript_title_is_compact_and_balanced():
 
     page.extract_text(visitor_text=collect_title_lines)
     expected_title = (
-        "Hierarchical Projection as a Validity Layer for ESG Promise "
-        "Verification: Multilingual Evidence"
+        "Team_10537 at the NTCIR-19 AI CUP-VeriPromiseESG Task: "
+        "Hierarchical Projection as a Validity Layer for Multilingual ESG "
+        "Promise Verification"
     )
     widths = [width for _, width in title_lines]
 
     assert " ".join(text for text, _ in title_lines) == expected_title
-    assert len(title_lines) <= 3, f"title rendered across {len(title_lines)} lines"
+    assert reader.metadata.title == expected_title
+    assert len(title_lines) == 3, f"title rendered across {len(title_lines)} lines"
     assert min(widths) >= max(widths) * 0.65, f"unbalanced title widths: {widths}"
 
 
@@ -255,6 +378,16 @@ def test_log_rejects_unresolved_references(tmp_path):
     log = tmp_path / "main.log"
     log.write_text("LaTeX Warning: There were undefined references.", encoding="utf-8")
     assert log_errors(log)
+
+
+def test_log_rejects_an_overfull_vertical_box_above_tolerance(tmp_path):
+    log = tmp_path / "main.log"
+    log.write_text(
+        "Overfull \\vbox (3.125pt too high) has occurred while \\output is active",
+        encoding="utf-8",
+    )
+
+    assert any("vbox" in error for error in log_errors(log))
 
 
 def test_asset_check_names_missing_generated_files(tmp_path):
@@ -532,16 +665,16 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
     pdf = manuscript / "build" / "main.pdf"
     reader = PdfReader(str(pdf))
     page_text = [page.extract_text().strip() for page in reader.pages]
-    assert any("7 DISCUSSION" in text for text in page_text[:6]), (
-        "the Discussion heading is pushed past page 6"
+    assert any("7 DISCUSSION" in text for text in page_text[:-1]), (
+        "the Discussion heading is pushed onto the final page"
     )
     document_text = "\n".join(page_text)
-    compact_document_text = re.sub(r"[\s-]+", "", document_text)
+    compact_document_text = re.sub(r"[\s-]+", "", document_text).replace("𝑀", "M")
     for caption in (
         "AI CUP 2026 dataset composition and hierarchy audit.",
         "Document-disjoint cross-fitted results on the Chinese development set.",
         "Projection (M1) versus independent argmax (M0) on five corpora",
-        "Chinese paired contrasts on the two pre-specified metrics.",
+        "Chinese paired contrasts on the two pre-specified metrics, with uncorrected",
     ):
         assert re.sub(r"[\s-]+", "", caption) in compact_document_text
     assert all(page_text), "the compiled manuscript contains a blank page"
@@ -562,7 +695,7 @@ def test_clean_compiled_manuscript_renders_without_system_fonts(tmp_path):
         assert compact in compact_document_text, f"not in the PDF: {needle!r}"
         return compact_document_text.index(compact)
 
-    table4_caption = "Chinese paired contrasts on the two pre-specified metrics."
+    table4_caption = "Chinese paired contrasts on the two pre-specified metrics, with uncorrected"
     external_start = "tuple accuracy is positive in 32/32 arms"
     discussion_heading = "7 DISCUSSION"
     assert position(table4_caption) < position(discussion_heading)

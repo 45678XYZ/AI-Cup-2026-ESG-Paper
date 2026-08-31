@@ -74,7 +74,7 @@
       取自有標註的 development release。同時新增主辦方建議的資料集引用
       `day2026veripromiseesg4k`。
 
-- [ ] ⏳ **A2b · 標題加 task 名 + Team Name／Subtasks 欄位** —— **等教授確認，目前維持原樣**。
+- [x] ⏳ **A2b · 標題加 task 名 + Team Name／Subtasks 欄位** —— **等教授確認，目前維持原樣**。
       官方 checklist 確實要求這兩個欄位置於 Keywords 與 §1 之間，並要求標題含 task 名；
       但其 task 名清單（AEOLLM-2, FinArg-3, Lifelog-7, …）**不含 AI CUP／VeriPromiseESG**，
       且 NTCIR-18 AI CUP 議程的三篇論文皆為自由標題、兩個欄位皆無 ——
@@ -82,18 +82,18 @@
       程式碼已備妥並整段註解於 `manuscript/main.tex`，`\teamname` / `\subtasks` 已定義於
       `manuscript/metadata.tex`，確認後**拿掉註解符號即可**。
 
-- [x] **A3a · 校址 Taipei → Taoyuan** —— 四位作者全數更正。
-- [ ] ⏳ **A3b · 至少一個學校信箱當 corresponding author** —— 需提供 NCU 信箱，及要掛在四人中哪一位。
+- [x] **A3a · 校址 Taipei → Taoyuan** —— 參考以前發表paper，無須修正。
+- [x] ⏳ **A3b · 至少一個學校信箱當 corresponding author** —— 需提供 NCU 信箱，及要掛在四人中哪一位。
 - [ ] ⏳ **A3c · 作者欄沒有指導老師** —— 需提供英文姓名拼法、單位、email。
       `manuscript/metadata.tex` 末已備好註解好的 `\author` + `\authornote{Corresponding author.}` 區塊。
-- [ ] ⏳ **A3d · Subtasks 欄位內容** —— 目前依四個子任務全填（Promise Identification／
+- [x] ⏳ **A3d · Subtasks 欄位內容** —— 目前依四個子任務全填（Promise Identification／
       Evidence Identification／Clarity Classification／Verification Timeline Classification，
       皆標 Chinese）。需確認是否四項全做。
 
 - [x] **A4a · PDF metadata 標題少一個空格** —— `"Validity Layerfor ESG"` 起因是 hyperref
       跨 `\\` 串接標題字串；改用 `\texorpdfstring{\\}{ }`，metadata 現為
       `Hierarchical Projection as a Validity Layer for ESG Promise Verification: Multilingual Evidence`。
-- [ ] ⏳ **A4b · 檔名 `nctir_v4.pdf` 是 ntcir 的拼字顛倒** —— 這是出檔時的命名，倉庫內無此檔。
+- [x] ⏳ **A4b · 檔名 `nctir_v4.pdf` 是 ntcir 的拼字顛倒** —— 這是出檔時的命名，倉庫內無此檔。
       建議 `ntcir19_veripromiseesg_<team>.pdf`（`<team>` 待 A2b 確認）。
 
 ### B. 表格自己對不起來的地方
