@@ -49,6 +49,19 @@ what the encoder represents rather than the decision rule, and the latter is
 ill-posed here because seven of the 17 legal states occur at most 26 times in
 the labeled release, two of them never.
 
+\subsection{Validity in audit use}
+\label{sec:audit}
+Validity is a precondition for using a prediction as an audit record, not
+evidence that the record is right. A contradictory tuple, such as an evidence
+quality attached to a paragraph judged to contain no evidence, cannot be
+filed, counted, or acted on without first deciding which field to believe;
+projection makes that decision deterministically, so every output is
+admissible. It does not make the record correct. Repairing a contradiction can
+turn a visibly inconsistent prediction into a consistent but wrong one,
+removing the cue that would have drawn a reviewer's attention. A deployed
+validity layer should therefore record which rows it repaired, so that
+admissibility does not hide uncertainty.
+
 \subsection{Reproducibility}
 \label{sec:repro}
 \begin{sloppypar}
