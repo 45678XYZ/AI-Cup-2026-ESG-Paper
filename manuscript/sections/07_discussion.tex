@@ -22,12 +22,21 @@ corpora. Post-hoc C-wF1 and hF point in the tuple direction, but were chosen
 after the primary analysis and are not needed to establish the pre-specified
 secondary result.
 
-Validity alone also does not identify the better structured rule. In Chinese,
-M4 scores all 17 legal states jointly yet loses tuple accuracy to greedy M1.
-Joint search can improve one field while changing another field that projection
-had already made correct. This adverse result cautions against treating a
-larger legal-state search as automatically superior; it does not imply that
-joint decoding must fail on other models or tasks.
+\paragraph{Why greedy projection beats joint decoding.} Validity alone does not
+identify the better structured rule: M4 searches all 17 legal states yet loses
+tuple accuracy to greedy M1. The decoder ranks each legal state by the product
+of its four field probabilities, which selects the most probable row only if
+the fields are independent given the text, the same assumption M0 makes.
+Pooled over both protocols and seeds, it revises promise status relative to
+projection on 339 of 12{,}000 rows: 225 become correct and 114 wrong, so the
+parent field improves, yet whole-row correctness on those rows falls from 114
+to 47. The exchange is asymmetric. Repairing a parent rarely rescues a row
+whose children remain wrong, whereas breaking a correct parent always loses
+the row. Table~\ref{tab:legality-cost} shows the same split across Chinese
+backbones: without structural training, joint decoding leaves official wF1
+level or higher but tuple accuracy level or lower. A larger legal-state search
+is therefore not automatically better, although joint decoding need not fail
+on other models or tasks.
 
 \subsection{Reproducibility}
 \label{sec:repro}
