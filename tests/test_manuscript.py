@@ -782,7 +782,7 @@ def test_compiled_table_captions_are_nine_point_and_bodies_are_at_least_eight_po
 
 
 def test_reproducibility_subsection_does_not_cross_a_page_boundary():
-    """Keep the 7.2 heading and its final compute detail on one PDF page."""
+    """Keep the Reproducibility heading and its final compute detail on one PDF page."""
     manuscript = REPO_ROOT / "manuscript"
     subprocess.run(
         ["make", "check"], cwd=manuscript, check=True,
@@ -793,15 +793,16 @@ def test_reproducibility_subsection_does_not_cross_a_page_boundary():
         for page in PdfReader(str(manuscript / "build" / "main.pdf")).pages
     ]
 
-    def unique_page(needle):
-        matches = [index for index, text in enumerate(page_text, start=1) if needle in text]
-        assert len(matches) == 1, f"expected one PDF page containing {needle!r}: {matches}"
+    def unique_page(pattern):
+        matches = [index for index, text in enumerate(page_text, start=1)
+                   if re.search(pattern, text)]
+        assert len(matches) == 1, f"expected one PDF page matching {pattern!r}: {matches}"
         return matches[0]
 
-    heading_page = unique_page("7.2 Reproducibility")
-    final_detail_page = unique_page("25.4 GPU-hours on one RTX 3090")
+    heading_page = unique_page(r"\b7\.\d+ Reproducibility\b")
+    final_detail_page = unique_page(r"25\.4 GPU-hours on one RTX 3090")
     assert final_detail_page == heading_page, (
-        f"Section 7.2 starts on page {heading_page} but ends on page {final_detail_page}"
+        f"Reproducibility starts on page {heading_page} but ends on page {final_detail_page}"
     )
 
 

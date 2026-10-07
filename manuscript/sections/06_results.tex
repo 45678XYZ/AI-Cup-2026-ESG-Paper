@@ -49,14 +49,10 @@ became more accurate. Pooled over both protocols and all three seeds, M0 emits
 of two implications: a substantive child under \textsf{PS}=No, or an evidence
 quality under \textsf{ES}=No. Table~\ref{tab:invalid-anatomy}(a) gives the
 full breakdown, and Table~\ref{tab:invalid-anatomy}(b) derives the 44.3\%
-weighted field credit those rows retain. The failure is concentrated in
-predictions that
-deny a parent and then answer its children anyway, rather than spread evenly
-over the label space. The $\pm$ values are sample standard deviations across
-the three seeds, on both the official metric and tuple accuracy. Because each
-seed determines both fold assignment and
-training randomness, they describe spread over the whole split-and-training
-pipeline, not a confidence interval.
+weighted field credit those rows retain. The failure concentrates where a
+parent is denied but its children are answered anyway. The $\pm$ values are sample standard deviations across
+three seeds, each varying both folds and training, so they describe pipeline
+spread, not a confidence interval.
 
 \begingroup\emergencystretch=1em
 Table~\ref{tab:contrasts} reports both pre-specified families in full. All
@@ -65,14 +61,12 @@ central M1--M0 contrast, $\Delta=-0.001$ with 95\% interval
 $[-0.006,0.003]$ and $p_{\mathrm{Holm}}=1.000$. This is the absence of a
 detected difference; it does not establish a zero effect.
 
-The null is not confined to that contrast. The seven decision rules span
-$0.008$ in official wF1, and that spread is itself a single contrast: M5 is
-the highest-scoring rule and M6 the lowest, so the range equals
-$|\textrm{M6}-\textrm{M5}|$, which has an interval excluding zero
-($[-0.016,-0.001]$) and still does not survive correction
-($p_{\mathrm{Holm}}=.171$). The largest gap between any two of the rules
-compared here is therefore below what this evaluation can resolve, which bounds
-what any decision-stage comparison on this benchmark can demonstrate.
+The null is not confined to that contrast. The seven rules span $0.008$ in
+official wF1, and that spread is itself one contrast: M5 scores highest and M6
+lowest, and $|\textrm{M6}-\textrm{M5}|$ has an interval excluding zero
+($[-0.016,-0.001]$) yet does not survive correction
+($p_{\mathrm{Holm}}=.171$). Even the largest gap between rules is thus below
+what this evaluation can resolve.
 \par\endgroup
 
 \paragraph{Whole-tuple effects.}
@@ -85,13 +79,11 @@ therefore reduce whole-row correctness relative to greedy projection. The
 validity guarantee is shared, but the choice among legal tuples still matters.
 \par\endgroup
 
-The two calibration contrasts are also undetected: conditional bias, fitted
-only on the subset each parent admits, is not distinguishable from global bias
-under either output rule (M3--M2 and M6--M5, on both pre-specified metrics).
-The hierarchy therefore constrains the output rule usefully without improving
-how the biases are estimated. The calibrated projection arms reach 0.428 and
-0.432 on tuple accuracy against M1's 0.394, a step no pre-specified contrast
-covers.
+Neither calibration contrast is detected (M3--M2 and M6--M5, on both
+pre-specified metrics): fitting biases only on the subset each parent admits
+does not improve on global biases. The calibrated projection arms still reach
+0.428 and 0.432 tuple accuracy against M1's 0.394, a step no pre-specified
+contrast covers.
 
 The post-hoc C-wF1 and hF M1--M0 point estimates are also positive ($+0.004$
 and $+0.003$) but do not alter the inferential hierarchy; under same-document
@@ -113,14 +105,14 @@ that crosses zero.
 \end{table}
 
 \paragraph{Evaluation protocol.}
-Section~\ref{sec:experiments} treats the two protocols as targeting distinct
-estimands rather than as a biased and an unbiased version of one quantity;
-Table~\ref{tab:regimes} is what that separation costs. Every rule scores
-higher under same-document evaluation, by $0.010$ to $0.020$, and every
-interval excludes zero. The gap is therefore a property of the split rather
-than of any rule, and it is larger than the $0.008$ that separates the rules
-themselves: on this benchmark, which paragraphs are held out matters more than
-which decision rule is applied to them.
+\begingroup\emergencystretch=1em
+Table~\ref{tab:regimes} compares the two protocols, which target distinct
+estimands rather than a biased and an unbiased version of one quantity. Every
+rule scores higher under same-document evaluation, by $0.010$ to $0.020$, with
+every interval excluding zero. The gap belongs to the split, not to any rule,
+and exceeds the $0.008$ separating the rules: which paragraphs are held out
+matters more than which decision rule is applied.
+\par\endgroup
 
 \paragraph{Multilingual replication.}
 Table~\ref{tab:multilingual} fixes one arm per language before inspecting
@@ -133,18 +125,20 @@ Table~\ref{tab:external-arms} reports all four external corpora at both loss
 settings, arm by arm. M1--M0 tuple accuracy is positive in $32/32$ arms. The
 weighted
 macro-F1 contrast is positive in only $14/32$: English $7/8$, French $5/8$,
-Japanese $0/8$, and Korean $2/8$. These are within-arm directions, not a raw
-score ranking across languages. Projection thus combines a deterministic
+Japanese $0/8$, and Korean $2/8$. These are within-arm directions, not
+evidence about language difficulty: the corpora also differ in source
+documents, label distributions, input units, and backbones, and macro-F1
+weights each Korean evidence-quality class more heavily
+(Section~\ref{sec:metrics}). Projection thus combines a deterministic
 validity guarantee with a repeated complete-tuple improvement, while its
 field-score effect is not directionally stable across arms.
 \par\endgroup
 
 \begin{sloppypar}
 For the pre-registered fixed English arm, the one-sided tuple effect is
-$+0.0725$, with a report-cluster bootstrap interval of $[0.0452,0.1019]$ and
-$p=.0002$. That $p$ is resampled from nine report clusters, which is the
-resolution the English corpus has: it should be read as a direction that
-survived its own resampling, not as a precise tail probability.
+$+0.0725$ $[0.0452,0.1019]$, $p=.0002$; with only nine report clusters, this
+$p$ marks a direction that survived resampling, not a precise tail
+probability.
 ML-Promise weighted scores use AI CUP weights applied to ML-Promise.
 \end{sloppypar}
 
@@ -180,22 +174,18 @@ ML-Promise weighted scores use AI CUP weights applied to ML-Promise.
 \paragraph{Exploratory robustness.}
 \begingroup\emergencystretch=1em
 On the Chinese anchor, structural loss lowers M0's invalid-tuple rate from
-12.55\% to 5.18\%; its pre-registered M1 wF1 effect is $+0.00250$
-$[-0.00384,0.00860]$ ($p=.427$). It also lowers that rate in all 16 external
+12.55\% to 5.18\%, with a pre-registered M1 wF1 effect of $+0.00250$
+$[-0.00384,0.00860]$ ($p=.427$); it lowers that rate in all 16 external
 language-by-backbone pairs, with mixed wF1 and tuple effects. The Chinese
-DeBERTa and ELECTRA screens likewise lack conclusive wF1 gains; the
-same-family base checkpoint's lower invalid-tuple rate contradicts a simple
+DeBERTa and ELECTRA screens also lack conclusive wF1 gains, and the
+same-family base checkpoint's lower invalid rate contradicts a simple
 smaller-model mechanism.
 
 \begingroup\emergencystretch=1em
-Table~\ref{tab:legality-cost} reports those seven Chinese arms as paired
-within-arm contrasts. Its invalid-rate column shows what the penalty does not do:
-the $\lambda=0.3$ arms still emit invalid tuples, because the training-time
-penalty pulls probability mass toward $\mathcal S$ without confining the
-output to $\mathcal S$, which is what a decision rule does. Two sign patterns
-then hold across all seven arms even though the official column does not:
-M1--M0 raises tuple accuracy in 7/7, and M4--M1 lowers it in 7/7. The
-single-arm M4--M1 result above is the sign the whole screen shows, not one
-arm's outcome.
+Table~\ref{tab:legality-cost} reports these seven Chinese arms. The
+$\lambda=0.3$ arms still emit invalid tuples: the penalty pulls probability
+mass toward $\mathcal S$ but, unlike a decision rule, does not confine output
+to it. M1--M0 raises tuple accuracy in 7/7 arms and M4--M1 lowers it in 7/7,
+so the single-arm M4--M1 result reflects the whole screen.
 \par\endgroup
 \par\endgroup
