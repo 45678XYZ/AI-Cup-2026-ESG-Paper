@@ -133,8 +133,11 @@ Table~\ref{tab:external-arms} reports all four external corpora at both loss
 settings, arm by arm. M1--M0 tuple accuracy is positive in $32/32$ arms. The
 weighted
 macro-F1 contrast is positive in only $14/32$: English $7/8$, French $5/8$,
-Japanese $0/8$, and Korean $2/8$. These are within-arm directions, not a raw
-score ranking across languages. Projection thus combines a deterministic
+Japanese $0/8$, and Korean $2/8$. These are within-arm directions, not
+evidence about language difficulty: the corpora also differ in source
+documents, label distributions, input units, and backbones, and macro-F1
+weights each Korean evidence-quality class more heavily
+(Section~\ref{sec:metrics}). Projection thus combines a deterministic
 validity guarantee with a repeated complete-tuple improvement, while its
 field-score effect is not directionally stable across arms.
 \par\endgroup
