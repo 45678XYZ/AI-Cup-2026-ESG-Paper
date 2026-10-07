@@ -3,8 +3,9 @@
 \subsection{Shared Base Models}
 For the Chinese study, we use
 {\small\texttt{hfl/chinese-roberta-wwm-ext-large}} as the fixed encoder, where
-\texttt{hfl} is the Joint Laboratory of HIT and iFLYTEK Research; it has
-BERT-Large dimensions \cite{devlin2019bert}. Cui et al. document the checkpoint's
+\texttt{hfl} is the Joint Laboratory of HIT and iFLYTEK Research. The
+checkpoint has BERT-Large dimensions, 24 layers and hidden size 1024
+\cite{devlin2019bert}. Cui et al. document the checkpoint's
 Chinese RoBERTa-WWM family: it uses whole-word masking, extended pretraining
 data, and no next-sentence prediction \cite{cui2021wwm}. We
 mean-pool its token representations and attach four independent linear heads,

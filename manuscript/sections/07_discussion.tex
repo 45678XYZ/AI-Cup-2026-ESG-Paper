@@ -61,8 +61,7 @@ evidence its per-class recall. (iii) If outputs feed portfolio statistics,
 such as the share of promises with clear evidence, use class-level field
 scores but keep validity, since invalid tuples make such counts inconsistent.
 (iv) Use official wF1 only where it is the agreed rule, as on a leaderboard,
-and even there not to separate rules closer than this benchmark's resolution
-(0.008).
+and not to separate rules closer than its resolution here (0.008).
 
 \subsection{Reproducibility}
 \label{sec:repro}
@@ -70,17 +69,17 @@ and even there not to separate rules closer than this benchmark's resolution
 The repository releases row-level predictions and text-free metadata for all
 eight paper tables and Figure~1; raw corpora, model weights, and retraining are
 excluded. Configurations pin each backbone's Hugging Face revision. Per seed, reports are identifier-sorted, shuffled,
-stable-sorted by decreasing size, and each assigned to one of the two lightest
-folds. Korean pages come from Poppler's \hfid{pdftotext}, with Tesseract for
-image-only pages. The 32 external arms took 25.4 GPU-hours on one RTX 3090.
+stable-sorted by decreasing size, and each assigned uniformly to one of the two
+lightest folds, ties broken by fold index. Korean text is one page per labeled
+(URL, page) pair, unique in the release, from Poppler's \hfid{pdftotext} or,
+for image-only pages, Tesseract. The 32 external arms took 25.4 GPU-hours on one RTX 3090.
 \par\endgroup
 
 \subsection{Limitations}
 The replication matrix is not a factorial estimate of a pure language
-effect. English and French each have only nine report clusters, and
-even Chinese inference resamples just 49. The $32/32$ and $14/32$ summaries
-are therefore descriptive directions across executed arms, not a pooled
-significance test. AI CUP weights applied to ML-Promise are not an official
+effect. English and French have only nine report clusters each and Chinese
+49, so the $32/32$ and $14/32$ summaries are descriptive directions across
+executed arms, not a pooled significance test. AI CUP weights applied to ML-Promise are not an official
 ML-Promise metric. Every contrast uses M0, unconstrained argmax on the same probabilities, to
 isolate the decision rule. We do not compare against a published system,
 official baseline, or leaderboard and make no participant-ranking claim.
@@ -93,8 +92,8 @@ Section~\ref{sec:repro}.
 Structural-loss and backbone results are exploratory; fixed loss weights and
 few checkpoints cannot characterize all objectives or architectures. The
 rarest Chinese quality label has two examples and Korean none, so no
-class-level claim is made. Each seed changes folds and optimization together,
-so their effects cannot be separated.
+class-level claim is made. Each seed changes folds and training randomness
+together, so their effects cannot be separated.
 \end{sloppypar}
 
 \section{Conclusion}
@@ -105,6 +104,5 @@ eliminates invalid tuples by construction and
 improves exact whole-tuple accuracy on the Chinese anchor and in all 32
 evaluated external arms.
 Its field-score effect varies across models and corpora, but its logical guarantee does not.
-For audit-oriented tasks with dependent outputs, structural validity should
-be a precondition, and the metric that chooses a rule should match the unit
-at which an error has consequences.
+For audit use, validity should be a precondition, and the metric that picks a
+rule should match the unit at which errors have consequences.
