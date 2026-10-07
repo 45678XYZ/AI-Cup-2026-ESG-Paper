@@ -38,6 +38,17 @@ level or higher but tuple accuracy level or lower. A larger legal-state search
 is therefore not automatically better, although joint decoding need not fail
 on other models or tasks.
 
+\paragraph{Calibration and factorization.} Decision calibration interacts with
+the output rule. Conditional biases do not detectably change projection
+(M3--M2, $+0.001$ wF1) yet lower 17-state decoding by $0.008$ (M6--M5, not
+surviving correction). A plausible cause is that the three pinned \emph{N/A}
+biases of Eq.~\eqref{eq:pinned-biases} distort the comparison across legal
+states that only the decoder makes. We hold the factorized four-head model
+fixed by design: classifier chains or a direct 17-way classifier would change
+what the encoder represents rather than the decision rule, and the latter is
+ill-posed here because seven of the 17 legal states occur at most 26 times in
+the labeled release, two of them never.
+
 \subsection{Reproducibility}
 \label{sec:repro}
 \begin{sloppypar}
