@@ -62,6 +62,26 @@ removing the cue that would have drawn a reviewer's attention. A deployed
 validity layer should therefore record which rows it repaired, so that
 admissibility does not hide uncertainty.
 
+\paragraph{Choosing between the metrics.} The two metrics disagree for two
+separable reasons: wF1 gives partial credit for each correct field even in a
+wrong or contradictory row, and it averages over classes, so rare labels count
+as much as common ones; tuple accuracy credits only whole rows and weights them
+by frequency. The choice should therefore follow how outputs are used, not a
+general preference. (i) When each paragraph becomes one record, such as an
+assurance file, a disclosure checklist, or a database entry, one wrong field
+spoils the record, so rules should be compared by tuple accuracy among valid
+outputs; here that favors projection over joint decoding. (ii) When one field
+drives an action, such as routing promise paragraphs to analysts, the other
+fields are irrelevant and that field's own F1 is the measure; if the action
+targets a rare label, such as misleading evidence, its per-class recall
+matters more than any average. (iii) When outputs feed portfolio statistics,
+such as the share of promises backed by clear evidence, class-level field
+scores matter, but validity remains necessary because invalid tuples make such
+counts inconsistent. (iv) Official wF1 should decide only where it is the
+agreed rule, as on a leaderboard, and even there differences below this
+benchmark's resolution (0.008 across all seven rules) should not settle a
+ranking.
+
 \subsection{Reproducibility}
 \label{sec:repro}
 \begin{sloppypar}
@@ -117,6 +137,6 @@ eliminates invalid tuples by construction and
 improves exact whole-tuple accuracy on the Chinese anchor and in all 32
 evaluated external arms.
 Its field-score effect varies across models and corpora, but its logical guarantee does not.
-For audit-oriented tasks with dependent outputs, field-wise performance,
-whole-tuple correctness, and structural validity should be reported
-together.
+For audit-oriented tasks with dependent outputs, structural validity should
+be a precondition, and the metric that chooses a rule should match the unit
+at which an error has consequences.
