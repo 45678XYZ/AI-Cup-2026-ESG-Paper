@@ -3,7 +3,7 @@
 ## Assumptions and open items
 
 - **Size:** A0, portrait (841 × 1189 mm). The venue requires A0 but does not state an orientation; portrait is assumed and should be confirmed in the Poster Questionnaire (due 2026-10-30 AoE).
-- **File name:** `NTCIR19-[TASK]-ChenS-poster.pdf`. The first author is Sheng-Xun Chen. The `[TASK]` token for the AI CUP special session is not confirmed.
+- **File name:** `NTCIR19-[TASK]-[FamilyName+Initial]-poster.pdf`, where `[FamilyName+Initial]` is the first author's family name and initial. Not yet decided.
 - **Source:** the camera-ready manuscript at `45678XYZ/AI-Cup-2026-ESG-Paper@f91f88b`. Every number on the poster comes from it.
 - **Branding:** no institution or venue logo was supplied, so the poster has none.
 - **Contact:** a QR code to the reproduction capsule (`github.com/tom1030507/ntcir19-esg-validity-layer`) stands in for a contact block.

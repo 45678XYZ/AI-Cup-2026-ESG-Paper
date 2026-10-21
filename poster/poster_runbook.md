@@ -43,12 +43,12 @@ It produces an editable `poster.pptx`, not a PDF. Export it to PDF with embedded
 
 - [ ] **Poster Questionnaire** (due 2026-10-30 AoE): presentation style, orientation, and printing. Every active team must submit it.
 - [ ] Orientation: portrait is assumed.
-- [ ] The `[TASK]` token in `NTCIR19-[TASK]-ChenS-poster.pdf`.
+- [ ] The file name: fill in `[TASK]` and `[FamilyName+Initial]` in `NTCIR19-[TASK]-[FamilyName+Initial]-poster.pdf`.
 - [ ] Logos: none are used, because none were supplied.
 
 ## Submit
 
-1. Copy `build/poster.pdf` to `NTCIR19-[TASK]-ChenS-poster.pdf`.
+1. Copy `build/poster.pdf` to `NTCIR19-[TASK]-[FamilyName+Initial]-poster.pdf`, with both tokens filled in.
 2. Upload it through the Poster Upload Form by **2026-11-27 AoE** (hard deadline).
 3. In-person: bring a printed A0 copy, or request printing in the questionnaire.
 
