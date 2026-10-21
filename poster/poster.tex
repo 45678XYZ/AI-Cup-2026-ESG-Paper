@@ -1,211 +1,252 @@
-\documentclass[25pt, a0paper, portrait, margin=0mm, innermargin=18mm,
-  blockverticalspace=10mm, colspace=16mm, subcolspace=0mm]{tikzposter}
-
+\documentclass{article}
+\usepackage[paperwidth=841mm, paperheight=1189mm, margin=20mm]{geometry}
 \usepackage{lmodern}
-\renewcommand{\familydefault}{\sfdefault}
-\usepackage[T1]{fontenc}
-\usepackage{booktabs}
+\usepackage[sfdefault, lining]{FiraSans}
+\usepackage{xcolor}
 \usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{adjustbox}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{qrcode}
 \usepackage{enumitem}
-\usepackage{adjustbox}
+\usepackage{ragged2e}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{svg.path}
 
-\definecolor{accent}{RGB}{0,98,105}
-\definecolor{ink}{RGB}{38,38,38}
-\definecolor{wash}{RGB}{231,242,242}
+\definecolor{navy}{RGB}{10,46,92}
+\definecolor{leaf}{RGB}{11,138,67}
+\definecolor{mint}{RGB}{232,244,236}
+\definecolor{ink}{RGB}{31,42,51}
+\definecolor{muted}{RGB}{90,103,114}
 
-\definecolorstyle{Validity}{
-  \definecolor{colorOne}{named}{accent}
-  \definecolor{colorTwo}{named}{wash}
-  \definecolor{colorThree}{named}{white}
-}{
-  \colorlet{backgroundcolor}{white}
-  \colorlet{framecolor}{white}
-  \colorlet{titlefgcolor}{white}
-  \colorlet{titlebgcolor}{accent}
-  \colorlet{blocktitlebgcolor}{accent}
-  \colorlet{blocktitlefgcolor}{white}
-  \colorlet{blockbodybgcolor}{white}
-  \colorlet{blockbodyfgcolor}{ink}
-  \colorlet{innerblocktitlebgcolor}{wash}
-  \colorlet{innerblocktitlefgcolor}{ink}
-  \colorlet{innerblockbodybgcolor}{wash}
-  \colorlet{innerblockbodyfgcolor}{ink}
-  \colorlet{notefgcolor}{ink}
-  \colorlet{notebgcolor}{wash}
-  \colorlet{notefrcolor}{wash}
-}
-\usetheme{Default}
-\usecolorstyle{Validity}
-\usetitlestyle{Filled}
-\useblockstyle{Basic}
-\usebackgroundstyle{Default}
-\makeatletter
-\settitle{%
-  \begin{minipage}[c]{0.14\linewidth}\centering
-    \includegraphics[width=0.85\linewidth]{assets/ncu-logo.png}
-  \end{minipage}\hfill
-  \begin{minipage}[c]{0.70\linewidth}\centering\color{titlefgcolor}
-    {\bfseries\fontsize{72}{84}\selectfont\@title\par}\vspace*{0.8em}
-    {\huge\@author\par}\vspace*{0.5em}{\LARGE\@institute\par}
-  \end{minipage}\hfill
-  \begin{minipage}[c]{0.14\linewidth}\hfill\end{minipage}}
-\makeatother
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
 
-\setlist[itemize]{leftmargin=1.2em, itemsep=0.25em, topsep=0.3em}
-\newcommand{\hl}[1]{\textbf{\textcolor{accent}{#1}}}
-\newcommand{\fittable}[1]{\adjustbox{max width=\linewidth}{\input{#1}}}
-\newcommand{\srcnote}[1]{\par\vspace{0.3em}{\centering\small\textcolor{gray}{#1}\par}}
+\newcommand{\bodysize}{\fontsize{26}{34}\selectfont}
+\newcommand{\tablesize}{\fontsize{23}{30}\selectfont}
+\newcommand{\notesize}{\fontsize{20}{26}\selectfont}
+\newcommand{\hl}[1]{\textbf{\textcolor{leaf}{#1}}}
+\newcommand{\fittable}[1]{{\tablesize\adjustbox{max width=\linewidth}{\input{#1}}}}
+\newcommand{\srcnote}[1]{\par\vspace{4mm}{\centering\notesize\textcolor{muted}{#1}\par}}
+\newcommand{\sub}[1]{\par\vspace{3mm}{\bfseries\textcolor{navy}{#1}}\par\vspace{1mm}}
 
-\title{\parbox{\linewidth}{\centering Hierarchical Projection as a Validity Layer\\
-  for Multilingual ESG Promise Verification}}
-\author{Sheng-Xun Chen, Chun-Wei Chen, Hsin-Chen Han, Shi-Yu Huang}
-\institute{National Central University, Taiwan \quad$\cdot$\quad Team\_10537\\
-  NTCIR-19 AI CUP Special Session \quad$\cdot$\quad VeriPromiseESG Task}
+\setlist[itemize]{leftmargin=1.1em, itemsep=2.5mm, topsep=2mm, parsep=0pt,
+  label={\textcolor{leaf}{\raisebox{0.12em}{\scalebox{0.9}{$\blacktriangleright$}}}}}
+\setlist[itemize,2]{leftmargin=1.1em, itemsep=1mm, topsep=1mm,
+  label={\textcolor{muted}{--}}}
 
-\tikzposterlatexaffectionproofoff
+\newtcolorbox{block}[2][]{enhanced, arc=3mm,
+  colback=white, colframe=navy, boxrule=0.8mm,
+  colbacktitle=navy, coltitle=white,
+  fonttitle=\bfseries\fontsize{38}{46}\selectfont,
+  toptitle=2.5mm, bottomtitle=2.5mm, left=9mm, right=9mm, top=6mm, bottom=6mm,
+  title={#2}, fontupper=\bodysize\color{ink}\RaggedRight, #1}
+
+\newtcolorbox{callout}{enhanced, colback=mint, colframe=mint, arc=2mm,
+  boxrule=0pt, left=7mm, right=7mm, top=5mm, bottom=5mm,
+  borderline west={2.2mm}{0pt}{leaf}}
+
+\newcommand{\sectitle}[2]{\textcolor{leaf!55!white}{#1}\hspace{0.45em}#2}
 
 \begin{document}
-\maketitle
+\bodysize\color{ink}
 
-\begin{columns}
-\column{0.5}
+\begin{tcolorbox}[enhanced, colback=navy, colframe=navy, arc=3mm, boxrule=0pt,
+  left=12mm, right=12mm, top=8mm, bottom=8mm]
+  \begin{minipage}[c]{0.13\linewidth}\centering
+    \includegraphics[width=0.92\linewidth]{assets/ncu-logo.png}
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.70\linewidth}\centering\color{white}
+    {\bfseries\fontsize{76}{90}\selectfont Hierarchical Projection as a Validity Layer\\
+      for Multilingual ESG Promise Verification\par}
+    \vspace{9mm}
+    {\fontsize{40}{50}\selectfont Sheng-Xun Chen, Chun-Wei Chen, Hsin-Chen Han,
+      Shi-Yu Huang\par}
+    \vspace{4mm}
+    {\fontsize{31}{40}\selectfont National Central University, Taiwan
+      \quad\textcolor{leaf!55!white}{$\bullet$}\quad Team\_10537\par
+      NTCIR-19 AI CUP Special Session
+      \quad\textcolor{leaf!55!white}{$\bullet$}\quad VeriPromiseESG Task\par}
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.13\linewidth}\centering
+    \definecolor{ntcirletter}{RGB}{255,255,255}
+    \definecolor{ntcirleaf}{RGB}{0,160,64}
+    \resizebox{0.96\linewidth}{!}{\input{assets/ntcir-logo.tex}}
+  \end{minipage}
+\end{tcolorbox}
 
-\block{1\,$\cdot$\,Problem: plausible fields, invalid tuple}{
+\vspace{9mm}
+
+\begin{tcbraster}[raster columns=2, raster equal height=rows,
+  raster column skip=10mm, raster row skip=9mm]
+\begin{block}{\sectitle{1}{Introduction}}
   \begin{itemize}
-    \item Four fields describe one ESG claim: promise status (PS), verification
-      timeline (VT), evidence status (ES), evidence quality (EQ).
-    \item Hard implications: PS\,=\,No forces VT\,=\,ES\,=\,EQ\,=\,N/A, and
-      ES\,=\,No forces EQ\,=\,N/A.
+    \item ESG promise verification labels each paragraph with \hl{four linked
+      fields}, and the output is meant for audit-oriented use.
+    \item A record is only usable if its fields agree, yet independent
+      classifiers can combine plausible labels into an impossible tuple.
+    \item The official metric scores each field on its own, so an invalid
+      tuple still earns \hl{44.3\%} of the weighted field credit.
+  \end{itemize}
+  \vspace{5mm}
+  \begin{callout}
+    \textbf{Question.} Can a retraining-free decision rule guarantee legal
+    outputs, and how does it change field-wise versus whole-tuple scores?
+  \end{callout}
+\end{block}
+\begin{block}{\sectitle{2}{Task \& Data}}
+  \begin{itemize}
+    \item Fields: promise status (PS), verification timeline (VT), evidence
+      status (ES), evidence quality (EQ).
+    \item Hard rules: PS\,=\,No $\Rightarrow$ VT\,=\,ES\,=\,EQ\,=\,N/A;\\
+      ES\,=\,No $\Rightarrow$ EQ\,=\,N/A.
     \item Only \hl{17 of 120} label combinations are legal.
-    \item Independent argmax emits invalid tuples on \hl{12.55\%} of Chinese
-      rows.
-    \item The official metric scores each field on its own, so an invalid tuple
-      still keeps \hl{44.3\%} of the weighted field credit.
+    \item \textbf{AI CUP 2026}: 2,000 Chinese paragraphs from 49 reports, all
+      legal (15 of 17 states observed).
+    \item \textbf{ML-Promise}: English, French, Japanese (400 paragraphs each),
+      Korean (500 PDF pages).
   \end{itemize}
-}
+\end{block}
+\end{tcbraster}
 
-\block{3\,$\cdot$\,Setup}{
-  \begin{itemize}
-    \item Chinese anchor: 2,000 paragraphs from 49 reports;
-      \texttt{\small hfl/chinese-roberta-wwm-ext-large}.
-    \item Five-way cross-fitting, three seeds, two protocols
-      (document-disjoint primary).
-    \item Paired report-cluster bootstrap, Holm-adjusted within each
-      pre-specified family.
-    \item External: English, French, Japanese (400 paragraphs each), Korean
-      (500 PDF pages); 4 backbones $\times$ $\lambda\in\{0,0.3\}$ =
-      \hl{32 arms}.
-  \end{itemize}
-}
+\vspace{9mm}
 
-\column{0.5}
-
-\block{2\,$\cdot$\,Method: seven decision rules}{
-  \begin{center}
+\begin{block}{\sectitle{3}{Methodology}}
+  \begin{minipage}[t]{0.50\linewidth}\vspace{0pt}
     \includegraphics[width=\linewidth]{../figures/figure1_hierarchy.pdf}
-    \srcnote{Figure 1 of the paper: the label hierarchy and the seven alternative
-      decision rules}
-  \end{center}
-  \vspace{0.4em}
-  \begin{itemize}
-    \item One fine-tuned encoder with four independent heads; every rule reads
-      the same cross-fitted probabilities.
-    \item \hl{Projection} (greedy, top-down): pick PS; under PS\,=\,Yes pick the
-      best substantive VT and ES; under ES\,=\,Yes the best substantive EQ.
-      Always legal, no retraining.
-    \item \hl{17-state decoding}: return the legal state with the highest summed
-      log-score.
-    \item Calibration: none, global, or conditional class biases.
-      M0 is independent argmax.
-  \end{itemize}
-}
+    \srcnote{Figure 1: the label hierarchy and the seven alternative decision
+      rules, all reading the same base probabilities}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.465\linewidth}\vspace{0pt}
+    \sub{Validity-preserving output rules}
+    \begin{itemize}
+      \item \hl{Projection}: greedy and top-down. Pick PS; under PS\,=\,Yes take
+        the best substantive VT and ES; under ES\,=\,Yes the best substantive
+        EQ. Always legal, no retraining.
+      \item \hl{17-state decoding}: return the legal state with the highest
+        summed log-score.
+      \item Calibration: none, global, or conditional class biases.
+    \end{itemize}
+    \sub{Evaluation}
+    \begin{itemize}
+      \item \texttt{\fontsize{24}{30}\selectfont hfl/chinese-roberta-wwm-ext-large},
+        four independent heads.
+      \item Five-way cross-fitting, three seeds, document-disjoint split.
+      \item Paired report-cluster bootstrap, Holm-adjusted.
+      \item External: 4 backbones $\times$ $\lambda\in\{0,0.3\}$ in each of 4
+        languages = \hl{32 arms}.
+    \end{itemize}
+  \end{minipage}
+\end{block}
 
-\end{columns}
+\vspace{9mm}
 
-\block{4\,$\cdot$\,Results: Chinese anchor}{
-  \begin{minipage}[t]{0.585\linewidth}
+\begin{block}{\sectitle{4}{Results: Chinese Anchor}}
+  \begin{minipage}[t]{0.575\linewidth}\vspace{0pt}
     \centering\fittable{../tables/table2_main.tex}
-    \srcnote{Table 2: seven decision rules, three-seed means $\pm$ s.d.,
-      document-disjoint}
+    \srcnote{Table 2: three-seed means $\pm$ s.d., document-disjoint}
   \end{minipage}\hfill
-  \begin{minipage}[t]{0.385\linewidth}
+  \begin{minipage}[t]{0.395\linewidth}\vspace{0pt}
     \centering\fittable{../tables/table4_contrasts.tex}
-    \srcnote{Table 4: pre-specified paired contrasts, 95\% report-cluster
-      bootstrap intervals}
+    \srcnote{Table 4: pre-specified paired contrasts, 95\% intervals}
   \end{minipage}
+  \par\vspace{6mm}
   \begin{itemize}
-    \item The seven rules span only \hl{0.008} wF1; no official-score contrast
-      survives Holm correction.
-    \item \hl{Adverse result:} 17-state decoding (M4) loses to projection (M1)
-      by \hl{$-$0.006} tuple accuracy ($p_{\mathrm{Holm}}{=}.028$).
+    \item Projection removes every invalid tuple (\hl{12.55\% $\to$ 0}) and
+      raises tuple accuracy by \hl{+0.035} ($p_{\mathrm{Holm}}=.001$), while
+      official wF1 does not move ($\Delta=-0.001$, $p_{\mathrm{Holm}}=1.000$).
+    \item Searching all 17 states is not better: joint decoding loses
+      \hl{$-$0.006} tuple accuracy to projection ($p_{\mathrm{Holm}}=.028$).
   \end{itemize}
-}
+\end{block}
 
-\begin{columns}
-\column{0.5}
+\vspace{9mm}
 
-\block{5\,$\cdot$\,Replication across four languages}{
-  \begin{center}
-    \fittable{../tables/table7_multilingual_mechanism.tex}
-    \srcnote{Table 7: projection (M1) vs.\ argmax (M0), one preselected arm per
-      corpus, three-seed means}
-  \end{center}
+\begin{tcbraster}[raster columns=2, raster equal height=rows,
+  raster column skip=10mm, raster row skip=9mm]
+\begin{block}{\sectitle{5}{Multilingual Replication}}
+  {\centering\fittable{../tables/table7_multilingual_mechanism.tex}\par}
+  \srcnote{Table 7: projection (M1) vs.\ argmax (M0), one preselected arm per
+    corpus}
   \begin{itemize}
-    \item Tuple accuracy rises in \hl{32/32} external arms; wF1 in
+    \item Tuple accuracy rises in \hl{32/32} external arms; wF1 in only
       \hl{14/32} (EN 7/8, FR 5/8, JA 0/8, KO 2/8).
-    \item Within-arm directions, not a ranking of languages: the corpora
-      differ in documents, labels, input units, and backbones.
+    \item These are within-arm directions, not a ranking of languages.
   \end{itemize}
-}
-
-\block{Takeaway}{
-  \begin{minipage}[c]{0.64\linewidth}
-    Projection guarantees coherent ESG records without retraining, but it is
-    not a route to a higher official score. For audit use, make validity a
-    precondition and pick the metric that matches the unit at which errors
-    have consequences.
-  \end{minipage}\hfill
-  \begin{minipage}[c]{0.32\linewidth}
-    \centering
-    \qrcode[height=7cm]{https://github.com/tom1030507/ntcir19-esg-validity-layer}\\[0.3em]
-    {\small Code and reproduction capsule}
-  \end{minipage}
-}
-
-\column{0.5}
-
-\block{6\,$\cdot$\,Why the metrics disagree}{
+\end{block}
+\begin{block}{\sectitle{6}{Why the Metrics Disagree}}
   \begin{itemize}
-    \item Projection's N/A net is positive and its substantive net negative in
-      all five corpora, yet tuple accuracy rises in every one.
+    \item A wrong parent makes projection overwrite a correct child with N/A;
+      a right parent lets it repair an unsupported child.
+    \item N/A credit goes up and substantive credit goes down in all five
+      corpora, yet whole tuples improve in every one.
     \item Joint decoding revises PS on \hl{339 of 12,000} rows: 225 become
-      correct, 114 wrong, yet whole-row correctness there falls
+      correct and 114 wrong, but whole-row correctness on them falls
       \hl{114 $\to$ 47}.
-    \item Repairing a parent rarely rescues a row whose children stay wrong;
+    \item Fixing a parent rarely saves a row whose children stay wrong;
       breaking a correct parent always loses it.
   \end{itemize}
-}
-
-\block{7\,$\cdot$\,For audit use}{
+\end{block}
+\begin{block}{\sectitle{7}{Implications for Audit Use}}
   \begin{itemize}
-    \item Validity is a \hl{precondition} for a usable record, not evidence that
+    \item Validity is a \hl{precondition} for a usable record, not proof that
       the record is right.
     \item A repair can hide an inconsistency, so a deployed validity layer
       should \hl{log the rows it repaired}.
-    \item Choose the metric by how outputs are used:
+    \item Pick the metric by how outputs are used:
       \begin{itemize}
-        \item records $\to$ tuple accuracy among valid outputs
-        \item single-field actions $\to$ that field's F1, or recall for a rare
-          class
-        \item portfolio statistics $\to$ class-level scores, keeping validity
-        \item leaderboards $\to$ official wF1, but not for gaps under 0.008
+        \item records: tuple accuracy among valid outputs
+        \item single-field actions: that field's F1, or rare-class recall
+        \item portfolio statistics: class-level scores, keeping validity
+        \item leaderboards: official wF1, but not for gaps under 0.008
       \end{itemize}
   \end{itemize}
-}
+\end{block}
+\begin{block}{\sectitle{8}{Conclusion}}
+  \begin{itemize}
+    \item Hierarchical projection is a \hl{retraining-free validity layer}: it
+      eliminates invalid tuples by construction.
+    \item It improves whole-tuple accuracy on the Chinese anchor and in all 32
+      external arms.
+    \item Its field-score effect varies across models and corpora; its logical
+      guarantee does not.
+  \end{itemize}
+  \vspace{5mm}
+  \begin{callout}
+    For audit use, make validity a precondition, and pick the metric that
+    matches the unit at which errors have consequences.
+  \end{callout}
+\end{block}
+\end{tcbraster}
 
-\end{columns}
+\vfill
 
+\begin{tcolorbox}[enhanced, colback=mint, colframe=mint, arc=3mm, boxrule=0pt,
+  left=10mm, right=10mm, top=5mm, bottom=5mm]
+  \begin{minipage}[c]{0.84\linewidth}\notesize\RaggedRight
+    {\bfseries\textcolor{navy}{References}}\par\vspace{2mm}
+    \begin{minipage}[t]{0.49\linewidth}\RaggedRight
+      {[1]} AI CUP 2026 Organizers. ESG Sustainability Commitment Verification
+      Competition 2026 (VeriPromiseESG4K). 2026.\par\vspace{1mm}
+      {[2]} M.-Y. Day et al. VeriPromiseESG4K: A Traditional Chinese ESG Promise
+      Verification Dataset for AI CUP 2026. IEEE IRI, 2026.
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.49\linewidth}\RaggedRight
+      {[3]} C.-C. Chen et al. SemEval-2025 Task 6: Multinational, Multilingual,
+      Multi-Industry Promise Verification. SemEval, 2025.\par\vspace{1mm}
+      {[4]} Y. Seki et al. ML-Promise: A Multilingual Dataset for Corporate
+      Promise Verification. EMNLP, 2025.
+    \end{minipage}
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.13\linewidth}\centering
+    \qrcode[height=4.6cm]{https://github.com/tom1030507/ntcir19-esg-validity-layer}\par
+    \vspace{2mm}{\fontsize{18}{22}\selectfont\textcolor{muted}{Code \& reproduction}\par}
+  \end{minipage}
+\end{tcolorbox}
 
 \end{document}
