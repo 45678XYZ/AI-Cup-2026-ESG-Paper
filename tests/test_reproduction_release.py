@@ -27,7 +27,7 @@ def test_release_groups_all_curated_inputs_by_corpus():
     load_reproduce_module()
     directories = {
         path.name for path in RELEASE_ROOT.iterdir()
-        if path.is_dir() and path.name != "outputs"
+        if path.is_dir() and path.name != "outputs" and not path.name.startswith(".")
     }
     assert directories == EXPECTED_FIRST_LEVEL_DIRECTORIES
 
