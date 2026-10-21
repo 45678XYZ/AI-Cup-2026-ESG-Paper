@@ -15,11 +15,12 @@
 \usepackage{tikz}
 \usetikzlibrary{svg.path}
 
-\definecolor{navy}{RGB}{10,46,92}
-\definecolor{leaf}{RGB}{11,138,67}
-\definecolor{mint}{RGB}{232,244,236}
-\definecolor{ink}{RGB}{31,42,51}
-\definecolor{muted}{RGB}{90,103,114}
+\definecolor{navy}{RGB}{12,45,87}
+\definecolor{accent}{RGB}{26,99,176}
+\definecolor{numeral}{RGB}{150,184,224}
+\definecolor{rule}{RGB}{206,216,228}
+\definecolor{ink}{RGB}{28,36,46}
+\definecolor{muted}{RGB}{88,100,116}
 
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
@@ -30,33 +31,32 @@
 \newcommand{\bodysize}{\fontsize{26}{34}\selectfont}
 \newcommand{\tablesize}{\fontsize{23}{30}\selectfont}
 \newcommand{\notesize}{\fontsize{20}{26}\selectfont}
-\newcommand{\hl}[1]{\textbf{\textcolor{leaf}{#1}}}
+\newcommand{\hl}[1]{\textbf{\textcolor{accent}{#1}}}
 \newcommand{\fittable}[1]{{\tablesize\adjustbox{max width=\linewidth}{\input{#1}}}}
 \newcommand{\srcnote}[1]{\par\vspace{4mm}{\centering\notesize\textcolor{muted}{#1}\par}}
 \newcommand{\sub}[1]{\par\vspace{3mm}{\bfseries\textcolor{navy}{#1}}\par\vspace{1mm}}
 
 \setlist[itemize]{leftmargin=1.1em, itemsep=2.5mm, topsep=2mm, parsep=0pt,
-  label={\textcolor{leaf}{\raisebox{0.12em}{\scalebox{0.9}{$\blacktriangleright$}}}}}
+  label={\textcolor{navy}{\textbullet}}}
 \setlist[itemize,2]{leftmargin=1.1em, itemsep=1mm, topsep=1mm,
   label={\textcolor{muted}{--}}}
 
-\newtcolorbox{block}[2][]{enhanced, arc=3mm,
-  colback=white, colframe=navy, boxrule=0.8mm,
+\newtcolorbox{block}[2][]{enhanced, sharp corners,
+  colback=white, colframe=rule, boxrule=0.6mm,
   colbacktitle=navy, coltitle=white,
   fonttitle=\bfseries\fontsize{38}{46}\selectfont,
   toptitle=2.5mm, bottomtitle=2.5mm, left=9mm, right=9mm, top=6mm, bottom=6mm,
   title={#2}, fontupper=\bodysize\color{ink}\RaggedRight, #1}
 
-\newtcolorbox{callout}{enhanced, colback=mint, colframe=mint, arc=2mm,
-  boxrule=0pt, left=7mm, right=7mm, top=5mm, bottom=5mm,
-  borderline west={2.2mm}{0pt}{leaf}}
+\newcommand{\closing}[2]{\par\vspace{6mm}{\color{rule}\rule{\linewidth}{0.6mm}}\par
+  \vspace{5mm}{\bfseries\textcolor{navy}{#1}}\hspace{0.4em}#2\par}
 
-\newcommand{\sectitle}[2]{\textcolor{leaf!55!white}{#1}\hspace{0.45em}#2}
+\newcommand{\sectitle}[2]{\textcolor{numeral}{#1}\hspace{0.45em}#2}
 
 \begin{document}
 \bodysize\color{ink}
 
-\begin{tcolorbox}[enhanced, colback=navy, colframe=navy, arc=3mm, boxrule=0pt,
+\begin{tcolorbox}[enhanced, colback=navy, colframe=navy, sharp corners, boxrule=0pt,
   left=12mm, right=12mm, top=8mm, bottom=8mm]
   \begin{minipage}[c]{0.13\linewidth}\centering
     \includegraphics[width=0.92\linewidth]{assets/ncu-logo.png}
@@ -69,9 +69,9 @@
       Shi-Yu Huang\par}
     \vspace{4mm}
     {\fontsize{31}{40}\selectfont National Central University, Taiwan
-      \quad\textcolor{leaf!55!white}{$\bullet$}\quad Team\_10537\par
+      \quad\textcolor{numeral}{$\bullet$}\quad Team\_10537\par
       NTCIR-19 AI CUP Special Session
-      \quad\textcolor{leaf!55!white}{$\bullet$}\quad VeriPromiseESG Task\par}
+      \quad\textcolor{numeral}{$\bullet$}\quad VeriPromiseESG Task\par}
   \end{minipage}\hfill
   \begin{minipage}[c]{0.13\linewidth}\centering
     \definecolor{ntcirletter}{RGB}{255,255,255}
@@ -86,18 +86,16 @@
   raster column skip=10mm, raster row skip=9mm]
 \begin{block}{\sectitle{1}{Introduction}}
   \begin{itemize}
-    \item ESG promise verification labels each paragraph with \hl{four linked
+    \item ESG promise verification labels each paragraph with \textbf{four linked
       fields}, and the output is meant for audit-oriented use.
     \item A record is only usable if its fields agree, yet independent
       classifiers can combine plausible labels into an impossible tuple.
     \item The official metric scores each field on its own, so an invalid
-      tuple still earns \hl{44.3\%} of the weighted field credit.
+      tuple still earns \textbf{44.3\%} of the weighted field credit.
   \end{itemize}
-  \vspace{5mm}
-  \begin{callout}
-    \textbf{Question.} Can a retraining-free decision rule guarantee legal
-    outputs, and how does it change field-wise versus whole-tuple scores?
-  \end{callout}
+  \closing{Research question.}{\itshape Can a retraining-free decision rule
+    guarantee legal outputs, and how does it change field-wise versus
+    whole-tuple scores?}
 \end{block}
 \begin{block}{\sectitle{2}{Task \& Data}}
   \begin{itemize}
@@ -105,7 +103,7 @@
       status (ES), evidence quality (EQ).
     \item Hard rules: PS\,=\,No $\Rightarrow$ VT\,=\,ES\,=\,EQ\,=\,N/A;\\
       ES\,=\,No $\Rightarrow$ EQ\,=\,N/A.
-    \item Only \hl{17 of 120} label combinations are legal.
+    \item Only \textbf{17 of 120} label combinations are legal.
     \item \textbf{AI CUP 2026}: 2,000 Chinese paragraphs from 49 reports, all
       legal (15 of 17 states observed).
     \item \textbf{ML-Promise}: English, French, Japanese (400 paragraphs each),
@@ -125,10 +123,10 @@
   \begin{minipage}[t]{0.465\linewidth}\vspace{0pt}
     \sub{Validity-preserving output rules}
     \begin{itemize}
-      \item \hl{Projection}: greedy and top-down. Pick PS; under PS\,=\,Yes take
+      \item \textbf{\textcolor{navy}{Projection}}: greedy and top-down. Pick PS; under PS\,=\,Yes take
         the best substantive VT and ES; under ES\,=\,Yes the best substantive
         EQ. Always legal, no retraining.
-      \item \hl{17-state decoding}: return the legal state with the highest
+      \item \textbf{\textcolor{navy}{17-state decoding}}: return the legal state with the highest
         summed log-score.
       \item Calibration: none, global, or conditional class biases.
     \end{itemize}
@@ -139,7 +137,7 @@
       \item Five-way cross-fitting, three seeds, document-disjoint split.
       \item Paired report-cluster bootstrap, Holm-adjusted.
       \item External: 4 backbones $\times$ $\lambda\in\{0,0.3\}$ in each of 4
-        languages = \hl{32 arms}.
+        languages = \textbf{32 arms}.
     \end{itemize}
   \end{minipage}
 \end{block}
@@ -185,19 +183,19 @@
       a right parent lets it repair an unsupported child.
     \item N/A credit goes up and substantive credit goes down in all five
       corpora, yet whole tuples improve in every one.
-    \item Joint decoding revises PS on \hl{339 of 12,000} rows: 225 become
+    \item Joint decoding revises PS on \textbf{339 of 12,000} rows: 225 become
       correct and 114 wrong, but whole-row correctness on them falls
-      \hl{114 $\to$ 47}.
+      \textbf{114 $\to$ 47}.
     \item Fixing a parent rarely saves a row whose children stay wrong;
       breaking a correct parent always loses it.
   \end{itemize}
 \end{block}
 \begin{block}{\sectitle{7}{Implications for Audit Use}}
   \begin{itemize}
-    \item Validity is a \hl{precondition} for a usable record, not proof that
+    \item Validity is a \textbf{precondition} for a usable record, not proof that
       the record is right.
     \item A repair can hide an inconsistency, so a deployed validity layer
-      should \hl{log the rows it repaired}.
+      should \textbf{log the rows it repaired}.
     \item Pick the metric by how outputs are used:
       \begin{itemize}
         \item records: tuple accuracy among valid outputs
@@ -209,43 +207,39 @@
 \end{block}
 \begin{block}{\sectitle{8}{Conclusion}}
   \begin{itemize}
-    \item Hierarchical projection is a \hl{retraining-free validity layer}: it
+    \item Hierarchical projection is a \textbf{retraining-free validity layer}: it
       eliminates invalid tuples by construction.
     \item It improves whole-tuple accuracy on the Chinese anchor and in all 32
       external arms.
     \item Its field-score effect varies across models and corpora; its logical
       guarantee does not.
   \end{itemize}
-  \vspace{5mm}
-  \begin{callout}
-    For audit use, make validity a precondition, and pick the metric that
-    matches the unit at which errors have consequences.
-  \end{callout}
+  \closing{Takeaway.}{For audit use, make validity a precondition, and pick
+    the metric that matches the unit at which errors have consequences.}
 \end{block}
 \end{tcbraster}
 
 \vfill
 
-\begin{tcolorbox}[enhanced, colback=mint, colframe=mint, arc=3mm, boxrule=0pt,
-  left=10mm, right=10mm, top=5mm, bottom=5mm]
-  \begin{minipage}[c]{0.84\linewidth}\notesize\RaggedRight
-    {\bfseries\textcolor{navy}{References}}\par\vspace{2mm}
-    \begin{minipage}[t]{0.49\linewidth}\RaggedRight
-      {[1]} AI CUP 2026 Organizers. ESG Sustainability Commitment Verification
-      Competition 2026 (VeriPromiseESG4K). 2026.\par\vspace{1mm}
-      {[2]} M.-Y. Day et al. VeriPromiseESG4K: A Traditional Chinese ESG Promise
-      Verification Dataset for AI CUP 2026. IEEE IRI, 2026.
-    \end{minipage}\hfill
-    \begin{minipage}[t]{0.49\linewidth}\RaggedRight
-      {[3]} C.-C. Chen et al. SemEval-2025 Task 6: Multinational, Multilingual,
-      Multi-Industry Promise Verification. SemEval, 2025.\par\vspace{1mm}
-      {[4]} Y. Seki et al. ML-Promise: A Multilingual Dataset for Corporate
-      Promise Verification. EMNLP, 2025.
-    \end{minipage}
+\begin{tcolorbox}[enhanced, colback=navy, colframe=navy, sharp corners, boxrule=0pt,
+  left=12mm, right=12mm, top=7mm, bottom=7mm]
+  \begin{minipage}[c]{0.84\linewidth}\notesize\color{white}\RaggedRight
+    {\bfseries References}\par\vspace{2mm}
+    \begin{enumerate}[label={[\arabic*]}, leftmargin=2.2em, itemsep=0.6mm,
+      topsep=0pt, parsep=0pt]
+      \item AI CUP 2026 Organizers. ESG Sustainability Commitment Verification
+        Competition 2026 (VeriPromiseESG4K). 2026.
+      \item M.-Y. Day et al. VeriPromiseESG4K: A Traditional Chinese ESG Promise
+        Verification Dataset for AI CUP 2026. IEEE IRI, 2026.
+      \item C.-C. Chen et al. SemEval-2025 Task 6: Multinational, Multilingual,
+        Multi-Industry Promise Verification. SemEval, 2025.
+      \item Y. Seki et al. ML-Promise: A Multilingual Dataset for Corporate
+        Promise Verification. EMNLP, 2025.
+    \end{enumerate}
   \end{minipage}\hfill
   \begin{minipage}[c]{0.13\linewidth}\centering
-    \qrcode[height=4.6cm]{https://github.com/tom1030507/ntcir19-esg-validity-layer}\par
-    \vspace{2mm}{\fontsize{18}{22}\selectfont\textcolor{muted}{Code \& reproduction}\par}
+    \colorbox{white}{\qrcode[height=4.4cm]{https://github.com/tom1030507/ntcir19-esg-validity-layer}}\par
+    \vspace{2mm}{\fontsize{18}{22}\selectfont\textcolor{numeral}{Code \& reproduction}\par}
   \end{minipage}
 \end{tcolorbox}
 

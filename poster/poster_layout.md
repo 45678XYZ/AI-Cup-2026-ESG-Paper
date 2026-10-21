@@ -11,25 +11,27 @@
 | Row | Left | Right |
 |---|---|---|
 | Header band (full width) | NCU logo · title, authors, affiliation, team, venue · NTCIR logo | — |
-| A | **1 · Introduction**, ending in a Question callout | **2 · Task & Data** |
+| A | **1 · Introduction**, ending in the research question below a thin rule | **2 · Task & Data** |
 | B (full width) | **3 · Methodology**: Figure 1 (50%) and two lists, output rules and evaluation (46%) | — |
 | C (full width) | **4 · Results: Chinese Anchor**: Table 2 (57.5%) and Table 4 (39.5%), then two bullets | — |
 | D | **5 · Multilingual Replication**: Table 7 and two bullets | **6 · Why the Metrics Disagree** |
-| E | **7 · Implications for Audit Use** | **8 · Conclusion**, ending in a takeaway callout |
-| Footer (full width) | References [1]–[4] in two columns · QR code to the reproduction capsule | — |
+| E | **7 · Implications for Audit Use** | **8 · Conclusion**, ending in the takeaway below a thin rule |
+| Footer band (full width, navy) | References [1]–[4], one per line · QR code on a white square | — |
 
 ## Color
 
-Taken from the NTCIR logo and darkened for print:
+One blue family, so the navy footer band balances the navy header and the poster is not top-heavy. Green appears only in the NTCIR logo's leaf.
 
 | Token | RGB | Use |
 |---|---|---|
-| navy | 10, 46, 92 | Header band, block title bars, block frames, sub-headings |
-| leaf | 11, 138, 67 | Highlighted numbers, bullet markers, callout edge |
-| leaf, 55% tint | — | Section numbers and separators on navy |
-| mint | 232, 244, 236 | Callouts and footer background |
-| ink | 31, 42, 51 | Body text |
-| muted | 90, 103, 114 | Table and figure notes |
+| navy | 12, 45, 87 | Header and footer bands, block title bars, bullets, sub-headings |
+| accent | 26, 99, 176 | The five headline results only: 12.55% → 0, +0.035, −0.006, 32/32, 14/32 |
+| numeral | 150, 184, 224 | Section numbers and separators on navy |
+| rule | 206, 216, 228 | Block frames and the thin rules above the research question and takeaway |
+| ink | 28, 36, 46 | Body text |
+| muted | 88, 100, 116 | Table and figure notes |
+
+No callout boxes, no colored left borders, no rounded corners: these are the most common marks of generated layouts. Other key numbers are plain bold.
 
 ## Type
 
