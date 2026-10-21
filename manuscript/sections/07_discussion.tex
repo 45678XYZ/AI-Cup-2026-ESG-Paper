@@ -71,8 +71,10 @@ eight paper tables and Figure~1; raw corpora, model weights, and retraining are
 excluded. Configurations pin each backbone's Hugging Face revision. Per seed, reports are identifier-sorted, shuffled,
 stable-sorted by decreasing size, and each assigned uniformly to one of the two
 lightest folds, ties broken by fold index. Korean text is one page per labeled
-(URL, page) pair, unique in the release, from Poppler's \hfid{pdftotext} or,
-for image-only pages, Tesseract. The 32 external arms took 25.4 GPU-hours on one RTX 3090.
+(URL, page) pair, unique in the release, from Poppler's
+\hfcmd{pdftotext -f P -l P -layout} or, for image-only pages,
+\hfcmd{pdftoppm -r 250} and Tesseract (\hfcmd{-l kor+eng}). The 32 external arms
+took 25.4 GPU-hours on one RTX 3090.
 \par\endgroup
 
 \subsection{Limitations}
