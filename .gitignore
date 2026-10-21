@@ -79,6 +79,8 @@
 *.synctex.gz
 /manuscript/build/*
 !/manuscript/build/main.pdf
+/poster/build/*
+!/poster/build/poster.pdf
 
 # Python
 __pycache__/
