@@ -120,7 +120,7 @@ PLACEHOLDER = "--"
 # W4 when the table no longer fits.
 TABLE2 = r"""\begin{tabular}{llrrrrrrrr}
 \toprule
-ID & Calibration & Decoding & Weighted F1 & PS & VT & ES & EQ & Tuple Acc. & Invalid \%% \\
+ID & Calibration & Decoding & PS & VT & ES & EQ & Weighted F1 & Tuple Acc. & Invalid \%% \\
 \midrule
 %s
 \bottomrule

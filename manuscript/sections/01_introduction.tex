@@ -3,9 +3,8 @@
 We participated in the VeriPromiseESG task of AI CUP 2026
 \cite{aicup2026guidelines,day2026veripromiseesg4k}, Taiwan's national
 inter-collegiate artificial intelligence competition, held as the AI CUP
-special session of NTCIR-19. This paper reports our own analysis of that task;
-the task definition, corpus construction and official evaluation are the
-organizers' and are not restated here. All results below are computed on the
+special session of NTCIR-19. The task definition, corpus, and official
+evaluation are the organizers' and are not restated here. All results below are computed on the
 labeled development release, because the competition test labels are not
 available to participants.
 
@@ -24,9 +23,8 @@ Field-wise weighted macro-F1 is a standard measure of classification quality
 for multi-field tasks, and it is the official ranking metric here. It does not,
 however, assess whether the four predictions form a jointly legal tuple. A
 validity-preserving rule may therefore repair an unsupported child without
-receiving a corresponding field-score gain. The metric places no weight at all
-on legality, and the consequence is larger than that phrasing suggests: because
-each field is scored on its own, a correct field still earns its weight even
+receiving a corresponding field-score gain. The metric places no weight on
+legality: because each field is scored on its own, a correct field still earns its weight even
 when the ancestors that would license it are wrong, so an invalid tuple retains
 44.3\% of the available weighted field credit on average.
 Table~\ref{tab:invalid-anatomy} derives that figure term by term. We ask
@@ -34,16 +32,14 @@ whether a retraining-free inference constraint can guarantee legal outputs, and
 how its effects differ under field-wise and whole-tuple evaluation.
 \par\endgroup
 
-We answer that question through a controlled decision comparison rather than a
-model or competition-performance claim. Seven rules consume identical
-cross-fitted base probabilities and test rows. Projection acts as a validity
-layer over those probabilities: it guarantees a legal tuple without changing
-the encoder or retraining the classifier. In Chinese, the confirmatory
-official-score family is null, yet pre-specified exact whole-tuple accuracy
-improves under projection. Across four ML-Promise languages, four backbones per
-language, and two fixed training objectives, tuple accuracy improves in all 32
-external arms while weighted macro-F1 has a mixed sign. These are within-corpus
-decision contrasts; raw scores do not isolate language effects.
+We answer it with a controlled decision comparison, not a model or
+competition-performance claim: seven rules consume identical cross-fitted
+probabilities and test rows, and projection guarantees a legal tuple without
+retraining the classifier. In Chinese the confirmatory official-score family is
+null, yet pre-specified whole-tuple accuracy improves; across 32 external arms
+in four ML-Promise languages, tuple accuracy improves in all while weighted
+macro-F1 has a mixed sign. These are within-corpus contrasts; raw scores do not
+isolate language effects.
 
 Our contributions are:
 \begin{enumerate}

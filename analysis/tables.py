@@ -495,8 +495,8 @@ def render_table2(summary) -> str:
         fields = " & ".join(_f(row["per_field_mean"][f]) for f in FIELDS)
         body.append(
             f"{method} & {calibration} & {decoding} & "
-            f"{_pm(row['weighted_macro_f1_mean'], row['weighted_macro_f1_std'])} & "
             f"{fields} & "
+            f"{_pm(row['weighted_macro_f1_mean'], row['weighted_macro_f1_std'])} & "
             f"{_pm(row['tuple_exact_match_mean'], row['tuple_exact_match_std'])} & "
             # Two decimals, not one: the running text and tables 4 and 6 all
             # print this same rate as 12.55, and a table that rounds it to
@@ -508,7 +508,7 @@ def render_table2(summary) -> str:
     # identify the metric the competition ranks by. ``Tuple acc.`` is the same
     # quantity tables 3 and 7 print, spelled the same way -- these are the two
     # columns a reader carries between them.
-    header = ("ID & Calibration & Decoding & wF1 (official) & PS & VT & ES & EQ "
+    header = ("ID & Calibration & Decoding & PS & VT & ES & EQ & wF1 (official) "
               "& Tuple acc. & Invalid \\%")
     return _tabular("llrrrrrrrr", header, body)
 

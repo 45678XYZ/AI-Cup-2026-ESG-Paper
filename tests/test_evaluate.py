@@ -154,8 +154,8 @@ def test_table2_placeholder_carries_every_column_the_plan_specifies(examples):
     only when the real numbers arrive is a layout problem discovered in W4."""
     tex = (examples / "tables" / "table2_main.tex").read_text(encoding="utf-8")
     header = [c.strip() for c in tex.splitlines()[2].removesuffix(r"\\").split("&")]
-    assert header == ["ID", "Calibration", "Decoding", "Weighted F1",
-                      "PS", "VT", "ES", "EQ", "Tuple Acc.", r"Invalid \%"]
+    assert header == ["ID", "Calibration", "Decoding",
+                      "PS", "VT", "ES", "EQ", "Weighted F1", "Tuple Acc.", r"Invalid \%"]
     assert tex.splitlines()[0] == r"\begin{tabular}{ll" + "r" * 8 + "}"
     for line in tex.splitlines():
         if line.startswith("M"):

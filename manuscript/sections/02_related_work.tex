@@ -6,12 +6,10 @@ actionable evidence, assess the clarity of the promise--evidence pair, and
 assign a verification horizon
 \cite{chen2025promiseeval}. ML-Promise is the associated
 multilingual corpus resource; we use its English, French, Japanese, and Korean
-releases for external replication \cite{seki2025mlpromise}. This joint
-verification problem differs from
-ClimateBERT-NetZero, which detects corporate and national net-zero or reduction
-targets and supports analysis of their ambition, rather than jointly assessing
-promise status, evidence, evidence quality, and timing
-\cite{schimanski2023climatebert}.
+releases for external replication \cite{seki2025mlpromise}. Unlike
+ClimateBERT-NetZero, which detects net-zero and reduction targets
+\cite{schimanski2023climatebert}, the task jointly assesses promise status,
+evidence, its quality, and timing.
 
 \begingroup\emergencystretch=1em
 These dependent outputs form a compact instance of hierarchical text
@@ -33,12 +31,8 @@ Section~\ref{sec:metrics} defines both it and the set-overlap hierarchical
 F1 (hF). Both were adopted post hoc and are reported as exploratory.
 
 Plaud et al. observed from point estimates that constrained F1 variants did not
-globally change method rankings in their experiments
-\cite{plaud2024revisiting}. That observation and our post-hoc paired contrast
-inference answer different questions: ranking a collection of models is not the
-same estimand as a paired difference between decision rules on shared rows and
-probabilities. Moreover, our hF changes both consistency treatment and
-macro-versus-micro aggregation. Of the two post-hoc metrics, only C-wF1
-isolates the treatment of children whose predicted ancestors do not
-support them, while retaining
-the official field aggregation.
+globally change method rankings \cite{plaud2024revisiting}. Ranking a
+collection of models is a different estimand from our paired difference
+between decision rules on shared rows and probabilities. Of the two post-hoc
+metrics, only C-wF1 isolates the treatment of children whose predicted
+ancestors do not support them while keeping the official field aggregation.
