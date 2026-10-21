@@ -21,20 +21,20 @@
 
 ## Color
 
-Navy carries the structure, one brighter blue marks the headline results, and the NTCIR leaf green is the supporting color. The navy footer balances the navy header.
+Navy carries the structure. The two highlight colors carry meaning: **green marks validity** and **blue marks performance**, which mirrors the paper's point that legality and score are separate questions. The navy footer balances the navy header.
 
 | Token | RGB | Use |
 |---|---|---|
 | navy | 12, 45, 87 | Header and footer bands, block title bars, bullets, sub-headings |
-| accent | 26, 99, 176 | The five headline results only: 12.55% → 0, +0.035, −0.006, 32/32, 14/32 |
-| leaf | 0, 160, 64 | Supporting only: section-number badges, the short rule under the title, the short rules before the research question and the takeaway, separators in the header |
+| accent | 26, 99, 176 | Performance results only: +0.035, −0.006, 32/32, 14/32 |
+| leaf | 0, 160, 64 | Validity results (17 of 120, Always legal, 12.55% → 0) in bold; section-number badges; short rules under the title, before the two Methodology sub-headings, and before the research question and takeaway; header separators; a 2.5 mm line on the inner edge of the header and footer bands |
 | numeral | 150, 184, 224 | Reference numbers on the footer band |
 | pagebg | 241, 245, 249 | Page ground behind the white blocks |
 | rowtint | 236, 242, 249 | Alternate table rows |
 | ink | 28, 36, 46 | Body text |
 | muted | 88, 100, 116 | Table and figure notes |
 
-Accent blue appears five times and leaf green only as small marks. There are no callout boxes and no colored left borders: a rounded card with a colored left edge is the most common mark of a generated layout.
+Green text is always bold and large: #00A040 on white is about 3.4:1, enough for bold large text (3:1) but not for small body text (4.5:1). There are no callout boxes and no colored left borders: a rounded card with a colored left edge is the most common mark of a generated layout.
 
 ## Type
 

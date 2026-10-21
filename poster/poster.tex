@@ -36,9 +36,10 @@
 \newcommand{\tablesize}{\fontsize{23}{30}\selectfont}
 \newcommand{\notesize}{\fontsize{20}{26}\selectfont}
 \newcommand{\hl}[1]{\textbf{\textcolor{accent}{#1}}}
+\newcommand{\valid}[1]{\textbf{\textcolor{leaf}{#1}}}
 \newcommand{\fittable}[1]{{\tablesize\rowcolors{2}{rowtint}{white}\adjustbox{max width=\linewidth}{\input{#1}}}}
 \newcommand{\srcnote}[1]{\par\vspace{4mm}{\centering\notesize\textcolor{muted}{#1}\par}}
-\newcommand{\sub}[1]{\par\vspace{3mm}{\bfseries\textcolor{navy}{#1}}\par\vspace{1mm}}
+\newcommand{\sub}[1]{\par\vspace{3mm}{\color{leaf}\rule[0.3em]{0.9em}{0.2em}}\hspace{0.4em}{\bfseries\textcolor{navy}{#1}}\par\vspace{1mm}}
 
 \setlist[itemize]{leftmargin=1.1em, itemsep=2.5mm, topsep=2mm, parsep=0pt,
   label={\textcolor{navy}{\textbullet}}}
@@ -63,7 +64,9 @@
 \bodysize\color{ink}
 
 \begin{tcolorbox}[enhanced, colback=navy, colframe=navy, arc=4mm, boxrule=0pt,
-  left=12mm, right=12mm, top=8mm, bottom=8mm]
+  left=12mm, right=12mm, top=8mm, bottom=8mm,
+  overlay={\fill[leaf] ([xshift=4mm]frame.south west) rectangle
+    ([xshift=-4mm, yshift=2.5mm]frame.south east);}]
   \begin{minipage}[c]{0.13\linewidth}\centering
     \includegraphics[width=0.92\linewidth]{assets/ncu-logo.png}
   \end{minipage}\hfill
@@ -109,7 +112,7 @@
       status (ES), evidence quality (EQ).
     \item Hard rules: PS\,=\,No $\Rightarrow$ VT\,=\,ES\,=\,EQ\,=\,N/A;\\
       ES\,=\,No $\Rightarrow$ EQ\,=\,N/A.
-    \item Only \textbf{17 of 120} label combinations are legal.
+    \item Only \valid{17 of 120} label combinations are legal.
     \item \textbf{AI CUP 2026}: 2,000 Chinese paragraphs from 49 reports, all
       legal (15 of 17 states observed).
     \item \textbf{ML-Promise}: English, French, Japanese (400 paragraphs each),
@@ -131,7 +134,7 @@
     \begin{itemize}
       \item \textbf{\textcolor{navy}{Projection}}: greedy and top-down. Pick PS; under PS\,=\,Yes take
         the best substantive VT and ES; under ES\,=\,Yes the best substantive
-        EQ. Always legal, no retraining.
+        EQ. \valid{Always legal}, no retraining.
       \item \textbf{\textcolor{navy}{17-state decoding}}: return the legal state with the highest
         summed log-score.
       \item Calibration: none, global, or conditional class biases.
@@ -161,7 +164,7 @@
   \end{minipage}
   \par\vspace{6mm}
   \begin{itemize}
-    \item Projection removes every invalid tuple (\hl{12.55\% $\to$ 0}) and
+    \item Projection removes every invalid tuple (\valid{12.55\% $\to$ 0}) and
       raises tuple accuracy by \hl{+0.035} ($p_{\mathrm{Holm}}=.001$), while
       official wF1 does not move ($\Delta=-0.001$, $p_{\mathrm{Holm}}=1.000$).
     \item Searching all 17 states is not better: joint decoding loses
@@ -228,7 +231,9 @@
 \vfill
 
 \begin{tcolorbox}[enhanced, colback=navy, colframe=navy, arc=4mm, boxrule=0pt,
-  left=12mm, right=12mm, top=7mm, bottom=7mm]
+  left=12mm, right=12mm, top=7mm, bottom=7mm,
+  overlay={\fill[leaf] ([xshift=4mm, yshift=-2.5mm]frame.north west) rectangle
+    ([xshift=-4mm]frame.north east);}]
   \begin{minipage}[c]{0.66\linewidth}\notesize\color{white}\RaggedRight
     {\bfseries References}\par\vspace{2mm}
     \begin{enumerate}[label={\textcolor{numeral}{[\arabic*]}}, leftmargin=2.2em,
