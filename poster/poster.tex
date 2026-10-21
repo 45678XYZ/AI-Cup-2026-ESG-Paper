@@ -42,9 +42,15 @@
 \useblockstyle{Basic}
 \usebackgroundstyle{Default}
 \makeatletter
-\settitle{\centering\vbox{\color{titlefgcolor}
-  {\bfseries\fontsize{88}{100}\selectfont\@title\par}\vspace*{0.8em}
-  {\huge\@author\par}\vspace*{0.5em}{\LARGE\@institute\par}}}
+\settitle{%
+  \begin{minipage}[c]{0.14\linewidth}\centering
+    \includegraphics[width=0.85\linewidth]{assets/ncu-logo.png}
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.70\linewidth}\centering\color{titlefgcolor}
+    {\bfseries\fontsize{72}{84}\selectfont\@title\par}\vspace*{0.8em}
+    {\huge\@author\par}\vspace*{0.5em}{\LARGE\@institute\par}
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.14\linewidth}\hfill\end{minipage}}
 \makeatother
 
 \setlist[itemize]{leftmargin=1.2em, itemsep=0.25em, topsep=0.3em}
@@ -52,27 +58,16 @@
 \newcommand{\fittable}[1]{\adjustbox{max width=\linewidth}{\input{#1}}}
 \newcommand{\srcnote}[1]{\par\vspace{0.3em}{\centering\small\textcolor{gray}{#1}\par}}
 
-\title{\parbox{0.92\linewidth}{\centering Hierarchical Projection as a Validity Layer\\
+\title{\parbox{\linewidth}{\centering Hierarchical Projection as a Validity Layer\\
   for Multilingual ESG Promise Verification}}
 \author{Sheng-Xun Chen, Chun-Wei Chen, Hsin-Chen Han, Shi-Yu Huang}
-\institute{National Central University, Taiwan \quad$\cdot$\quad Team\_10537
-  \quad$\cdot$\quad NTCIR-19 AI CUP Special Session (VeriPromiseESG)}
+\institute{National Central University, Taiwan \quad$\cdot$\quad Team\_10537\\
+  NTCIR-19 AI CUP Special Session \quad$\cdot$\quad VeriPromiseESG Task}
 
 \tikzposterlatexaffectionproofoff
 
 \begin{document}
 \maketitle
-
-\block{}{
-  \centering
-  \begin{tabular}{cccc}
-    {\Huge\hl{12.55\% $\to$ 0}} & {\Huge\hl{$\Delta$\,wF1 $-$0.001}} &
-    {\Huge\hl{tuple acc.\ +0.035}} & {\Huge\hl{32/32 vs 14/32}} \\[0.3em]
-    invalid tuples, by construction & official score, undetected
-      ($p_{\mathrm{Holm}}{=}1.000$) & whole-tuple accuracy
-      ($p_{\mathrm{Holm}}{=}.001$) & external arms improving: tuple acc.\ vs wF1
-  \end{tabular}
-}
 
 \begin{columns}
 \column{0.5}
