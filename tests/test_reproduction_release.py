@@ -27,7 +27,7 @@ def test_release_groups_all_curated_inputs_by_corpus():
     load_reproduce_module()
     directories = {
         path.name for path in RELEASE_ROOT.iterdir()
-        if path.is_dir() and path.name != "outputs"
+        if path.is_dir() and path.name != "outputs" and not path.name.startswith(".")
     }
     assert directories == EXPECTED_FIRST_LEVEL_DIRECTORIES
 
@@ -72,7 +72,7 @@ def test_release_verifies_the_exact_curated_input_capsule():
         "artifact_files": 311,
         "prediction_files": 300,
         "raw_text_files": 0,
-        "source_commit": "babd85e61368037d235607ac5ebc798378a7ef75",
+        "source_commit": "f91f88ba39eb754fa80ca21804de2f5d9d6ed4ab",
         "status": "ok",
     }
 

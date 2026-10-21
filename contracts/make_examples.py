@@ -138,11 +138,14 @@ TABLE2_ROWS = [
 
 TABLE1 = r"""\begin{tabular}{lrr}
 \toprule
-Statistic & Development & Test \\
+Statistic & Development & Competition test \\
 \midrule
 Paragraphs & %(p)s & %(p)s \\
 Source reports (PDFs) & %(p)s & %(p)s \\
+\quad shared with other split & %(p)s & %(p)s \\
 Companies & %(p)s & %(p)s \\
+Gold labels available & %(p)s & %(p)s \\
+Gold hierarchy-valid tuples & %(p)s & %(p)s \\
 Legal states observed & %(p)s & %(p)s \\
 \midrule
 \multicolumn{3}{l}{\emph{Rarest classes}} \\

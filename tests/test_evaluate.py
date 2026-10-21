@@ -11,7 +11,7 @@ from paper.artifacts import (
     read_predictions_df,
     write_predictions,
 )
-from paper.data import file_sha256, load_dev
+from paper.data import REPO_ROOT, file_sha256, load_dev
 from paper.evaluate import build_results, summarise_predictions, write_results
 from paper.labels import FIELDS
 from paper.score import compute_weighted_macro_f1
@@ -147,6 +147,13 @@ def test_contract4_placeholders_are_bare_tabulars(examples):
         assert r"\begin{table}" not in tex
         assert r"\caption" not in tex
         assert (examples / "tables" / f"{name}_caption.txt").exists()
+
+
+def test_contract4_tables_match_the_committed_examples(examples):
+    committed = REPO_ROOT / "contracts" / "examples" / "tables"
+    for name in ("table1_dataset", "table2_main", "table6_regimes"):
+        for file in (f"{name}.tex", f"{name}_caption.txt"):
+            assert (examples / "tables" / file).read_bytes() == (committed / file).read_bytes(), file
 
 
 def test_table2_placeholder_carries_every_column_the_plan_specifies(examples):
