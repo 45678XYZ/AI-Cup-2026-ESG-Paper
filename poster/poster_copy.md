@@ -10,12 +10,7 @@ Team_10537 · NTCIR-19 AI CUP Special Session · VeriPromiseESG
 
 Sheng-Xun Chen, Chun-Wei Chen, Hsin-Chen Han, Shi-Yu Huang · National Central University, Taiwan
 
-## Takeaway banner
-
-- Invalid tuples: **12.55% → 0** by construction, with no retraining (abstract, Table 2)
-- Official wF1: **Δ −0.001**, undetected (p_Holm = 1.000) (Table 4)
-- Tuple accuracy: **+0.035** (p_Holm = .001) (Table 4)
-- External arms: tuple accuracy up in **32/32**, wF1 up in **14/32** (Section 6)
+Logo: National Central University (`assets/ncu-logo.png`), left of the title
 
 ## 1 · Problem: individually plausible fields, invalid tuple
 
