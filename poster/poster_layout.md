@@ -27,7 +27,7 @@ Navy carries the structure. The two highlight colors carry meaning: **green mark
 |---|---|---|
 | navy | 12, 45, 87 | Header and footer bands, block title bars, bullets, sub-headings |
 | accent | 26, 99, 176 | Performance results only: +0.035, −0.006, 32/32, 14/32 |
-| leaf | 0, 160, 64 | Validity results (17 of 120, Always legal, 12.55% → 0) in bold; section-number badges; short rules under the title, before the two Methodology sub-headings, and before the research question and takeaway; header separators; a 2.5 mm line on the inner edge of the header and footer bands |
+| leaf | 0, 160, 64 | Validity results (17 of 120, Always legal, 12.55% → 0) in bold; section-number badges; short rules under the title, before the two Methodology sub-headings, and before the research question and takeaway; header separators |
 | numeral | 150, 184, 224 | Reference numbers on the footer band |
 | pagebg | 241, 245, 249 | Page ground behind the white blocks |
 | rowtint | 236, 242, 249 | Alternate table rows |
