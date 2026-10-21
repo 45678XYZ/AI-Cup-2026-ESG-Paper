@@ -1,70 +1,94 @@
 # Poster copy
 
-The LaTeX poster (`poster.tex`) sets this copy. Each number links back to its source in the camera-ready paper.
+`poster.tex` sets this copy. Section names follow the usual research-poster order: Introduction, Task & Data, Methodology, Results, Discussion, Conclusion, References. Each number is followed by its source in the camera-ready paper.
 
 ## Title block
 
 **Hierarchical Projection as a Validity Layer for Multilingual ESG Promise Verification**
 
-Team_10537 · NTCIR-19 AI CUP Special Session · VeriPromiseESG
+Sheng-Xun Chen, Chun-Wei Chen, Hsin-Chen Han, Shi-Yu Huang
 
-Sheng-Xun Chen, Chun-Wei Chen, Hsin-Chen Han, Shi-Yu Huang · National Central University, Taiwan
+National Central University, Taiwan · Team_10537 · NTCIR-19 AI CUP Special Session · VeriPromiseESG Task
 
-Logo: National Central University (`assets/ncu-logo.png`), left of the title
+Logos: NCU (left) and NTCIR (right, white letters with the green leaf).
 
-## 1 · Problem: individually plausible fields, invalid tuple
+## 1 · Introduction
 
-- Four fields describe one ESG claim: promise status (PS), verification timeline (VT), evidence status (ES), and evidence quality (EQ). (Section 3)
-- Hard implications: PS = No forces VT = ES = EQ = N/A, and ES = No forces EQ = N/A. (Section 3)
+- ESG promise verification labels each paragraph with **four linked fields**, and the output is meant for audit-oriented use. (Section 1)
+- A record is only usable if its fields agree, yet independent classifiers can combine plausible labels into an impossible tuple. (Section 1)
+- The official metric scores each field on its own, so an invalid tuple still earns **44.3%** of the weighted field credit. (Section 1, Table 8)
+- **Question.** Can a retraining-free decision rule guarantee legal outputs, and how does it change field-wise versus whole-tuple scores? (Section 1)
+
+## 2 · Task & Data
+
+- Fields: promise status (PS), verification timeline (VT), evidence status (ES), evidence quality (EQ). (Section 3)
+- Hard rules: PS = No ⇒ VT = ES = EQ = N/A; ES = No ⇒ EQ = N/A. (Section 3)
 - Only **17 of 120** label combinations are legal. (Eq. 1)
-- Independent argmax emits invalid tuples on **12.55%** of Chinese rows. (Table 2)
-- The official metric scores each field separately, so an invalid tuple still keeps **44.3%** of the weighted field credit. (Section 1, Table 8)
+- AI CUP 2026: 2,000 Chinese paragraphs from 49 reports, all legal (15 of 17 states observed). (Section 3)
+- ML-Promise: English, French, and Japanese (400 paragraphs each), Korean (500 PDF pages). (Section 3)
 
-## 2 · Method: seven rules, one set of probabilities
+## 3 · Methodology
 
-- One fine-tuned encoder with four independent heads, shared by every rule. (Section 4.1)
-- **Projection** (greedy, top-down): choose PS; under PS = Yes, choose the best substantive VT and ES; under ES = Yes, choose the best substantive EQ. Always legal. (Section 4.3)
+Figure 1 of the paper, with the right-hand column below.
+
+**Validity-preserving output rules**
+
+- **Projection**: greedy and top-down. Pick PS; under PS = Yes take the best substantive VT and ES; under ES = Yes the best substantive EQ. Always legal, with no retraining. (Section 4.3)
 - **17-state decoding**: return the legal state with the highest summed log-score. (Eq. 5)
-- **Calibration**: none, global, or conditional class biases. (Section 4.2)
-- M0 is independent argmax; M1–M3 use projection and M4–M6 use 17-state decoding. (Figure 1)
+- Calibration: none, global, or conditional class biases. (Section 4.2)
 
-## 3 · Setup
+**Evaluation**
 
-- Chinese anchor: 2,000 paragraphs from 49 reports, `hfl/chinese-roberta-wwm-ext-large`. (Sections 3, 4.1)
-- Five-way cross-fitting, three seeds, and two protocols (document-disjoint primary). (Section 5.1)
-- Paired report-cluster bootstrap, Holm-adjusted within each pre-specified family. (Section 5.2)
-- External: English, French, and Japanese (400 paragraphs each) and Korean (500 PDF pages), 4 backbones × λ ∈ {0, 0.3} = **32 arms**. (Sections 3, 5.1)
+- `hfl/chinese-roberta-wwm-ext-large` with four independent heads. (Section 4.1)
+- Five-way cross-fitting, three seeds, document-disjoint split. (Section 5.1)
+- Paired report-cluster bootstrap, Holm-adjusted. (Section 5.2)
+- External: 4 backbones × λ ∈ {0, 0.3} in each of 4 languages = **32 arms**. (Section 5.1)
 
-## 4 · Results: Chinese anchor
+## 4 · Results: Chinese Anchor
 
-- The seven rules span only **0.008** wF1. No official-score contrast survives Holm correction. (Section 6)
-- Projection versus argmax: tuple accuracy **0.359 → 0.394**. (Table 2)
-- **Adverse result:** 17-state decoding (M4) loses to projection (M1) by **−0.006** tuple accuracy (p_Holm = .028). (Table 4)
+Tables 2 and 4 of the paper, side by side.
 
-## 5 · Replication across four languages
+- Projection removes every invalid tuple (**12.55% → 0**) and raises tuple accuracy by **+0.035** (p_Holm = .001), while official wF1 does not move (Δ = −0.001, p_Holm = 1.000). (Tables 2, 4)
+- Searching all 17 states does not help: joint decoding loses **−0.006** tuple accuracy to projection (p_Holm = .028). (Table 4)
 
-- Tuple accuracy rises in **all five corpora** and in **32/32** external arms. (Table 7, Section 6)
-- wF1 rises in **14/32** arms: English 7/8, French 5/8, Japanese 0/8, and Korean 2/8. (Section 6)
-- These are within-arm directions, not a ranking of languages: the corpora differ in documents, labels, input units, and backbones. (Section 6)
+## 5 · Multilingual Replication
 
-## 6 · Why the metrics disagree
+Table 7 of the paper.
 
-- Projection's net change in correct N/A predictions is **positive** and its net change in correct substantive predictions is **negative** in all five fixed arms, yet tuple accuracy rises in every one. (Table 7)
-- Joint decoding revises PS on **339 of 12,000** rows: **225** become correct and **114** wrong, yet whole-row correctness on those rows falls from **114 to 47**. (Section 7.1)
-- Repairing a parent rarely rescues a row whose children remain wrong; breaking a correct parent always loses it. (Section 7.1)
+- Tuple accuracy rises in **32/32** external arms; wF1 rises in only **14/32** (EN 7/8, FR 5/8, JA 0/8, KO 2/8). (Section 6)
+- These are within-arm directions, not a ranking of languages. (Section 6)
 
-## 7 · For audit use
+## 6 · Why the Metrics Disagree
 
-- Validity is a **precondition** for using a prediction as a record, not evidence that the record is right. (Section 7.2)
+- When the parent is wrong, projection overwrites a correct child with N/A; when the parent is right, it repairs an unsupported child. (Section 7.1)
+- Credit for correct N/A predictions goes up and credit for correct substantive predictions goes down in all five corpora, yet whole tuples improve in every one. (Table 7)
+- Joint decoding revises PS on **339 of 12,000** rows: 225 become correct and 114 wrong, but whole-row correctness on them falls **114 → 47**. (Section 7.1)
+- Fixing a parent rarely saves a row whose children stay wrong; breaking a correct parent always loses it. (Section 7.1)
+
+## 7 · Implications for Audit Use
+
+- Validity is a **precondition** for a usable record, not proof that the record is right. (Section 7.2)
 - A repair can hide an inconsistency, so a deployed validity layer should **log the rows it repaired**. (Section 7.2)
-- Choose the metric by use (Section 7.2):
-  - records → tuple accuracy among valid outputs
-  - single-field actions → that field's F1, or recall for a rare target
-  - portfolio statistics → class-level field scores, keeping validity
-  - leaderboards → official wF1, but not for gaps under 0.008
+- Pick the metric by how outputs are used (Section 7.2):
+  - records: tuple accuracy among valid outputs
+  - single-field actions: that field's F1, or recall for a rare class
+  - portfolio statistics: class-level scores, keeping validity
+  - leaderboards: official wF1, but not for gaps under 0.008
 
-## Takeaway and QR
+## 8 · Conclusion
 
-Projection guarantees coherent ESG records without retraining, but it is not a route to a higher official score. For audit use, make validity a precondition and pick the metric that matches the unit at which errors have consequences. (Conclusion)
+- Hierarchical projection is a **retraining-free validity layer**: it eliminates invalid tuples by construction. (Conclusion)
+- It improves whole-tuple accuracy on the Chinese anchor and in all 32 external arms. (Conclusion)
+- Its field-score effect varies across models and corpora; its logical guarantee does not. (Conclusion)
+- For audit use, make validity a precondition, and pick the metric that matches the unit at which errors have consequences. (Conclusion)
 
-QR → github.com/tom1030507/ntcir19-esg-validity-layer (code and reproduction capsule)
+## Footer
+
+**References**
+
+1. AI CUP 2026 Organizers. ESG Sustainability Commitment Verification Competition 2026 (VeriPromiseESG4K). 2026.
+2. M.-Y. Day et al. VeriPromiseESG4K: A Traditional Chinese ESG Promise Verification Dataset for AI CUP 2026. IEEE IRI, 2026.
+3. C.-C. Chen et al. SemEval-2025 Task 6: Multinational, Multilingual, Multi-Industry Promise Verification. SemEval, 2025.
+4. Y. Seki et al. ML-Promise: A Multilingual Dataset for Corporate Promise Verification. EMNLP, 2025.
+
+QR code → github.com/tom1030507/ntcir19-esg-validity-layer (code and reproduction)

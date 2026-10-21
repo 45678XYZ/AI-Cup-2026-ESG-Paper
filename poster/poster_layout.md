@@ -2,35 +2,48 @@
 
 ## Canvas
 
-- A0 portrait, 841 × 1189 mm, built with `tikzposter` at 25 pt body text.
-- Two columns of equal width below a full-width title strip.
-- One accent color (deep teal) for block titles and highlighted numbers, dark gray body text, and a white background.
+- A0 portrait, 841 × 1189 mm with 20 mm margins, built from `article` with `tcolorbox` blocks.
+- Two-column rows use `tcbraster` with `raster equal height=rows`, so both blocks in a row end on the same line. Full-width rows hold Figure 1 and the result tables.
+- Do not leave blank lines between blocks inside a `tcbraster`: a blank line starts a new row, and the blocks then stack instead of sitting side by side.
 
-## Panel plan (top to bottom)
+## Grid (top to bottom)
 
-| Row | Left column | Right column |
+| Row | Left | Right |
 |---|---|---|
-| Title strip (full width) | NCU logo (left, no background), title, authors, affiliation, team and venue | — |
-| Upper | **1 · Problem**: hierarchy rules, 17/120, 12.55%, 44.3%; then **3 · Setup** | **2 · Method**: Figure 1 (hero) and the output rules |
-| Middle (full width) | **4 · Results: Chinese anchor**: Table 2 and Table 4 side by side, then two bullets | — |
-| Lower | **5 · Replication**: Table 7 and arm counts; then **Takeaway** with the QR code to the reproduction capsule | **6 · Why the metrics disagree**; then **7 · For audit use** with the metric-by-use list |
+| Header band (full width) | NCU logo · title, authors, affiliation, team, venue · NTCIR logo | — |
+| A | **1 · Introduction**, ending in a Question callout | **2 · Task & Data** |
+| B (full width) | **3 · Methodology**: Figure 1 (50%) and two lists, output rules and evaluation (46%) | — |
+| C (full width) | **4 · Results: Chinese Anchor**: Table 2 (57.5%) and Table 4 (39.5%), then two bullets | — |
+| D | **5 · Multilingual Replication**: Table 7 and two bullets | **6 · Why the Metrics Disagree** |
+| E | **7 · Implications for Audit Use** | **8 · Conclusion**, ending in a takeaway callout |
+| Footer (full width) | References [1]–[4] in two columns · QR code to the reproduction capsule | — |
 
-## Figures and tables
+## Color
 
-- **Hero:** Figure 1 (`figures/figure1_hierarchy.pdf`), full width of the right column, in the Method block where the seven rules are introduced.
-- **Tables:** `tables/table2_main.tex`, `tables/table4_contrasts.tex`, and `tables/table7_multilingual_mechanism.tex`, input unchanged at body size and shrunk only if wider than their box. The generated files are reused so the poster cannot drift from the paper.
-- Captions keep the paper's numbering (Figure 1, Tables 2, 4, 7) and repeat the unit (three-seed means, document-disjoint).
+Taken from the NTCIR logo and darkened for print:
 
-## Hierarchy
+| Token | RGB | Use |
+|---|---|---|
+| navy | 10, 46, 92 | Header band, block title bars, block frames, sub-headings |
+| leaf | 11, 138, 67 | Highlighted numbers, bullet markers, callout edge |
+| leaf, 55% tint | — | Section numbers and separators on navy |
+| mint | 232, 244, 236 | Callouts and footer background |
+| ink | 31, 42, 51 | Body text |
+| muted | 90, 103, 114 | Table and figure notes |
 
-1. Title (largest)
-2. Block titles
-3. Figure 1 and the result tables
-4. Highlighted numbers in the bullets (accent color, bold)
-5. Bullets
+## Type
 
-## Notes
+- Fira Sans throughout, set ragged-right with hyphenation off.
+- Title 76 pt bold, authors 40 pt, affiliation 31 pt, block titles 38 pt bold.
+- Body 26 pt (the usual minimum is 24 pt), tables 23 pt, notes and references 20 pt.
 
-- Keep the body copy near 500 words; the copy deck is the source of truth.
-- The logo sits on the title strip's teal background without a white box.
-- Check legibility at A0 by viewing the PDF at 25% zoom, which is roughly how it reads from 1.5 m.
+## Figures, tables, and logos
+
+- Figure 1 and Tables 2, 4, and 7 come straight from `figures/` and `tables/`. They keep the paper's numbering, so the poster cannot drift from the paper.
+- `assets/ncu-logo.png` comes from Wikimedia Commons (`NCULogo.svg`) and is placed without a background.
+- `assets/ntcir-logo.tex` holds the NTCIR logo as TikZ `svg.path` data copied from the header of the NTCIR-19 site. Its colors are `ntcirletter` and `ntcirleaf`, which default to the official values. The poster sets the letters to white so they read on the navy band.
+
+## Checks
+
+- One page, A0, and every font embedded (`pdfinfo`, `pdffonts`).
+- At 25% zoom, the title and block titles are readable.
