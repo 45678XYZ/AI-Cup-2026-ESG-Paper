@@ -2,12 +2,13 @@
 \usepackage[paperwidth=841mm, paperheight=1189mm, margin=20mm]{geometry}
 \usepackage{lmodern}
 \usepackage[sfdefault, lining]{FiraSans}
-\usepackage{xcolor}
+\usepackage[table]{xcolor}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{adjustbox}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
 \usepackage{qrcode}
 \usepackage{enumitem}
 \usepackage{ragged2e}
@@ -18,6 +19,9 @@
 \definecolor{navy}{RGB}{12,45,87}
 \definecolor{accent}{RGB}{26,99,176}
 \definecolor{numeral}{RGB}{150,184,224}
+\definecolor{leaf}{RGB}{0,160,64}
+\definecolor{pagebg}{RGB}{241,245,249}
+\definecolor{rowtint}{RGB}{236,242,249}
 \definecolor{rule}{RGB}{206,216,228}
 \definecolor{ink}{RGB}{28,36,46}
 \definecolor{muted}{RGB}{88,100,116}
@@ -32,7 +36,7 @@
 \newcommand{\tablesize}{\fontsize{23}{30}\selectfont}
 \newcommand{\notesize}{\fontsize{20}{26}\selectfont}
 \newcommand{\hl}[1]{\textbf{\textcolor{accent}{#1}}}
-\newcommand{\fittable}[1]{{\tablesize\adjustbox{max width=\linewidth}{\input{#1}}}}
+\newcommand{\fittable}[1]{{\tablesize\rowcolors{2}{rowtint}{white}\adjustbox{max width=\linewidth}{\input{#1}}}}
 \newcommand{\srcnote}[1]{\par\vspace{4mm}{\centering\notesize\textcolor{muted}{#1}\par}}
 \newcommand{\sub}[1]{\par\vspace{3mm}{\bfseries\textcolor{navy}{#1}}\par\vspace{1mm}}
 
@@ -41,22 +45,24 @@
 \setlist[itemize,2]{leftmargin=1.1em, itemsep=1mm, topsep=1mm,
   label={\textcolor{muted}{--}}}
 
-\newtcolorbox{block}[2][]{enhanced, sharp corners,
-  colback=white, colframe=rule, boxrule=0.6mm,
+\newtcolorbox{block}[2][]{enhanced, arc=4mm,
+  colback=white, colframe=white, boxrule=0pt,
   colbacktitle=navy, coltitle=white,
   fonttitle=\bfseries\fontsize{38}{46}\selectfont,
-  toptitle=2.5mm, bottomtitle=2.5mm, left=9mm, right=9mm, top=6mm, bottom=6mm,
+  toptitle=2mm, bottomtitle=2mm, left=9mm, right=9mm, top=6mm, bottom=6mm,
   title={#2}, fontupper=\bodysize\color{ink}\RaggedRight, #1}
 
-\newcommand{\closing}[2]{\par\vspace{6mm}{\color{rule}\rule{\linewidth}{0.6mm}}\par
-  \vspace{5mm}{\bfseries\textcolor{navy}{#1}}\hspace{0.4em}#2\par}
+\newcommand{\closing}[2]{\par\vspace{8mm}{\color{leaf}\rule{28mm}{1.4mm}}\par
+  \vspace{4mm}{\bfseries\textcolor{navy}{#1}}\hspace{0.4em}#2\par}
 
-\newcommand{\sectitle}[2]{\textcolor{numeral}{#1}\hspace{0.45em}#2}
+\newcommand{\sectitle}[2]{\tikz[baseline=(n.base)]\node[circle, fill=leaf,
+  text=white, inner sep=0pt, minimum size=1.08em, font=\bfseries\fontsize{32}{32}\selectfont](n){#1};\hspace{0.5em}#2}
 
 \begin{document}
+\pagecolor{pagebg}
 \bodysize\color{ink}
 
-\begin{tcolorbox}[enhanced, colback=navy, colframe=navy, sharp corners, boxrule=0pt,
+\begin{tcolorbox}[enhanced, colback=navy, colframe=navy, arc=4mm, boxrule=0pt,
   left=12mm, right=12mm, top=8mm, bottom=8mm]
   \begin{minipage}[c]{0.13\linewidth}\centering
     \includegraphics[width=0.92\linewidth]{assets/ncu-logo.png}
@@ -64,14 +70,14 @@
   \begin{minipage}[c]{0.70\linewidth}\centering\color{white}
     {\bfseries\fontsize{76}{90}\selectfont Hierarchical Projection as a Validity Layer\\
       for Multilingual ESG Promise Verification\par}
-    \vspace{9mm}
+    \vspace{5mm}{\color{leaf}\rule{40mm}{1.6mm}}\par\vspace{5mm}
     {\fontsize{40}{50}\selectfont Sheng-Xun Chen, Chun-Wei Chen, Hsin-Chen Han,
       Shi-Yu Huang\par}
     \vspace{4mm}
     {\fontsize{31}{40}\selectfont National Central University, Taiwan
-      \quad\textcolor{numeral}{$\bullet$}\quad Team\_10537\par
+      \quad\textcolor{leaf}{$\bullet$}\quad Team\_10537\par
       NTCIR-19 AI CUP Special Session
-      \quad\textcolor{numeral}{$\bullet$}\quad VeriPromiseESG Task\par}
+      \quad\textcolor{leaf}{$\bullet$}\quad VeriPromiseESG Task\par}
   \end{minipage}\hfill
   \begin{minipage}[c]{0.13\linewidth}\centering
     \definecolor{ntcirletter}{RGB}{255,255,255}
@@ -221,12 +227,12 @@
 
 \vfill
 
-\begin{tcolorbox}[enhanced, colback=navy, colframe=navy, sharp corners, boxrule=0pt,
+\begin{tcolorbox}[enhanced, colback=navy, colframe=navy, arc=4mm, boxrule=0pt,
   left=12mm, right=12mm, top=7mm, bottom=7mm]
-  \begin{minipage}[c]{0.84\linewidth}\notesize\color{white}\RaggedRight
+  \begin{minipage}[c]{0.66\linewidth}\notesize\color{white}\RaggedRight
     {\bfseries References}\par\vspace{2mm}
-    \begin{enumerate}[label={[\arabic*]}, leftmargin=2.2em, itemsep=0.6mm,
-      topsep=0pt, parsep=0pt]
+    \begin{enumerate}[label={\textcolor{numeral}{[\arabic*]}}, leftmargin=2.2em,
+      itemsep=0.6mm, topsep=0pt, parsep=0pt]
       \item AI CUP 2026 Organizers. ESG Sustainability Commitment Verification
         Competition 2026 (VeriPromiseESG4K). 2026.
       \item M.-Y. Day et al. VeriPromiseESG4K: A Traditional Chinese ESG Promise
@@ -237,9 +243,13 @@
         Promise Verification. EMNLP, 2025.
     \end{enumerate}
   \end{minipage}\hfill
-  \begin{minipage}[c]{0.13\linewidth}\centering
-    \colorbox{white}{\qrcode[height=4.4cm]{https://github.com/tom1030507/ntcir19-esg-validity-layer}}\par
-    \vspace{2mm}{\fontsize{18}{22}\selectfont\textcolor{numeral}{Code \& reproduction}\par}
+  \begin{minipage}[c]{0.20\linewidth}\RaggedLeft\color{white}
+    {\bfseries\fontsize{26}{32}\selectfont Code \& reproduction\par}
+    \vspace{4mm}
+    {\fontsize{19}{24}\selectfont\href{https://github.com/tom1030507/ntcir19-esg-validity-layer}{github.com/tom1030507/\\ntcir19-esg-validity-layer}\par}
+  \end{minipage}\hspace{8mm}
+  \begin{minipage}[c]{0.11\linewidth}\centering
+    \href{https://github.com/tom1030507/ntcir19-esg-validity-layer}{\XeTeXLinkBox{\colorbox{white}{\qrcode[height=4.6cm, nolink]{https://github.com/tom1030507/ntcir19-esg-validity-layer}}}}
   \end{minipage}
 \end{tcolorbox}
 

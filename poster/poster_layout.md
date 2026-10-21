@@ -3,6 +3,7 @@
 ## Canvas
 
 - A0 portrait, 841 × 1189 mm with 20 mm margins, built from `article` with `tcolorbox` blocks.
+- The page has a pale blue-grey ground; blocks are white with 4 mm rounded corners and no frame, so they read as cards without outlines. The header and footer bands use the same radius.
 - Two-column rows use `tcbraster` with `raster equal height=rows`, so both blocks in a row end on the same line. Full-width rows hold Figure 1 and the result tables.
 - Do not leave blank lines between blocks inside a `tcbraster`: a blank line starts a new row, and the blocks then stack instead of sitting side by side.
 
@@ -16,22 +17,24 @@
 | C (full width) | **4 · Results: Chinese Anchor**: Table 2 (57.5%) and Table 4 (39.5%), then two bullets | — |
 | D | **5 · Multilingual Replication**: Table 7 and two bullets | **6 · Why the Metrics Disagree** |
 | E | **7 · Implications for Audit Use** | **8 · Conclusion**, ending in the takeaway below a thin rule |
-| Footer band (full width, navy) | References [1]–[4], one per line · QR code on a white square | — |
+| Footer band (full width, navy) | References [1]–[4], one per line · "Code & reproduction" with the repo URL · clickable QR code on a white square | — |
 
 ## Color
 
-One blue family, so the navy footer band balances the navy header and the poster is not top-heavy. Green appears only in the NTCIR logo's leaf.
+Navy carries the structure, one brighter blue marks the headline results, and the NTCIR leaf green is the supporting color. The navy footer balances the navy header.
 
 | Token | RGB | Use |
 |---|---|---|
 | navy | 12, 45, 87 | Header and footer bands, block title bars, bullets, sub-headings |
 | accent | 26, 99, 176 | The five headline results only: 12.55% → 0, +0.035, −0.006, 32/32, 14/32 |
-| numeral | 150, 184, 224 | Section numbers and separators on navy |
-| rule | 206, 216, 228 | Block frames and the thin rules above the research question and takeaway |
+| leaf | 0, 160, 64 | Supporting only: section-number badges, the short rule under the title, the short rules before the research question and the takeaway, separators in the header |
+| numeral | 150, 184, 224 | Reference numbers on the footer band |
+| pagebg | 241, 245, 249 | Page ground behind the white blocks |
+| rowtint | 236, 242, 249 | Alternate table rows |
 | ink | 28, 36, 46 | Body text |
 | muted | 88, 100, 116 | Table and figure notes |
 
-No callout boxes, no colored left borders, no rounded corners: these are the most common marks of generated layouts. Other key numbers are plain bold.
+Accent blue appears five times and leaf green only as small marks. There are no callout boxes and no colored left borders: a rounded card with a colored left edge is the most common mark of a generated layout.
 
 ## Type
 
@@ -46,6 +49,8 @@ No callout boxes, no colored left borders, no rounded corners: these are the mos
 - `assets/ntcir-logo.tex` holds the NTCIR logo as TikZ `svg.path` data copied from the header of the NTCIR-19 site. Its colors are `ntcirletter` and `ntcirleaf`, which default to the official values. The poster sets the letters to white so they read on the navy band.
 
 ## Checks
+
+- Links: under XeTeX a link drawn only around a picture gets no clickable area, so the QR code sits inside `\XeTeXLinkBox`.
 
 - One page, A0, and every font embedded (`pdfinfo`, `pdffonts`).
 - At 25% zoom, the title and block titles are readable.

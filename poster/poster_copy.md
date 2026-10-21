@@ -91,4 +91,4 @@ Table 7 of the paper.
 3. C.-C. Chen et al. SemEval-2025 Task 6: Multinational, Multilingual, Multi-Industry Promise Verification. SemEval, 2025.
 4. Y. Seki et al. ML-Promise: A Multilingual Dataset for Corporate Promise Verification. EMNLP, 2025.
 
-QR code → github.com/tom1030507/ntcir19-esg-validity-layer (code and reproduction)
+**Code & reproduction**: github.com/tom1030507/ntcir19-esg-validity-layer, printed as text and as a QR code. Both are links in the PDF. No e-mail address is printed.

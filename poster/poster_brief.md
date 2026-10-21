@@ -6,7 +6,7 @@
 - **File name:** `NTCIR19-[TASK]-[FamilyName+Initial]-poster.pdf`, where `[FamilyName+Initial]` is the first author's family name and initial. Not yet decided.
 - **Source:** the camera-ready manuscript at `45678XYZ/AI-Cup-2026-ESG-Paper@f91f88b`. Every number on the poster comes from it.
 - **Branding:** the NCU logo (`assets/ncu-logo.png`, from Wikimedia Commons `NCULogo.svg`) sits left of the title and the NTCIR logo (`assets/ntcir-logo.tex`, from the NTCIR-19 site) sits right. The palette (navy and leaf green) comes from the NTCIR logo and also suits the ESG topic.
-- **Contact:** a QR code to the reproduction capsule (`github.com/tom1030507/ntcir19-esg-validity-layer`) stands in for a contact block. No e-mail address is printed.
+- **Contact:** no e-mail address, by decision. The footer gives the reproduction capsule (`github.com/tom1030507/ntcir19-esg-validity-layer`) as text and as a QR code; both are clickable in the PDF.
 - **Style:** style B from the NTCIR-18 comparison (a colored title band and numbered blocks), with the section order of a standard research poster.
 
 ## Venue rules (research.nii.ac.jp/ntcir/ntcir-19/poster.html)

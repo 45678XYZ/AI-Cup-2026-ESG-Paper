@@ -32,5 +32,5 @@ pdffonts build/poster.pdf                              # every row "emb yes"
 
 - [ ] Every number traces to the camera-ready paper (`poster_copy.md` cites the source of each one).
 - [ ] At 25% zoom, the title and block titles are readable.
-- [ ] The QR code resolves to the reproduction capsule.
+- [ ] The QR code resolves to the reproduction capsule, and clicking it or the URL in the PDF opens the same page.
 - [ ] The PDF is one A0 page, and every font is embedded.
